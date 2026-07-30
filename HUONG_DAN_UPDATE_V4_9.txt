@@ -1,0 +1,16 @@
+BẢN V4.9 - LỊCH LÀM VIỆC THEO THÁNG
+
+Cập nhật chính:
+1. Lịch làm việc mặc định hiển thị dạng bảng xem gọn, chỉ hiện mã ca S / C / G1 / OFF.
+2. Chỉ khi bấm "Sửa lịch" mới hiện ô chọn ca và ô ghi chú.
+3. Sau khi bấm "Lưu lịch", hệ thống tự quay về bảng xem gọn để dễ nhìn.
+4. Bộ lọc lịch đổi từ chọn tuần sang chọn tháng.
+5. Mỗi tháng hiển thị toàn bộ các tuần trong tháng. Ngày gối sang tháng khác sẽ để trống.
+6. Phần nhập doanh thu vẫn có lượt khách tổng cửa hàng, UPT hiển thị 2 số sau dấu phẩy.
+
+Cách update:
+- Giải nén file zip.
+- Upload toàn bộ file/thư mục bên trong lên GitHub repo dezus-store-ops.
+- Commit changes.
+- Vào Render -> Manual Deploy -> Deploy latest commit.
+- Mở web và bấm Ctrl + F5.

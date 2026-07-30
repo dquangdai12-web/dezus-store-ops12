@@ -1,0 +1,16 @@
+HUONG DAN UPDATE V4.10 - ORDER HANG
+
+1. Giai nen file zip.
+2. Vao GitHub repo dezus-store-ops.
+3. Add file -> Upload files.
+4. Keo toan bo file/thu muc ben trong ban moi len GitHub.
+5. Commit changes.
+6. Qua Render -> Manual Deploy -> Deploy latest commit.
+7. Mo lai web va bam Ctrl + F5.
+
+Tinh nang moi:
+- Them muc Order hang.
+- Nhap SKU, Ten SP, So luong, ghi chu.
+- Cap nhat trang thai: Cho xu ly, Da lam, Cho hang nhap, Da nhap hang.
+- Tai CSV order hang de lay du lieu xu ly.
+- Co quyen rieng: Tao/sua order hang va Xem order hang.

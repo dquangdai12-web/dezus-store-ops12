@@ -1,0 +1,15 @@
+BẢN V4.17 - ĐỔI MẬT KHẨU CÁ NHÂN
+
+Đã thêm:
+- Mục Đổi MK trên menu.
+- Người dùng tự đổi mật khẩu bằng mật khẩu hiện tại.
+- Mật khẩu mới tối thiểu 6 ký tự.
+- Sau khi đổi mật khẩu, hệ thống tự đăng xuất để đăng nhập lại.
+- Admin vẫn có thể tạo tài khoản/reset mật khẩu thông qua phần quản lý tài khoản.
+
+Cách update:
+1. Giải nén file zip.
+2. Upload toàn bộ file/thư mục lên GitHub repo dezus-store-ops.
+3. Commit changes.
+4. Render -> Manual Deploy -> Deploy latest commit.
+5. Mở web và bấm Ctrl + F5.

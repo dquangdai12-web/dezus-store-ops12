@@ -1,0 +1,28 @@
+BẢN V4.5 - SET TARGET THEO QUYỀN + TARGET NGÀY
+
+Đã cập nhật:
+1. Tách quyền Set target khỏi quyền Nhập doanh thu.
+   - Chỉ tài khoản có quyền "Set target doanh thu" mới thấy và lưu được target.
+   - Admin có nút "Cấp set target" / "Thu hồi set target" trong mục Admin.
+
+2. Thêm target từng ngày theo tổng cửa hàng.
+   - Target ngày gồm: Doanh thu, UPT, ATV, CR.
+   - Bảng tổng hợp tháng sẽ có cột Target ngày và % ngày.
+   - Chỉ số đạt target hiện màu xanh, chưa đạt hiện màu đỏ.
+
+3. Phần nhập doanh thu có lượt khách tổng cửa hàng.
+   - Mỗi ngày nhập doanh thu từng nhân viên: doanh thu, bill, món.
+   - Lượt khách nhập 1 lần theo tổng cửa hàng.
+   - CR = tổng bill / lượt khách cửa hàng.
+
+4. UPT hiển thị 2 số sau dấu phẩy.
+   - VD: 2.00, 2.44.
+
+Cách update:
+1. Giải nén file zip.
+2. Vào GitHub repo dezus-store-ops.
+3. Add file -> Upload files.
+4. Kéo toàn bộ file/thư mục bên trong bản này lên GitHub.
+5. Commit changes.
+6. Vào Render -> Manual Deploy -> Deploy latest commit.
+7. Mở web và bấm Ctrl + F5.

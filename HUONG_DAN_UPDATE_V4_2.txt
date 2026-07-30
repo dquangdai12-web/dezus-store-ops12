@@ -1,0 +1,20 @@
+HUONG DAN UPDATE V4.2 - DOANH THU NGAY
+
+1. Giai nen file zip.
+2. Vao GitHub repo dang dung.
+3. Add file -> Upload files.
+4. Keo toan bo file va thu muc ben trong ban nay len GitHub, gom public, data, uploads, server.js, package.json, render.yaml.
+5. Commit changes.
+6. Vao Render -> Manual Deploy -> Deploy latest commit.
+7. Mo web va bam Ctrl + F5.
+
+Tinh nang moi:
+- Nhap doanh thu tung ngay theo tung nhan vien: doanh thu, so bill, so mon.
+- So khach chi nhap 1 lan theo tong cua hang.
+- Nhap lai cung ngay/cung nhan vien se cap nhat, khong cong trung.
+- He thong tu tinh UPT = so mon / so bill.
+- He thong tu tinh ATV = doanh thu / so bill.
+- Bang tong hop thang theo cua hang, chi cua hang do/admin/nguoi duoc cap quyen moi xem duoc.
+- Tinh tong luy ke theo tung ngay de biet % dat target thang.
+- Them quyen: Xem tong doanh thu cua hang.
+- Upload anh/chung tu hoan thanh bao cao/vi pham tiep tuc ho tro nhieu file.

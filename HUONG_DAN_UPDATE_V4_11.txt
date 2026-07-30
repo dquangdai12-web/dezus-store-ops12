@@ -1,0 +1,18 @@
+DEZUS STORE OPS - UPDATE V4.11
+
+Bản này cập nhật mục Order hàng theo đợt/tag.
+
+Tính năng mới:
+- Khi tạo order, nhập thêm Đợt / tag order, ví dụ: Đợt 1 - Tuần 31.
+- Các dòng nhập ở nhiều ngày khác nhau nhưng cùng tag sẽ gom vào cùng một đợt.
+- Nếu cùng SKU/tên sản phẩm trong cùng tag, hệ thống tự cộng tổng số lượng.
+- Danh sách order hiển thị theo từng tag/đợt để dễ nhìn.
+- Có nút đổi trạng thái cho cả đợt: Đã làm, Chờ hàng nhập, Đã nhập.
+- Tải CSV order sẽ xuất dữ liệu tổng theo đợt để lấy hàng/nhập hàng.
+
+Cách cập nhật:
+1. Giải nén file zip.
+2. Upload toàn bộ file/thư mục lên GitHub repo dezus-store-ops.
+3. Commit changes.
+4. Vào Render > Manual Deploy > Deploy latest commit.
+5. Mở web và bấm Ctrl + F5.

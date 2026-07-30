@@ -1,0 +1,30 @@
+BẢN V4.12 - ORDER THEO LẦN, ĐÁNH GIÁ SẢN PHẨM, ĐÀO TẠO SẢN PHẨM
+
+Cập nhật chính:
+1. Đổi Order hàng từ "Đợt" sang "Lần / tag order".
+   - Ví dụ: Lần 1 - Tuần 31, Lần 2 - Tuần 31.
+   - Các order nhiều ngày cùng một lần/tag sẽ gom chung và cộng tổng số lượng.
+
+2. Thêm mục Đánh giá SP:
+   - Cửa hàng nhập đánh giá sản phẩm từ khách hàng.
+   - Gồm SKU, tên SP, kiểu dáng/form, chất liệu, lỗi sản phẩm, đánh giá khách hàng, mong muốn tái sản phẩm và ghi chú.
+   - Có thể tải CSV dữ liệu đánh giá sản phẩm.
+
+3. Thêm mục Đào tạo SP:
+   - Admin nhập nội dung học sản phẩm trước khi hàng về.
+   - Gồm chất liệu, kiểu dáng/form, điểm bán hàng, cách tư vấn/bảo quản, lỗi cần lưu ý và ghi chú đào tạo.
+   - Cửa hàng/nhân viên có quyền xem để học trên web.
+   - Có thể tải CSV dữ liệu đào tạo sản phẩm.
+
+4. Thêm quyền mới trong Admin:
+   - Nhập đánh giá sản phẩm
+   - Xem đánh giá sản phẩm
+   - Nhập đào tạo sản phẩm
+   - Xem đào tạo sản phẩm
+
+Cách update:
+1. Giải nén file zip.
+2. Upload toàn bộ file/thư mục trong thư mục giải nén lên GitHub repo dezus-store-ops.
+3. Commit changes.
+4. Vào Render > Manual Deploy > Deploy latest commit.
+5. Mở web và bấm Ctrl + F5.

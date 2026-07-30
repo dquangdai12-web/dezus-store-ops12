@@ -1,0 +1,14 @@
+BẢN V4.8 - LỊCH LÀM VIỆC GỌN HƠN
+
+- Bảng ca hiển thị đơn giản bằng mã ca S / C / G1 / F1 / C2.
+- Màu sắc tự đổi theo từng ca.
+- Bố cục lịch tuần dễ nhìn hơn, ô ca gọn hơn.
+- Admin set ca chỉ cần nhập mã ca, giờ bắt đầu, giờ kết thúc.
+- Quản lý vẫn phân lịch T2-CN và có thể sửa khi thay đổi.
+
+Cách update:
+1. Giải nén zip.
+2. Upload toàn bộ file/thư mục lên GitHub repo.
+3. Commit changes.
+4. Render -> Manual Deploy -> Deploy latest commit.
+5. Mở web, nhấn Ctrl + F5.

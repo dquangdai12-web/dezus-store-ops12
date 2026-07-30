@@ -1,0 +1,34 @@
+BẢN V4.7 - LỊCH LÀM VIỆC TỪ T2 ĐẾN CN
+
+Nội dung thêm mới:
+1. Thêm mục Lịch làm việc trên thanh menu.
+2. Admin có quyền set ca và giờ của ca:
+   - Mã ca
+   - Tên ca
+   - Giờ bắt đầu
+   - Giờ kết thúc
+   - Ghi chú
+3. Quản lý cửa hàng có quyền phân lịch làm việc cho nhân sự cửa hàng từ T2 đến CN.
+4. Quản lý có thể sửa lịch nếu có thay đổi.
+5. Nhân viên xem được lịch làm việc của mình.
+6. Admin có thể xem/phân lịch toàn bộ cửa hàng.
+7. Có quyền riêng:
+   - Set ca và giờ ca
+   - Phân lịch làm việc
+   - Xem lịch làm việc
+8. Có tải CSV:
+   - Ca làm
+   - Lịch làm việc
+
+Cách update lên GitHub/Render:
+1. Giải nén file zip.
+2. Vào GitHub repo dezus-store-ops.
+3. Chọn Add file -> Upload files.
+4. Kéo toàn bộ file/thư mục trong bản này lên GitHub.
+5. Bấm Commit changes.
+6. Vào Render -> Manual Deploy -> Deploy latest commit.
+7. Mở web và bấm Ctrl + F5.
+
+Lưu ý:
+- Nếu đang test Free trên Render, dữ liệu lịch và file vẫn có thể mất khi Render restart/redeploy.
+- Khi dùng thật nên bật Persistent Disk để lưu dữ liệu ổn định.

@@ -1,0 +1,19 @@
+BẢN V4.15 - BÁO CÁO TUẦN
+
+Đã thêm mục Báo cáo tuần:
+- Chọn tuần để xem từ T2 đến CN.
+- Admin chọn được cửa hàng, quản lý xem cửa hàng của mình.
+- Tổng hợp doanh thu cửa hàng theo tuần.
+- Tổng hợp doanh thu cá nhân theo tuần.
+- Tự tính Bill, số món, lượt khách, UPT, ATV, CR.
+- Có feedback tuần, vấn đề phát sinh, việc cần làm tuần tới, ghi chú.
+- Có tải CSV báo cáo tuần.
+
+Cách cập nhật:
+1. Giải nén file zip.
+2. Vào GitHub repo dezus-store-ops.
+3. Add file -> Upload files.
+4. Kéo toàn bộ file/thư mục bên trong bản này lên GitHub.
+5. Commit changes.
+6. Vào Render -> Manual Deploy -> Deploy latest commit.
+7. Mở web và bấm Ctrl + F5.

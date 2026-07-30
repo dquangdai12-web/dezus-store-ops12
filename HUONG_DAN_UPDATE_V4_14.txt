@@ -1,0 +1,26 @@
+DEZUS STORE OPS V4.14 - ĐÀO TẠO SẢN PHẨM + BÀI KIỂM TRA
+
+Bản này bổ sung:
+1. Admin nhập thông tin đào tạo sản phẩm trước khi hàng về.
+2. Admin set yêu cầu học cho Toàn hệ thống hoặc từng cửa hàng.
+3. Có thời hạn hoàn thành bài học.
+4. Có bài kiểm tra trắc nghiệm.
+5. Nhân viên học xong làm bài kiểm tra ngay trên web.
+6. Từ 90% trở lên là ĐẠT; không đạt được làm lại.
+7. Không hoàn thành đúng thời hạn sẽ bị trừ điểm trong phần Tổng hợp điểm.
+8. Có tải CSV: bài đào tạo sản phẩm và kết quả kiểm tra.
+
+Cách nhập câu hỏi trắc nghiệm:
+Mỗi dòng là 1 câu, theo mẫu:
+Câu hỏi | Đáp án A | Đáp án B | Đáp án C | Đáp án D | A
+
+Ví dụ:
+Chất liệu chính là gì? | Cotton | Linen | Denim | Kate | A
+Sản phẩm cần lưu ý gì? | Dễ nhăn | Không co giãn | Dễ xù | Tất cả đúng | D
+
+Cách cập nhật lên web:
+1. Giải nén file zip.
+2. Upload toàn bộ file/thư mục bên trong lên GitHub repo dezus-store-ops.
+3. Commit changes.
+4. Vào Render -> Manual Deploy -> Deploy latest commit.
+5. Mở web và bấm Ctrl + F5.

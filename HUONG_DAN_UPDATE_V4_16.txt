@@ -1,0 +1,16 @@
+BẢN V4.16 - BÁO CÁO TUẦN DẠNG BẢNG + ĐƠN ONLINE
+
+1. Báo cáo tuần
+- Sau khi lưu feedback, hệ thống hiển thị dạng bảng dễ nhìn.
+- Bấm Sửa feedback mới mở ô nhập để chỉnh sửa.
+
+2. Đơn online
+- Cửa hàng nhập số hóa đơn, giá trị đơn, nhân viên đóng đơn, ghi chú.
+- Doanh thu hưởng tự tính = 30% giá trị đơn.
+- Có tổng hợp theo cửa hàng và theo cá nhân.
+- Có tải CSV đơn online.
+
+CÁCH UPDATE
+- Upload toàn bộ file/thư mục lên GitHub.
+- Render → Manual Deploy → Deploy latest commit.
+- Mở web → Ctrl + F5.

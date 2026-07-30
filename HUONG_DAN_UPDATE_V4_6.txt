@@ -1,0 +1,26 @@
+BẢN V4.6 - THÊM THƯ VIỆN TÀI LIỆU / QUY TRÌNH
+
+Cập nhật mới:
+1. Thêm menu Tài liệu / Quy trình.
+2. Admin/quản lý được cấp quyền có thể tải file lên hệ thống.
+3. Nhân viên được xem và tải file quy trình/biểu mẫu/đào tạo về.
+4. Có phân quyền:
+   - Tải/sửa tài liệu quy trình
+   - Xem/tải tài liệu quy trình
+5. Tài liệu có nhóm: Quy trình, Biểu mẫu, Đào tạo, Thông báo, Khác.
+6. Có phạm vi áp dụng: Toàn hệ thống hoặc từng cửa hàng.
+7. Có ghi chú, phiên bản/ngày hiệu lực, lượt tải, người tải lên.
+8. Hỗ trợ PDF, Word, Excel, PowerPoint, CSV và ảnh.
+
+Cách cập nhật:
+1. Giải nén file zip.
+2. Vào GitHub repo dezus-store-ops.
+3. Add file → Upload files.
+4. Kéo toàn bộ file/thư mục trong bản giải nén lên GitHub.
+5. Commit changes.
+6. Vào Render → Manual Deploy → Deploy latest commit.
+7. Mở web và bấm Ctrl + F5.
+
+Lưu ý:
+Nếu dùng Render Free để test, file tài liệu có thể mất khi Render restart/redeploy.
+Dùng thật nên nâng gói có Persistent Disk để giữ file ổn định.

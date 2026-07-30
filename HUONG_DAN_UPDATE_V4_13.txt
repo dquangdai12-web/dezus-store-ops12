@@ -1,0 +1,16 @@
+BẢN V4.13 - BST/LIST SẢN PHẨM & TỔNG HỢP ĐÁNH GIÁ
+
+Cập nhật chính:
+1. Admin set BST/List sản phẩm theo tháng, ví dụ BST 8.1, BST 8.2.
+2. Admin nhập SKU/Tên sản phẩm trong từng BST/List.
+3. Cửa hàng đánh giá hằng ngày bằng cách chọn sản phẩm trong list đã được set.
+4. Hệ thống tự tổng hợp đánh giá theo SKU/Tên SP: số lần đánh giá, kiểu dáng, chất liệu, lỗi, ý kiến khách, đề xuất tái/không tái/theo dõi.
+5. Có bộ lọc theo tháng, cửa hàng, BST/List.
+6. Có tải CSV: tổng hợp đánh giá, chi tiết đánh giá, list BST/SKU.
+
+Cách update:
+- Giải nén file zip.
+- Upload toàn bộ file/thư mục lên GitHub repo dezus-store-ops.
+- Commit changes.
+- Vào Render > Manual Deploy > Deploy latest commit.
+- Mở web và bấm Ctrl + F5.

@@ -1,0 +1,23 @@
+HUONG DAN UPDATE DEZUS STORE OPS - V4 FEATURES
+
+Ban nay them cac tinh nang:
+1. Tien thuong nhan vien: Hotbill, Thuong tuan, Thuong KPI, Thuong khac.
+2. Admin/nguoi co quyen Nhap thuong se nhap tien thuong.
+3. Doanh thu co them Target, bang top chi hien % dat target, khong hien so tien ban.
+4. Admin co nut Cap xem %/thuong cho nhan vien: cho phep xem % dat target toan he thong va tien thuong.
+5. Checklist sau khi cham co nut Xem ghi chu de xem chi tiet diem va ghi chu tung muc.
+6. Hoan thanh cong viec/bao cao co the tai len nhieu anh/chung tu cung luc.
+
+CACH UPDATE LEN GITHUB:
+1. Giai nen file zip nay.
+2. Vao GitHub repo dang dung: dezus-store-ops.
+3. Add file -> Upload files.
+4. Keo tha TOAN BO file va thu muc ben trong thu muc giai nen len GitHub.
+5. Commit changes.
+6. Sang Render -> Manual Deploy -> Deploy latest commit.
+7. Mo lai link onrender.com va bam Ctrl + F5 neu trinh duyet con cache.
+
+LUU Y:
+- Neu dang test Free Render, du lieu/anh van co rui ro mat khi Render restart.
+- Khi dung that, nen dung Persistent Disk/paid plan.
+- Sau khi update, Admin vao Admin -> Danh sach tai khoan -> Cap xem %/thuong de cap quyen nhanh cho nhan vien.

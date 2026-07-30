@@ -1,0 +1,16 @@
+BẢN V4.4 - TARGET KPI & MÀU ĐẠT/CHƯA ĐẠT
+
+Cập nhật chính:
+1. Bảng doanh thu bỏ quản lý, chỉ hiện nhân viên bán hàng.
+2. Mục set target đầu tháng từng nhân viên gồm: doanh thu, UPT, ATV, CR.
+3. Target quản lý/cửa hàng: doanh thu = tổng target nhân viên; UPT/ATV/CR = trung bình target nhân viên có nhập trong cửa hàng.
+4. Mục Doanh thu vẫn hiện doanh thu thực đạt.
+5. Mục Tổng quan chỉ hiện % target.
+6. KPI đạt target hiển thị màu xanh, chưa đạt hiển thị màu đỏ.
+7. CR tính theo tổng bill / tổng khách cửa hàng.
+
+Cách update:
+- Upload toàn bộ file/thư mục lên GitHub repo dezus-store-ops.
+- Commit changes.
+- Qua Render chọn Manual Deploy -> Deploy latest commit.
+- Mở web và nhấn Ctrl + F5.

@@ -1,0 +1,16 @@
+BẢN V4.3 - TARGET CÁ NHÂN / TARGET QUẢN LÝ / TIỀN CÔNG
+
+Cập nhật chính:
+1. Target nhập theo từng nhân viên bán hàng, mỗi người có target riêng.
+2. Target của quản lý/cửa hàng tự tính bằng tổng target cá nhân của nhân viên trong cửa hàng. Không cần nhập target riêng cho quản lý.
+3. Mục Doanh thu hiển thị doanh thu thực đạt + target + % đạt target.
+4. Mục Tổng quan chỉ hiển thị % đạt target, không hiển thị số tiền bán.
+5. Tiền thưởng/tiền công: mỗi lần nhập thêm sẽ cộng vào tổng tiền công/thưởng của nhân viên; bảng chính không tách từng ngày.
+6. Vẫn giữ upload nhiều ảnh/chứng từ tối đa 10 file/lần.
+
+Cách cập nhật online:
+- Giải nén ZIP.
+- Upload toàn bộ file/thư mục bên trong lên GitHub repo đang dùng.
+- Commit changes.
+- Vào Render -> Manual Deploy -> Deploy latest commit.
+- Mở lại web và bấm Ctrl + F5.
