@@ -339,7 +339,6 @@ function renderLogin() {
           <div class="logo"><div class="mark">DZ</div><div><h1>Dezus Store Ops</h1><p>Store Operations</p></div></div>
           <div class="login-copy">
             <h2>Đăng nhập hệ thống</h2>
-            <p>Giao diện mới dùng font gọn kiểu ChatGPT, tông màu đậm vừa phải, bảng rõ và dễ thao tác trên điện thoại.</p>
           </div>
           <div class="field"><label>Tài khoản</label><input class="input" name="username" placeholder="Nhập tài khoản" autocomplete="username" required></div>
           <div class="field"><label>Mật khẩu</label><input class="input" name="password" type="password" placeholder="Mật khẩu" autocomplete="current-password" required></div>
