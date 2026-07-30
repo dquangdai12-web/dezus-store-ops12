@@ -1,0 +1,10 @@
+BẢN V4.18 - SỬA QUYỀN TÀI KHOẢN
+
+Bản này thêm nút Sửa quyền trong Admin -> Danh sách tài khoản.
+Admin có thể sửa vai trò, cửa hàng, tích/bỏ tích quyền, reset mật khẩu và lưu lại.
+
+Cách cập nhật web đã chạy Render:
+1. Upload toàn bộ file/thư mục lên GitHub repo dezus-store-ops.
+2. Commit changes.
+3. Vào Render -> Manual Deploy -> Deploy latest commit.
+4. Mở web và bấm Ctrl + F5.
