@@ -1988,3 +1988,96 @@ textarea.input{min-height:92px;resize:vertical;line-height:1.45}
   .weekly-promo-row td:last-child{display:table-cell}
   .weeklyRemovePromoBtn{margin-top:6px;margin-left:0!important}
 }
+
+
+/* ==== V4.45 WEEKLY FEEDBACK FULL CONTENT ==== */
+.weekly-feedback-card{
+  overflow:visible!important;
+}
+.weekly-feedback-view{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),max-content));
+  gap:12px;
+  align-items:start;
+  margin-top:10px;
+}
+.weekly-feedback-block{
+  width:fit-content;
+  max-width:100%;
+  min-width:min(100%,280px);
+  border:1px solid #dbe5ef;
+  border-left:4px solid #5d8fc7;
+  border-radius:16px;
+  padding:13px 14px;
+  background:linear-gradient(180deg,#ffffff,#f8fbff);
+  box-shadow:0 8px 18px rgba(17,24,39,.05);
+}
+.weekly-feedback-block b{
+  display:block;
+  color:#163f69;
+  font-size:12px;
+  margin-bottom:7px;
+  white-space:normal!important;
+}
+.weekly-feedback-content{
+  color:#27384a;
+  font-size:13px;
+  line-height:1.55;
+  white-space:pre-wrap!important;
+  overflow:visible!important;
+  overflow-wrap:anywhere;
+  word-break:normal;
+  text-overflow:clip!important;
+  max-width:100%;
+}
+#weeklyFeedbackForm textarea[data-auto-resize]{
+  min-height:88px;
+  overflow:hidden!important;
+  resize:none;
+  line-height:1.5;
+}
+.weekly-read-table-wrap{
+  overflow:visible!important;
+}
+.weekly-read-table-wrap:after{
+  display:none!important;
+}
+.weekly-read-table{
+  min-width:0!important;
+  width:100%!important;
+  table-layout:auto!important;
+}
+.weekly-read-table th,
+.weekly-read-table td{
+  white-space:normal!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  overflow-wrap:anywhere;
+  line-height:1.45!important;
+}
+.weekly-read-table td b{
+  white-space:normal!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+}
+@media (min-width:700px) and (max-width:1180px){
+  .weekly-feedback-view{
+    grid-template-columns:1fr!important;
+  }
+  .weekly-feedback-block{
+    width:100%;
+  }
+  .weekly-read-table th,
+  .weekly-read-table td{
+    font-size:12px!important;
+  }
+}
+@media (max-width:699px){
+  .weekly-feedback-view{
+    grid-template-columns:1fr;
+  }
+  .weekly-feedback-block{
+    width:100%;
+    min-width:0;
+  }
+}

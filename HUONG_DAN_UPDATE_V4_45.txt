@@ -1,0 +1,14 @@
+V4.45 - Feedback tuần hiển thị đầy đủ nội dung
+
+Nội dung cập nhật:
+- Phần Feedback tuần không còn hiển thị dạng bảng kéo ngang.
+- Từng nội dung feedback tự co/giãn theo nội dung.
+- Nội dung dài tự xuống dòng và hiển thị đầy đủ, không bị cắt chữ.
+- Ô nhập feedback tự tăng chiều cao theo nội dung khi sửa báo cáo.
+- Bảng Top 5 sản phẩm và CTKM trong báo cáo tuần cho phép xuống dòng ở ghi chú/tên dài.
+
+Cách cập nhật:
+1. Giải nén file zip.
+2. Upload toàn bộ file/folder bên trong lên GitHub và ghi đè bản cũ.
+3. Commit changes.
+4. Render > Manual Deploy > Deploy latest commit.
