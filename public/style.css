@@ -1760,3 +1760,72 @@ textarea.input{min-height:92px;resize:vertical;line-height:1.45}
     display:block!important;
   }
 }
+
+/* ==== V4.39 IPAD/MAC OVERVIEW LAYOUT FIX ==== */
+.overview-bottom-grid{
+  align-items:start;
+}
+.overview-leaderboard-card,
+.overview-violations-card{
+  min-width:0;
+}
+/* Cho tên Top 1/2/3 hiện rõ hơn */
+.leaderboard-premium .rank-card{
+  min-height:150px;
+}
+.leaderboard-premium .rank-card b{
+  white-space:normal !important;
+  overflow:hidden;
+  text-overflow:initial;
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  line-height:1.25;
+  min-height:2.5em;
+}
+.leaderboard-premium .rank-card span{
+  white-space:nowrap !important;
+}
+
+@media (min-width:700px){
+  .overview-bottom-grid{
+    grid-template-columns:minmax(0,1.32fr) minmax(300px,.92fr) !important;
+  }
+  .overview-violations-card{
+    max-width:none;
+  }
+  .leaderboard-premium{
+    grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+    gap:14px !important;
+  }
+  .leaderboard-premium .rank-card{
+    padding:15px 15px 14px !important;
+  }
+}
+
+@media (min-width:700px) and (max-width:899px){
+  .overview-bottom-grid{
+    grid-template-columns:minmax(0,1.45fr) minmax(260px,.8fr) !important;
+  }
+  .leaderboard-premium .rank-card b{
+    font-size:13.5px !important;
+  }
+  .leaderboard-premium .rank-card strong{
+    font-size:22px !important;
+  }
+}
+
+@media (min-width:900px) and (max-width:1366px){
+  .overview-bottom-grid{
+    grid-template-columns:minmax(0,1.38fr) minmax(320px,.82fr) !important;
+  }
+  .leaderboard-premium .rank-card b{
+    font-size:14px !important;
+  }
+}
+
+@media (min-width:1367px){
+  .overview-bottom-grid{
+    grid-template-columns:minmax(0,1.28fr) minmax(340px,.9fr) !important;
+  }
+}

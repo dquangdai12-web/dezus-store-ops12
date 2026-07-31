@@ -575,9 +575,9 @@ async function renderDashboard() {
       <div class="card kpi dashboard-kpi kpi-late"><div class="label">Trễ / quá hạn</div><div class="num danger-text">${late}</div><div class="hint">Tự ghi nhận trừ điểm</div></div>
       <div class="card kpi top-month-kpi"><div class="top-month-head"><div><div class="label">Top tháng</div><div class="num top-month-name">${top[0] ? esc(top[0].full_name) : '-'}</div><div class="hint top-month-store">${top[0] ? esc(top[0].store_name || '') : 'Chưa có dữ liệu'}</div></div><div class="top-month-cup" aria-hidden="true">🏆</div></div></div>
     </section>
-    <section class="grid two" style="margin-top:17px">
-      <div class="card"><div class="section-title"><h3>Top % đạt target tháng này</h3><span class="badge">Cạnh tranh</span></div>${tableLeaderboard(top)}</div>
-      <div class="card"><div class="section-title"><h3>Vi phạm gần đây</h3><span class="badge danger">Kiểm soát</span></div>${violationsData.violations.slice(0, 6).map(v => `<div class="activity-item"><div><b>${esc(v.employee_name)}</b><span>${esc(v.store_name || '')} • ${dt(v.created_at)}</span><p>${esc(v.description || '')}</p></div><span class="badge danger">-${v.points_deducted}</span></div>`).join('') || '<div class="empty">Chưa có vi phạm</div>'}</div>
+    <section class="grid two overview-bottom-grid" style="margin-top:17px">
+      <div class="card overview-leaderboard-card"><div class="section-title"><h3>Top % đạt target tháng này</h3><span class="badge">Cạnh tranh</span></div>${tableLeaderboard(top)}</div>
+      <div class="card overview-violations-card"><div class="section-title"><h3>Vi phạm gần đây</h3><span class="badge danger">Kiểm soát</span></div>${violationsData.violations.slice(0, 6).map(v => `<div class="activity-item"><div><b>${esc(v.employee_name)}</b><span>${esc(v.store_name || '')} • ${dt(v.created_at)}</span><p>${esc(v.description || '')}</p></div><span class="badge danger">-${v.points_deducted}</span></div>`).join('') || '<div class="empty">Chưa có vi phạm</div>'}</div>
     </section>
   `, 'Tổng quan', '');
 }
