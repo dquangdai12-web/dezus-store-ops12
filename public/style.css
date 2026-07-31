@@ -1829,3 +1829,142 @@ textarea.input{min-height:92px;resize:vertical;line-height:1.45}
     grid-template-columns:minmax(0,1.28fr) minmax(340px,.9fr) !important;
   }
 }
+
+/* ==== V4.40 MULTI EMPLOYEE MONTH TARGET ==== */
+.target-employee-field{
+  min-width:0;
+}
+.target-multi-actions{
+  margin:6px 0 10px;
+  align-items:center;
+}
+.target-employee-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:9px;
+}
+.target-employee-check{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+  padding:10px 11px;
+  border:1px solid #d8e2ee;
+  border-radius:14px;
+  background:linear-gradient(180deg,#ffffff,#f8fbff);
+  cursor:pointer;
+  transition:.16s ease;
+}
+.target-employee-check:hover{
+  border-color:#9fc7ef;
+  box-shadow:0 8px 18px rgba(36,79,84,.08);
+}
+.target-employee-check input{
+  width:18px;
+  height:18px;
+  flex:0 0 auto;
+  accent-color:#1687f7;
+}
+.target-employee-check span{
+  display:grid;
+  gap:2px;
+  min-width:0;
+}
+.target-employee-check b,
+.target-employee-check small{
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.target-employee-check b{
+  font-size:12.5px;
+  color:#1f2937;
+}
+.target-employee-check small{
+  font-size:10.5px;
+  color:#667085;
+}
+.target-employee-check:has(input:checked){
+  border-color:#1d9bf0;
+  background:linear-gradient(135deg,#eaf6ff,#ffffff);
+}
+.target-employee-check:has(input:checked) b{
+  color:#0b5faf;
+}
+@media (max-width:1180px){
+  .target-employee-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+}
+@media (max-width:699px){
+  .target-employee-grid{grid-template-columns:1fr;}
+}
+
+/* ==== V4.41 DAILY TARGET RANGE FORM ==== */
+.daily-target-range-form .field label{white-space:nowrap}
+.daily-target-range-form .btn{white-space:nowrap}
+@media (min-width:700px){
+  .daily-target-range-form{align-items:end}
+}
+
+/* ==== V4.42 DAILY TARGET SELECTED DATES ==== */
+.daily-target-pick-form .daily-date-add-row{
+  flex-wrap:nowrap;
+  align-items:center;
+}
+.daily-target-pick-form .daily-date-add-row .input{
+  min-width:180px;
+  flex:1 1 180px;
+}
+.daily-target-actions{
+  margin-bottom:9px;
+}
+.daily-date-list{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  min-height:42px;
+  padding:10px;
+  border:1px dashed #cbd8e6;
+  border-radius:14px;
+  background:linear-gradient(180deg,#fbfdff,#f5f9fd);
+}
+.daily-date-chip{
+  border:1px solid #b9d8f4;
+  background:linear-gradient(135deg,#e7f4ff,#d9edff);
+  color:#155886;
+  border-radius:999px;
+  padding:7px 10px;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  font-size:12px;
+  font-weight:750;
+  cursor:pointer;
+  white-space:nowrap;
+}
+.daily-date-chip span{
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  background:rgba(21,88,134,.12);
+  font-size:13px;
+  line-height:1;
+}
+.daily-date-chip:hover{
+  border-color:#7cb9ee;
+  transform:translateY(-1px);
+}
+.small-empty{
+  width:100%;
+  padding:10px!important;
+  font-size:12px!important;
+}
+@media (max-width:699px){
+  .daily-target-pick-form .daily-date-add-row{
+    flex-wrap:wrap;
+  }
+  .daily-target-pick-form .daily-date-add-row .btn{
+    width:100%;
+  }
+}

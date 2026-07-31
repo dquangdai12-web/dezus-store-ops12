@@ -773,9 +773,10 @@ function storeDailyTarget(storeId, saleDate) {
   const row = storeDailyTargetRow(storeId, saleDate);
   return {
     target_revenue: row ? Number(row.target_revenue || 0) : 0,
-    target_upt: row ? Number(row.target_upt || 0) : 0,
-    target_atv: row ? Number(row.target_atv || 0) : 0,
-    target_cr: row ? Number(row.target_cr || 0) : 0,
+    // UPT / ATV / CR không set theo ngày nữa; các màn tổng hợp dùng target tháng.
+    target_upt: 0,
+    target_atv: 0,
+    target_cr: 0,
     note: row ? (row.note || '') : ''
   };
 }
@@ -1532,56 +1533,102 @@ app.post('/api/sales/daily', requireAuth, requirePerm('can_manage_sales'), (req,
 });
 
 app.post('/api/sales/targets', requireAuth, requirePerm('can_set_sales_targets'), (req, res) => {
-  const { user_id, target_month, target, target_revenue, target_upt, target_atv, target_cr, note } = req.body || {};
-  const employee = getActiveUser(Number(user_id));
-  if (!employee || employee.role !== 'employee') return res.status(400).json({ error: 'Chỉ nhập target cá nhân cho nhân viên bán hàng' });
+  const { user_id, user_ids, target_month, target, target_revenue, target_upt, target_atv, target_cr, note } = req.body || {};
+  const ids = Array.from(new Set((Array.isArray(user_ids) ? user_ids : (user_id ? [user_id] : [])).map(v => Number(v)).filter(v => Number.isFinite(v) && v > 0)));
+  if (!ids.length) return res.status(400).json({ error: 'Chọn ít nhất 1 nhân viên để nhập target' });
   if (!/^\d{4}-\d{2}$/.test(String(target_month || ''))) return res.status(400).json({ error: 'Tháng target không hợp lệ' });
-  if (req.user.role !== 'admin' && !userHasStore(req.user, employee.store_id)) return res.status(403).json({ error: 'Không có quyền nhập target nhân viên này' });
   db.sales_targets = db.sales_targets || [];
   const revenueTarget = Number(target_revenue ?? target ?? 0);
-  let row = db.sales_targets.find(t => Number(t.user_id) === Number(employee.id) && String(t.target_month) === String(target_month));
-  if (row) {
-    row.target = revenueTarget;
-    row.target_revenue = revenueTarget;
-    row.target_upt = Number(target_upt || 0);
-    row.target_atv = Number(target_atv || 0);
-    row.target_cr = Number(target_cr || 0);
-    row.note = note || '';
-    row.updated_by = req.user.id;
-    row.updated_at = nowIso();
-  } else {
-    row = { id: nextId('sales_targets'), user_id: employee.id, store_id: employee.store_id, target_month, target: revenueTarget, target_revenue: revenueTarget, target_upt: Number(target_upt || 0), target_atv: Number(target_atv || 0), target_cr: Number(target_cr || 0), note: note || '', created_by: req.user.id, created_at: nowIso(), updated_by: req.user.id, updated_at: nowIso() };
-    db.sales_targets.push(row);
+  const saved = [];
+  for (const id of ids) {
+    const employee = getActiveUser(Number(id));
+    if (!employee || employee.role !== 'employee') return res.status(400).json({ error: 'Chỉ nhập target cá nhân cho nhân viên bán hàng' });
+    const employeeStoreId = getPrimaryStoreId(employee);
+    if (req.user.role !== 'admin' && !userHasStore(req.user, employeeStoreId)) return res.status(403).json({ error: `Không có quyền nhập target cho ${employee.full_name}` });
+    let row = db.sales_targets.find(t => Number(t.user_id) === Number(employee.id) && String(t.target_month) === String(target_month));
+    if (row) {
+      row.target = revenueTarget;
+      row.target_revenue = revenueTarget;
+      row.target_upt = Number(target_upt || 0);
+      row.target_atv = Number(target_atv || 0);
+      row.target_cr = Number(target_cr || 0);
+      row.note = note || '';
+      row.store_id = employeeStoreId;
+      row.updated_by = req.user.id;
+      row.updated_at = nowIso();
+    } else {
+      row = { id: nextId('sales_targets'), user_id: employee.id, store_id: employeeStoreId, target_month, target: revenueTarget, target_revenue: revenueTarget, target_upt: Number(target_upt || 0), target_atv: Number(target_atv || 0), target_cr: Number(target_cr || 0), note: note || '', created_by: req.user.id, created_at: nowIso(), updated_by: req.user.id, updated_at: nowIso() };
+      db.sales_targets.push(row);
+    }
+    saved.push(row);
   }
   saveDb();
-  res.json({ ok: true, id: row.id });
+  res.json({ ok: true, count: saved.length, ids: saved.map(r => r.id) });
 });
 
 
 app.post('/api/sales/daily-targets', requireAuth, requirePerm('can_set_sales_targets'), (req, res) => {
-  const { store_id, target_date, target_revenue, target_upt, target_atv, target_cr, note } = req.body || {};
+  const { store_id, target_date, start_date, end_date, target_revenue, note } = req.body || {};
+  let { dates } = req.body || {};
   const storeId = req.user.role === 'admin' ? Number(store_id || getPrimaryStoreId(req.user)) : Number(getPrimaryStoreId(req.user));
   const store = getStore(storeId);
   if (!store) return res.status(400).json({ error: 'Cửa hàng không hợp lệ' });
   if (req.user.role !== 'admin' && !userHasStore(req.user, storeId)) return res.status(403).json({ error: 'Không có quyền set target cửa hàng này' });
-  if (!target_date || Number.isNaN(new Date(target_date).getTime())) return res.status(400).json({ error: 'Ngày target không hợp lệ' });
-  const d = dateOnly(target_date);
+
+  // V4.42: cho phép chọn nhiều ngày rời rạc, không bắt buộc từ ngày - đến ngày.
+  let selectedDates = [];
+  if (Array.isArray(dates)) {
+    selectedDates = dates;
+  } else if (typeof dates === 'string' && dates.trim()) {
+    try {
+      const parsed = JSON.parse(dates);
+      selectedDates = Array.isArray(parsed) ? parsed : String(dates).split(',');
+    } catch (_err) {
+      selectedDates = String(dates).split(',');
+    }
+  }
+
+  if (!selectedDates.length) {
+    const startInput = start_date || target_date;
+    const endInput = end_date || startInput;
+    if (!startInput || Number.isNaN(new Date(startInput).getTime())) return res.status(400).json({ error: 'Chọn ít nhất 1 ngày để set target' });
+    if (!endInput || Number.isNaN(new Date(endInput).getTime())) return res.status(400).json({ error: 'Ngày kết thúc không hợp lệ' });
+    const startD = dateOnly(startInput);
+    const endD = dateOnly(endInput);
+    if (endD < startD) return res.status(400).json({ error: 'Ngày kết thúc phải sau hoặc bằng ngày bắt đầu' });
+    selectedDates = dateRangeEvery(startD, endD, 1);
+  }
+
+  const cleanDates = [...new Set(selectedDates
+    .map(d => String(d || '').trim())
+    .filter(Boolean)
+    .map(d => dateOnly(d))
+    .filter(d => d && !Number.isNaN(new Date(d).getTime()))
+  )].sort();
+  if (!cleanDates.length) return res.status(400).json({ error: 'Chọn ít nhất 1 ngày hợp lệ' });
+  if (cleanDates.length > 370) return res.status(400).json({ error: 'Chỉ được set tối đa 370 ngày/lần' });
+
   db.sales_daily_targets = db.sales_daily_targets || [];
-  let row = db.sales_daily_targets.find(t => Number(t.store_id) === Number(storeId) && String(t.target_date) === d);
-  if (row) {
-    row.target_revenue = Number(target_revenue || 0);
-    row.target_upt = Number(target_upt || 0);
-    row.target_atv = Number(target_atv || 0);
-    row.target_cr = Number(target_cr || 0);
-    row.note = note || '';
-    row.updated_by = req.user.id;
-    row.updated_at = nowIso();
-  } else {
-    row = { id: nextId('sales_daily_targets'), store_id: storeId, target_date: d, target_revenue: Number(target_revenue || 0), target_upt: Number(target_upt || 0), target_atv: Number(target_atv || 0), target_cr: Number(target_cr || 0), note: note || '', created_by: req.user.id, created_at: nowIso(), updated_by: req.user.id, updated_at: nowIso() };
-    db.sales_daily_targets.push(row);
+  const saved = [];
+  for (const d of cleanDates) {
+    let row = db.sales_daily_targets.find(t => Number(t.store_id) === Number(storeId) && String(t.target_date) === d);
+    if (row) {
+      row.target_revenue = Number(target_revenue || 0);
+      // UPT / ATV / CR ngày không set riêng nữa; hệ thống dùng target tháng.
+      row.target_upt = 0;
+      row.target_atv = 0;
+      row.target_cr = 0;
+      row.note = note || '';
+      row.updated_by = req.user.id;
+      row.updated_at = nowIso();
+    } else {
+      row = { id: nextId('sales_daily_targets'), store_id: storeId, target_date: d, target_revenue: Number(target_revenue || 0), target_upt: 0, target_atv: 0, target_cr: 0, note: note || '', created_by: req.user.id, created_at: nowIso(), updated_by: req.user.id, updated_at: nowIso() };
+      db.sales_daily_targets.push(row);
+    }
+    saved.push(row);
   }
   saveDb();
-  res.json({ ok: true, id: row.id });
+  res.json({ ok: true, count: saved.length, dates: cleanDates, ids: saved.map(r => r.id) });
 });
 
 app.get('/api/sales/leaderboard', requireAuth, (req, res) => {
@@ -1638,9 +1685,10 @@ app.get('/api/sales/store-summary', requireAuth, (req, res) => {
       const d = dateVal(x.target_date);
       const row = dayMap.get(d) || { sale_date: d, revenue: 0, bill_count: 0, item_count: 0, customer_count: 0, upt: 0, atv: 0, cr: 0, cumulative_revenue: 0, achievement_percent: 0 };
       row.daily_target = Number(x.target_revenue || 0);
-      row.daily_target_upt = Number(x.target_upt || 0);
-      row.daily_target_atv = Number(x.target_atv || 0);
-      row.daily_target_cr = Number(x.target_cr || 0);
+      // UPT / ATV / CR dùng mặc định target tháng, không dùng target ngày.
+      row.daily_target_upt = targetMetrics.target_upt;
+      row.daily_target_atv = targetMetrics.target_atv;
+      row.daily_target_cr = targetMetrics.target_cr;
       row.daily_target_note = x.note || '';
       dayMap.set(d, row);
     });
@@ -1649,9 +1697,9 @@ app.get('/api/sales/store-summary', requireAuth, (req, res) => {
   rows.forEach(r => {
     const dayTarget = storeDailyTarget(storeId, r.sale_date);
     r.daily_target = Number(r.daily_target || dayTarget.target_revenue || 0);
-    r.daily_target_upt = Number(r.daily_target_upt || dayTarget.target_upt || 0);
-    r.daily_target_atv = Number(r.daily_target_atv || dayTarget.target_atv || 0);
-    r.daily_target_cr = Number(r.daily_target_cr || dayTarget.target_cr || 0);
+    r.daily_target_upt = targetMetrics.target_upt;
+    r.daily_target_atv = targetMetrics.target_atv;
+    r.daily_target_cr = targetMetrics.target_cr;
     r.daily_target_note = r.daily_target_note || dayTarget.note || '';
     r.daily_achievement_percent = r.daily_target ? Math.round((Number(r.revenue || 0) / r.daily_target) * 10000) / 100 : 0;
     cumulative += Number(r.revenue || 0);

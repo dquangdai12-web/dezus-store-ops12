@@ -1,0 +1,8 @@
+V4.41 - Set target ngày nhiều ngày
+
+- Set target ngày chỉ nhập doanh thu/ngày.
+- UPT, ATV, CR không set từng ngày nữa, tự lấy theo target tháng đã set cho nhân viên.
+- Chọn từ ngày - đến ngày để lưu target doanh thu cho nhiều ngày cùng lúc.
+- Nếu ngày đã có target, hệ thống cập nhật lại, không tạo trùng.
+
+Cập nhật: upload đè toàn bộ file/folder trong thư mục này lên GitHub, commit, Render Manual Deploy.
