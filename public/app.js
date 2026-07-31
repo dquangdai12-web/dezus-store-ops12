@@ -38,6 +38,8 @@ const PERM_LABELS = {
   can_grade_checklists: 'Chấm checklist',
   can_manage_sales: 'Nhập doanh thu',
   can_set_sales_targets: 'Set target doanh thu',
+  can_manage_weekly_report: 'Nhập báo cáo tuần',
+  can_view_weekly_report: 'Xem báo cáo tuần',
   can_view_sales_target: 'Xem % đạt target toàn hệ thống',
   can_view_store_sales_summary: 'Xem tổng doanh thu cửa hàng',
   can_manage_bonuses: 'Nhập tiền công/thưởng',
@@ -310,7 +312,7 @@ function navItems() {
   ];
   return items.filter(([id]) => {
     if (id === 'dashboard' || id === 'account' || id === 'tasks' || id === 'violations' || id === 'checklists' || id === 'sales') return true;
-    if (id === 'weekly_report') return state.user?.role !== 'employee' || can('can_view_reports') || can('can_manage_sales');
+    if (id === 'weekly_report') return can('can_view_weekly_report') || can('can_manage_weekly_report');
     if (id === 'online_orders') return can('can_view_online_orders') || can('can_manage_online_orders');
     if (id === 'orders') return can('can_view_orders') || can('can_manage_orders');
     if (id === 'product_feedback') return can('can_view_product_feedback') || can('can_manage_product_feedback');
@@ -390,7 +392,7 @@ function shell(content, title = 'Tổng quan', subtitle = 'Vận hành cửa hà
           <button class="mobile-icon-btn" id="logoutBtn2" title="Đăng xuất">↗</button>
         </div>
         <div class="topbar">
-          <div class="page-title"><h2>${esc(title)}</h2><p>${esc(subtitle)}</p></div>
+          <div class="page-title"><h2>${esc(title)}</h2>${subtitle ? `<p>${esc(subtitle)}</p>` : ''}</div>
           <div class="row mobile-top"><button class="btn secondary" id="logoutBtn3">Đăng xuất</button></div>
         </div>
         <div class="mobile-cats">${mobileCats}</div>
@@ -560,7 +562,6 @@ async function renderDashboard() {
       <div>
         <span class="badge dark">${esc(today)}</span>
         <h3>Xin chào, ${esc(state.user.full_name)}</h3>
-        <p>Kiểm soát vận hành cửa hàng theo thời gian thực: việc cần làm, vi phạm, checklist, doanh thu và điểm tổng hợp.</p>
       </div>
       <div class="hero-score">
         <span>Điểm tổng hợp</span>
@@ -569,24 +570,24 @@ async function renderDashboard() {
       </div>
     </section>
     <section class="grid four dash-kpis">
-      <div class="card kpi"><div class="label">Việc đang mở</div><div class="num">${open}</div><div class="hint">Cần xử lý trong hạn</div></div>
-      <div class="card kpi"><div class="label">Đúng hạn</div><div class="num ok-text">${done}</div><div class="hint">Tỷ lệ đúng hạn ${onTimeRate}%</div></div>
-      <div class="card kpi"><div class="label">Trễ / quá hạn</div><div class="num danger-text">${late}</div><div class="hint">Tự ghi nhận trừ điểm</div></div>
-      <div class="card kpi"><div class="label">Top tháng</div><div class="num">${top[0] ? '#' + top[0].rank : '-'}</div><div class="hint">${top[0] ? esc(top[0].full_name) : 'Chưa có dữ liệu'}</div></div>
+      <div class="card kpi dashboard-kpi kpi-open"><div class="label">Việc đang mở</div><div class="num">${open}</div><div class="hint">Cần xử lý trong hạn</div></div>
+      <div class="card kpi dashboard-kpi kpi-done"><div class="label">Đúng hạn</div><div class="num ok-text">${done}</div><div class="hint">Tỷ lệ đúng hạn ${onTimeRate}%</div></div>
+      <div class="card kpi dashboard-kpi kpi-late"><div class="label">Trễ / quá hạn</div><div class="num danger-text">${late}</div><div class="hint">Tự ghi nhận trừ điểm</div></div>
+      <div class="card kpi top-month-kpi"><div class="top-month-head"><div><div class="label">Top tháng</div><div class="num top-month-name">${top[0] ? esc(top[0].full_name) : '-'}</div><div class="hint top-month-store">${top[0] ? esc(top[0].store_name || '') : 'Chưa có dữ liệu'}</div></div><div class="top-month-cup" aria-hidden="true">🏆</div></div></div>
     </section>
     <section class="grid two" style="margin-top:17px">
       <div class="card"><div class="section-title"><h3>Top % đạt target tháng này</h3><span class="badge">Cạnh tranh</span></div>${tableLeaderboard(top)}</div>
       <div class="card"><div class="section-title"><h3>Vi phạm gần đây</h3><span class="badge danger">Kiểm soát</span></div>${violationsData.violations.slice(0, 6).map(v => `<div class="activity-item"><div><b>${esc(v.employee_name)}</b><span>${esc(v.store_name || '')} • ${dt(v.created_at)}</span><p>${esc(v.description || '')}</p></div><span class="badge danger">-${v.points_deducted}</span></div>`).join('') || '<div class="empty">Chưa có vi phạm</div>'}</div>
     </section>
-  `, 'Tổng quan', 'Màn hình điều hành nhanh cho cửa hàng và PKD');
+  `, 'Tổng quan', '');
 }
 
 function tableLeaderboard(rows, showAmounts = false) {
   if (!rows.length) return '<div class="empty">Chưa có dữ liệu doanh thu/target</div>';
   const moneyColsHead = showAmounts ? '<th>Doanh thu thực đạt</th><th>Target DT</th>' : '';
   const moneyColsBody = r => showAmounts ? `<td><b>${money(r.revenue || 0)}đ</b></td><td>${money(r.target || 0)}đ</td>` : '';
-  const podium = rows.slice(0, 3).map(r => `<div class="rank-card rank-${r.rank}"><div class="rank-no">#${r.rank}</div><b>${esc(r.full_name)}</b><span>${esc(r.store_name || '')}</span><strong>${Number(r.achievement_percent || 0)}%</strong><small>% đạt target • UPT ${fmt2(r.upt || 0)} / ${Number(r.target_upt || 0) ? fmt2(r.target_upt) : '-'} • ATV ${money(r.atv || 0)} / ${Number(r.target_atv || 0) ? money(r.target_atv) : '-'}${showAmounts ? ' • DT ' + money(r.revenue || 0) + 'đ' : ''} • GUESTS ${Math.round(r.guests_percent || 0)}%</small></div>`).join('');
-  return `<div class="leaderboard-premium">${podium}</div><div class="table-wrap"><table><thead><tr><th>Top</th><th>Nhân viên</th><th>Cửa hàng</th><th>% đạt target</th>${moneyColsHead}<th>% tỷ trọng DT</th><th>Bill</th><th>Món</th><th>UPT</th><th>ATV</th><th>GUESTS</th></tr></thead><tbody>${rows.map(r => `<tr><td><span class="badge dark">#${r.rank}</span></td><td><b>${esc(r.full_name)}</b></td><td>${esc(r.store_name || '')}</td><td>${percentBadge(r.achievement_percent || 0)}</td>${moneyColsBody(r)}<td>${Number(r.revenue_percent || 0)}%</td><td>${money(r.bill_count || 0)}</td><td>${money(r.item_count || 0)}</td><td>${targetBadge(r.upt || 0, r.target_upt || 0, '', 2)}</td><td>${targetBadge(r.atv || 0, r.target_atv || 0, 'đ')}</td><td>${Math.round(r.guests_percent || 0)}%</td></tr>`).join('')}</tbody></table></div>`;
+  const podium = rows.slice(0, 3).map(r => `<div class="rank-card rank-${r.rank}">${r.rank === 1 ? `<div class="rank-cup" aria-hidden="true">🏆</div>` : ""}<div class="rank-no">Top ${r.rank}</div><b class="employee-name-line">${esc(r.full_name)}</b><span>${esc(r.store_name || '')}</span><strong>${Number(r.achievement_percent || 0)}%</strong></div>`).join('');
+  return `<div class="leaderboard-premium">${podium}</div><div class="table-wrap leaderboard-wrap"><table class="leaderboard-table"><thead><tr><th>Top</th><th>Nhân viên</th><th>Cửa hàng</th><th>% đạt target</th>${moneyColsHead}<th>% tỷ trọng DT</th><th>Bill</th><th>Món</th><th>UPT</th><th>ATV</th><th>GUESTS</th></tr></thead><tbody>${rows.map(r => `<tr><td><span class="badge dark">Top ${r.rank}</span></td><td class="employee-name-cell"><b>${esc(r.full_name)}</b></td><td class="store-name-cell">${esc(r.store_name || '')}</td><td>${percentBadge(r.achievement_percent || 0)}</td>${moneyColsBody(r)}<td>${Number(r.revenue_percent || 0)}%</td><td>${money(r.bill_count || 0)}</td><td>${money(r.item_count || 0)}</td><td class="metric-badge-cell">${targetBadge(r.upt || 0, r.target_upt || 0, '', 2)}</td><td class="metric-badge-cell">${targetBadge(r.atv || 0, r.target_atv || 0, 'đ')}</td><td>${Math.round(r.guests_percent || 0)}%</td></tr>`).join('')}</tbody></table></div>`;
 }
 
 function tableStoreSalesSummary(summary) {
@@ -636,10 +637,10 @@ async function renderWeeklyReport() {
   const storeOptions = state.boot.stores.map(s => `<option value="${s.id}" ${Number(s.id) === Number(data.store_id) ? 'selected' : ''}>${esc(s.name)}</option>`).join('');
   const storeFilter = state.user.role === 'admin' ? `<div class="field"><label>Cửa hàng</label><select class="input" id="weeklyStoreFilter">${storeOptions}</select></div>` : '';
   const t = data.totals || {};
-  const kpis = `<section class="grid four dash-kpis"><div class="card kpi"><div class="label">Doanh thu tuần</div><div class="num">${money(t.revenue || 0)}đ</div><div class="hint">Target tuần: ${money(t.target_revenue || 0)}đ • ${percentBadge(t.achievement_percent || 0)}</div></div><div class="card kpi"><div class="label">Bill / Món</div><div class="num">${money(t.bill_count || 0)} / ${money(t.item_count || 0)}</div><div class="hint">Tổng toàn cửa hàng</div></div><div class="card kpi"><div class="label">UPT</div><div class="num">${fmt2(t.upt || 0)}</div><div class="hint">Số món / bill</div></div><div class="card kpi"><div class="label">ATV</div><div class="num">${money(t.atv || 0)}đ</div><div class="hint">Doanh thu / bill</div></div><div class="card kpi"><div class="label">CR</div><div class="num">${fmt2(t.cr || 0)}%</div><div class="hint">Bill / lượt khách</div></div><div class="card kpi"><div class="label">Lượt khách</div><div class="num">${money(t.customer_count || 0)}</div><div class="hint">Theo tổng cửa hàng</div></div></section>`;
+  const kpis = `<section class="grid four dash-kpis weekly-kpis"><div class="card kpi weekly-kpi weekly-revenue"><div class="label">Doanh thu tuần</div><div class="num">${money(t.revenue || 0)}đ</div><div class="hint">Target tuần: ${money(t.target_revenue || 0)}đ • ${percentBadge(t.achievement_percent || 0)}</div></div><div class="card kpi weekly-kpi weekly-bill"><div class="label">Bill / Món</div><div class="num">${money(t.bill_count || 0)} / ${money(t.item_count || 0)}</div><div class="hint">Tổng toàn cửa hàng</div></div><div class="card kpi weekly-kpi weekly-upt"><div class="label">UPT</div><div class="num">${fmt2(t.upt || 0)}</div><div class="hint">Số món / bill</div></div><div class="card kpi weekly-kpi weekly-atv"><div class="label">ATV</div><div class="num">${money(t.atv || 0)}đ</div><div class="hint">Doanh thu / bill</div></div><div class="card kpi weekly-kpi weekly-cr"><div class="label">CR</div><div class="num">${fmt2(t.cr || 0)}%</div><div class="hint">Bill / lượt khách</div></div><div class="card kpi weekly-kpi weekly-customer"><div class="label">Lượt khách</div><div class="num">${money(t.customer_count || 0)}</div><div class="hint">Theo tổng cửa hàng</div></div></section>`;
   const feedback = data.feedback || {};
   const hasFeedback = !!(feedback.id || feedback.feedback || feedback.issues || feedback.action_plan || feedback.note);
-  const canEditFeedback = state.user.role !== 'employee';
+  const canEditFeedback = can('can_manage_weekly_report');
   const feedbackView = `<div class="card" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">Feedback tuần</h3>${canEditFeedback ? `<button class="btn secondary" id="weeklyEditFeedbackBtn">Sửa feedback</button>` : ''}</div>${hasFeedback ? `<div class="table-wrap"><table><tbody><tr><th>Nhận xét tuần</th><td>${esc(feedback.feedback || '')}</td></tr><tr><th>Vấn đề phát sinh</th><td>${esc(feedback.issues || '')}</td></tr><tr><th>Việc cần làm tuần tới</th><td>${esc(feedback.action_plan || '')}</td></tr><tr><th>Ghi chú</th><td>${esc(feedback.note || '')}</td></tr></tbody></table></div>` : '<div class="empty">Chưa lưu feedback tuần này</div>'}</div>`;
   const feedbackForm = canEditFeedback ? `<div class="card" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">${hasFeedback ? 'Sửa feedback tuần' : 'Nhập feedback tuần'}</h3>${hasFeedback ? '<button type="button" class="btn secondary" id="weeklyCancelFeedbackBtn">Hủy sửa</button>' : ''}</div><form id="weeklyFeedbackForm" class="grid two"><input type="hidden" name="store_id" value="${esc(data.store_id)}"><input type="hidden" name="week_start" value="${esc(data.week_start)}"><div class="field" style="grid-column:1/-1"><label>Nhận xét/feedback tuần này</label><textarea name="feedback" placeholder="VD: TF tăng cuối tuần, khách hỏi nhiều size L/XL...">${esc(feedback.feedback || '')}</textarea></div><div class="field"><label>Vấn đề phát sinh</label><textarea name="issues" placeholder="VD: Thiếu size, khách chê chất liệu, nhân sự thiếu ca...">${esc(feedback.issues || '')}</textarea></div><div class="field"><label>Việc cần làm tuần tới</label><textarea name="action_plan" placeholder="VD: Đẩy combo, bổ sung hàng, đào tạo lại UPT...">${esc(feedback.action_plan || '')}</textarea></div><div class="field" style="grid-column:1/-1"><label>Ghi chú thêm</label><textarea name="note">${esc(feedback.note || '')}</textarea></div><div style="grid-column:1/-1"><button class="btn">Lưu feedback tuần</button></div></form></div>` : '';
   const feedbackSection = canEditFeedback && (state.weeklyEditMode || !hasFeedback) ? feedbackForm : feedbackView;

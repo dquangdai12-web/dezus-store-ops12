@@ -1,0 +1,18 @@
+V4.26 - Căn hàng nội dung + phân quyền báo cáo tuần
+
+Đã chỉnh:
+1. Các bảng/card/nút/badge hạn chế xuống dòng, giữ nội dung thẳng hàng hơn.
+2. Tên nhân viên, cửa hàng, chỉ số trong bảng hạn chế lệch bố cục.
+3. Thêm quyền mới trong Admin:
+   - Nhập báo cáo tuần
+   - Xem báo cáo tuần
+4. Báo cáo tuần chỉ hiện với tài khoản được cấp quyền xem hoặc nhập báo cáo tuần.
+5. Nút nhập/sửa feedback tuần chỉ hiện với tài khoản được cấp quyền nhập báo cáo tuần.
+
+Cách cập nhật online:
+- Giải nén file zip.
+- Upload toàn bộ file/thư mục bên trong lên GitHub repo hiện tại.
+- Commit changes.
+- Render -> Manual Deploy -> Deploy latest commit.
+
+Không xoá Render service, không xoá Disk, không xoá Environment Variables.

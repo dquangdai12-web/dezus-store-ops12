@@ -62,61 +62,61 @@
       "id": 1,
       "full_name": "Admin PKD",
       "username": "admin",
-      "password_hash": "$2a$10$2YtbK/DcQUTFbAiEPFM4u.YRXZRMBYjtRbb3Q5f1TzqCz2st.rQmC",
+      "password_hash": "$2a$10$qRI9TiEtnD8zCPdSJhKemOneX.SH4LxDqml6Caw.o5lwK0eouqvwS",
       "role": "admin",
       "store_id": null,
       "status": "active",
-      "created_at": "2026-07-31T04:04:43.358Z"
+      "created_at": "2026-07-31T13:08:02.935Z"
     },
     {
       "id": 2,
       "full_name": "QL Bà Triệu",
       "username": "qly.bt",
-      "password_hash": "$2a$10$2YtbK/DcQUTFbAiEPFM4u.YRXZRMBYjtRbb3Q5f1TzqCz2st.rQmC",
+      "password_hash": "$2a$10$qRI9TiEtnD8zCPdSJhKemOneX.SH4LxDqml6Caw.o5lwK0eouqvwS",
       "role": "manager",
       "store_id": 1,
       "status": "active",
-      "created_at": "2026-07-31T04:04:43.359Z"
+      "created_at": "2026-07-31T13:08:02.936Z"
     },
     {
       "id": 3,
       "full_name": "ĐSKD Bà Triệu 01",
       "username": "nv.bt1",
-      "password_hash": "$2a$10$2YtbK/DcQUTFbAiEPFM4u.YRXZRMBYjtRbb3Q5f1TzqCz2st.rQmC",
+      "password_hash": "$2a$10$qRI9TiEtnD8zCPdSJhKemOneX.SH4LxDqml6Caw.o5lwK0eouqvwS",
       "role": "employee",
       "store_id": 1,
       "status": "active",
-      "created_at": "2026-07-31T04:04:43.359Z"
+      "created_at": "2026-07-31T13:08:02.936Z"
     },
     {
       "id": 4,
       "full_name": "ĐSKD Bà Triệu 02",
       "username": "nv.bt2",
-      "password_hash": "$2a$10$2YtbK/DcQUTFbAiEPFM4u.YRXZRMBYjtRbb3Q5f1TzqCz2st.rQmC",
+      "password_hash": "$2a$10$qRI9TiEtnD8zCPdSJhKemOneX.SH4LxDqml6Caw.o5lwK0eouqvwS",
       "role": "employee",
       "store_id": 1,
       "status": "active",
-      "created_at": "2026-07-31T04:04:43.359Z"
+      "created_at": "2026-07-31T13:08:02.936Z"
     },
     {
       "id": 5,
       "full_name": "QL Đà Nẵng",
       "username": "qly.dn",
-      "password_hash": "$2a$10$2YtbK/DcQUTFbAiEPFM4u.YRXZRMBYjtRbb3Q5f1TzqCz2st.rQmC",
+      "password_hash": "$2a$10$qRI9TiEtnD8zCPdSJhKemOneX.SH4LxDqml6Caw.o5lwK0eouqvwS",
       "role": "manager",
       "store_id": 2,
       "status": "active",
-      "created_at": "2026-07-31T04:04:43.359Z"
+      "created_at": "2026-07-31T13:08:02.936Z"
     },
     {
       "id": 6,
       "full_name": "ĐSKD Đà Nẵng 01",
       "username": "nv.dn1",
-      "password_hash": "$2a$10$2YtbK/DcQUTFbAiEPFM4u.YRXZRMBYjtRbb3Q5f1TzqCz2st.rQmC",
+      "password_hash": "$2a$10$qRI9TiEtnD8zCPdSJhKemOneX.SH4LxDqml6Caw.o5lwK0eouqvwS",
       "role": "employee",
       "store_id": 2,
       "status": "active",
-      "created_at": "2026-07-31T04:04:43.359Z"
+      "created_at": "2026-07-31T13:08:02.936Z"
     }
   ],
   "permissions": [
@@ -127,6 +127,8 @@
       "can_grade_checklists": 1,
       "can_manage_sales": 1,
       "can_set_sales_targets": 1,
+      "can_manage_weekly_report": 1,
+      "can_view_weekly_report": 1,
       "can_view_reports": 1,
       "can_manage_users": 1,
       "can_export": 1,
@@ -156,6 +158,8 @@
       "can_grade_checklists": 1,
       "can_manage_sales": 1,
       "can_set_sales_targets": 0,
+      "can_manage_weekly_report": 1,
+      "can_view_weekly_report": 1,
       "can_view_reports": 1,
       "can_manage_users": 0,
       "can_export": 1,
@@ -185,6 +189,8 @@
       "can_grade_checklists": 0,
       "can_manage_sales": 0,
       "can_set_sales_targets": 0,
+      "can_manage_weekly_report": 0,
+      "can_view_weekly_report": 0,
       "can_view_reports": 0,
       "can_manage_users": 0,
       "can_export": 0,
@@ -214,6 +220,8 @@
       "can_grade_checklists": 0,
       "can_manage_sales": 0,
       "can_set_sales_targets": 0,
+      "can_manage_weekly_report": 0,
+      "can_view_weekly_report": 0,
       "can_view_reports": 0,
       "can_manage_users": 0,
       "can_export": 0,
@@ -243,6 +251,8 @@
       "can_grade_checklists": 1,
       "can_manage_sales": 1,
       "can_set_sales_targets": 0,
+      "can_manage_weekly_report": 1,
+      "can_view_weekly_report": 1,
       "can_view_reports": 1,
       "can_manage_users": 0,
       "can_export": 1,
@@ -272,6 +282,8 @@
       "can_grade_checklists": 0,
       "can_manage_sales": 0,
       "can_set_sales_targets": 0,
+      "can_manage_weekly_report": 0,
+      "can_view_weekly_report": 0,
       "can_view_reports": 0,
       "can_manage_users": 0,
       "can_export": 0,
@@ -304,7 +316,7 @@
       "end_time": "16:30",
       "note": "Ca sáng",
       "status": "active",
-      "created_at": "2026-07-31T04:04:43.359Z"
+      "created_at": "2026-07-31T13:08:02.936Z"
     },
     {
       "id": 2,
@@ -314,7 +326,7 @@
       "end_time": "22:00",
       "note": "Ca chiều",
       "status": "active",
-      "created_at": "2026-07-31T04:04:43.359Z"
+      "created_at": "2026-07-31T13:08:02.936Z"
     },
     {
       "id": 3,
@@ -324,7 +336,7 @@
       "end_time": "22:00",
       "note": "Ca gãy / full peak",
       "status": "active",
-      "created_at": "2026-07-31T04:04:43.359Z"
+      "created_at": "2026-07-31T13:08:02.936Z"
     },
     {
       "id": 4,
@@ -334,7 +346,7 @@
       "end_time": "17:00",
       "note": "",
       "status": "active",
-      "created_at": "2026-07-31T04:04:43.359Z"
+      "created_at": "2026-07-31T13:08:02.936Z"
     },
     {
       "id": 5,
@@ -344,7 +356,7 @@
       "end_time": "20:30",
       "note": "",
       "status": "active",
-      "created_at": "2026-07-31T04:04:43.359Z"
+      "created_at": "2026-07-31T13:08:02.936Z"
     }
   ],
   "tasks": [],

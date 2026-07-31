@@ -1,0 +1,14 @@
+HUONG DAN UPDATE V4.25
+
+Noi dung chinh:
+- Toi uu phan Lich lam viec tren dien thoai: bang ca gon hon, xem duoc nhieu ngay hon trong mot lan vuot.
+- Ten nhan vien o man Tong quan hien thi thang hang, khong bi xuong dong tho.
+- Bo dong chi so phu trong top % target: khong hien dong UPT / ATV / GUESTS trong card top nua.
+- Giu lai cac tinh nang da co: giao viec co dinh, giao viec nhieu ngay, giao theo ca, cap quyen nhieu cua hang.
+
+Cach update:
+1. Giai nen file zip.
+2. Upload toan bo file/thu muc ben trong len GitHub repo hien tai.
+3. Commit changes.
+4. Render -> Manual Deploy -> Deploy latest commit.
+5. Khi Live, mo web tren dien thoai va Ctrl/F5 hoac tai lai trang.

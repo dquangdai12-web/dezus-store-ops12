@@ -44,15 +44,15 @@ app.use(express.static(path.join(ROOT, 'public')));
 const ROLE_DEFAULTS = {
   admin: {
     can_assign_tasks: 1, can_manage_violations: 1, can_grade_checklists: 1,
-    can_manage_sales: 1, can_set_sales_targets: 1, can_view_reports: 1, can_manage_users: 1, can_export: 1, can_view_sales_target: 1, can_view_store_sales_summary: 1, can_manage_bonuses: 1, can_view_bonuses: 1, can_manage_documents: 1, can_view_documents: 1, can_manage_shifts: 1, can_manage_schedule: 1, can_view_schedule: 1, can_manage_orders: 1, can_view_orders: 1, can_manage_online_orders: 1, can_view_online_orders: 1, can_manage_product_feedback: 1, can_view_product_feedback: 1, can_manage_product_collections: 1, can_manage_product_training: 1, can_view_product_training: 1
+    can_manage_sales: 1, can_set_sales_targets: 1, can_manage_weekly_report: 1, can_view_weekly_report: 1, can_view_reports: 1, can_manage_users: 1, can_export: 1, can_view_sales_target: 1, can_view_store_sales_summary: 1, can_manage_bonuses: 1, can_view_bonuses: 1, can_manage_documents: 1, can_view_documents: 1, can_manage_shifts: 1, can_manage_schedule: 1, can_view_schedule: 1, can_manage_orders: 1, can_view_orders: 1, can_manage_online_orders: 1, can_view_online_orders: 1, can_manage_product_feedback: 1, can_view_product_feedback: 1, can_manage_product_collections: 1, can_manage_product_training: 1, can_view_product_training: 1
   },
   manager: {
     can_assign_tasks: 1, can_manage_violations: 1, can_grade_checklists: 1,
-    can_manage_sales: 1, can_set_sales_targets: 0, can_view_reports: 1, can_manage_users: 0, can_export: 1, can_view_sales_target: 0, can_view_store_sales_summary: 1, can_manage_bonuses: 0, can_view_bonuses: 1, can_manage_documents: 1, can_view_documents: 1, can_manage_shifts: 0, can_manage_schedule: 1, can_view_schedule: 1, can_manage_orders: 1, can_view_orders: 1, can_manage_online_orders: 1, can_view_online_orders: 1, can_manage_product_feedback: 1, can_view_product_feedback: 1, can_manage_product_collections: 0, can_manage_product_training: 0, can_view_product_training: 1
+    can_manage_sales: 1, can_set_sales_targets: 0, can_manage_weekly_report: 1, can_view_weekly_report: 1, can_view_reports: 1, can_manage_users: 0, can_export: 1, can_view_sales_target: 0, can_view_store_sales_summary: 1, can_manage_bonuses: 0, can_view_bonuses: 1, can_manage_documents: 1, can_view_documents: 1, can_manage_shifts: 0, can_manage_schedule: 1, can_view_schedule: 1, can_manage_orders: 1, can_view_orders: 1, can_manage_online_orders: 1, can_view_online_orders: 1, can_manage_product_feedback: 1, can_view_product_feedback: 1, can_manage_product_collections: 0, can_manage_product_training: 0, can_view_product_training: 1
   },
   employee: {
     can_assign_tasks: 0, can_manage_violations: 0, can_grade_checklists: 0,
-    can_manage_sales: 0, can_set_sales_targets: 0, can_view_reports: 0, can_manage_users: 0, can_export: 0, can_view_sales_target: 0, can_view_store_sales_summary: 0, can_manage_bonuses: 0, can_view_bonuses: 0, can_manage_documents: 0, can_view_documents: 1, can_manage_shifts: 0, can_manage_schedule: 0, can_view_schedule: 1, can_manage_orders: 0, can_view_orders: 1, can_manage_online_orders: 0, can_view_online_orders: 0, can_manage_product_feedback: 1, can_view_product_feedback: 1, can_manage_product_collections: 0, can_manage_product_training: 0, can_view_product_training: 1
+    can_manage_sales: 0, can_set_sales_targets: 0, can_manage_weekly_report: 0, can_view_weekly_report: 0, can_view_reports: 0, can_manage_users: 0, can_export: 0, can_view_sales_target: 0, can_view_store_sales_summary: 0, can_manage_bonuses: 0, can_view_bonuses: 0, can_manage_documents: 0, can_view_documents: 1, can_manage_shifts: 0, can_manage_schedule: 0, can_view_schedule: 1, can_manage_orders: 0, can_view_orders: 1, can_manage_online_orders: 0, can_view_online_orders: 0, can_manage_product_feedback: 1, can_view_product_feedback: 1, can_manage_product_collections: 0, can_manage_product_training: 0, can_view_product_training: 1
   }
 };
 
@@ -1443,7 +1443,7 @@ function buildWeeklyReport(user, rawWeekStart, rawStoreId) {
   const storeId = user.role === 'admin' ? Number(rawStoreId || getPrimaryStoreId(user) || db.stores[0]?.id) : Number(getPrimaryStoreId(user));
   const store = getStore(storeId);
   if (!store) throw new Error('Cửa hàng không hợp lệ');
-  if (!canViewStoreSales(user, storeId) && user.role !== 'admin' && Number(user.permissions.can_view_reports) !== 1) throw new Error('Không có quyền xem báo cáo tuần');
+  if (user.role !== 'admin' && Number(user.permissions.can_view_weekly_report) !== 1 && Number(user.permissions.can_manage_weekly_report) !== 1) throw new Error('Không có quyền xem báo cáo tuần');
   const days = datesBetween(week_start, endExclusive);
   const salesRows = (db.sales || []).filter(sa => Number(sa.store_id) === Number(storeId) && dateVal(sa.sale_date) >= week_start && dateVal(sa.sale_date) < endExclusive);
   const dailyMap = new Map(days.map(d => [d, { sale_date: d, revenue: 0, bill_count: 0, item_count: 0, customer_count: 0, target_revenue: 0, upt: 0, atv: 0, cr: 0, achievement_percent: 0, note: '' }]));
@@ -1677,7 +1677,7 @@ app.post('/api/weekly-report', requireAuth, (req, res) => {
   const storeId = req.user.role === 'admin' ? Number(store_id || getPrimaryStoreId(req.user)) : Number(getPrimaryStoreId(req.user));
   const store = getStore(storeId);
   if (!store) return res.status(400).json({ error: 'Cửa hàng không hợp lệ' });
-  if (req.user.role === 'employee' || (req.user.role !== 'admin' && !userHasStore(req.user, storeId))) return res.status(403).json({ error: 'Không có quyền lưu báo cáo tuần' });
+  if (req.user.role !== 'admin' && (Number(req.user.permissions.can_manage_weekly_report) !== 1 || !userHasStore(req.user, storeId))) return res.status(403).json({ error: 'Không có quyền nhập báo cáo tuần' });
   const ws = weekStartOf(week_start || new Date());
   db.weekly_reports = db.weekly_reports || [];
   let row = weeklyReportRow(storeId, ws);
