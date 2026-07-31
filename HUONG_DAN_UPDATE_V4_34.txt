@@ -1,0 +1,14 @@
+V4.34 - Tối ưu giao diện iPad / Tablet
+
+- Tối ưu bố cục riêng cho iPad/tablet từ 700px đến 1180px.
+- iPad không còn dùng giao diện điện thoại quá hẹp.
+- Sidebar gọn hơn, menu dễ bấm hơn.
+- Dashboard hiển thị 2 cột hợp lý trên iPad.
+- Bảng và lịch làm việc có vùng vuốt ngang riêng, dễ thao tác hơn.
+- Form, nút, card, bảng được giảm kích thước vừa iPad.
+
+Cách cập nhật:
+1. Giải nén file zip.
+2. Upload đè toàn bộ file/thư mục trong thư mục giải nén lên GitHub repo.
+3. Commit changes.
+4. Render -> Manual Deploy -> Deploy latest commit.

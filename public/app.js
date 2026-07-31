@@ -828,7 +828,7 @@ async function renderSales() {
   const defaultStoreId = state.user.role === 'admin' ? (state.salesStoreId || state.boot.stores[0]?.id || '') : state.user.store_id;
   state.salesStoreId = defaultStoreId;
   const [data, summary] = await Promise.all([
-    api(`/api/sales/leaderboard?period=${state.leaderboardPeriod}&date=${currentMonth}-15`),
+    api(`/api/sales/leaderboard?period=${state.leaderboardPeriod}&date=${currentMonth}-15${defaultStoreId ? `&store_id=${defaultStoreId}` : ''}`),
     api(`/api/sales/store-summary?month=${currentMonth}${defaultStoreId ? `&store_id=${defaultStoreId}` : ''}`).catch(() => null)
   ]);
   const storeIdForForms = state.user.role === 'admin' ? defaultStoreId : state.user.store_id;
