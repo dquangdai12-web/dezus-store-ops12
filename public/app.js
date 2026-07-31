@@ -78,6 +78,35 @@ function money(v) {
   return new Intl.NumberFormat('vi-VN').format(Number(v || 0));
 }
 
+function cleanNumberInput(v) {
+  const raw = String(v ?? '').trim();
+  if (!raw) return 0;
+  const normalized = raw.replace(/\s/g, '').replace(/\./g, '').replace(/,/g, '.').replace(/[^0-9.-]/g, '');
+  const n = Number(normalized);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function formatIntegerDots(v) {
+  const digits = String(v ?? '').replace(/\D/g, '');
+  return digits ? digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.') : '';
+}
+
+function setupNumberFormat(root = document) {
+  $$('input[data-number-format]', root).forEach(input => {
+    if (input.dataset.numberFormatReady === '1') return;
+    input.dataset.numberFormatReady = '1';
+    input.inputMode = 'numeric';
+    input.autocomplete = 'off';
+    input.value = formatIntegerDots(input.value);
+    input.addEventListener('input', () => {
+      input.value = formatIntegerDots(input.value);
+    });
+    input.addEventListener('blur', () => {
+      input.value = formatIntegerDots(input.value);
+    });
+  });
+}
+
 function dt(v) {
   if (!v) return '';
   const d = new Date(v);
@@ -418,6 +447,7 @@ function shell(content, title = 'Tổng quan', subtitle = 'Vận hành cửa hà
   $('#logoutBtn2')?.addEventListener('click', logout);
   $('#logoutBtn3')?.addEventListener('click', logout);
   $$('[data-export]').forEach(btn => btn.addEventListener('click', () => downloadExport(btn.dataset.export)));
+  setupNumberFormat(app);
 }
 
 function logout() {
@@ -584,8 +614,8 @@ async function renderDashboard() {
 
 function tableLeaderboard(rows, showAmounts = false) {
   if (!rows.length) return '<div class="empty">Chưa có dữ liệu doanh thu/target</div>';
-  const moneyColsHead = showAmounts ? '<th>Doanh thu thực đạt</th><th>Target DT</th>' : '';
-  const moneyColsBody = r => showAmounts ? `<td><b>${money(r.revenue || 0)}đ</b></td><td>${money(r.target || 0)}đ</td>` : '';
+  const moneyColsHead = showAmounts ? '<th>Doanh thu thực đạt</th><th>Target DT</th><th>Timeline dự kiến</th><th>Cần bán/ngày</th>' : '';
+  const moneyColsBody = r => showAmounts ? `<td><b>${money(r.revenue || 0)}đ</b></td><td>${money(r.target || 0)}đ</td><td>${percentBadge(r.pace_percent || 0)}</td><td><b>${money(r.daily_needed || 0)}đ</b></td>` : '';
   const podium = rows.slice(0, 3).map(r => `<div class="rank-card rank-${r.rank}">${r.rank === 1 ? `<div class="rank-cup" aria-hidden="true">🏆</div>` : ""}<div class="rank-no">Top ${r.rank}</div><b class="employee-name-line">${esc(r.full_name)}</b><span>${esc(r.store_name || '')}</span><strong>${Number(r.achievement_percent || 0)}%</strong></div>`).join('');
   return `<div class="leaderboard-premium">${podium}</div><div class="table-wrap leaderboard-wrap"><table class="leaderboard-table"><thead><tr><th>Top</th><th>Nhân viên</th><th>Cửa hàng</th><th>% đạt target</th>${moneyColsHead}<th>% tỷ trọng DT</th><th>Bill</th><th>Món</th><th>UPT</th><th>ATV</th><th>ASP</th><th>GUESTS</th></tr></thead><tbody>${rows.map(r => `<tr><td><span class="badge dark">Top ${r.rank}</span></td><td class="employee-name-cell"><b>${esc(r.full_name)}</b></td><td class="store-name-cell">${esc(r.store_name || '')}</td><td>${percentBadge(r.achievement_percent || 0)}</td>${moneyColsBody(r)}<td>${Number(r.revenue_percent || 0)}%</td><td>${money(r.bill_count || 0)}</td><td>${money(r.item_count || 0)}</td><td class="metric-badge-cell">${targetBadge(r.upt || 0, r.target_upt || 0, '', 2)}</td><td class="metric-badge-cell">${targetBadge(r.atv || 0, r.target_atv || 0, 'đ')}</td><td>${money(r.asp || 0)}đ</td><td>${Math.round(r.guests_percent || 0)}%</td></tr>`).join('')}</tbody></table></div>`;
 }
@@ -593,7 +623,7 @@ function tableLeaderboard(rows, showAmounts = false) {
 function tableStoreSalesSummary(summary) {
   if (!summary || !summary.rows?.length) return '<div class="empty">Chưa có dữ liệu doanh thu ngày trong tháng này</div>';
   const t = summary.totals || {};
-  const kpis = `<div class="grid four dash-kpis" style="margin-bottom:14px"><div class="card kpi"><div class="label">Doanh thu thực đạt</div><div class="num">${money(t.revenue || 0)}đ</div><div class="hint">Target tháng: ${money(summary.monthly_target || 0)}đ • ${percentBadge(t.achievement_percent || 0)}</div></div><div class="card kpi"><div class="label">Target ngày đã set</div><div class="num">${money(t.daily_target || 0)}đ</div><div class="hint">Theo tổng target ngày trong tháng • ${percentBadge(t.daily_achievement_percent || 0)}</div></div><div class="card kpi"><div class="label">UPT</div><div class="num">${fmt2(t.upt || 0)}</div><div class="hint">${targetBadge(t.upt || 0, t.target_upt || 0, '', 2)}</div></div><div class="card kpi"><div class="label">ATV</div><div class="num">${money(t.atv || 0)}đ</div><div class="hint">${targetBadge(t.atv || 0, t.target_atv || 0, 'đ')}</div></div><div class="card kpi"><div class="label">ASP</div><div class="num">${money(t.asp || 0)}đ</div><div class="hint">Doanh thu / số món</div></div><div class="card kpi"><div class="label">CR</div><div class="num">${Number(t.cr || 0)}%</div><div class="hint">${targetBadge(t.cr || 0, t.target_cr || 0, '%', 2)}</div></div><div class="card kpi"><div class="label">Lượt khách cửa hàng</div><div class="num">${money(t.customer_count || 0)}</div><div class="hint">CR = bill / lượt khách</div></div></div>`;
+  const kpis = `<div class="grid four dash-kpis" style="margin-bottom:14px"><div class="card kpi"><div class="label">Doanh thu thực đạt</div><div class="num">${money(t.revenue || 0)}đ</div><div class="hint">Target tháng: ${money(summary.monthly_target || 0)}đ • ${percentBadge(t.achievement_percent || 0)}</div></div><div class="card kpi"><div class="label">Timeline dự kiến</div><div class="num">${Number(t.pace_percent || 0)}%</div><div class="hint">Dự kiến về: ${money(t.projected_revenue || 0)}đ</div></div><div class="card kpi"><div class="label">Cần bán/ngày</div><div class="num">${money(t.daily_needed || 0)}đ</div><div class="hint">Còn ${money(t.days_remaining || 0)} ngày để về 100%</div></div><div class="card kpi"><div class="label">Target ngày đã set</div><div class="num">${money(t.daily_target || 0)}đ</div><div class="hint">Theo tổng target ngày trong tháng • ${percentBadge(t.daily_achievement_percent || 0)}</div></div><div class="card kpi"><div class="label">UPT</div><div class="num">${fmt2(t.upt || 0)}</div><div class="hint">${targetBadge(t.upt || 0, t.target_upt || 0, '', 2)}</div></div><div class="card kpi"><div class="label">ATV</div><div class="num">${money(t.atv || 0)}đ</div><div class="hint">${targetBadge(t.atv || 0, t.target_atv || 0, 'đ')}</div></div><div class="card kpi"><div class="label">ASP</div><div class="num">${money(t.asp || 0)}đ</div><div class="hint">Doanh thu / số món</div></div><div class="card kpi"><div class="label">CR</div><div class="num">${Number(t.cr || 0)}%</div><div class="hint">${targetBadge(t.cr || 0, t.target_cr || 0, '%', 2)}</div></div><div class="card kpi"><div class="label">Lượt khách cửa hàng</div><div class="num">${money(t.customer_count || 0)}</div><div class="hint">CR = bill / lượt khách</div></div></div>`;
   const rows = summary.rows.map(r => `<tr><td><b>${dOnly(r.sale_date)}</b></td><td>${money(r.revenue || 0)}</td><td>${money(r.daily_target || 0)}</td><td>${percentBadge(r.daily_achievement_percent || 0)}</td><td>${money(r.bill_count || 0)}</td><td>${money(r.item_count || 0)}</td><td>${money(r.customer_count || 0)}</td><td>${targetBadge(r.upt || 0, r.daily_target_upt || r.target_upt || 0, '', 2)}</td><td>${targetBadge(r.atv || 0, r.daily_target_atv || r.target_atv || 0, 'đ')}</td><td>${money(r.asp || 0)}đ</td><td>${targetBadge(r.cr || 0, r.daily_target_cr || r.target_cr || 0, '%', 2)}</td><td>${percentBadge(r.achievement_percent || 0)}</td><td>${esc(r.note || r.daily_target_note || '')}</td></tr>`).join('');
   return `${kpis}<div class="table-wrap"><table><thead><tr><th>Ngày</th><th>Doanh thu ngày</th><th>Target ngày</th><th>% ngày</th><th>Bill</th><th>Món</th><th>Lượt khách CH</th><th>UPT</th><th>ATV</th><th>ASP</th><th>CR</th><th>% lũy kế tháng</th><th>Ghi chú</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
@@ -623,12 +653,12 @@ function tableWeeklyPromotions(rows) {
 function weeklyProductInputRows(rows = []) {
   const base = Array.isArray(rows) && rows.length ? rows.slice(0,5) : [{}, {}, {}, {}, {}];
   while (base.length < 5) base.push({});
-  return base.slice(0,5).map((r, i) => `<tr class="weekly-product-row"><td><span class="badge dark">Top ${i + 1}</span></td><td><input class="input weekly-product-name" value="${esc(r.name || '')}" placeholder="Tên sản phẩm"></td><td><input class="input weekly-product-sku" value="${esc(r.sku || '')}" placeholder="SKU"></td><td><input class="input weekly-product-qty" type="number" min="0" value="${Number(r.quantity || 0)}"></td><td><input class="input weekly-product-bill" type="number" min="0" value="${Number(r.bill_count || 0)}"></td><td><input class="input weekly-product-note" value="${esc(r.note || '')}" placeholder="Ghi chú"></td></tr>`).join('');
+  return base.slice(0,5).map((r, i) => `<tr class="weekly-product-row"><td><span class="badge dark">Top ${i + 1}</span></td><td><input class="input weekly-product-name" value="${esc(r.name || '')}" placeholder="Tên sản phẩm"></td><td><input class="input weekly-product-sku" value="${esc(r.sku || '')}" placeholder="SKU"></td><td><input class="input weekly-product-qty" type="text" inputmode="numeric" data-number-format value="${money(r.quantity || 0)}"></td><td><input class="input weekly-product-bill" type="text" inputmode="numeric" data-number-format value="${money(r.bill_count || 0)}"></td><td><input class="input weekly-product-note" value="${esc(r.note || '')}" placeholder="Ghi chú"></td></tr>`).join('');
 }
 
 function weeklyPromotionInputRows(rows = []) {
   const base = Array.isArray(rows) && rows.length ? rows.slice(0,10) : [{ name:'Mua 3 giảm 5%', bill_count:0 }, { name:'Mua 5 giảm 10%', bill_count:0 }];
-  return base.map((r, i) => `<tr class="weekly-promo-row"><td><input class="input weekly-promo-name" value="${esc(r.name || '')}" placeholder="VD: Mua 3 giảm 5%"></td><td><input class="input weekly-promo-bill" type="number" min="0" value="${Number(r.bill_count || 0)}"></td><td><input class="input weekly-promo-note" value="${esc(r.note || '')}" placeholder="Ghi chú"><button type="button" class="btn ghost small weeklyRemovePromoBtn" style="margin-left:6px">Xóa</button></td></tr>`).join('');
+  return base.map((r, i) => `<tr class="weekly-promo-row"><td><input class="input weekly-promo-name" value="${esc(r.name || '')}" placeholder="VD: Mua 3 giảm 5%"></td><td><input class="input weekly-promo-bill" type="text" inputmode="numeric" data-number-format value="${money(r.bill_count || 0)}"></td><td><input class="input weekly-promo-note" value="${esc(r.note || '')}" placeholder="Ghi chú"><button type="button" class="btn ghost small weeklyRemovePromoBtn" style="margin-left:6px">Xóa</button></td></tr>`).join('');
 }
 
 
@@ -680,7 +710,8 @@ async function renderWeeklyReport() {
   $('#weeklyAddPromoBtn')?.addEventListener('click', () => {
     const body = $('#weeklyPromoRows');
     if (!body) return;
-    body.insertAdjacentHTML('beforeend', `<tr class="weekly-promo-row"><td><input class="input weekly-promo-name" placeholder="VD: Mua 3 giảm 5%"></td><td><input class="input weekly-promo-bill" type="number" min="0" value="0"></td><td><input class="input weekly-promo-note" placeholder="Ghi chú"><button type="button" class="btn ghost small weeklyRemovePromoBtn" style="margin-left:6px">Xóa</button></td></tr>`);
+    body.insertAdjacentHTML('beforeend', `<tr class="weekly-promo-row"><td><input class="input weekly-promo-name" placeholder="VD: Mua 3 giảm 5%"></td><td><input class="input weekly-promo-bill" type="text" inputmode="numeric" data-number-format value="0"></td><td><input class="input weekly-promo-note" placeholder="Ghi chú"><button type="button" class="btn ghost small weeklyRemovePromoBtn" style="margin-left:6px">Xóa</button></td></tr>`);
+    setupNumberFormat(body);
   });
   $('#weeklyFeedbackForm')?.addEventListener('click', ev => {
     if (!ev.target?.classList?.contains('weeklyRemovePromoBtn')) return;
@@ -693,15 +724,15 @@ async function renderWeeklyReport() {
     payload.top_products = $$('.weekly-product-row', e.target).map(row => ({
       name: $('.weekly-product-name', row)?.value || '',
       sku: $('.weekly-product-sku', row)?.value || '',
-      quantity: $('.weekly-product-qty', row)?.value || 0,
-      bill_count: $('.weekly-product-bill', row)?.value || 0,
+      quantity: cleanNumberInput($('.weekly-product-qty', row)?.value),
+      bill_count: cleanNumberInput($('.weekly-product-bill', row)?.value),
       note: $('.weekly-product-note', row)?.value || ''
-    })).filter(x => x.name || x.sku || Number(x.quantity || 0) || Number(x.bill_count || 0)).slice(0,5);
+    })).filter(x => x.name || x.sku || cleanNumberInput(x.quantity) || cleanNumberInput(x.bill_count)).slice(0,5);
     payload.promotions = $$('.weekly-promo-row', e.target).map(row => ({
       name: $('.weekly-promo-name', row)?.value || '',
-      bill_count: $('.weekly-promo-bill', row)?.value || 0,
+      bill_count: cleanNumberInput($('.weekly-promo-bill', row)?.value),
       note: $('.weekly-promo-note', row)?.value || ''
-    })).filter(x => x.name || Number(x.bill_count || 0));
+    })).filter(x => x.name || cleanNumberInput(x.bill_count));
     try { await api('/api/weekly-report', { method: 'POST', body: JSON.stringify(payload) }); toast('Đã lưu báo cáo tuần'); state.weeklyEditMode = false; renderWeeklyReport(); } catch (err) { toast(err.message, 'danger'); }
   });
 }
@@ -891,14 +922,14 @@ async function renderSales() {
   const storeOptions = state.boot.stores.map(s => `<option value="${s.id}" ${Number(s.id) === Number(defaultStoreId) ? 'selected' : ''}>${esc(s.name)}</option>`).join('');
   const storeSelect = state.user.role === 'admin' ? `<div class="field"><label>Cửa hàng</label><select class="input" id="salesStoreFilter" name="store_id">${storeOptions}</select></div>` : `<input type="hidden" name="store_id" value="${esc(state.user.store_id)}">`;
   const storeSelectTarget = state.user.role === 'admin' ? `<div class="field"><label>Cửa hàng</label><select class="input" id="dailyTargetStoreFilter" name="store_id">${storeOptions}</select></div>` : `<input type="hidden" name="store_id" value="${esc(state.user.store_id)}">`;
-  const targetForm = can('can_set_sales_targets') ? `<div class="card"><h3>Set target đầu tháng nhiều nhân viên</h3><p class="hint">Có thể chọn một hoặc nhiều nhân viên cùng lúc để set chung target tháng. Nếu nhân viên đã có target tháng này, hệ thống sẽ cập nhật lại thay vì tạo trùng.</p><form id="targetForm" class="grid four"><div class="field target-employee-field" style="grid-column:1/-1"><label>Chọn nhân viên bán hàng</label><div class="row target-multi-actions"><button type="button" class="btn secondary small" id="targetSelectAllBtn">Chọn tất cả</button><button type="button" class="btn ghost small" id="targetClearAllBtn">Bỏ chọn</button><span class="hint">Chọn nhiều nhân viên để lưu target nhanh trong 1 lần.</span></div><div class="target-employee-grid">${targetEmployeeChecks}</div></div><div class="field"><label>Tháng target</label><input class="input" type="month" name="target_month" value="${currentMonth}" required></div><div class="field"><label>Target doanh thu tháng</label><input class="input" type="number" name="target_revenue" min="0" required placeholder="VD: 80000000"></div><div class="field"><label>Target UPT</label><input class="input" type="number" step="0.01" name="target_upt" min="0" placeholder="VD: 2.50"></div><div class="field"><label>Target ATV</label><input class="input" type="number" name="target_atv" min="0" placeholder="VD: 1500000"></div><div class="field"><label>Target CR %</label><input class="input" type="number" step="0.01" name="target_cr" min="0" placeholder="VD: 35"></div><div class="field" style="grid-column:span 2"><label>Ghi chú target</label><input class="input" name="note" placeholder="VD: Target tháng 7 / target điều chỉnh"></div><div class="field" style="align-self:end"><button class="btn">Lưu target đã chọn</button></div></form></div>` : '';
+  const targetForm = can('can_set_sales_targets') ? `<div class="card"><h3>Set target đầu tháng nhiều nhân viên</h3><p class="hint">Có thể chọn một hoặc nhiều nhân viên cùng lúc để set chung target tháng. Nếu nhân viên đã có target tháng này, hệ thống sẽ cập nhật lại thay vì tạo trùng.</p><form id="targetForm" class="grid four"><div class="field target-employee-field" style="grid-column:1/-1"><label>Chọn nhân viên bán hàng</label><div class="row target-multi-actions"><button type="button" class="btn secondary small" id="targetSelectAllBtn">Chọn tất cả</button><button type="button" class="btn ghost small" id="targetClearAllBtn">Bỏ chọn</button><span class="hint">Chọn nhiều nhân viên để lưu target nhanh trong 1 lần.</span></div><div class="target-employee-grid">${targetEmployeeChecks}</div></div><div class="field"><label>Tháng target</label><input class="input" type="month" name="target_month" value="${currentMonth}" required></div><div class="field"><label>Target doanh thu tháng</label><input class="input" type="text" inputmode="numeric" data-number-format name="target_revenue" required placeholder="VD: 80.000.000"></div><div class="field"><label>Target UPT</label><input class="input" type="number" step="0.01" name="target_upt" min="0" placeholder="VD: 2.50"></div><div class="field"><label>Target ATV</label><input class="input" type="text" inputmode="numeric" data-number-format name="target_atv" placeholder="VD: 1.500.000"></div><div class="field"><label>Target CR %</label><input class="input" type="number" step="0.01" name="target_cr" min="0" placeholder="VD: 35"></div><div class="field" style="grid-column:span 2"><label>Ghi chú target</label><input class="input" name="note" placeholder="VD: Target tháng 7 / target điều chỉnh"></div><div class="field" style="align-self:end"><button class="btn">Lưu target đã chọn</button></div></form></div>` : '';
   const todayIso = new Date().toISOString().slice(0,10);
-  const dailyTargetForm = can('can_set_sales_targets') ? `<div class="card" style="margin-top:16px"><h3>Set target doanh thu theo ngày - tổng cửa hàng</h3><p class="hint">Chọn từng ngày muốn set target, có thể chọn nhiều ngày không liền nhau. UPT / ATV / CR tự lấy theo target tháng, không cần set riêng từng ngày.</p><form id="dailyTargetForm" class="grid four daily-target-pick-form">${storeSelectTarget}<div class="field" style="grid-column:span 2"><label>Chọn ngày cần set</label><div class="row daily-date-add-row"><input class="input" type="date" id="dailyTargetDatePicker" value="${todayIso}"><button type="button" class="btn secondary" id="dailyTargetAddDateBtn">Thêm ngày</button></div></div><div class="field"><label>Target doanh thu/ngày</label><input class="input" type="number" name="target_revenue" min="0" required placeholder="VD: 10000000"></div><div class="field" style="grid-column:1/-1"><label>Ngày đã chọn</label><div class="row daily-target-actions"><button type="button" class="btn secondary small" id="dailyTargetAddTodayBtn">Thêm hôm nay</button><button type="button" class="btn ghost small" id="dailyTargetClearDatesBtn">Xóa chọn</button><span class="hint">Bấm Thêm ngày nhiều lần để chọn các ngày rời rạc.</span></div><div id="dailyTargetDateList" class="daily-date-list"></div></div><div class="field" style="grid-column:span 3"><label>Ghi chú target ngày</label><input class="input" name="note" placeholder="VD: Target cuối tuần / ngày sale"></div><div class="field" style="align-self:end"><button class="btn">Lưu target ngày đã chọn</button></div></form></div>` : '';
-  const rowsInputs = salesStaff.map(u => `<tr data-user="${u.id}"><td><b>${esc(u.full_name)}</b><div class="hint">${esc(u.store_name || '')}</div></td><td><input class="input" name="revenue_${u.id}" type="number" min="0" value="0"></td><td><input class="input" name="bill_${u.id}" type="number" min="0" value="0"></td><td><input class="input" name="item_${u.id}" type="number" min="0" value="0"></td><td><input class="input" name="note_${u.id}" placeholder="Ghi chú NV"></td></tr>`).join('') || '<tr><td colspan="5"><div class="empty">Chưa có nhân viên bán hàng trong cửa hàng này</div></td></tr>';
-  const salesForm = can('can_manage_sales') ? `<div class="card" style="margin-top:16px"><h3>Nhập doanh thu từng ngày</h3><p class="hint">Mỗi ngày cửa hàng nhập doanh thu từng nhân viên: doanh thu, số bill, số món. Lượt khách nhập 1 lần theo tổng cửa hàng. Nếu nhập lại cùng ngày, hệ thống sẽ cập nhật thay vì cộng trùng.</p><form id="dailySalesForm"><div class="grid four">${storeSelect}<div class="field"><label>Ngày bán</label><input class="input" type="date" name="sale_date" value="${new Date().toISOString().slice(0,10)}" required></div><div class="field"><label>Lượt khách tổng cửa hàng</label><input class="input" type="number" name="customer_count" min="0" value="0"></div><div class="field"><label>Ghi chú cửa hàng</label><input class="input" name="note" placeholder="VD: Cuối ngày / ca tối"></div></div><div class="table-wrap" style="margin-top:12px"><table><thead><tr><th>Nhân viên</th><th>Doanh thu</th><th>Số bill</th><th>Số món</th><th>Ghi chú</th></tr></thead><tbody>${rowsInputs}</tbody></table></div><div style="margin-top:12px"><button class="btn">Lưu doanh thu ngày</button></div></form></div>` : '';
+  const dailyTargetForm = can('can_set_sales_targets') ? `<div class="card" style="margin-top:16px"><h3>Set target doanh thu theo ngày - tổng cửa hàng</h3><p class="hint">Chọn từng ngày muốn set target, có thể chọn nhiều ngày không liền nhau. UPT / ATV / CR tự lấy theo target tháng, không cần set riêng từng ngày.</p><form id="dailyTargetForm" class="grid four daily-target-pick-form">${storeSelectTarget}<div class="field" style="grid-column:span 2"><label>Chọn ngày cần set</label><div class="row daily-date-add-row"><input class="input" type="date" id="dailyTargetDatePicker" value="${todayIso}"><button type="button" class="btn secondary" id="dailyTargetAddDateBtn">Thêm ngày</button></div></div><div class="field"><label>Target doanh thu/ngày</label><input class="input" type="text" inputmode="numeric" data-number-format name="target_revenue" required placeholder="VD: 10.000.000"></div><div class="field" style="grid-column:1/-1"><label>Ngày đã chọn</label><div class="row daily-target-actions"><button type="button" class="btn secondary small" id="dailyTargetAddTodayBtn">Thêm hôm nay</button><button type="button" class="btn ghost small" id="dailyTargetClearDatesBtn">Xóa chọn</button><span class="hint">Bấm Thêm ngày nhiều lần để chọn các ngày rời rạc.</span></div><div id="dailyTargetDateList" class="daily-date-list"></div></div><div class="field" style="grid-column:span 3"><label>Ghi chú target ngày</label><input class="input" name="note" placeholder="VD: Target cuối tuần / ngày sale"></div><div class="field" style="align-self:end"><button class="btn">Lưu target ngày đã chọn</button></div></form></div>` : '';
+  const rowsInputs = salesStaff.map(u => `<tr data-user="${u.id}"><td><b>${esc(u.full_name)}</b><div class="hint">${esc(u.store_name || '')}</div></td><td><input class="input" name="revenue_${u.id}" type="text" inputmode="numeric" data-number-format value="0"></td><td><input class="input" name="bill_${u.id}" type="text" inputmode="numeric" data-number-format value="0"></td><td><input class="input" name="item_${u.id}" type="text" inputmode="numeric" data-number-format value="0"></td><td><input class="input" name="note_${u.id}" placeholder="Ghi chú NV"></td></tr>`).join('') || '<tr><td colspan="5"><div class="empty">Chưa có nhân viên bán hàng trong cửa hàng này</div></td></tr>';
+  const salesForm = can('can_manage_sales') ? `<div class="card" style="margin-top:16px"><h3>Nhập doanh thu từng ngày</h3><p class="hint">Mỗi ngày cửa hàng nhập doanh thu từng nhân viên: doanh thu, số bill, số món. Lượt khách nhập 1 lần theo tổng cửa hàng. Nếu nhập lại cùng ngày, hệ thống sẽ cập nhật thay vì cộng trùng.</p><form id="dailySalesForm"><div class="grid four">${storeSelect}<div class="field"><label>Ngày bán</label><input class="input" type="date" name="sale_date" value="${new Date().toISOString().slice(0,10)}" required></div><div class="field"><label>Lượt khách tổng cửa hàng</label><input class="input" type="text" inputmode="numeric" data-number-format name="customer_count" value="0"></div><div class="field"><label>Ghi chú cửa hàng</label><input class="input" name="note" placeholder="VD: Cuối ngày / ca tối"></div></div><div class="table-wrap" style="margin-top:12px"><table><thead><tr><th>Nhân viên</th><th>Doanh thu</th><th>Số bill</th><th>Số món</th><th>Ghi chú</th></tr></thead><tbody>${rowsInputs}</tbody></table></div><div style="margin-top:12px"><button class="btn">Lưu doanh thu ngày</button></div></form></div>` : '';
   const tabs = `<div class="pillbar"><button data-period="month" class="${state.leaderboardPeriod === 'month' ? 'active' : ''}">Tháng</button><button data-period="quarter" class="${state.leaderboardPeriod === 'quarter' ? 'active' : ''}">Quý</button><button data-period="year" class="${state.leaderboardPeriod === 'year' ? 'active' : ''}">Năm</button></div>`;
   const monthFilter = `<div class="toolbar" style="margin-bottom:12px"><div class="field"><label>Tháng xem tổng hợp</label><input class="input" id="salesMonthFilter" type="month" value="${currentMonth}"></div>${state.user.role === 'admin' ? `<div class="field"><label>Cửa hàng xem tổng</label><select class="input" id="salesStoreSummaryFilter">${storeOptions}</select></div>` : ''}</div>`;
-  const summaryBlock = summary ? `<div class="card" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">Tổng hợp doanh thu tháng ${esc(summary.month)} - ${esc(summary.store_name)}</h3></div><p class="hint">Bảng này cộng từng ngày đã nhập để theo dõi doanh thu ngày; UPT, ATV, CR mặc định so với target tháng. CR tính theo tổng bill / tổng khách cửa hàng.</p>${tableStoreSalesSummary(summary)}</div>` : '<div class="card" style="margin-top:16px"><h3>Tổng hợp doanh thu cửa hàng</h3><div class="empty">Tài khoản này chưa được cấp quyền xem tổng doanh thu cửa hàng</div></div>';
+  const summaryBlock = summary ? `<div class="card" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">Tổng hợp doanh thu tháng ${esc(summary.month)} - ${esc(summary.store_name)}</h3></div><p class="hint">Bảng này cộng từng ngày đã nhập để theo dõi doanh thu ngày; UPT, ATV, ASP, CR mặc định so với target tháng. Timeline dự kiến tính theo tốc độ doanh thu hiện tại và số ngày còn lại trong kỳ.</p>${tableStoreSalesSummary(summary)}</div>` : '<div class="card" style="margin-top:16px"><h3>Tổng hợp doanh thu cửa hàng</h3><div class="empty">Tài khoản này chưa được cấp quyền xem tổng doanh thu cửa hàng</div></div>';
   shell(`${targetForm}${dailyTargetForm}${salesForm}<div class="card" style="margin-top:16px">${monthFilter}<div class="toolbar"><h3 style="margin-right:auto">Bảng doanh thu thực đạt ${state.leaderboardPeriod === 'month' ? 'tháng' : state.leaderboardPeriod === 'quarter' ? 'quý' : 'năm'}</h3>${tabs}${can('can_export') ? '<button class="btn secondary" data-export="sales">Tải CSV doanh thu</button>' : ''}</div><p class="hint">Mục Doanh thu được phép xem doanh thu thực đạt. Riêng màn Tổng quan chỉ hiển thị % đạt target, không hiển thị số tiền bán.</p>${tableLeaderboard(data.leaderboard, true)}</div>${summaryBlock}`, 'Doanh thu', 'Nhập doanh thu ngày, target cá nhân, target ngày và tổng hợp target cửa hàng');
   $$('.pillbar button').forEach(b => b.onclick = () => { state.leaderboardPeriod = b.dataset.period; renderSales(); });
   $('#salesMonthFilter')?.addEventListener('change', e => { state.salesMonth = e.target.value; renderSales(); });
@@ -931,6 +962,8 @@ async function renderSales() {
     if (!userIds.length) return toast('Chọn ít nhất 1 nhân viên để lưu target', 'danger');
     const payload = Object.fromEntries(fd);
     payload.user_ids = userIds;
+    payload.target_revenue = cleanNumberInput(payload.target_revenue);
+    payload.target_atv = cleanNumberInput(payload.target_atv);
     delete payload.user_id;
     try {
       const res = await api('/api/sales/targets', { method: 'POST', body: JSON.stringify(payload) });
@@ -941,6 +974,7 @@ async function renderSales() {
   $('#dailyTargetForm')?.addEventListener('submit', async e => {
     e.preventDefault();
     const payload = Object.fromEntries(new FormData(e.target));
+    payload.target_revenue = cleanNumberInput(payload.target_revenue);
     payload.dates = [...dailyTargetDates].sort();
     if (!payload.dates.length) return toast('Chọn ít nhất 1 ngày để lưu target', 'danger');
     try {
@@ -954,9 +988,9 @@ async function renderSales() {
     const fd = new FormData(e.target);
     const entries = $$('tbody tr[data-user]', e.target).map(tr => {
       const uid = tr.dataset.user;
-      return { user_id: uid, revenue: fd.get(`revenue_${uid}`) || 0, bill_count: fd.get(`bill_${uid}`) || 0, item_count: fd.get(`item_${uid}`) || 0, note: fd.get(`note_${uid}`) || '' };
+      return { user_id: uid, revenue: cleanNumberInput(fd.get(`revenue_${uid}`)), bill_count: cleanNumberInput(fd.get(`bill_${uid}`)), item_count: cleanNumberInput(fd.get(`item_${uid}`)), note: fd.get(`note_${uid}`) || '' };
     });
-    const payload = { store_id: fd.get('store_id') || state.user.store_id, sale_date: fd.get('sale_date'), customer_count: fd.get('customer_count') || 0, note: fd.get('note') || '', entries };
+    const payload = { store_id: fd.get('store_id') || state.user.store_id, sale_date: fd.get('sale_date'), customer_count: cleanNumberInput(fd.get('customer_count')), note: fd.get('note') || '', entries };
     try { await api('/api/sales/daily', { method: 'POST', body: JSON.stringify(payload) }); toast('Đã lưu doanh thu ngày'); renderSales(); } catch (err) { toast(err.message, 'danger'); }
   });
 }
@@ -1013,7 +1047,7 @@ function orderInputRows(count = 8) {
   return Array.from({ length: count }, (_, i) => `<tr>
     <td><input class="input orderSku" placeholder="SKU ${i + 1}"></td>
     <td><input class="input orderName" placeholder="Tên sản phẩm"></td>
-    <td><input class="input orderQty" type="number" min="0" value="0"></td>
+    <td><input class="input orderQty" type="text" inputmode="numeric" data-number-format value="0"></td>
     <td><input class="input orderNote" placeholder="Ghi chú dòng"></td>
   </tr>`).join('');
 }
@@ -1130,7 +1164,7 @@ async function renderOnlineOrders() {
   const storeField = allScope ? `<div class="field"><label>Cửa hàng</label><select class="input" id="onlineOrderStoreFilter" name="store_id">${storeOptions}</select></div>` : `<input type="hidden" name="store_id" value="${esc(defaultStoreId)}">`;
   const t = summary.totals || {};
   const kpis = `<section class="grid four dash-kpis"><div class="card kpi"><div class="label">Số đơn online</div><div class="num">${money(t.order_count || 0)}</div><div class="hint">Theo tháng đang lọc</div></div><div class="card kpi"><div class="label">Tổng giá trị đơn</div><div class="num">${money(t.order_value || 0)}đ</div><div class="hint">Giá trị hóa đơn online</div></div><div class="card kpi"><div class="label">Doanh thu hưởng 30%</div><div class="num">${money(t.benefit_revenue || 0)}đ</div><div class="hint">Tự tính = giá trị đơn × 30%</div></div></section>`;
-  const form = can('can_manage_online_orders') ? `<div class="card"><h3>Nhập đơn online</h3><p class="hint">Cửa hàng nhập số hóa đơn, giá trị đơn, nhân viên đóng đơn. Doanh thu hưởng sẽ tự tính 30% giá trị đơn.</p><form id="onlineOrderForm" class="grid three">${storeField}<div class="field"><label>Ngày hóa đơn</label><input class="input" type="date" name="order_date" value="${new Date().toISOString().slice(0,10)}" required></div><div class="field"><label>Số hóa đơn</label><input class="input" name="invoice_no" placeholder="VD: OL12345" required></div><div class="field"><label>Giá trị đơn</label><input class="input" type="number" name="order_value" min="0" placeholder="1000000" required></div><div class="field"><label>Nhân viên đóng đơn</label><select class="input" name="packer_id" required>${employeeOptions}</select></div><div class="field"><label>Ghi chú</label><input class="input" name="note" placeholder="VD: đơn livestream, đơn web..."></div><div style="align-self:end"><button class="btn">Lưu đơn online</button></div></form></div>` : '';
+  const form = can('can_manage_online_orders') ? `<div class="card"><h3>Nhập đơn online</h3><p class="hint">Cửa hàng nhập số hóa đơn, giá trị đơn, nhân viên đóng đơn. Doanh thu hưởng sẽ tự tính 30% giá trị đơn.</p><form id="onlineOrderForm" class="grid three">${storeField}<div class="field"><label>Ngày hóa đơn</label><input class="input" type="date" name="order_date" value="${new Date().toISOString().slice(0,10)}" required></div><div class="field"><label>Số hóa đơn</label><input class="input" name="invoice_no" placeholder="VD: OL12345" required></div><div class="field"><label>Giá trị đơn</label><input class="input" type="text" inputmode="numeric" data-number-format name="order_value" placeholder="1.000.000" required></div><div class="field"><label>Nhân viên đóng đơn</label><select class="input" name="packer_id" required>${employeeOptions}</select></div><div class="field"><label>Ghi chú</label><input class="input" name="note" placeholder="VD: đơn livestream, đơn web..."></div><div style="align-self:end"><button class="btn">Lưu đơn online</button></div></form></div>` : '';
   const storeSummary = summary.stores?.length ? `<div class="table-wrap"><table><thead><tr><th>Cửa hàng</th><th>Số đơn</th><th>Tổng giá trị</th><th>Doanh thu hưởng 30%</th></tr></thead><tbody>${summary.stores.map(r => `<tr><td><b>${esc(r.store_name || '')}</b></td><td>${money(r.order_count || 0)}</td><td>${money(r.order_value || 0)}đ</td><td><b>${money(r.benefit_revenue || 0)}đ</b></td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Chưa có tổng hợp cửa hàng</div>';
   const employeeSummary = summary.employees?.length ? `<div class="table-wrap"><table><thead><tr><th>Nhân viên đóng đơn</th><th>Cửa hàng</th><th>Số đơn</th><th>Tổng giá trị</th><th>Doanh thu hưởng 30%</th></tr></thead><tbody>${summary.employees.map(r => `<tr><td><b>${esc(r.full_name || '')}</b></td><td>${esc(r.store_name || '')}</td><td>${money(r.order_count || 0)}</td><td>${money(r.order_value || 0)}đ</td><td><b>${money(r.benefit_revenue || 0)}đ</b></td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Chưa có tổng hợp cá nhân</div>';
   const detailRows = orders.length ? `<div class="table-wrap"><table><thead><tr><th>Ngày</th><th>Cửa hàng</th><th>Số hóa đơn</th><th>Giá trị</th><th>NV đóng</th><th>Doanh thu hưởng 30%</th><th>Ghi chú</th><th>Thao tác</th></tr></thead><tbody>${orders.map(o => `<tr><td>${dOnly(o.order_date)}</td><td>${esc(o.store_name || '')}</td><td><b>${esc(o.invoice_no || '')}</b></td><td>${money(o.order_value || 0)}đ</td><td>${esc(o.packer_name || '')}</td><td><b>${money(o.benefit_revenue || 0)}đ</b></td><td>${esc(o.note || '')}</td><td>${can('can_manage_online_orders') ? `<button class="btn small secondary onlineOrderEditBtn" data-id="${o.id}" data-order="${encodeURIComponent(JSON.stringify({ order_date: o.order_date || '', invoice_no: o.invoice_no || '', order_value: o.order_value || 0, packer_id: o.packer_id || '', note: o.note || '' }))}">Sửa</button><button class="btn small danger onlineOrderDeleteBtn" data-id="${o.id}">Xóa</button>` : ''}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Chưa có đơn online trong tháng này</div>';
@@ -1142,6 +1176,7 @@ async function renderOnlineOrders() {
   $('#onlineOrderForm')?.addEventListener('submit', async e => {
     e.preventDefault();
     const payload = Object.fromEntries(new FormData(e.target));
+    payload.order_value = cleanNumberInput(payload.order_value);
     try { await api('/api/online-orders', { method: 'POST', body: JSON.stringify(payload) }); toast('Đã lưu đơn online'); renderOnlineOrders(); } catch (err) { toast(err.message, 'danger'); }
   });
   $$('.onlineOrderDeleteBtn').forEach(btn => btn.addEventListener('click', async () => {
@@ -1156,7 +1191,7 @@ async function renderOnlineOrders() {
     const order_value = prompt('Giá trị đơn', current.order_value || 0);
     if (order_value === null) return;
     const note = prompt('Ghi chú', current.note || '');
-    try { await api(`/api/online-orders/${btn.dataset.id}`, { method: 'PATCH', body: JSON.stringify({ invoice_no, order_value, note }) }); toast('Đã sửa đơn online'); renderOnlineOrders(); } catch (err) { toast(err.message, 'danger'); }
+    try { await api(`/api/online-orders/${btn.dataset.id}`, { method: 'PATCH', body: JSON.stringify({ invoice_no, order_value: cleanNumberInput(order_value), note }) }); toast('Đã sửa đơn online'); renderOnlineOrders(); } catch (err) { toast(err.message, 'danger'); }
   }));
 }
 
@@ -1190,7 +1225,7 @@ async function renderOrders() {
     const items = $$('#orderForm tbody tr').map(tr => ({
       sku: $('.orderSku', tr)?.value || '',
       product_name: $('.orderName', tr)?.value || '',
-      quantity: Number($('.orderQty', tr)?.value || 0),
+      quantity: cleanNumberInput($('.orderQty', tr)?.value),
       note: $('.orderNote', tr)?.value || '',
     })).filter(x => (x.sku || x.product_name) && Number(x.quantity || 0) > 0);
     try {
@@ -1533,11 +1568,11 @@ async function renderDocuments() {
 async function renderBonuses() {
   const data = await api('/api/bonuses');
   const bonusPeople = salesStaffInStore(state.user.role === 'admin' ? '' : state.user.store_id);
-  const form = can('can_manage_bonuses') ? `<div class="card"><h3>Nhập tiền công/thưởng nhân viên</h3><p class="hint">Mỗi lần nhập thêm sẽ cộng vào tổng tiền công/thưởng của nhân viên. Bảng bên dưới hiển thị tổng theo nhân viên, không tách từng ngày.</p><form id="bonusForm" class="grid three"><div class="field"><label>Nhân viên</label><select name="user_id" required>${bonusPeople.map(u => `<option value="${u.id}">${esc(u.full_name)} - ${esc(u.store_name || '')}</option>`).join('')}</select></div><div class="field"><label>Ngày ghi nhận</label><input class="input" type="date" name="bonus_date" value="${new Date().toISOString().slice(0,10)}" required></div><div class="field"><label>Loại tiền công/thưởng</label><select name="bonus_type"><option value="Hotbill">Hotbill</option><option value="Thưởng tuần">Thưởng tuần</option><option value="Thưởng KPI">Thưởng KPI</option><option value="Thưởng khác">Thưởng khác</option></select></div><div class="field"><label>Số tiền cộng thêm</label><input class="input" type="number" name="amount" min="0" required placeholder="100000"></div><div class="field" style="grid-column:span 2"><label>Ghi chú</label><input class="input" name="note" placeholder="VD: Hotbill / thưởng tuần W30"></div><div style="grid-column:1/-1"><button class="btn">Cộng tiền</button></div></form></div>` : '';
+  const form = can('can_manage_bonuses') ? `<div class="card"><h3>Nhập tiền công/thưởng nhân viên</h3><p class="hint">Mỗi lần nhập thêm sẽ cộng vào tổng tiền công/thưởng của nhân viên. Bảng bên dưới hiển thị tổng theo nhân viên, không tách từng ngày.</p><form id="bonusForm" class="grid three"><div class="field"><label>Nhân viên</label><select name="user_id" required>${bonusPeople.map(u => `<option value="${u.id}">${esc(u.full_name)} - ${esc(u.store_name || '')}</option>`).join('')}</select></div><div class="field"><label>Ngày ghi nhận</label><input class="input" type="date" name="bonus_date" value="${new Date().toISOString().slice(0,10)}" required></div><div class="field"><label>Loại tiền công/thưởng</label><select name="bonus_type"><option value="Hotbill">Hotbill</option><option value="Thưởng tuần">Thưởng tuần</option><option value="Thưởng KPI">Thưởng KPI</option><option value="Thưởng khác">Thưởng khác</option></select></div><div class="field"><label>Số tiền cộng thêm</label><input class="input" type="text" inputmode="numeric" data-number-format name="amount" required placeholder="100.000"></div><div class="field" style="grid-column:span 2"><label>Ghi chú</label><input class="input" name="note" placeholder="VD: Hotbill / thưởng tuần W30"></div><div style="grid-column:1/-1"><button class="btn">Cộng tiền</button></div></form></div>` : '';
   const rows = data.summary || [];
   const list = rows.length ? `<div class="table-wrap"><table><thead><tr><th>Nhân viên</th><th>Cửa hàng</th><th>Tổng tiền công/thưởng</th><th>Hotbill</th><th>Thưởng tuần</th><th>Thưởng KPI</th><th>Khác</th><th>Số lần nhập</th><th>Cập nhật gần nhất</th><th>Ghi chú gần nhất</th></tr></thead><tbody>${rows.map(b => `<tr><td><b>${esc(b.employee_name)}</b></td><td>${esc(b.store_name || '')}</td><td><b>${money(b.total_amount)}đ</b></td><td>${money(b.hotbill_amount)}đ</td><td>${money(b.week_amount)}đ</td><td>${money(b.kpi_amount)}đ</td><td>${money(b.other_amount)}đ</td><td>${money(b.entries_count || 0)}</td><td>${dOnly(b.latest_date)}</td><td>${esc(b.latest_note || '')}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Chưa có dữ liệu tiền công/thưởng</div>';
   shell(`${form}<div class="card" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">Tổng tiền công/thưởng theo nhân viên</h3>${can('can_export') ? '<button class="btn secondary" data-export="bonuses">Tải CSV chi tiết</button>' : ''}</div>${list}</div>`, 'Tiền công/thưởng', 'Cộng tiền hotbill, thưởng tuần, thưởng KPI vào tổng tiền công của nhân viên');
-  $('#bonusForm')?.addEventListener('submit', async e => { e.preventDefault(); try { await api('/api/bonuses', { method: 'POST', body: JSON.stringify(Object.fromEntries(new FormData(e.target))) }); toast('Đã cộng tiền công/thưởng'); renderBonuses(); } catch (err) { toast(err.message, 'danger'); } });
+  $('#bonusForm')?.addEventListener('submit', async e => { e.preventDefault(); try { await api('/api/bonuses', { method: 'POST', body: JSON.stringify((() => { const payload = Object.fromEntries(new FormData(e.target)); payload.amount = cleanNumberInput(payload.amount); return payload; })()) }); toast('Đã cộng tiền công/thưởng'); renderBonuses(); } catch (err) { toast(err.message, 'danger'); } });
 }
 
 async function renderReports() {

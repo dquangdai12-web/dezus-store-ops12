@@ -1,0 +1,21 @@
+V4.44 - Định dạng số + Timeline doanh thu
+
+1. Các ô nhập số quan trọng đã tự hiện dấu chấm hàng nghìn khi nhập:
+   - Doanh thu ngày
+   - Bill / số món / lượt khách
+   - Target doanh thu tháng/ngày
+   - ATV target
+   - Đơn online
+   - Tiền công/thưởng
+   - Order số lượng
+   - Báo cáo tuần: top sản phẩm và bill CTKM
+
+2. Phần doanh thu cá nhân đã thêm:
+   - Timeline dự kiến: tốc độ dự kiến về cuối kỳ theo %
+   - Cần bán/ngày: số tiền cần bán mỗi ngày để đạt 100%, tính theo doanh thu đã bán và số ngày còn lại
+
+3. Phần tổng hợp cửa hàng đã thêm:
+   - Timeline dự kiến
+   - Cần bán/ngày
+
+Cập nhật: giải nén, upload đè toàn bộ file lên GitHub, Commit changes, Render Manual Deploy.

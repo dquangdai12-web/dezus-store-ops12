@@ -70,7 +70,14 @@ function monthKeysBetween(start, end) {
   }
   return out;
 }
-function toNumber(v, fallback = 0) { const n = Number(v); return Number.isFinite(n) ? n : fallback; }
+function toNumber(v, fallback = 0) {
+  if (v === null || v === undefined || v === '') return fallback;
+  const normalized = typeof v === 'string'
+    ? v.trim().replace(/\s/g, '').replace(/\./g, '').replace(/,/g, '.').replace(/[^0-9.-]/g, '')
+    : v;
+  const n = Number(normalized);
+  return Number.isFinite(n) ? n : fallback;
+}
 function clone(v) { return JSON.parse(JSON.stringify(v)); }
 function slugCode(name) { return String(name).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '').toUpperCase(); }
 
@@ -810,6 +817,27 @@ function aggregateKpiTargetsForStore(storeId, months) {
   };
 }
 
+
+function periodPaceMetrics(start, end, target, revenue) {
+  const startD = new Date(`${dateOnly(start)}T00:00:00Z`);
+  const endD = new Date(`${dateOnly(end)}T00:00:00Z`);
+  const todayD = new Date(`${dateOnly(new Date())}T00:00:00Z`);
+  const dayMs = 24 * 60 * 60 * 1000;
+  const totalDays = Math.max(1, Math.round((endD - startD) / dayMs));
+  let elapsedDays;
+  if (todayD < startD) elapsedDays = 0;
+  else if (todayD >= endD) elapsedDays = totalDays;
+  else elapsedDays = Math.min(totalDays, Math.max(1, Math.floor((todayD - startD) / dayMs) + 1));
+  const daysRemaining = Math.max(0, totalDays - elapsedDays);
+  const rev = toNumber(revenue, 0);
+  const tgt = toNumber(target, 0);
+  const dailyAverage = elapsedDays > 0 ? rev / elapsedDays : 0;
+  const projectedRevenue = Math.round(todayD >= endD ? rev : dailyAverage * totalDays);
+  const pacePercent = tgt ? Math.round((projectedRevenue / tgt) * 10000) / 100 : 0;
+  const dailyNeeded = daysRemaining > 0 ? Math.ceil(Math.max(tgt - rev, 0) / daysRemaining) : Math.max(Math.ceil(tgt - rev), 0);
+  return { pace_percent: pacePercent, projected_revenue: projectedRevenue, days_elapsed: elapsedDays, days_remaining: daysRemaining, daily_needed: dailyNeeded };
+}
+
 function salesRowsForUserPeriod(userId, start, end) {
   return (db.sales || []).filter(sa => Number(sa.user_id) === Number(userId) && dateVal(sa.sale_date) >= start && dateVal(sa.sale_date) < end);
 }
@@ -838,6 +866,7 @@ function salesProgressForUserPeriod(userId, start, end) {
     atv: bill_count ? Math.round(revenue / bill_count) : 0,
     asp: item_count ? Math.round(revenue / item_count) : 0,
     cr: 0,
+    ...periodPaceMetrics(start, end, target, revenue),
     last_update
   };
 }
@@ -878,7 +907,9 @@ function storeSalesProgressForPeriod(storeId, start, end) {
     customer_count,
     upt: bill_count ? Math.round((item_count / bill_count) * 100) / 100 : 0,
     atv: bill_count ? Math.round(revenue / bill_count) : 0,
+    asp: item_count ? Math.round(revenue / item_count) : 0,
     cr: customer_count ? Math.round((bill_count / customer_count) * 10000) / 100 : 0,
+    ...periodPaceMetrics(start, end, target, revenue),
     last_update
   };
 }
@@ -894,12 +925,12 @@ function upsertStoreSalesDay(storeId, saleDate, customerCount, note, actorId) {
   const d = dateOnly(saleDate || new Date());
   let row = db.sales_store_days.find(x => Number(x.store_id) === Number(storeId) && String(x.sale_date) === d);
   if (row) {
-    row.customer_count = Number(customerCount || 0);
+    row.customer_count = toNumber(customerCount, 0);
     row.note = note || '';
     row.updated_by = actorId;
     row.updated_at = nowIso();
   } else {
-    row = { id: nextId('sales_store_days'), store_id: Number(storeId), sale_date: d, customer_count: Number(customerCount || 0), note: note || '', created_by: actorId, created_at: nowIso(), updated_by: actorId, updated_at: nowIso() };
+    row = { id: nextId('sales_store_days'), store_id: Number(storeId), sale_date: d, customer_count: toNumber(customerCount, 0), note: note || '', created_by: actorId, created_at: nowIso(), updated_by: actorId, updated_at: nowIso() };
     db.sales_store_days.push(row);
   }
   return row;
@@ -909,14 +940,14 @@ function upsertSalesRow(employee, saleDate, payload, actorId) {
   const d = dateOnly(saleDate || new Date());
   let row = (db.sales || []).find(sa => Number(sa.user_id) === Number(employee.id) && String(sa.sale_date) === d);
   if (row) {
-    row.revenue = Number(payload.revenue || 0);
-    row.bill_count = Number(payload.bill_count || 0);
-    row.item_count = Number(payload.item_count || 0);
+    row.revenue = toNumber(payload.revenue, 0);
+    row.bill_count = toNumber(payload.bill_count, 0);
+    row.item_count = toNumber(payload.item_count, 0);
     row.note = payload.note || '';
     row.updated_by = actorId;
     row.updated_at = nowIso();
   } else {
-    row = { id: nextId('sales'), user_id: employee.id, store_id: employee.store_id, sale_date: d, revenue: Number(payload.revenue || 0), bill_count: Number(payload.bill_count || 0), item_count: Number(payload.item_count || 0), note: payload.note || '', created_by: actorId, created_at: nowIso(), updated_by: actorId, updated_at: nowIso() };
+    row = { id: nextId('sales'), user_id: employee.id, store_id: employee.store_id, sale_date: d, revenue: toNumber(payload.revenue, 0), bill_count: toNumber(payload.bill_count, 0), item_count: toNumber(payload.item_count, 0), note: payload.note || '', created_by: actorId, created_at: nowIso(), updated_by: actorId, updated_at: nowIso() };
     db.sales.push(row);
   }
   return row;
@@ -1091,7 +1122,7 @@ function leaderboardRows(user, period, refDate, storeId = null, options = {}) {
     const guestsRows = db.assessments.filter(a => a.template_id === 'GUESTS' && Number(a.employee_id) === Number(u.id) && dateVal(a.assessed_at) >= start && dateVal(a.assessed_at) < end);
     const guests_percent = guestsRows.length ? guestsRows.reduce((sum, a) => sum + Number(a.percent || 0), 0) / guestsRows.length : 0;
     const achievement_percent = progress.target ? Math.round((progress.revenue / progress.target) * 10000) / 100 : 0;
-    return { user_id: u.id, full_name: u.full_name, role: u.role, is_store_total: false, store_name: getStore(u.store_id)?.name || '', revenue: progress.revenue, target: progress.target, target_upt: progress.target_upt, target_atv: progress.target_atv, target_cr: progress.target_cr, achievement_percent, bill_count: progress.bill_count, item_count: progress.item_count, upt: progress.upt, atv: progress.atv, asp: progress.asp, cr: progress.cr, guests_percent, last_update: progress.last_update };
+    return { user_id: u.id, full_name: u.full_name, role: u.role, is_store_total: false, store_name: getStore(u.store_id)?.name || '', revenue: progress.revenue, target: progress.target, target_upt: progress.target_upt, target_atv: progress.target_atv, target_cr: progress.target_cr, achievement_percent, bill_count: progress.bill_count, item_count: progress.item_count, upt: progress.upt, atv: progress.atv, asp: progress.asp, cr: progress.cr, pace_percent: progress.pace_percent, projected_revenue: progress.projected_revenue, days_elapsed: progress.days_elapsed, days_remaining: progress.days_remaining, daily_needed: progress.daily_needed, guests_percent, last_update: progress.last_update };
   }).sort((a, b) => b.achievement_percent - a.achievement_percent || b.revenue - a.revenue || b.guests_percent - a.guests_percent);
   const employeeTotal = rows.reduce((sum, row) => sum + Number(row.revenue || 0), 0);
   return { period, start, end, leaderboard: rows.map((r, idx) => ({ ...r, rank: idx + 1, revenue_percent: employeeTotal ? Math.round((r.revenue / employeeTotal) * 10000) / 100 : 0 })) };
@@ -1454,15 +1485,15 @@ function normalizeWeeklyProducts(value) {
   return parseWeeklyList(value).map(item => ({
     name: String(item.name || item.product_name || '').trim(),
     sku: String(item.sku || '').trim(),
-    quantity: Number(item.quantity || item.qty || 0),
-    bill_count: Number(item.bill_count || 0),
+    quantity: toNumber(item.quantity || item.qty, 0),
+    bill_count: toNumber(item.bill_count, 0),
     note: String(item.note || '').trim()
   })).filter(item => item.name || item.sku || item.quantity).slice(0, 5);
 }
 function normalizeWeeklyPromotions(value) {
   return parseWeeklyList(value).map(item => ({
     name: String(item.name || item.promotion_name || '').trim(),
-    bill_count: Number(item.bill_count || item.bills || 0),
+    bill_count: toNumber(item.bill_count || item.bills, 0),
     note: String(item.note || '').trim()
   })).filter(item => item.name || item.bill_count).slice(0, 20);
 }
@@ -1564,7 +1595,7 @@ app.post('/api/sales/targets', requireAuth, requirePerm('can_set_sales_targets')
   if (!ids.length) return res.status(400).json({ error: 'Chọn ít nhất 1 nhân viên để nhập target' });
   if (!/^\d{4}-\d{2}$/.test(String(target_month || ''))) return res.status(400).json({ error: 'Tháng target không hợp lệ' });
   db.sales_targets = db.sales_targets || [];
-  const revenueTarget = Number(target_revenue ?? target ?? 0);
+  const revenueTarget = toNumber(target_revenue ?? target, 0);
   const saved = [];
   for (const id of ids) {
     const employee = getActiveUser(Number(id));
@@ -1575,15 +1606,15 @@ app.post('/api/sales/targets', requireAuth, requirePerm('can_set_sales_targets')
     if (row) {
       row.target = revenueTarget;
       row.target_revenue = revenueTarget;
-      row.target_upt = Number(target_upt || 0);
-      row.target_atv = Number(target_atv || 0);
-      row.target_cr = Number(target_cr || 0);
+      row.target_upt = toNumber(target_upt, 0);
+      row.target_atv = toNumber(target_atv, 0);
+      row.target_cr = toNumber(target_cr, 0);
       row.note = note || '';
       row.store_id = employeeStoreId;
       row.updated_by = req.user.id;
       row.updated_at = nowIso();
     } else {
-      row = { id: nextId('sales_targets'), user_id: employee.id, store_id: employeeStoreId, target_month, target: revenueTarget, target_revenue: revenueTarget, target_upt: Number(target_upt || 0), target_atv: Number(target_atv || 0), target_cr: Number(target_cr || 0), note: note || '', created_by: req.user.id, created_at: nowIso(), updated_by: req.user.id, updated_at: nowIso() };
+      row = { id: nextId('sales_targets'), user_id: employee.id, store_id: employeeStoreId, target_month, target: revenueTarget, target_revenue: revenueTarget, target_upt: toNumber(target_upt, 0), target_atv: toNumber(target_atv, 0), target_cr: toNumber(target_cr, 0), note: note || '', created_by: req.user.id, created_at: nowIso(), updated_by: req.user.id, updated_at: nowIso() };
       db.sales_targets.push(row);
     }
     saved.push(row);
@@ -1639,7 +1670,7 @@ app.post('/api/sales/daily-targets', requireAuth, requirePerm('can_set_sales_tar
   for (const d of cleanDates) {
     let row = db.sales_daily_targets.find(t => Number(t.store_id) === Number(storeId) && String(t.target_date) === d);
     if (row) {
-      row.target_revenue = Number(target_revenue || 0);
+      row.target_revenue = toNumber(target_revenue, 0);
       // UPT / ATV / CR ngày không set riêng nữa; hệ thống dùng target tháng.
       row.target_upt = 0;
       row.target_atv = 0;
@@ -1648,7 +1679,7 @@ app.post('/api/sales/daily-targets', requireAuth, requirePerm('can_set_sales_tar
       row.updated_by = req.user.id;
       row.updated_at = nowIso();
     } else {
-      row = { id: nextId('sales_daily_targets'), store_id: storeId, target_date: d, target_revenue: Number(target_revenue || 0), target_upt: 0, target_atv: 0, target_cr: 0, note: note || '', created_by: req.user.id, created_at: nowIso(), updated_by: req.user.id, updated_at: nowIso() };
+      row = { id: nextId('sales_daily_targets'), store_id: storeId, target_date: d, target_revenue: toNumber(target_revenue, 0), target_upt: 0, target_atv: 0, target_cr: 0, note: note || '', created_by: req.user.id, created_at: nowIso(), updated_by: req.user.id, updated_at: nowIso() };
       db.sales_daily_targets.push(row);
     }
     saved.push(row);
@@ -1753,6 +1784,7 @@ app.get('/api/sales/store-summary', requireAuth, (req, res) => {
   totals.target_cr = targetMetrics.target_cr;
   totals.achievement_percent = target ? Math.round((totals.revenue / target) * 10000) / 100 : 0;
   totals.daily_achievement_percent = totals.daily_target ? Math.round((totals.revenue / totals.daily_target) * 10000) / 100 : 0;
+  Object.assign(totals, periodPaceMetrics(start, end, target, totals.revenue));
   res.json({ month, store_id: store.id, store_name: store.name, monthly_target: target, target_metrics: targetMetrics, totals, rows });
 });
 
@@ -1928,7 +1960,7 @@ app.post('/api/orders', requireAuth, requirePerm('can_manage_orders'), (req, res
   items.forEach(item => {
     const sku = String(item.sku || '').trim();
     const productName = String(item.product_name || '').trim();
-    const quantity = Math.max(0, Math.round(Number(item.quantity || 0)));
+    const quantity = Math.max(0, Math.round(toNumber(item.quantity, 0)));
     if (!sku && !productName) return;
     if (!quantity) return;
     db.orders.push({
@@ -1962,7 +1994,7 @@ app.patch('/api/orders/:id', requireAuth, requirePerm('can_manage_orders'), (req
   if (order_status && !['new', 'done', 'waiting', 'received', 'cancelled'].includes(order_status)) return res.status(400).json({ error: 'Trạng thái order không hợp lệ' });
   if (order_status) row.order_status = order_status;
   if (note !== undefined) row.note = String(note || '');
-  if (quantity !== undefined) row.quantity = Math.max(0, Math.round(Number(quantity || 0)));
+  if (quantity !== undefined) row.quantity = Math.max(0, Math.round(toNumber(quantity, 0)));
   if (sku !== undefined) row.sku = String(sku || '').trim();
   if (product_name !== undefined) row.product_name = String(product_name || '').trim();
   if (batch_name !== undefined) row.batch_name = String(batch_name || 'Chưa gắn lần').trim() || 'Chưa gắn lần';
@@ -2003,7 +2035,7 @@ app.post('/api/online-orders', requireAuth, requirePerm('can_manage_online_order
   if (!packer || Number(packer.store_id) !== Number(storeId) || packer.role === 'admin') return res.status(400).json({ error: 'Nhân viên đóng đơn không hợp lệ' });
   const invoice = String(invoice_no || '').trim();
   if (!invoice) return res.status(400).json({ error: 'Chưa nhập số hóa đơn' });
-  const value = Math.max(0, Number(order_value || 0));
+  const value = Math.max(0, toNumber(order_value, 0));
   if (!value) return res.status(400).json({ error: 'Giá trị đơn phải lớn hơn 0' });
   db.online_orders = db.online_orders || [];
   const d = dateOnly(order_date || new Date());
@@ -2031,7 +2063,7 @@ app.patch('/api/online-orders/:id', requireAuth, requirePerm('can_manage_online_
   const { order_date, invoice_no, order_value, packer_id, note } = req.body || {};
   if (order_date) row.order_date = dateOnly(order_date);
   if (invoice_no !== undefined) row.invoice_no = String(invoice_no || '').trim();
-  if (order_value !== undefined) { const value = Math.max(0, Number(order_value || 0)); row.order_value = value; row.benefit_revenue = Math.round(value * 0.3); }
+  if (order_value !== undefined) { const value = Math.max(0, toNumber(order_value, 0)); row.order_value = value; row.benefit_revenue = Math.round(value * 0.3); }
   if (packer_id !== undefined) {
     const packer = getActiveUser(Number(packer_id));
     if (!packer || Number(packer.store_id) !== Number(row.store_id) || packer.role === 'admin') return res.status(400).json({ error: 'Nhân viên đóng đơn không hợp lệ' });
@@ -2353,7 +2385,7 @@ app.post('/api/bonuses', requireAuth, requirePerm('can_manage_bonuses'), (req, r
   if (!target) return res.status(400).json({ error: 'Nhân viên không hợp lệ' });
   if (req.user.role !== 'admin' && !userHasStore(req.user, target.store_id)) return res.status(403).json({ error: 'Không có quyền nhập thưởng nhân viên này' });
   const id = nextId('bonuses');
-  db.bonuses.push({ id, user_id: target.id, store_id: target.store_id, bonus_date: bonus_date || dateOnly(new Date()), bonus_type: bonus_type || 'Thưởng khác', amount: Number(amount || 0), note: note || '', created_by: req.user.id, created_at: nowIso() });
+  db.bonuses.push({ id, user_id: target.id, store_id: target.store_id, bonus_date: bonus_date || dateOnly(new Date()), bonus_type: bonus_type || 'Thưởng khác', amount: toNumber(amount, 0), note: note || '', created_by: req.user.id, created_at: nowIso() });
   saveDb();
   res.json({ ok: true, id });
 });
