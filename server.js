@@ -836,6 +836,7 @@ function salesProgressForUserPeriod(userId, start, end) {
     item_count,
     upt: bill_count ? Math.round((item_count / bill_count) * 100) / 100 : 0,
     atv: bill_count ? Math.round(revenue / bill_count) : 0,
+    asp: item_count ? Math.round(revenue / item_count) : 0,
     cr: 0,
     last_update
   };
@@ -1090,7 +1091,7 @@ function leaderboardRows(user, period, refDate, storeId = null, options = {}) {
     const guestsRows = db.assessments.filter(a => a.template_id === 'GUESTS' && Number(a.employee_id) === Number(u.id) && dateVal(a.assessed_at) >= start && dateVal(a.assessed_at) < end);
     const guests_percent = guestsRows.length ? guestsRows.reduce((sum, a) => sum + Number(a.percent || 0), 0) / guestsRows.length : 0;
     const achievement_percent = progress.target ? Math.round((progress.revenue / progress.target) * 10000) / 100 : 0;
-    return { user_id: u.id, full_name: u.full_name, role: u.role, is_store_total: false, store_name: getStore(u.store_id)?.name || '', revenue: progress.revenue, target: progress.target, target_upt: progress.target_upt, target_atv: progress.target_atv, target_cr: progress.target_cr, achievement_percent, bill_count: progress.bill_count, item_count: progress.item_count, upt: progress.upt, atv: progress.atv, cr: progress.cr, guests_percent, last_update: progress.last_update };
+    return { user_id: u.id, full_name: u.full_name, role: u.role, is_store_total: false, store_name: getStore(u.store_id)?.name || '', revenue: progress.revenue, target: progress.target, target_upt: progress.target_upt, target_atv: progress.target_atv, target_cr: progress.target_cr, achievement_percent, bill_count: progress.bill_count, item_count: progress.item_count, upt: progress.upt, atv: progress.atv, asp: progress.asp, cr: progress.cr, guests_percent, last_update: progress.last_update };
   }).sort((a, b) => b.achievement_percent - a.achievement_percent || b.revenue - a.revenue || b.guests_percent - a.guests_percent);
   const employeeTotal = rows.reduce((sum, row) => sum + Number(row.revenue || 0), 0);
   return { period, start, end, leaderboard: rows.map((r, idx) => ({ ...r, rank: idx + 1, revenue_percent: employeeTotal ? Math.round((r.revenue / employeeTotal) * 10000) / 100 : 0 })) };
@@ -1444,6 +1445,27 @@ function weeklyReportRow(storeId, weekStart) {
   db.weekly_reports = db.weekly_reports || [];
   return db.weekly_reports.find(r => Number(r.store_id) === Number(storeId) && String(r.week_start) === String(weekStart)) || null;
 }
+function parseWeeklyList(value) {
+  if (Array.isArray(value)) return value;
+  if (!value) return [];
+  try { const parsed = JSON.parse(value); return Array.isArray(parsed) ? parsed : []; } catch (_err) { return []; }
+}
+function normalizeWeeklyProducts(value) {
+  return parseWeeklyList(value).map(item => ({
+    name: String(item.name || item.product_name || '').trim(),
+    sku: String(item.sku || '').trim(),
+    quantity: Number(item.quantity || item.qty || 0),
+    bill_count: Number(item.bill_count || 0),
+    note: String(item.note || '').trim()
+  })).filter(item => item.name || item.sku || item.quantity).slice(0, 5);
+}
+function normalizeWeeklyPromotions(value) {
+  return parseWeeklyList(value).map(item => ({
+    name: String(item.name || item.promotion_name || '').trim(),
+    bill_count: Number(item.bill_count || item.bills || 0),
+    note: String(item.note || '').trim()
+  })).filter(item => item.name || item.bill_count).slice(0, 20);
+}
 function buildWeeklyReport(user, rawWeekStart, rawStoreId) {
   const week_start = weekStartOf(rawWeekStart || new Date());
   const week_end = addDaysUtc(week_start, 6);
@@ -1454,7 +1476,7 @@ function buildWeeklyReport(user, rawWeekStart, rawStoreId) {
   if (user.role !== 'admin' && Number(user.permissions.can_view_weekly_report) !== 1 && Number(user.permissions.can_manage_weekly_report) !== 1) throw new Error('Không có quyền xem báo cáo tuần');
   const days = datesBetween(week_start, endExclusive);
   const salesRows = (db.sales || []).filter(sa => Number(sa.store_id) === Number(storeId) && dateVal(sa.sale_date) >= week_start && dateVal(sa.sale_date) < endExclusive);
-  const dailyMap = new Map(days.map(d => [d, { sale_date: d, revenue: 0, bill_count: 0, item_count: 0, customer_count: 0, target_revenue: 0, upt: 0, atv: 0, cr: 0, achievement_percent: 0, note: '' }]));
+  const dailyMap = new Map(days.map(d => [d, { sale_date: d, revenue: 0, bill_count: 0, item_count: 0, customer_count: 0, target_revenue: 0, upt: 0, atv: 0, asp: 0, cr: 0, achievement_percent: 0, note: '' }]));
   salesRows.forEach(r => {
     const d = dateVal(r.sale_date);
     const row = dailyMap.get(d);
@@ -1482,6 +1504,7 @@ function buildWeeklyReport(user, rawWeekStart, rawStoreId) {
   const daysRows = Array.from(dailyMap.values()).map(r => {
     r.upt = r.bill_count ? Math.round((r.item_count / r.bill_count) * 100) / 100 : 0;
     r.atv = r.bill_count ? Math.round(r.revenue / r.bill_count) : 0;
+    r.asp = r.item_count ? Math.round(r.revenue / r.item_count) : 0;
     r.cr = r.customer_count ? Math.round((r.bill_count / r.customer_count) * 10000) / 100 : 0;
     r.achievement_percent = r.target_revenue ? Math.round((r.revenue / r.target_revenue) * 10000) / 100 : 0;
     return r;
@@ -1493,7 +1516,7 @@ function buildWeeklyReport(user, rawWeekStart, rawStoreId) {
     const bill_count = rows.reduce((s, r) => s + Number(r.bill_count || 0), 0);
     const item_count = rows.reduce((s, r) => s + Number(r.item_count || 0), 0);
     const target = Math.round(proratedTargetForUser(u.id, week_start, endExclusive));
-    return { user_id: u.id, full_name: u.full_name, store_id: u.store_id, store_name: store.name, revenue, target, achievement_percent: target ? Math.round((revenue / target) * 10000) / 100 : 0, revenue_percent: 0, bill_count, item_count, upt: bill_count ? Math.round((item_count / bill_count) * 100) / 100 : 0, atv: bill_count ? Math.round(revenue / bill_count) : 0 };
+    return { user_id: u.id, full_name: u.full_name, store_id: u.store_id, store_name: store.name, revenue, target, achievement_percent: target ? Math.round((revenue / target) * 10000) / 100 : 0, revenue_percent: 0, bill_count, item_count, upt: bill_count ? Math.round((item_count / bill_count) * 100) / 100 : 0, atv: bill_count ? Math.round(revenue / bill_count) : 0, asp: item_count ? Math.round(revenue / item_count) : 0 };
   }).sort((a, b) => b.revenue - a.revenue);
   const totals = daysRows.reduce((acc, r) => {
     acc.revenue += Number(r.revenue || 0);
@@ -1507,11 +1530,14 @@ function buildWeeklyReport(user, rawWeekStart, rawStoreId) {
   if (!totals.target_revenue) totals.target_revenue = proratedStoreTarget;
   totals.upt = totals.bill_count ? Math.round((totals.item_count / totals.bill_count) * 100) / 100 : 0;
   totals.atv = totals.bill_count ? Math.round(totals.revenue / totals.bill_count) : 0;
+  totals.asp = totals.item_count ? Math.round(totals.revenue / totals.item_count) : 0;
   totals.cr = totals.customer_count ? Math.round((totals.bill_count / totals.customer_count) * 10000) / 100 : 0;
   totals.achievement_percent = totals.target_revenue ? Math.round((totals.revenue / totals.target_revenue) * 10000) / 100 : 0;
   employeeRows.forEach(r => { r.revenue_percent = totals.revenue ? Math.round((r.revenue / totals.revenue) * 10000) / 100 : 0; });
-  const feedback = weeklyReportRow(storeId, week_start) || { feedback: '', issues: '', action_plan: '', note: '' };
-  return { store_id: storeId, store_name: store.name, week_start, week_end, totals, days: daysRows, employees: employeeRows, feedback };
+  const feedback = weeklyReportRow(storeId, week_start) || { feedback: '', issues: '', action_plan: '', note: '', top_products: [], promotions: [] };
+  const top_products = normalizeWeeklyProducts(feedback.top_products || []);
+  const promotions = normalizeWeeklyPromotions(feedback.promotions || []);
+  return { store_id: storeId, store_name: store.name, week_start, week_end, totals, days: daysRows, employees: employeeRows, top_products, promotions, feedback: { ...feedback, top_products, promotions } };
 }
 
 app.post('/api/sales/daily', requireAuth, requirePerm('can_manage_sales'), (req, res) => {
@@ -1664,7 +1690,7 @@ app.get('/api/sales/store-summary', requireAuth, (req, res) => {
   const dayMap = new Map();
   salesRows.forEach(r => {
     const d = dateVal(r.sale_date);
-    const row = dayMap.get(d) || { sale_date: d, revenue: 0, bill_count: 0, item_count: 0, customer_count: 0, upt: 0, atv: 0, cumulative_revenue: 0, achievement_percent: 0 };
+    const row = dayMap.get(d) || { sale_date: d, revenue: 0, bill_count: 0, item_count: 0, customer_count: 0, upt: 0, atv: 0, asp: 0, cumulative_revenue: 0, achievement_percent: 0 };
     row.revenue += Number(r.revenue || 0);
     row.bill_count += Number(r.bill_count || 0);
     row.item_count += Number(r.item_count || 0);
@@ -1674,7 +1700,7 @@ app.get('/api/sales/store-summary', requireAuth, (req, res) => {
     .filter(x => Number(x.store_id) === Number(storeId) && dateVal(x.sale_date) >= start && dateVal(x.sale_date) < end)
     .forEach(x => {
       const d = dateVal(x.sale_date);
-      const row = dayMap.get(d) || { sale_date: d, revenue: 0, bill_count: 0, item_count: 0, customer_count: 0, upt: 0, atv: 0, cr: 0, cumulative_revenue: 0, achievement_percent: 0 };
+      const row = dayMap.get(d) || { sale_date: d, revenue: 0, bill_count: 0, item_count: 0, customer_count: 0, upt: 0, atv: 0, asp: 0, cr: 0, cumulative_revenue: 0, achievement_percent: 0 };
       row.customer_count = Number(x.customer_count || 0);
       row.note = x.note || '';
       dayMap.set(d, row);
@@ -1683,7 +1709,7 @@ app.get('/api/sales/store-summary', requireAuth, (req, res) => {
     .filter(x => Number(x.store_id) === Number(storeId) && dateVal(x.target_date) >= start && dateVal(x.target_date) < end)
     .forEach(x => {
       const d = dateVal(x.target_date);
-      const row = dayMap.get(d) || { sale_date: d, revenue: 0, bill_count: 0, item_count: 0, customer_count: 0, upt: 0, atv: 0, cr: 0, cumulative_revenue: 0, achievement_percent: 0 };
+      const row = dayMap.get(d) || { sale_date: d, revenue: 0, bill_count: 0, item_count: 0, customer_count: 0, upt: 0, atv: 0, asp: 0, cr: 0, cumulative_revenue: 0, achievement_percent: 0 };
       row.daily_target = Number(x.target_revenue || 0);
       // UPT / ATV / CR dùng mặc định target tháng, không dùng target ngày.
       row.daily_target_upt = targetMetrics.target_upt;
@@ -1705,6 +1731,7 @@ app.get('/api/sales/store-summary', requireAuth, (req, res) => {
     cumulative += Number(r.revenue || 0);
     r.upt = r.bill_count ? Math.round((r.item_count / r.bill_count) * 100) / 100 : 0;
     r.atv = r.bill_count ? Math.round(r.revenue / r.bill_count) : 0;
+    r.asp = r.item_count ? Math.round(r.revenue / r.item_count) : 0;
     r.cr = r.customer_count ? Math.round((r.bill_count / r.customer_count) * 10000) / 100 : 0;
     r.cumulative_revenue = cumulative;
     r.achievement_percent = target ? Math.round((cumulative / target) * 10000) / 100 : 0;
@@ -1719,6 +1746,7 @@ app.get('/api/sales/store-summary', requireAuth, (req, res) => {
   }, { revenue: 0, bill_count: 0, item_count: 0, customer_count: 0, daily_target: 0 });
   totals.upt = totals.bill_count ? Math.round((totals.item_count / totals.bill_count) * 100) / 100 : 0;
   totals.atv = totals.bill_count ? Math.round(totals.revenue / totals.bill_count) : 0;
+  totals.asp = totals.item_count ? Math.round(totals.revenue / totals.item_count) : 0;
   totals.cr = totals.customer_count ? Math.round((totals.bill_count / totals.customer_count) * 10000) / 100 : 0;
   totals.target_upt = targetMetrics.target_upt;
   totals.target_atv = targetMetrics.target_atv;
@@ -1740,12 +1768,14 @@ app.get('/api/weekly-report', requireAuth, (req, res) => {
 });
 
 app.post('/api/weekly-report', requireAuth, (req, res) => {
-  const { store_id, week_start, feedback, issues, action_plan, note } = req.body || {};
+  const { store_id, week_start, feedback, issues, action_plan, note, top_products, promotions } = req.body || {};
   const storeId = req.user.role === 'admin' ? Number(store_id || getPrimaryStoreId(req.user)) : Number(getPrimaryStoreId(req.user));
   const store = getStore(storeId);
   if (!store) return res.status(400).json({ error: 'Cửa hàng không hợp lệ' });
   if (req.user.role !== 'admin' && (Number(req.user.permissions.can_manage_weekly_report) !== 1 || !userHasStore(req.user, storeId))) return res.status(403).json({ error: 'Không có quyền nhập báo cáo tuần' });
   const ws = weekStartOf(week_start || new Date());
+  const cleanTopProducts = normalizeWeeklyProducts(top_products);
+  const cleanPromotions = normalizeWeeklyPromotions(promotions);
   db.weekly_reports = db.weekly_reports || [];
   let row = weeklyReportRow(storeId, ws);
   if (row) {
@@ -1753,10 +1783,12 @@ app.post('/api/weekly-report', requireAuth, (req, res) => {
     row.issues = issues || '';
     row.action_plan = action_plan || '';
     row.note = note || '';
+    row.top_products = cleanTopProducts;
+    row.promotions = cleanPromotions;
     row.updated_by = req.user.id;
     row.updated_at = nowIso();
   } else {
-    row = { id: nextId('weekly_reports'), store_id: storeId, week_start: ws, feedback: feedback || '', issues: issues || '', action_plan: action_plan || '', note: note || '', created_by: req.user.id, created_at: nowIso(), updated_by: req.user.id, updated_at: nowIso() };
+    row = { id: nextId('weekly_reports'), store_id: storeId, week_start: ws, feedback: feedback || '', issues: issues || '', action_plan: action_plan || '', note: note || '', top_products: cleanTopProducts, promotions: cleanPromotions, created_by: req.user.id, created_at: nowIso(), updated_by: req.user.id, updated_at: nowIso() };
     db.weekly_reports.push(row);
   }
   saveDb();
@@ -1767,9 +1799,11 @@ app.get('/api/weekly-report/export.csv', requireAuth, requirePerm('can_export'),
   try {
     const data = buildWeeklyReport(req.user, req.query.week_start, req.query.store_id);
     const rows = [];
-    rows.push({ phan: 'Tong cua hang', cua_hang: data.store_name, tu_ngay: data.week_start, den_ngay: data.week_end, doanh_thu: data.totals.revenue, target_tuan: data.totals.target_revenue, phan_tram_dat: data.totals.achievement_percent, bill: data.totals.bill_count, so_mon: data.totals.item_count, luot_khach: data.totals.customer_count, upt: data.totals.upt, atv: data.totals.atv, cr: data.totals.cr, feedback: data.feedback.feedback || '', van_de: data.feedback.issues || '', hanh_dong_tuan_toi: data.feedback.action_plan || '', ghi_chu: data.feedback.note || '' });
-    data.days.forEach(d => rows.push({ phan: 'Theo ngay', cua_hang: data.store_name, ngay: d.sale_date, doanh_thu: d.revenue, target_ngay: d.target_revenue, phan_tram_dat: d.achievement_percent, bill: d.bill_count, so_mon: d.item_count, luot_khach: d.customer_count, upt: d.upt, atv: d.atv, cr: d.cr, ghi_chu: d.note || '' }));
-    data.employees.forEach(e => rows.push({ phan: 'Ca nhan', cua_hang: data.store_name, nhan_vien: e.full_name, doanh_thu: e.revenue, target_tuan_uoc_tinh: e.target, phan_tram_dat: e.achievement_percent, ty_trong_dt: e.revenue_percent, bill: e.bill_count, so_mon: e.item_count, upt: e.upt, atv: e.atv }));
+    rows.push({ phan: 'Tong cua hang', cua_hang: data.store_name, tu_ngay: data.week_start, den_ngay: data.week_end, doanh_thu: data.totals.revenue, target_tuan: data.totals.target_revenue, phan_tram_dat: data.totals.achievement_percent, bill: data.totals.bill_count, so_mon: data.totals.item_count, luot_khach: data.totals.customer_count, upt: data.totals.upt, atv: data.totals.atv, asp: data.totals.asp, cr: data.totals.cr, feedback: data.feedback.feedback || '', van_de: data.feedback.issues || '', hanh_dong_tuan_toi: data.feedback.action_plan || '', ghi_chu: data.feedback.note || '' });
+    data.days.forEach(d => rows.push({ phan: 'Theo ngay', cua_hang: data.store_name, ngay: d.sale_date, doanh_thu: d.revenue, target_ngay: d.target_revenue, phan_tram_dat: d.achievement_percent, bill: d.bill_count, so_mon: d.item_count, luot_khach: d.customer_count, upt: d.upt, atv: d.atv, asp: d.asp, cr: d.cr, ghi_chu: d.note || '' }));
+    data.employees.forEach(e => rows.push({ phan: 'Ca nhan', cua_hang: data.store_name, nhan_vien: e.full_name, doanh_thu: e.revenue, target_tuan_uoc_tinh: e.target, phan_tram_dat: e.achievement_percent, ty_trong_dt: e.revenue_percent, bill: e.bill_count, so_mon: e.item_count, upt: e.upt, atv: e.atv, asp: e.asp }));
+    (data.top_products || []).forEach((p, idx) => rows.push({ phan: 'Top san pham ban chay', top: idx + 1, cua_hang: data.store_name, san_pham: p.name, sku: p.sku || '', so_luong: p.quantity || 0, so_bill: p.bill_count || 0, ghi_chu: p.note || '' }));
+    (data.promotions || []).forEach(p => rows.push({ phan: 'CTKM', cua_hang: data.store_name, ten_ctkm: p.name, so_bill_tham_gia: p.bill_count || 0, ghi_chu: p.note || '' }));
     res.header('Content-Type', 'text/csv; charset=utf-8');
     res.attachment(`bao-cao-tuan-${data.store_name}-${data.week_start}.csv`);
     res.send('\uFEFF' + toCsv(rows));

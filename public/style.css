@@ -1968,3 +1968,23 @@ textarea.input{min-height:92px;resize:vertical;line-height:1.45}
     width:100%;
   }
 }
+
+/* ==== V4.43 ASP + WEEKLY PRODUCTS / PROMOTIONS ==== */
+.weekly-kpis .weekly-asp{
+  background:linear-gradient(135deg,#fff7ed,#fffaf5)!important;
+  border-left:4px solid #f97316!important;
+}
+.weekly-kpis .weekly-asp::after{background:#f97316}
+.weekly-kpis .weekly-asp .label,
+.weekly-kpis .weekly-asp .num{color:#c2410c!important}
+.weekly-extra-grid .card h3{margin-bottom:12px}
+.weekly-extra-input-table input.input{min-width:120px}
+.weekly-extra-input-table .weekly-product-name{min-width:180px}
+.weekly-extra-input-table .weekly-promo-name{min-width:210px}
+.weekly-extra-input-table .weekly-promo-note{min-width:180px}
+.weekly-promo-row td:last-child{display:flex;align-items:center;gap:6px;white-space:nowrap}
+@media (max-width:699px){
+  .weekly-extra-grid{grid-template-columns:1fr!important}
+  .weekly-promo-row td:last-child{display:table-cell}
+  .weeklyRemovePromoBtn{margin-top:6px;margin-left:0!important}
+}
