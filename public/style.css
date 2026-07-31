@@ -1536,3 +1536,227 @@ textarea.input{min-height:92px;resize:vertical;line-height:1.45}
   .hero-card{grid-template-columns:1fr 136px!important}
   .hero-score{width:136px!important;height:112px!important}
 }
+
+
+/* ==== V4.38 CROSS DEVICE DESKTOP CONSISTENCY ==== */
+/* Từ iPad trở lên dùng cùng một logic desktop, không phụ thuộc Windows/Mac/Safari */
+@media (min-width:700px){
+  html{
+    -webkit-text-size-adjust:100%;
+    text-size-adjust:100%;
+    font-size:14px!important;
+  }
+  body,
+  button,
+  input,
+  select,
+  textarea{
+    font-family:Arial, Helvetica, sans-serif!important;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:geometricPrecision;
+  }
+  body{
+    font-size:14px!important;
+    padding-bottom:0!important;
+    overflow-x:hidden!important;
+  }
+  .app-shell{
+    display:grid!important;
+    grid-template-columns:248px minmax(0,1fr)!important;
+    min-height:100vh!important;
+    min-height:100dvh!important;
+    width:100%!important;
+  }
+  .sidebar{
+    display:flex!important;
+    position:sticky!important;
+    top:0!important;
+    height:100vh!important;
+    height:100dvh!important;
+    width:auto!important;
+    padding:18px 14px!important;
+    border-right:1px solid rgba(255,255,255,.06)!important;
+    border-bottom:0!important;
+    overflow:auto!important;
+  }
+  .side-nav{
+    display:grid!important;
+    gap:3px!important;
+    overflow:visible!important;
+    padding:0!important;
+  }
+  .side-bottom{
+    display:grid!important;
+    margin-top:auto!important;
+  }
+  .mobile-app-head,
+  .mobile-cats,
+  .mobile-bottom-nav,
+  .mobile-subnav,
+  .mobile-top{
+    display:none!important;
+  }
+  .main{
+    min-width:0!important;
+    max-width:none!important;
+    margin:0!important;
+    padding:22px 24px 32px!important;
+  }
+  .topbar{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    margin-bottom:18px!important;
+  }
+  .page-title{
+    display:block!important;
+  }
+  .page-title h2{
+    font-size:26px!important;
+    line-height:1.15!important;
+  }
+  .page-title p{
+    font-size:12.5px!important;
+  }
+
+  .grid{
+    gap:14px!important;
+  }
+  .grid.two{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+  .grid.three{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  }
+  .grid.four,
+  .dash-kpis{
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  }
+  .grid.five{
+    grid-template-columns:repeat(5,minmax(0,1fr))!important;
+  }
+  .card{
+    border-radius:18px!important;
+    padding:18px!important;
+  }
+  .hero-card{
+    grid-template-columns:1fr 148px!important;
+    gap:16px!important;
+    padding:18px!important;
+  }
+  .hero-score{
+    width:148px!important;
+    height:118px!important;
+    display:grid!important;
+  }
+  .hero-score b{
+    font-size:32px!important;
+  }
+  .leaderboard-premium{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  }
+  .toolbar{
+    align-items:center!important;
+    gap:10px!important;
+  }
+  .toolbar .field{
+    min-width:180px!important;
+    width:auto!important;
+  }
+  .toolbar .btn{
+    width:auto!important;
+  }
+  .input,
+  select,
+  textarea{
+    min-height:42px!important;
+    font-size:13.5px!important;
+  }
+  .btn{
+    min-height:42px!important;
+    font-size:12.5px!important;
+  }
+  .table-wrap{
+    overflow:auto!important;
+    -webkit-overflow-scrolling:touch!important;
+  }
+  .table-wrap table{
+    min-width:980px!important;
+  }
+  .table-wrap th,
+  .table-wrap td{
+    white-space:nowrap!important;
+    font-size:12px!important;
+    padding:10px 11px!important;
+  }
+  .table-wrap th{
+    font-size:10px!important;
+  }
+  .schedule-wrap table.schedule-table{
+    min-width:1040px!important;
+  }
+  .schedule-cell{
+    min-width:98px!important;
+  }
+  .schedule-view-cell{
+    min-width:90px!important;
+    height:52px!important;
+  }
+}
+
+/* iPad dọc / màn nhỏ: vẫn là desktop, nhưng giảm sidebar và chuyển KPI 2 cột để không bị bóp */
+@media (min-width:700px) and (max-width:899px){
+  .app-shell{
+    grid-template-columns:218px minmax(0,1fr)!important;
+  }
+  .main{
+    padding:18px 16px 28px!important;
+  }
+  .grid.four,
+  .dash-kpis{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+  .grid.five{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+  .grid.three{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+  .hero-card{
+    grid-template-columns:1fr 126px!important;
+  }
+  .hero-score{
+    width:126px!important;
+    height:106px!important;
+  }
+  .leaderboard-premium{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  }
+  .rank-card b{
+    font-size:12px!important;
+  }
+  .rank-card strong{
+    font-size:22px!important;
+  }
+}
+
+/* Laptop/MacBook nhỏ: giữ desktop 4 cột như PC */
+@media (min-width:900px) and (max-width:1280px){
+  .app-shell{
+    grid-template-columns:248px minmax(0,1fr)!important;
+  }
+  .main{
+    padding:22px 24px 32px!important;
+  }
+  .grid.four,
+  .dash-kpis{
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  }
+}
+
+/* Điện thoại mới dùng mobile thật sự */
+@media (max-width:699px){
+  .app-shell{
+    display:block!important;
+  }
+}
