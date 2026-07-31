@@ -1070,13 +1070,16 @@ function assessmentRowsForUser(user, templateId) {
   return rows.sort((a, b) => new Date(b.assessed_at) - new Date(a.assessed_at)).slice(0, 300);
 }
 
-function leaderboardRows(user, period, refDate, storeId = null) {
+function leaderboardRows(user, period, refDate, storeId = null, options = {}) {
   const { start, end } = periodRange(period, refDate);
   // Bảng doanh thu chỉ hiển thị nhân viên bán hàng, không đưa quản lý vào bảng này.
   let people = db.users.filter(u => u.status === 'active' && u.role === 'employee');
   const requestedStoreId = storeId ? Number(storeId) : null;
   if (requestedStoreId) {
     people = people.filter(u => Number(getPrimaryStoreId(u)) === Number(requestedStoreId));
+  } else if (options.includeAllStores) {
+    // Màn Tổng quan: cho phép xem bảng xếp hạng theo % đạt target toàn hệ thống.
+    // Không truyền store_id để tránh bị khóa theo cửa hàng ở khu vực này.
   } else if (user.role !== 'admin') {
     const canViewStoreScope = user.role === 'manager' || Number(user.permissions.can_manage_sales) === 1 || Number(user.permissions.can_view_sales_target) === 1 || Number(user.permissions.can_view_store_sales_summary) === 1;
     people = canViewStoreScope ? people.filter(u => userHasStore(user, getPrimaryStoreId(u))) : people.filter(u => Number(u.id) === Number(user.id));
@@ -1582,14 +1585,20 @@ app.post('/api/sales/daily-targets', requireAuth, requirePerm('can_set_sales_tar
 });
 
 app.get('/api/sales/leaderboard', requireAuth, (req, res) => {
-  const { period = 'month', date, store_id } = req.query;
-  const storeId = store_id ? Number(store_id) : null;
+  const { period = 'month', date, store_id, scope } = req.query;
+  const overviewPercentScope = String(scope || '') === 'overview_percent';
+  const storeId = overviewPercentScope ? null : (store_id ? Number(store_id) : null);
   if (storeId) {
     const store = getStore(storeId);
     if (!store) return res.status(400).json({ error: 'Cửa hàng không hợp lệ' });
     if (req.user.role !== 'admin' && !userHasStore(req.user, storeId)) return res.status(403).json({ error: 'Không có quyền xem doanh thu cửa hàng này' });
   }
-  res.json(leaderboardRows(req.user, period, date, storeId));
+  const result = leaderboardRows(req.user, period, date, storeId, { includeAllStores: overviewPercentScope });
+  if (overviewPercentScope && req.user.role !== 'admin') {
+    // Ở Tổng quan, cửa hàng được xem thứ hạng toàn hệ thống theo %, nhưng không trả số tiền doanh thu/target.
+    result.leaderboard = result.leaderboard.map(r => ({ ...r, revenue: 0, target: 0 }));
+  }
+  res.json(result);
 });
 
 app.get('/api/sales/store-summary', requireAuth, (req, res) => {

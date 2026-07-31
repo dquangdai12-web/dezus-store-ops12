@@ -545,7 +545,7 @@ async function renderDashboard() {
   const [tasksData, violationsData, leaderboardData, reportData] = await Promise.all([
     api('/api/tasks'),
     api('/api/violations'),
-    api('/api/sales/leaderboard?period=month'),
+    api('/api/sales/leaderboard?period=month&scope=overview_percent'),
     (state.user.role !== 'employee' || can('can_view_reports')) ? api('/api/reports/performance').catch(() => ({ performance: [], storeSummary: [] })) : Promise.resolve({ performance: [], storeSummary: [] }),
   ]);
   const tasks = tasksData.tasks;
