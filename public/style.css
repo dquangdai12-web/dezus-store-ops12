@@ -1104,3 +1104,26 @@ textarea.input{min-height:92px;resize:vertical;line-height:1.45}
     border-radius:18px!important;
   }
 }
+
+/* ==== V4.33 HERO TEXT CONTRAST FIX ==== */
+.hero-card{
+  color:#204b74!important;
+}
+.hero-card h3{
+  color:#163f69!important;
+}
+.hero-card p{
+  color:#55738f!important;
+}
+@media (max-width:860px){
+  .hero-card{
+    background:linear-gradient(135deg,#edf6ff 0%,#f8fbff 58%,#e6f2fb 100%)!important;
+    color:#204b74!important;
+  }
+  .hero-card h3{
+    color:#163f69!important;
+  }
+  .hero-card p{
+    color:#5d7992!important;
+  }
+}
