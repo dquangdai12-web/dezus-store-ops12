@@ -183,10 +183,33 @@ function setPermissions(userId, role, permissions) {
   }
   Object.keys(ROLE_DEFAULTS.admin).forEach(k => row[k] = Number(base[k] || 0));
 }
+function normalizeStoreIds(list) {
+  return Array.from(new Set((Array.isArray(list) ? list : []).map(v => Number(v)).filter(v => Number.isFinite(v) && v > 0)));
+}
+function getUserStoreIds(row) {
+  if (!row) return [];
+  const raw = Array.isArray(row.store_ids) ? row.store_ids : (Array.isArray(row.access_store_ids) ? row.access_store_ids : (row.store_id ? [row.store_id] : []));
+  return normalizeStoreIds(raw.length ? raw : (row.store_id ? [row.store_id] : []));
+}
+function getPrimaryStoreId(row) {
+  if (!row) return null;
+  return row.store_id ? Number(row.store_id) : (getUserStoreIds(row)[0] || null);
+}
+function userHasStore(user, storeId) {
+  if (user?.role === 'admin') return true;
+  if (!storeId) return true;
+  const ids = getUserStoreIds(user);
+  if (!ids.length) return false;
+  return ids.includes(Number(storeId));
+}
+function userStoreNames(row) {
+  return getUserStoreIds(row).map(id => getStore(id)?.name).filter(Boolean);
+}
 function withStore(row) {
   if (!row) return null;
-  const s = row.store_id ? getStore(row.store_id) : null;
-  return { ...row, store_name: s ? s.name : null };
+  const ids = getUserStoreIds(row);
+  const names = userStoreNames(row);
+  return { ...row, store_id: getPrimaryStoreId(row), store_ids: ids, store_name: names[0] || null, store_names: names };
 }
 function publicUser(row) {
   if (!row) return null;
@@ -197,12 +220,14 @@ function publicUser(row) {
     username: u.username,
     role: u.role,
     store_id: u.store_id,
+    store_ids: u.store_ids || [],
     store_name: u.store_name || null,
+    store_names: u.store_names || [],
     status: u.status,
     permissions: getPermissions(u.id, u.role)
   };
 }
-function canAccessStore(req, storeId) { return req.user.role === 'admin' || Number(req.user.store_id) === Number(storeId); }
+function canAccessStore(req, storeId) { return userHasStore(req.user, storeId); }
 
 function requireAuth(req, res, next) {
   const header = req.headers.authorization || '';
@@ -250,7 +275,7 @@ function documentRowsForUser(user) {
   const canView = user.role === 'admin' || Number(user.permissions.can_view_documents) === 1 || Number(user.permissions.can_manage_documents) === 1;
   if (!canView) return [];
   let rows = (db.documents || []).filter(d => d.status !== 'deleted');
-  if (user.role !== 'admin') rows = rows.filter(d => !d.store_id || Number(d.store_id) === Number(user.store_id));
+  if (user.role !== 'admin') rows = rows.filter(d => !d.store_id || userHasStore(user, d.store_id));
   return rows.map(d => {
     const store = d.store_id ? getStore(d.store_id) : null;
     const creator = getUser(d.created_by);
@@ -261,12 +286,12 @@ function canAccessDocument(user, doc) {
   if (!doc || doc.status === 'deleted') return false;
   if (user.role === 'admin') return true;
   const canView = Number(user.permissions.can_view_documents) === 1 || Number(user.permissions.can_manage_documents) === 1;
-  return canView && (!doc.store_id || Number(doc.store_id) === Number(user.store_id));
+  return canView && (!doc.store_id || userHasStore(user, doc.store_id));
 }
 function canManageDocumentScope(user, storeId) {
   if (user.role === 'admin') return true;
   if (Number(user.permissions.can_manage_documents) !== 1) return false;
-  return !storeId || Number(storeId) === Number(user.store_id);
+  return !storeId || userHasStore(user, storeId);
 }
 
 
@@ -290,13 +315,13 @@ function canViewOrderScope(user, storeId) {
   const ok = Number(user.permissions.can_view_orders) === 1 || Number(user.permissions.can_manage_orders) === 1;
   if (!ok) return false;
   if (!user.store_id) return true;
-  return Number(user.store_id) === Number(storeId);
+  return userHasStore(user, storeId);
 }
 function canManageOrderScope(user, storeId) {
   if (user.role === 'admin') return true;
   if (Number(user.permissions.can_manage_orders) !== 1) return false;
   if (!user.store_id) return true;
-  return Number(user.store_id) === Number(storeId);
+  return userHasStore(user, storeId);
 }
 function orderRowsForUser(user, storeId = null) {
   db.orders = db.orders || [];
@@ -304,7 +329,7 @@ function orderRowsForUser(user, storeId = null) {
   if (storeId) rows = rows.filter(o => Number(o.store_id) === Number(storeId));
   if (user.role !== 'admin') {
     if (!Number(user.permissions.can_view_orders) && !Number(user.permissions.can_manage_orders)) return [];
-    if (user.store_id) rows = rows.filter(o => Number(o.store_id) === Number(user.store_id));
+    if (user.store_id) rows = rows.filter(o => userHasStore(user, o.store_id));
   }
   return rows.map(o => {
     const store = getStore(o.store_id);
@@ -373,12 +398,12 @@ function canViewOnlineOrderScope(user, storeId) {
   if (user.role === 'admin') return true;
   const ok = Number(user.permissions.can_view_online_orders) === 1 || Number(user.permissions.can_manage_online_orders) === 1;
   if (!ok) return false;
-  return !storeId || Number(user.store_id) === Number(storeId);
+  return !storeId || userHasStore(user, storeId);
 }
 function canManageOnlineOrderScope(user, storeId) {
   if (user.role === 'admin') return true;
   if (Number(user.permissions.can_manage_online_orders) !== 1) return false;
-  return Number(user.store_id) === Number(storeId);
+  return userHasStore(user, storeId);
 }
 function onlineOrderRowsForUser(user, storeId = null, month = null) {
   db.online_orders = db.online_orders || [];
@@ -387,7 +412,7 @@ function onlineOrderRowsForUser(user, storeId = null, month = null) {
   if (month) rows = rows.filter(o => String(o.order_date || '').slice(0, 7) === String(month).slice(0, 7));
   if (user.role !== 'admin') {
     if (!Number(user.permissions.can_view_online_orders) && !Number(user.permissions.can_manage_online_orders)) return [];
-    rows = rows.filter(o => Number(o.store_id) === Number(user.store_id));
+    rows = rows.filter(o => userHasStore(user, o.store_id));
   }
   return rows.map(o => ({
     ...o,
@@ -433,13 +458,13 @@ function canViewProductCollectionScope(user, storeId) {
   if (!ok) return false;
   if (!storeId) return true;
   if (!user.store_id) return true;
-  return Number(user.store_id) === Number(storeId);
+  return userHasStore(user, storeId);
 }
 function canManageProductCollectionScope(user, storeId) {
   if (user.role === 'admin') return true;
   if (Number(user.permissions.can_manage_product_collections) !== 1) return false;
   if (!user.store_id) return true;
-  return !storeId || Number(user.store_id) === Number(storeId);
+  return !storeId || userHasStore(user, storeId);
 }
 function collectionItems(collectionId) {
   db.product_collection_items = db.product_collection_items || [];
@@ -454,7 +479,7 @@ function productCollectionRowsForUser(user, storeId = null, month = null) {
   if (month) rows = rows.filter(c => String(c.collection_month || '').slice(0, 7) === String(month).slice(0, 7));
   if (user.role !== 'admin') {
     rows = rows.filter(c => canViewProductCollectionScope(user, c.store_id));
-    if (user.store_id) rows = rows.filter(c => !c.store_id || Number(c.store_id) === Number(user.store_id));
+    if (user.store_id) rows = rows.filter(c => !c.store_id || userHasStore(user, c.store_id));
   }
   return rows.map(c => {
     const store = c.store_id ? getStore(c.store_id) : null;
@@ -529,13 +554,13 @@ function canViewProductFeedbackScope(user, storeId) {
   const ok = Number(user.permissions.can_view_product_feedback) === 1 || Number(user.permissions.can_manage_product_feedback) === 1;
   if (!ok) return false;
   if (!user.store_id) return true;
-  return !storeId || Number(user.store_id) === Number(storeId);
+  return !storeId || userHasStore(user, storeId);
 }
 function canManageProductFeedbackScope(user, storeId) {
   if (user.role === 'admin') return true;
   if (Number(user.permissions.can_manage_product_feedback) !== 1) return false;
   if (!user.store_id) return true;
-  return Number(user.store_id) === Number(storeId);
+  return userHasStore(user, storeId);
 }
 function productFeedbackRowsForUser(user, storeId = null, collectionId = null, month = null) {
   db.product_feedback = db.product_feedback || [];
@@ -545,7 +570,7 @@ function productFeedbackRowsForUser(user, storeId = null, collectionId = null, m
   if (month) rows = rows.filter(r => String(r.feedback_date || '').slice(0, 7) === String(month).slice(0, 7));
   if (user.role !== 'admin') {
     if (!Number(user.permissions.can_view_product_feedback) && !Number(user.permissions.can_manage_product_feedback)) return [];
-    if (user.store_id) rows = rows.filter(r => Number(r.store_id) === Number(user.store_id));
+    if (user.store_id) rows = rows.filter(r => userHasStore(user, r.store_id));
   }
   return rows.map(r => {
     const store = getStore(r.store_id);
@@ -561,13 +586,13 @@ function canViewProductTrainingScope(user, storeId) {
   if (!ok) return false;
   if (!storeId) return true;
   if (!user.store_id) return true;
-  return Number(user.store_id) === Number(storeId);
+  return userHasStore(user, storeId);
 }
 function canManageProductTrainingScope(user, storeId) {
   if (user.role === 'admin') return true;
   if (Number(user.permissions.can_manage_product_training) !== 1) return false;
   if (!user.store_id) return true;
-  return !storeId || Number(user.store_id) === Number(storeId);
+  return !storeId || userHasStore(user, storeId);
 }
 function trainingQuestions(row, includeAnswers = false) {
   let questions = [];
@@ -632,7 +657,7 @@ function productTrainingRowsForUser(user, storeId = null) {
   if (storeId) rows = rows.filter(r => !r.store_id || Number(r.store_id) === Number(storeId));
   if (user.role !== 'admin') {
     if (!Number(user.permissions.can_view_product_training) && !Number(user.permissions.can_manage_product_training)) return [];
-    if (user.store_id) rows = rows.filter(r => !r.store_id || Number(r.store_id) === Number(user.store_id));
+    if (getUserStoreIds(user).length) rows = rows.filter(r => !r.store_id || userHasStore(user, r.store_id));
   }
   return rows.map(r => {
     const store = r.store_id ? getStore(r.store_id) : null;
@@ -667,13 +692,13 @@ function scheduleWeekDates(weekStart) {
 }
 function canViewSchedule(user, storeId) {
   if (user.role === 'admin') return true;
-  if (Number(user.store_id) !== Number(storeId)) return false;
+  if (!userHasStore(user, storeId)) return false;
   return Number(user.permissions.can_view_schedule) === 1 || Number(user.permissions.can_manage_schedule) === 1;
 }
 function canManageSchedule(user, storeId) {
   if (user.role === 'admin') return true;
   if (Number(user.permissions.can_manage_schedule) !== 1) return false;
-  return Number(user.store_id) === Number(storeId);
+  return userHasStore(user, storeId);
 }
 function scheduleRowsForUser(user, storeId, dates) {
   db.work_schedules = db.work_schedules || [];
@@ -858,7 +883,7 @@ function storeSalesProgressForPeriod(storeId, start, end) {
 
 function canViewStoreSales(user, storeId) {
   if (user.role === 'admin') return true;
-  if (Number(user.store_id) !== Number(storeId)) return false;
+  if (!userHasStore(user, storeId)) return false;
   return Number(user.permissions.can_view_store_sales_summary) === 1 || Number(user.permissions.can_manage_sales) === 1 || Number(user.permissions.can_view_sales_target) === 1;
 }
 
@@ -913,6 +938,36 @@ function loadChecklists() {
 }
 function dateVal(v) { return dateOnly(v || new Date()); }
 
+function addDaysIso(dateStr, days) {
+  const d = new Date(`${dateStr}T00:00:00`);
+  d.setDate(d.getDate() + Number(days || 0));
+  return d.toISOString().slice(0, 10);
+}
+function dateRangeEvery(start, end, every = 1) {
+  const out = [];
+  const step = Math.max(1, Number(every || 1));
+  let cur = dateOnly(start);
+  const last = dateOnly(end || start);
+  let guard = 0;
+  while (cur <= last && guard < 370) {
+    out.push(cur);
+    cur = addDaysIso(cur, step);
+    guard += 1;
+  }
+  return out;
+}
+function shiftLabelByIds(ids) {
+  const set = new Set((ids || []).map(Number));
+  return activeShifts().filter(sh => set.has(Number(sh.id))).map(sh => sh.code || sh.name).join(', ');
+}
+function scheduledUsersByShift(storeId, workDate, shiftIds = []) {
+  const set = new Set((shiftIds || []).map(Number).filter(Boolean));
+  if (!set.size) return [];
+  return (db.work_schedules || [])
+    .filter(x => x.status !== 'deleted' && Number(x.store_id) === Number(storeId) && String(x.work_date) === String(workDate) && set.has(Number(x.shift_id)))
+    .map(x => Number(x.user_id));
+}
+
 function taskRowsForUser(user) {
   let rows = db.task_assignees.map(ta => {
     const t = db.tasks.find(x => Number(x.id) === Number(ta.task_id));
@@ -934,7 +989,7 @@ function taskRowsForUser(user) {
     };
   }).filter(Boolean);
   if (user.role === 'employee') rows = rows.filter(r => Number(r.assignee_id) === Number(user.id));
-  else if (user.role === 'manager') rows = rows.filter(r => Number(r.store_id) === Number(user.store_id));
+  else if (user.role === 'manager') rows = rows.filter(r => userHasStore(user, r.store_id));
   return rows.map(r => ({ ...r, status: taskStatus(r) })).sort((a, b) => new Date(a.due_at) - new Date(b.due_at) || new Date(b.created_at) - new Date(a.created_at));
 }
 
@@ -946,7 +1001,7 @@ function violationRowsForUser(user) {
     return { ...v, employee_name: emp ? emp.full_name : '', store_name: s ? s.name : '', created_by_name: c ? c.full_name : '' };
   });
   if (user.role === 'employee') rows = rows.filter(v => Number(v.user_id) === Number(user.id));
-  else if (user.role === 'manager') rows = rows.filter(v => Number(v.store_id) === Number(user.store_id));
+  else if (user.role === 'manager') rows = rows.filter(v => userHasStore(user, v.store_id));
   return rows.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 }
 
@@ -958,7 +1013,7 @@ function bonusRowsForUser(user) {
     return { ...b, employee_name: emp ? emp.full_name : '', store_name: store ? store.name : '', created_by_name: creator ? creator.full_name : '' };
   });
   const canViewAll = user.role === 'admin' || Number(user.permissions.can_view_bonuses) === 1;
-  if (!canViewAll && user.role === 'manager') rows = rows.filter(b => Number(b.store_id) === Number(user.store_id));
+  if (!canViewAll && user.role === 'manager') rows = rows.filter(b => userHasStore(user, b.store_id));
   if (!canViewAll && user.role === 'employee') rows = rows.filter(b => Number(b.user_id) === Number(user.id));
   return rows.sort((a, b) => new Date(b.bonus_date) - new Date(a.bonus_date) || new Date(b.created_at) - new Date(a.created_at));
 }
@@ -1007,9 +1062,9 @@ function assessmentRowsForUser(user, templateId) {
     return { ...a, store_name: s ? s.name : '', employee_name: emp ? emp.full_name : '', created_by_name: c ? c.full_name : '' };
   });
   if (user.role === 'employee') {
-    rows = rows.filter(a => (a.target_type === 'employee' && Number(a.employee_id) === Number(user.id)) || (a.target_type === 'store' && Number(a.store_id) === Number(user.store_id)));
+    rows = rows.filter(a => (a.target_type === 'employee' && Number(a.employee_id) === Number(user.id)) || (a.target_type === 'store' && userHasStore(user, a.store_id)));
   } else if (user.role === 'manager') {
-    rows = rows.filter(a => Number(a.store_id) === Number(user.store_id));
+    rows = rows.filter(a => userHasStore(user, a.store_id));
   }
   if (templateId) rows = rows.filter(a => a.template_id === templateId);
   return rows.sort((a, b) => new Date(b.assessed_at) - new Date(a.assessed_at)).slice(0, 300);
@@ -1020,7 +1075,7 @@ function leaderboardRows(user, period, refDate) {
   // Bảng doanh thu chỉ hiển thị nhân viên bán hàng, không đưa quản lý vào bảng này.
   let people = db.users.filter(u => u.status === 'active' && u.role === 'employee');
   const canViewAll = user.role === 'admin' || Number(user.permissions.can_view_sales_target) === 1;
-  if (!canViewAll && user.role === 'manager') people = people.filter(u => Number(u.store_id) === Number(user.store_id));
+  if (!canViewAll && user.role === 'manager') people = people.filter(u => userHasStore(user, u.store_id));
   if (!canViewAll && user.role === 'employee') people = people.filter(u => Number(u.id) === Number(user.id));
   const rows = people.map(u => {
     const progress = salesProgressForUserPeriod(u.id, start, end);
@@ -1036,7 +1091,7 @@ function leaderboardRows(user, period, refDate) {
 function computePerformance(scopeUser) {
   const now = new Date();
   let users = db.users.filter(u => u.status === 'active' && ['employee', 'manager'].includes(u.role));
-  if (scopeUser.role === 'manager') users = users.filter(u => Number(u.store_id) === Number(scopeUser.store_id));
+  if (scopeUser.role === 'manager') users = users.filter(u => userHasStore(scopeUser, u.store_id));
   if (scopeUser.role === 'employee') users = users.filter(u => Number(u.id) === Number(scopeUser.id));
   const { start, end } = periodRange('month', now);
   return users.map(u => {
@@ -1091,8 +1146,8 @@ function computePerformance(scopeUser) {
 
 function storeSummaryRows(user) {
   let stores = db.stores.filter(s => s.status === 'active');
-  if (user.role === 'manager') stores = stores.filter(s => Number(s.id) === Number(user.store_id));
-  if (user.role === 'employee') stores = stores.filter(s => Number(s.id) === Number(user.store_id));
+  if (user.role === 'manager') stores = stores.filter(s => userHasStore(user, s.id));
+  if (user.role === 'employee') stores = stores.filter(s => userHasStore(user, s.id));
   return stores.map(s => {
     const ops = db.assessments.filter(a => Number(a.store_id) === Number(s.id) && a.template_id === 'OPS');
     const vm = db.assessments.filter(a => Number(a.store_id) === Number(s.id) && a.template_id === 'VM');
@@ -1132,8 +1187,8 @@ app.patch('/api/me/password', requireAuth, (req, res) => {
 app.get('/api/bootstrap', requireAuth, (req, res) => {
   const stores = db.stores.filter(s => s.status === 'active').sort((a, b) => a.id - b.id).map(clone);
   let users = db.users.filter(u => u.status === 'active');
-  if (req.user.role === 'manager') users = users.filter(u => Number(u.store_id) === Number(req.user.store_id));
-  users = users.sort((a, b) => Number(a.store_id || 0) - Number(b.store_id || 0) || a.role.localeCompare(b.role) || a.full_name.localeCompare(b.full_name, 'vi')).map(publicUser);
+  if (req.user.role === 'manager') users = users.filter(u => userHasStore(req.user, u.store_id));
+  users = users.sort((a, b) => Number(getPrimaryStoreId(a) || 0) - Number(getPrimaryStoreId(b) || 0) || a.role.localeCompare(b.role) || a.full_name.localeCompare(b.full_name, 'vi')).map(publicUser);
   res.json({ stores, users, currentUser: req.user });
 });
 
@@ -1141,17 +1196,18 @@ app.get('/api/users', requireAuth, requirePerm('can_manage_users'), (req, res) =
   const users = db.users
     .filter(u => u.status === 'active')
     .slice()
-    .sort((a, b) => Number(a.store_id || 0) - Number(b.store_id || 0) || a.role.localeCompare(b.role) || a.full_name.localeCompare(b.full_name, 'vi'))
+    .sort((a, b) => Number(getPrimaryStoreId(a) || 0) - Number(getPrimaryStoreId(b) || 0) || a.role.localeCompare(b.role) || a.full_name.localeCompare(b.full_name, 'vi'))
     .map(publicUser);
   res.json({ users });
 });
 
 app.post('/api/users', requireAuth, requirePerm('can_manage_users'), (req, res) => {
-  const { full_name, username, password, role, store_id, permissions } = req.body || {};
+  const { full_name, username, password, role, store_id, store_ids, permissions } = req.body || {};
   if (!full_name || !username || !password || !['admin', 'manager', 'employee'].includes(role)) return res.status(400).json({ error: 'Thiếu thông tin tài khoản' });
   if (db.users.some(u => String(u.username).toLowerCase() === String(username).trim().toLowerCase())) return res.status(400).json({ error: 'Tên đăng nhập đã tồn tại' });
   const id = nextId('users');
-  db.users.push({ id, full_name: String(full_name).trim(), username: String(username).trim(), password_hash: bcrypt.hashSync(String(password), 10), role, store_id: store_id ? Number(store_id) : null, status: 'active', created_at: nowIso() });
+  const normalizedStoreIds = normalizeStoreIds(Array.isArray(store_ids) ? store_ids : (store_id ? [store_id] : []));
+  db.users.push({ id, full_name: String(full_name).trim(), username: String(username).trim(), password_hash: bcrypt.hashSync(String(password), 10), role, store_id: normalizedStoreIds[0] || null, store_ids: normalizedStoreIds, status: 'active', created_at: nowIso() });
   setPermissions(id, role, permissions || {});
   saveDb();
   res.json({ ok: true, id });
@@ -1161,10 +1217,12 @@ app.patch('/api/users/:id', requireAuth, requirePerm('can_manage_users'), (req, 
   const id = Number(req.params.id);
   const existing = getUser(id);
   if (!existing) return res.status(404).json({ error: 'Không tìm thấy tài khoản' });
-  const { full_name, role, store_id, status, password, permissions } = req.body || {};
+  const { full_name, role, store_id, store_ids, status, password, permissions } = req.body || {};
   if (full_name) existing.full_name = full_name;
   if (role && ['admin', 'manager', 'employee'].includes(role)) existing.role = role;
-  existing.store_id = store_id === undefined ? existing.store_id : (store_id ? Number(store_id) : null);
+  const nextStoreIds = store_ids === undefined ? getUserStoreIds(existing) : normalizeStoreIds(Array.isArray(store_ids) ? store_ids : (store_id ? [store_id] : []));
+  existing.store_ids = nextStoreIds;
+  existing.store_id = nextStoreIds[0] || null;
   if (status) existing.status = status;
   if (password) existing.password_hash = bcrypt.hashSync(String(password), 10);
   setPermissions(id, existing.role, permissions || getPermissions(id, existing.role));
@@ -1192,20 +1250,59 @@ app.delete('/api/users/:id', requireAuth, requirePerm('can_manage_users'), (req,
 app.get('/api/tasks', requireAuth, (req, res) => res.json({ tasks: taskRowsForUser(req.user) }));
 
 app.post('/api/tasks', requireAuth, requirePerm('can_assign_tasks'), (req, res) => {
-  const { title, description, due_at, priority, store_id, assignee_ids, score_value } = req.body || {};
-  if (!title || !due_at || !Array.isArray(assignee_ids) || assignee_ids.length === 0) return res.status(400).json({ error: 'Thiếu tiêu đề, hạn hoàn thành hoặc nhân viên nhận việc' });
-  const storeId = req.user.role === 'admin' ? Number(store_id || req.user.store_id) : Number(req.user.store_id);
+  const { title, description, due_at, priority, store_id, assignee_ids, score_value, start_date, end_date, due_time, repeat_every_days, shift_ids } = req.body || {};
+  const manualAssignees = Array.isArray(assignee_ids) ? assignee_ids.map(Number).filter(Boolean) : [];
+  const selectedShiftIds = Array.isArray(shift_ids) ? shift_ids.map(Number).filter(Boolean) : [];
+  const useMultiDate = !!(start_date && end_date);
+  if (!title) return res.status(400).json({ error: 'Thiếu tiêu đề công việc' });
+  if (!useMultiDate && !due_at) return res.status(400).json({ error: 'Vui lòng nhập hạn hoàn thành hoặc chọn khoảng ngày giao việc' });
+  if (!manualAssignees.length && !selectedShiftIds.length) return res.status(400).json({ error: 'Vui lòng chọn nhân viên hoặc chọn ca giao việc' });
+  const storeId = req.user.role === 'admin' ? Number(store_id || getPrimaryStoreId(req.user)) : Number(getPrimaryStoreId(req.user));
   if (!storeId || !canAccessStore(req, storeId)) return res.status(403).json({ error: 'Không có quyền giao việc cửa hàng này' });
-  const validUsers = assignee_ids.map(Number).filter(uid => {
-    const u = getActiveUser(uid);
-    return u && Number(u.store_id) === Number(storeId);
+  const dates = useMultiDate ? dateRangeEvery(start_date, end_date, repeat_every_days || 1) : [dateOnly(due_at)];
+  if (!dates.length) return res.status(400).json({ error: 'Khoảng ngày giao việc không hợp lệ' });
+  const shiftText = shiftLabelByIds(selectedShiftIds);
+  let createdTasks = 0;
+  let createdAssignments = 0;
+  const batchId = `TASK-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+  dates.forEach(workDate => {
+    const ids = new Set(manualAssignees);
+    scheduledUsersByShift(storeId, workDate, selectedShiftIds).forEach(uid => ids.add(uid));
+    const validUsers = Array.from(ids).filter(uid => {
+      const u = getActiveUser(uid);
+      return u && u.role !== 'admin' && userHasStore(u, storeId);
+    });
+    if (!validUsers.length) return;
+    const taskId = nextId('tasks');
+    const dueAt = useMultiDate ? `${workDate}T${due_time || '22:00'}` : due_at;
+    const extraDesc = [];
+    if (useMultiDate) extraDesc.push(`Giao cố định/nhiều ngày: ${dateOnly(start_date)} đến ${dateOnly(end_date)}, lặp mỗi ${Math.max(1, Number(repeat_every_days || 1))} ngày.`);
+    if (shiftText) extraDesc.push(`Áp dụng ca: ${shiftText}.`);
+    db.tasks.push({
+      id: taskId,
+      title,
+      description: [description || '', extraDesc.join(' ')].filter(Boolean).join('\n'),
+      priority: priority || 'medium',
+      due_at: dueAt,
+      task_date: workDate,
+      shift_ids: selectedShiftIds,
+      shift_label: shiftText,
+      recurrence_batch: useMultiDate ? batchId : null,
+      recurrence_label: useMultiDate ? `Lặp mỗi ${Math.max(1, Number(repeat_every_days || 1))} ngày` : '',
+      store_id: storeId,
+      score_value: Number(score_value || 10),
+      created_by: req.user.id,
+      created_at: nowIso()
+    });
+    [...new Set(validUsers)].forEach(uid => {
+      db.task_assignees.push({ id: nextId('task_assignees'), task_id: taskId, user_id: uid, completed_at: null, evidence_path: null, evidence_note: '', points_delta: 0 });
+      createdAssignments += 1;
+    });
+    createdTasks += 1;
   });
-  if (!validUsers.length) return res.status(400).json({ error: 'Không có nhân viên hợp lệ để giao việc' });
-  const taskId = nextId('tasks');
-  db.tasks.push({ id: taskId, title, description: description || '', priority: priority || 'medium', due_at, store_id: storeId, score_value: Number(score_value || 10), created_by: req.user.id, created_at: nowIso() });
-  [...new Set(validUsers)].forEach(uid => db.task_assignees.push({ id: nextId('task_assignees'), task_id: taskId, user_id: uid, completed_at: null, evidence_path: null, evidence_note: '', points_delta: 0 }));
+  if (!createdAssignments) return res.status(400).json({ error: 'Không có nhân viên hợp lệ trong ngày/ca đã chọn. Hãy kiểm tra lịch làm việc hoặc chọn nhân viên thủ công.' });
   saveDb();
-  res.json({ ok: true, id: taskId });
+  res.json({ ok: true, created_tasks: createdTasks, created_assignments: createdAssignments });
 });
 
 app.post('/api/tasks/:assignmentId/complete', requireAuth, upload.array('evidence', 10), (req, res) => {
@@ -1233,7 +1330,7 @@ app.post('/api/violations', requireAuth, requirePerm('can_manage_violations'), u
   const { user_id, violation_type, description, points_deducted } = req.body || {};
   const target = getActiveUser(Number(user_id));
   if (!target) return res.status(400).json({ error: 'Nhân viên không hợp lệ' });
-  if (req.user.role !== 'admin' && Number(target.store_id) !== Number(req.user.store_id)) return res.status(403).json({ error: 'Không có quyền ghi nhận vi phạm nhân viên này' });
+  if (req.user.role !== 'admin' && !userHasStore(req.user, target.store_id)) return res.status(403).json({ error: 'Không có quyền ghi nhận vi phạm nhân viên này' });
   const id = nextId('violations');
   db.violations.push({ id, user_id: target.id, store_id: target.store_id, violation_type: violation_type || 'Vi phạm vận hành', description: description || '', points_deducted: Math.abs(Number(points_deducted || 0)), evidence_path: saveUploadedFiles(req.files), created_by: req.user.id, created_at: nowIso() });
   saveDb();
@@ -1251,7 +1348,7 @@ app.post('/api/checklist/assessments', requireAuth, requirePerm('can_grade_check
   if (template.target_type === 'employee') {
     const emp = getActiveUser(empId);
     if (!emp || !emp.store_id) return res.status(400).json({ error: 'Đại sứ kinh doanh không hợp lệ' });
-    if (req.user.role !== 'admin' && Number(emp.store_id) !== Number(req.user.store_id)) return res.status(403).json({ error: 'Không có quyền chấm nhân viên này' });
+    if (req.user.role !== 'admin' && !userHasStore(req.user, emp.store_id)) return res.status(403).json({ error: 'Không có quyền chấm nhân viên này' });
     storeId = Number(emp.store_id);
   } else {
     empId = null;
@@ -1298,7 +1395,7 @@ app.post('/api/sales', requireAuth, requirePerm('can_manage_sales'), (req, res) 
   const { user_id, sale_date, revenue, bill_count, item_count, customer_count, note } = req.body || {};
   const employee = getActiveUser(Number(user_id));
   if (!employee || employee.role !== 'employee') return res.status(400).json({ error: 'Chỉ nhập doanh thu cho nhân viên bán hàng' });
-  if (req.user.role !== 'admin' && Number(employee.store_id) !== Number(req.user.store_id)) return res.status(403).json({ error: 'Không có quyền nhập doanh thu nhân viên này' });
+  if (req.user.role !== 'admin' && !userHasStore(req.user, employee.store_id)) return res.status(403).json({ error: 'Không có quyền nhập doanh thu nhân viên này' });
   const row = upsertSalesRow(employee, sale_date, { revenue, bill_count, item_count, note }, req.user.id);
   if (customer_count !== undefined && customer_count !== null && customer_count !== '') upsertStoreSalesDay(employee.store_id, sale_date, customer_count, '', req.user.id);
   saveDb();
@@ -1343,7 +1440,7 @@ function buildWeeklyReport(user, rawWeekStart, rawStoreId) {
   const week_start = weekStartOf(rawWeekStart || new Date());
   const week_end = addDaysUtc(week_start, 6);
   const endExclusive = addDaysUtc(week_start, 7);
-  const storeId = user.role === 'admin' ? Number(rawStoreId || user.store_id || db.stores[0]?.id) : Number(user.store_id);
+  const storeId = user.role === 'admin' ? Number(rawStoreId || getPrimaryStoreId(user) || db.stores[0]?.id) : Number(getPrimaryStoreId(user));
   const store = getStore(storeId);
   if (!store) throw new Error('Cửa hàng không hợp lệ');
   if (!canViewStoreSales(user, storeId) && user.role !== 'admin' && Number(user.permissions.can_view_reports) !== 1) throw new Error('Không có quyền xem báo cáo tuần');
@@ -1411,10 +1508,10 @@ function buildWeeklyReport(user, rawWeekStart, rawStoreId) {
 
 app.post('/api/sales/daily', requireAuth, requirePerm('can_manage_sales'), (req, res) => {
   const { store_id, sale_date, customer_count, note, entries } = req.body || {};
-  const storeId = req.user.role === 'admin' ? Number(store_id || req.user.store_id) : Number(req.user.store_id);
+  const storeId = req.user.role === 'admin' ? Number(store_id || getPrimaryStoreId(req.user)) : Number(getPrimaryStoreId(req.user));
   const store = getStore(storeId);
   if (!store) return res.status(400).json({ error: 'Cửa hàng không hợp lệ' });
-  if (req.user.role !== 'admin' && Number(storeId) !== Number(req.user.store_id)) return res.status(403).json({ error: 'Không có quyền nhập doanh thu cửa hàng này' });
+  if (req.user.role !== 'admin' && !userHasStore(req.user, storeId)) return res.status(403).json({ error: 'Không có quyền nhập doanh thu cửa hàng này' });
   if (!Array.isArray(entries) || !entries.length) return res.status(400).json({ error: 'Chưa có dòng nhân viên để nhập doanh thu' });
   const saved = [];
   entries.forEach(entry => {
@@ -1432,7 +1529,7 @@ app.post('/api/sales/targets', requireAuth, requirePerm('can_set_sales_targets')
   const employee = getActiveUser(Number(user_id));
   if (!employee || employee.role !== 'employee') return res.status(400).json({ error: 'Chỉ nhập target cá nhân cho nhân viên bán hàng' });
   if (!/^\d{4}-\d{2}$/.test(String(target_month || ''))) return res.status(400).json({ error: 'Tháng target không hợp lệ' });
-  if (req.user.role !== 'admin' && Number(employee.store_id) !== Number(req.user.store_id)) return res.status(403).json({ error: 'Không có quyền nhập target nhân viên này' });
+  if (req.user.role !== 'admin' && !userHasStore(req.user, employee.store_id)) return res.status(403).json({ error: 'Không có quyền nhập target nhân viên này' });
   db.sales_targets = db.sales_targets || [];
   const revenueTarget = Number(target_revenue ?? target ?? 0);
   let row = db.sales_targets.find(t => Number(t.user_id) === Number(employee.id) && String(t.target_month) === String(target_month));
@@ -1456,10 +1553,10 @@ app.post('/api/sales/targets', requireAuth, requirePerm('can_set_sales_targets')
 
 app.post('/api/sales/daily-targets', requireAuth, requirePerm('can_set_sales_targets'), (req, res) => {
   const { store_id, target_date, target_revenue, target_upt, target_atv, target_cr, note } = req.body || {};
-  const storeId = req.user.role === 'admin' ? Number(store_id || req.user.store_id) : Number(req.user.store_id);
+  const storeId = req.user.role === 'admin' ? Number(store_id || getPrimaryStoreId(req.user)) : Number(getPrimaryStoreId(req.user));
   const store = getStore(storeId);
   if (!store) return res.status(400).json({ error: 'Cửa hàng không hợp lệ' });
-  if (req.user.role !== 'admin' && Number(storeId) !== Number(req.user.store_id)) return res.status(403).json({ error: 'Không có quyền set target cửa hàng này' });
+  if (req.user.role !== 'admin' && !userHasStore(req.user, storeId)) return res.status(403).json({ error: 'Không có quyền set target cửa hàng này' });
   if (!target_date || Number.isNaN(new Date(target_date).getTime())) return res.status(400).json({ error: 'Ngày target không hợp lệ' });
   const d = dateOnly(target_date);
   db.sales_daily_targets = db.sales_daily_targets || [];
@@ -1487,7 +1584,7 @@ app.get('/api/sales/leaderboard', requireAuth, (req, res) => {
 
 app.get('/api/sales/store-summary', requireAuth, (req, res) => {
   const month = /^\d{4}-\d{2}$/.test(String(req.query.month || '')) ? String(req.query.month) : dateOnly(new Date()).slice(0, 7);
-  const storeId = req.user.role === 'admin' ? Number(req.query.store_id || req.user.store_id || db.stores[0]?.id) : Number(req.user.store_id);
+  const storeId = req.user.role === 'admin' ? Number(req.query.store_id || getPrimaryStoreId(req.user) || db.stores[0]?.id) : Number(getPrimaryStoreId(req.user));
   const store = getStore(storeId);
   if (!store) return res.status(400).json({ error: 'Cửa hàng không hợp lệ' });
   if (!canViewStoreSales(req.user, storeId)) return res.status(403).json({ error: 'Không có quyền xem tổng doanh thu cửa hàng' });
@@ -1577,10 +1674,10 @@ app.get('/api/weekly-report', requireAuth, (req, res) => {
 
 app.post('/api/weekly-report', requireAuth, (req, res) => {
   const { store_id, week_start, feedback, issues, action_plan, note } = req.body || {};
-  const storeId = req.user.role === 'admin' ? Number(store_id || req.user.store_id) : Number(req.user.store_id);
+  const storeId = req.user.role === 'admin' ? Number(store_id || getPrimaryStoreId(req.user)) : Number(getPrimaryStoreId(req.user));
   const store = getStore(storeId);
   if (!store) return res.status(400).json({ error: 'Cửa hàng không hợp lệ' });
-  if (req.user.role === 'employee' || (req.user.role !== 'admin' && Number(req.user.store_id) !== Number(storeId))) return res.status(403).json({ error: 'Không có quyền lưu báo cáo tuần' });
+  if (req.user.role === 'employee' || (req.user.role !== 'admin' && !userHasStore(req.user, storeId))) return res.status(403).json({ error: 'Không có quyền lưu báo cáo tuần' });
   const ws = weekStartOf(week_start || new Date());
   db.weekly_reports = db.weekly_reports || [];
   let row = weeklyReportRow(storeId, ws);
@@ -1657,7 +1754,7 @@ app.delete('/api/shifts/:id', requireAuth, requirePerm('can_manage_shifts'), (re
 });
 
 app.get('/api/schedules', requireAuth, (req, res) => {
-  const storeId = req.user.role === 'admin' ? Number(req.query.store_id || req.user.store_id || db.stores[0]?.id) : Number(req.user.store_id);
+  const storeId = req.user.role === 'admin' ? Number(req.query.store_id || getPrimaryStoreId(req.user) || db.stores[0]?.id) : Number(getPrimaryStoreId(req.user));
   const store = getStore(storeId);
   if (!store) return res.status(400).json({ error: 'Cửa hàng không hợp lệ' });
   if (!canViewSchedule(req.user, storeId)) return res.status(403).json({ error: 'Không có quyền xem lịch làm việc' });
@@ -1671,7 +1768,7 @@ app.get('/api/schedules', requireAuth, (req, res) => {
 
 app.post('/api/schedules/bulk', requireAuth, requirePerm('can_manage_schedule'), (req, res) => {
   const { store_id, week_start, entries } = req.body || {};
-  const storeId = req.user.role === 'admin' ? Number(store_id || req.user.store_id) : Number(req.user.store_id);
+  const storeId = req.user.role === 'admin' ? Number(store_id || getPrimaryStoreId(req.user)) : Number(getPrimaryStoreId(req.user));
   const store = getStore(storeId);
   if (!store) return res.status(400).json({ error: 'Cửa hàng không hợp lệ' });
   if (!canManageSchedule(req.user, storeId)) return res.status(403).json({ error: 'Không có quyền phân lịch cửa hàng này' });
@@ -1682,7 +1779,7 @@ app.post('/api/schedules/bulk', requireAuth, requirePerm('can_manage_schedule'),
   let count = 0;
   entries.forEach(item => {
     const user = getActiveUser(Number(item.user_id));
-    if (!user || Number(user.store_id) !== Number(storeId) || user.role === 'admin') return;
+    if (!user || !userHasStore(user, storeId) || user.role === 'admin') return;
     const workDate = dateOnly(item.work_date);
     if (!dates.includes(workDate)) return;
     const shiftId = item.shift_id ? Number(item.shift_id) : null;
@@ -1711,14 +1808,14 @@ app.post('/api/schedules/bulk', requireAuth, requirePerm('can_manage_schedule'),
 
 
 app.get('/api/orders', requireAuth, (req, res) => {
-  const storeId = req.user.role === 'admin' ? (req.query.store_id ? Number(req.query.store_id) : null) : (req.user.store_id ? Number(req.user.store_id) : (req.query.store_id ? Number(req.query.store_id) : null));
+  const storeId = req.user.role === 'admin' ? (req.query.store_id ? Number(req.query.store_id) : null) : (getPrimaryStoreId(req.user) ? Number(getPrimaryStoreId(req.user)) : (req.query.store_id ? Number(req.query.store_id) : null));
   if (storeId && !canViewOrderScope(req.user, storeId)) return res.status(403).json({ error: 'Không có quyền xem order cửa hàng này' });
   res.json({ orders: orderRowsForUser(req.user, storeId) });
 });
 
 app.post('/api/orders', requireAuth, requirePerm('can_manage_orders'), (req, res) => {
   const { store_id, order_date, batch_name, items } = req.body || {};
-  const storeId = req.user.role === 'admin' ? Number(store_id || req.user.store_id || 0) : Number(req.user.store_id || store_id || 0);
+  const storeId = req.user.role === 'admin' ? Number(store_id || getPrimaryStoreId(req.user) || 0) : Number(getPrimaryStoreId(req.user) || store_id || 0);
   const store = getStore(storeId);
   if (!store) return res.status(400).json({ error: 'Cửa hàng không hợp lệ' });
   if (!canManageOrderScope(req.user, storeId)) return res.status(403).json({ error: 'Không có quyền tạo order cửa hàng này' });
@@ -1789,7 +1886,7 @@ app.delete('/api/orders/:id', requireAuth, requirePerm('can_manage_orders'), (re
 
 app.get('/api/online-orders', requireAuth, (req, res) => {
   const month = /^\d{4}-\d{2}$/.test(String(req.query.month || '')) ? String(req.query.month).slice(0, 7) : dateOnly(new Date()).slice(0, 7);
-  const storeId = req.user.role === 'admin' ? (req.query.store_id ? Number(req.query.store_id) : null) : Number(req.user.store_id || 0);
+  const storeId = req.user.role === 'admin' ? (req.query.store_id ? Number(req.query.store_id) : null) : Number(getPrimaryStoreId(req.user) || 0);
   if (storeId && !canViewOnlineOrderScope(req.user, storeId)) return res.status(403).json({ error: 'Không có quyền xem đơn online cửa hàng này' });
   const rows = onlineOrderRowsForUser(req.user, storeId, month);
   res.json({ month, orders: rows, summary: onlineOrderSummary(rows) });
@@ -1797,7 +1894,7 @@ app.get('/api/online-orders', requireAuth, (req, res) => {
 
 app.post('/api/online-orders', requireAuth, requirePerm('can_manage_online_orders'), (req, res) => {
   const { store_id, order_date, invoice_no, order_value, packer_id, note } = req.body || {};
-  const storeId = req.user.role === 'admin' ? Number(store_id || req.user.store_id || 0) : Number(req.user.store_id || store_id || 0);
+  const storeId = req.user.role === 'admin' ? Number(store_id || getPrimaryStoreId(req.user) || 0) : Number(getPrimaryStoreId(req.user) || store_id || 0);
   const store = getStore(storeId);
   if (!store) return res.status(400).json({ error: 'Cửa hàng không hợp lệ' });
   if (!canManageOnlineOrderScope(req.user, storeId)) return res.status(403).json({ error: 'Không có quyền nhập đơn online cửa hàng này' });
@@ -1987,7 +2084,7 @@ app.get('/api/product-feedback', requireAuth, (req, res) => {
 
 app.post('/api/product-feedback', requireAuth, requirePerm('can_manage_product_feedback'), (req, res) => {
   const { store_id, feedback_date, collection_id, sku, product_name, style_feedback, material_feedback, product_errors, customer_feedback, restock_wish, note } = req.body || {};
-  const storeId = req.user.role === 'admin' ? Number(store_id || req.user.store_id) : Number(req.user.store_id);
+  const storeId = req.user.role === 'admin' ? Number(store_id || getPrimaryStoreId(req.user)) : Number(getPrimaryStoreId(req.user));
   if (!storeId || !getStore(storeId)) return res.status(400).json({ error: 'Cửa hàng không hợp lệ' });
   if (!canManageProductFeedbackScope(req.user, storeId)) return res.status(403).json({ error: 'Không có quyền nhập đánh giá sản phẩm cửa hàng này' });
   if (!sku && !product_name) return res.status(400).json({ error: 'Cần nhập SKU hoặc tên sản phẩm' });
@@ -2153,7 +2250,7 @@ app.post('/api/bonuses', requireAuth, requirePerm('can_manage_bonuses'), (req, r
   const { user_id, bonus_date, bonus_type, amount, note } = req.body || {};
   const target = getActiveUser(Number(user_id));
   if (!target) return res.status(400).json({ error: 'Nhân viên không hợp lệ' });
-  if (req.user.role !== 'admin' && Number(target.store_id) !== Number(req.user.store_id)) return res.status(403).json({ error: 'Không có quyền nhập thưởng nhân viên này' });
+  if (req.user.role !== 'admin' && !userHasStore(req.user, target.store_id)) return res.status(403).json({ error: 'Không có quyền nhập thưởng nhân viên này' });
   const id = nextId('bonuses');
   db.bonuses.push({ id, user_id: target.id, store_id: target.store_id, bonus_date: bonus_date || dateOnly(new Date()), bonus_type: bonus_type || 'Thưởng khác', amount: Number(amount || 0), note: note || '', created_by: req.user.id, created_at: nowIso() });
   saveDb();
@@ -2177,21 +2274,21 @@ app.get('/api/export/:type.csv', requireAuth, requirePerm('can_export'), (req, r
     rows = assessmentRowsForUser(req.user);
   } else if (type === 'sales') {
     rows = db.sales.map(sa => ({ id: sa.id, sale_date: sa.sale_date, store_id: sa.store_id, employee_name: getUser(sa.user_id)?.full_name || '', store_name: getStore(sa.store_id)?.name || '', revenue: Number(sa.revenue || 0), bill_count: Number(sa.bill_count || 0), item_count: Number(sa.item_count || 0), upt: Number(sa.bill_count || 0) ? Math.round((Number(sa.item_count || 0) / Number(sa.bill_count || 0)) * 100) / 100 : 0, atv: Number(sa.bill_count || 0) ? Math.round(Number(sa.revenue || 0) / Number(sa.bill_count || 0)) : 0, note: sa.note || '', created_at: sa.created_at || '', updated_at: sa.updated_at || '' }));
-    if (req.user.role === 'manager') rows = rows.filter(r => Number(r.store_id) === Number(req.user.store_id));
+    if (req.user.role === 'manager') rows = rows.filter(r => userHasStore(req.user, r.store_id));
     rows = rows.sort((a, b) => new Date(b.sale_date) - new Date(a.sale_date));
   } else if (type === 'sales_targets') {
     rows = (db.sales_targets || []).map(t => ({ id: t.id, target_month: t.target_month, store_id: t.store_id, employee_name: getUser(t.user_id)?.full_name || '', store_name: getStore(t.store_id)?.name || '', target: Number(t.target_revenue ?? t.target ?? 0), target_upt: Number(t.target_upt || 0), target_atv: Number(t.target_atv || 0), target_cr: Number(t.target_cr || 0), note: t.note || '', updated_at: t.updated_at || t.created_at || '' }));
-    if (req.user.role === 'manager') rows = rows.filter(r => Number(r.store_id) === Number(req.user.store_id));
+    if (req.user.role === 'manager') rows = rows.filter(r => userHasStore(req.user, r.store_id));
     rows = rows.sort((a, b) => String(b.target_month).localeCompare(String(a.target_month)));
   } else if (type === 'sales_daily_targets') {
     rows = (db.sales_daily_targets || []).map(t => ({ id: t.id, target_date: t.target_date, store_id: t.store_id, store_name: getStore(t.store_id)?.name || '', target_revenue: Number(t.target_revenue || 0), target_upt: Number(t.target_upt || 0), target_atv: Number(t.target_atv || 0), target_cr: Number(t.target_cr || 0), note: t.note || '', updated_at: t.updated_at || t.created_at || '' }));
-    if (req.user.role === 'manager') rows = rows.filter(r => Number(r.store_id) === Number(req.user.store_id));
+    if (req.user.role === 'manager') rows = rows.filter(r => userHasStore(req.user, r.store_id));
     rows = rows.sort((a, b) => String(b.target_date).localeCompare(String(a.target_date)));
   } else if (type === 'shifts') {
     rows = activeShifts().map(s => ({ id: s.id, code: s.code, name: s.name, start_time: s.start_time, end_time: s.end_time, note: s.note || '', updated_at: s.updated_at || s.created_at || '' }));
   } else if (type === 'work_schedules') {
     rows = (db.work_schedules || []).filter(x => x.status !== 'deleted').map(x => ({ id: x.id, work_date: x.work_date, store_id: x.store_id, store_name: getStore(x.store_id)?.name || '', employee_name: getUser(x.user_id)?.full_name || '', role: getUser(x.user_id)?.role || '', shift_code: (db.shifts || []).find(s => Number(s.id) === Number(x.shift_id))?.code || '', shift_name: (db.shifts || []).find(s => Number(s.id) === Number(x.shift_id))?.name || '', start_time: (db.shifts || []).find(s => Number(s.id) === Number(x.shift_id))?.start_time || '', end_time: (db.shifts || []).find(s => Number(s.id) === Number(x.shift_id))?.end_time || '', note: x.note || '', updated_at: x.updated_at || x.created_at || '' }));
-    if (req.user.role === 'manager') rows = rows.filter(r => Number(r.store_id) === Number(req.user.store_id));
+    if (req.user.role === 'manager') rows = rows.filter(r => userHasStore(req.user, r.store_id));
     if (req.user.role === 'employee') rows = rows.filter(r => r.employee_name === req.user.full_name);
     rows = rows.sort((a, b) => String(b.work_date).localeCompare(String(a.work_date)) || String(a.store_name).localeCompare(String(b.store_name), 'vi'));
   } else if (type === 'orders') {

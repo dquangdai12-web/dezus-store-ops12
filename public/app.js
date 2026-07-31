@@ -25,8 +25,9 @@ const state = {
   weeklyEditMode: false,
   onlineOrderStoreId: '',
   onlineOrderMonth: new Date().toISOString().slice(0, 7),
-  adminEditUserId: null,
   scheduleEditMode: false,
+  navOpenGroup: localStorage.getItem('dezus_ops_nav_group') || 'overview',
+  adminEditUserId: null,
 };
 
 const app = $('#app');
@@ -258,6 +259,20 @@ function storeName(id) {
   return state.boot.stores.find(s => Number(s.id) === Number(id))?.name || '';
 }
 
+function userStoreText(user) {
+  const names = Array.isArray(user?.store_names) && user.store_names.length ? user.store_names : (user?.store_name ? [user.store_name] : []);
+  return names.length ? names.join(' • ') : 'Toàn hệ thống';
+}
+
+function selectedValues(selectEl) {
+  return Array.from(selectEl?.selectedOptions || []).map(opt => Number(opt.value)).filter(Boolean);
+}
+
+function renderStoreMultiOptions(selectedIds = []) {
+  const selected = new Set((selectedIds || []).map(Number));
+  return state.boot.stores.map(s => `<option value="${s.id}" ${selected.has(Number(s.id)) ? 'selected' : ''}>${esc(s.name)}</option>`).join('');
+}
+
 function employees() {
   return state.boot.users.filter(u => u.role !== 'admin');
 }
@@ -276,28 +291,86 @@ function can(p) {
 
 function navItems() {
   const items = [
-    ['dashboard', 'Tổng quan', '◆'],
-    ['account', 'Đổi MK', 'KEY'],
-    ['tasks', 'Công việc', '✓'],
-    ['violations', 'Vi phạm', '!'],
-    ['checklists', 'Checklist', '★'],
-    ['sales', 'Doanh thu', '%'],
+    ['dashboard', 'Tổng quan', '◆', 'overview'],
+    ['sales', 'Doanh thu', '%', 'revenue'],
+    ['weekly_report', 'Báo cáo tuần', 'WK', 'revenue'],
+    ['online_orders', 'Đơn online', 'OL', 'revenue'],
+    ['bonuses', 'Tiền thưởng', '₫', 'revenue'],
+    ['orders', 'Order hàng', 'SKU', 'product'],
+    ['product_feedback', 'Đánh giá SP', 'FB', 'product'],
+    ['product_training', 'Đào tạo SP', 'EDU', 'product'],
+    ['tasks', 'Công việc', '✓', 'work'],
+    ['checklists', 'Checklist', '★', 'work'],
+    ['schedule', 'Lịch làm việc', '↗', 'work'],
+    ['violations', 'Vi phạm', '!', 'work'],
+    ['documents', 'Tài liệu', '☰', 'more'],
+    ['reports', 'Tổng hợp điểm', '100', 'more'],
+    ['account', 'Đổi MK', 'KEY', 'system'],
+    ['admin', 'Admin', '⚙', 'system'],
   ];
-  if (state.user?.role !== 'employee' || can('can_view_reports') || can('can_manage_sales')) items.push(['weekly_report', 'Báo cáo tuần', 'WK']);
-  if (can('can_view_online_orders') || can('can_manage_online_orders')) items.push(['online_orders', 'Đơn online', 'OL']);
-  if (can('can_view_orders') || can('can_manage_orders')) items.push(['orders', 'Order hàng', 'SKU']);
-  if (can('can_view_product_feedback') || can('can_manage_product_feedback')) items.push(['product_feedback', 'Đánh giá SP', 'FB']);
-  if (can('can_view_product_training') || can('can_manage_product_training')) items.push(['product_training', 'Đào tạo SP', 'EDU']);
-  if (can('can_view_schedule') || can('can_manage_schedule') || can('can_manage_shifts')) items.push(['schedule', 'Lịch làm việc', '↗']);
-  if (can('can_view_documents') || can('can_manage_documents')) items.push(['documents', 'Tài liệu', '☰']);
-  if (can('can_manage_bonuses') || can('can_view_bonuses') || state.user?.role !== 'employee') items.push(['bonuses', 'Tiền thưởng', '₫']);
-  if (state.user?.role !== 'employee' || can('can_view_reports')) items.push(['reports', 'Tổng hợp điểm', '100']);
-  if (can('can_manage_users')) items.push(['admin', 'Admin', '⚙']);
-  return items;
+  return items.filter(([id]) => {
+    if (id === 'dashboard' || id === 'account' || id === 'tasks' || id === 'violations' || id === 'checklists' || id === 'sales') return true;
+    if (id === 'weekly_report') return state.user?.role !== 'employee' || can('can_view_reports') || can('can_manage_sales');
+    if (id === 'online_orders') return can('can_view_online_orders') || can('can_manage_online_orders');
+    if (id === 'orders') return can('can_view_orders') || can('can_manage_orders');
+    if (id === 'product_feedback') return can('can_view_product_feedback') || can('can_manage_product_feedback');
+    if (id === 'product_training') return can('can_view_product_training') || can('can_manage_product_training');
+    if (id === 'schedule') return can('can_view_schedule') || can('can_manage_schedule') || can('can_manage_shifts');
+    if (id === 'documents') return can('can_view_documents') || can('can_manage_documents');
+    if (id === 'bonuses') return can('can_manage_bonuses') || can('can_view_bonuses') || state.user?.role !== 'employee';
+    if (id === 'reports') return state.user?.role !== 'employee' || can('can_view_reports');
+    if (id === 'admin') return can('can_manage_users');
+    return false;
+  });
+}
+
+function navGroups() {
+  return [
+    { key:'overview', label:'Tổng quan', icon:'⌂', ids:['dashboard'] },
+    { key:'work', label:'Công việc', icon:'☑', ids:['tasks','checklists','schedule','violations'] },
+    { key:'revenue', label:'Doanh thu', icon:'₫', ids:['sales','weekly_report','online_orders','bonuses'] },
+    { key:'product', label:'▣', icon:'▣', ids:['orders','product_feedback','product_training'], navLabel:'Sản phẩm' },
+    { key:'more', label:'Tài liệu', icon:'☷', ids:['documents','reports'] },
+    { key:'system', label:'Hệ thống', icon:'⚙', ids:['account','admin'] },
+  ].map(g => ({...g, label: g.navLabel || g.label }));
+}
+
+function availableGroupItems(group, items = navItems()) {
+  return group.ids.map(id => items.find(item => item[0] === id)).filter(Boolean);
+}
+
+function firstRouteInGroup(group, items = navItems()) {
+  return availableGroupItems(group, items)[0]?.[0] || 'dashboard';
+}
+
+function activeGroupKey(items = navItems()) {
+  const found = items.find(item => item[0] === state.route);
+  return found?.[3] || 'overview';
 }
 
 function shell(content, title = 'Tổng quan', subtitle = 'Vận hành cửa hàng Dezus') {
-  const nav = navItems().map(([id, label, dot]) => `<button class="nav-btn ${state.route === id ? 'active' : ''}" data-route="${id}"><span>${label}</span><span class="nav-dot">${dot}</span></button>`).join('');
+  const items = navItems();
+  const groups = navGroups();
+  const activeGroup = activeGroupKey(items);
+  if (!groups.find(g => g.key === state.navOpenGroup && availableGroupItems(g, items).length)) state.navOpenGroup = activeGroup;
+  const sideNav = groups.map(group => {
+    const groupItems = availableGroupItems(group, items);
+    if (!groupItems.length) return '';
+    const open = state.navOpenGroup === group.key || activeGroup === group.key;
+    return `<div class="nav-group ${open ? 'open' : ''} group-${group.key}"><button class="nav-group-btn group-${group.key} ${activeGroup === group.key ? 'active' : ''}" data-group="${group.key}"><span class="nav-group-main"><b>${group.icon}</b><strong>${group.label}</strong></span><span class="nav-group-caret">${open ? '−' : '+'}</span></button><div class="nav-sub ${open ? 'show' : ''}">${groupItems.map(([id, label, dot]) => `<button class="nav-btn ${state.route === id ? 'active' : ''}" data-route="${id}"><span>${label}</span><span class="nav-dot">${dot}</span></button>`).join('')}</div></div>`;
+  }).join('');
+  const bottomGroups = ['overview','work','revenue','product','system'].map(key => groups.find(g => g.key === key)).filter(Boolean);
+  const mobileBottom = bottomGroups.map(group => {
+    const count = availableGroupItems(group, items).length;
+    return `<button class="mobile-tab group-${group.key} ${activeGroup === group.key ? 'active' : ''}" data-group="${group.key}"><span class="mobile-tab-icon">${group.icon}</span><span>${group.key === 'system' ? 'Thêm' : group.label}</span>${count > 1 ? `<small>${count}</small>` : ''}</button>`;
+  }).join('');
+  const mobileCats = groups.map(group => {
+    const count = availableGroupItems(group, items).length;
+    if (!count) return '';
+    return `<button class="mobile-cat group-${group.key} ${activeGroup === group.key ? 'active' : ''}" data-group="${group.key}"><b>${group.icon}</b><span>${group.label}</span><small>${count} mục</small></button>`;
+  }).join('');
+  const openGroup = groups.find(g => g.key === state.navOpenGroup) || groups.find(g => g.key === activeGroup) || groups[0];
+  const mobileSubnav = openGroup ? `<div class="mobile-subnav">${availableGroupItems(openGroup, items).map(([id,label]) => `<button class="mobile-subitem ${state.route === id ? 'active' : ''}" data-route="${id}">${label}</button>`).join('')}</div>` : '';
   app.innerHTML = `
     <div class="app-shell">
       <aside class="sidebar">
@@ -305,23 +378,43 @@ function shell(content, title = 'Tổng quan', subtitle = 'Vận hành cửa hà
           <div class="mark">DZ</div>
           <div><h1>Dezus Store Ops</h1><p>Store Operations</p></div>
         </div>
-        <nav class="side-nav">${nav}</nav>
+        <nav class="side-nav">${sideNav}</nav>
         <div class="side-bottom">
-          <div class="user-pill"><b>${esc(state.user.full_name)}</b><span>${roleLabel(state.user.role)}${state.user.store_name ? ' • ' + esc(state.user.store_name) : ''}</span></div>
+          <div class="user-pill"><b>${esc(state.user.full_name)}</b><span>${roleLabel(state.user.role)} • ${esc(userStoreText(state.user))}</span></div>
           <button class="btn secondary" id="logoutBtn">Đăng xuất</button>
         </div>
       </aside>
       <main class="main">
+        <div class="mobile-app-head">
+          <div class="mobile-logo"><div class="mark">DZ</div><div><b>Dezus Ops</b><span>${esc(userStoreText(state.user))}</span></div></div>
+          <button class="mobile-icon-btn" id="logoutBtn2" title="Đăng xuất">↗</button>
+        </div>
         <div class="topbar">
           <div class="page-title"><h2>${esc(title)}</h2><p>${esc(subtitle)}</p></div>
-          <div class="row mobile-top"><button class="btn secondary" id="logoutBtn2">Đăng xuất</button></div>
+          <div class="row mobile-top"><button class="btn secondary" id="logoutBtn3">Đăng xuất</button></div>
         </div>
+        <div class="mobile-cats">${mobileCats}</div>
+        ${mobileSubnav}
         ${content}
       </main>
+      <nav class="mobile-bottom-nav">${mobileBottom}</nav>
     </div>`;
-  $$('.nav-btn').forEach(btn => btn.onclick = () => { state.route = btn.dataset.route; localStorage.setItem('dezus_ops_route', state.route); render(); });
+  $$('[data-route]').forEach(btn => btn.onclick = () => { state.route = btn.dataset.route; localStorage.setItem('dezus_ops_route', state.route); render(); });
+  $$('[data-group]').forEach(btn => btn.onclick = () => {
+    const key = btn.dataset.group;
+    state.navOpenGroup = key;
+    localStorage.setItem('dezus_ops_nav_group', key);
+    const group = groups.find(g => g.key === key);
+    const firstRoute = firstRouteInGroup(group, items);
+    if (firstRoute) {
+      state.route = firstRoute;
+      localStorage.setItem('dezus_ops_route', state.route);
+    }
+    render();
+  });
   $('#logoutBtn')?.addEventListener('click', logout);
   $('#logoutBtn2')?.addEventListener('click', logout);
+  $('#logoutBtn3')?.addEventListener('click', logout);
   $$('[data-export]').forEach(btn => btn.addEventListener('click', () => downloadExport(btn.dataset.export)));
 }
 
@@ -562,22 +655,36 @@ async function renderWeeklyReport() {
 async function renderTasks() {
   const data = await api('/api/tasks');
   const tasks = data.tasks;
-  const storeId = state.user.role === 'admin' ? (state.boot.stores[0]?.id || '') : state.user.store_id;
+  let shiftData = { shifts: [] };
+  if (can('can_assign_tasks')) {
+    try { shiftData = await api('/api/shifts'); } catch (_err) { shiftData = { shifts: [] }; }
+  }
+  const shifts = shiftData.shifts || [];
+  const userStoreIds = Array.isArray(state.user.store_ids) && state.user.store_ids.length ? state.user.store_ids.map(Number) : (state.user.store_id ? [Number(state.user.store_id)] : []);
+  const allowedStores = state.user.role === 'admin' ? state.boot.stores : state.boot.stores.filter(s => userStoreIds.includes(Number(s.id)));
+  const storeId = allowedStores[0]?.id || state.user.store_id || state.boot.stores[0]?.id || '';
+  const storeOptions = allowedStores.map(s => `<option value="${s.id}" ${Number(s.id) === Number(storeId) ? 'selected' : ''}>${esc(s.name)}</option>`).join('');
+  const shiftOptions = shifts.map(sh => `<option value="${sh.id}">${esc(sh.code || sh.name)} • ${esc(sh.start_time || '')}-${esc(sh.end_time || '')}</option>`).join('');
   const assignForm = can('can_assign_tasks') ? `
     <div class="card"><h3>Giao việc mới</h3>
-      <form id="taskForm" class="grid two">
+      <form id="taskForm" class="grid two task-advanced-form">
         <div class="field"><label>Tiêu đề công việc</label><input class="input" name="title" required placeholder="VD: Kiểm tra VM đầu ca"></div>
-        <div class="field"><label>Hạn hoàn thành</label><input class="input" name="due_at" type="datetime-local" required></div>
-        <div class="field"><label>Cửa hàng</label><select name="store_id" id="taskStore" ${state.user.role !== 'admin' ? 'disabled' : ''}>${state.boot.stores.map(s => `<option value="${s.id}" ${Number(s.id) === Number(storeId) ? 'selected' : ''}>${esc(s.name)}</option>`).join('')}</select></div>
+        <div class="field"><label>Cửa hàng</label><select name="store_id" id="taskStore" ${allowedStores.length <= 1 ? 'disabled' : ''}>${storeOptions}</select></div>
+        <div class="field"><label>Hạn hoàn thành 1 lần</label><input class="input" name="due_at" type="datetime-local"><span class="hint">Dùng khi chỉ giao 1 lần. Nếu có khoảng ngày bên dưới thì hệ thống sẽ dùng hạn theo từng ngày.</span></div>
         <div class="field"><label>Mức độ</label><select name="priority"><option value="low">Thấp</option><option value="medium" selected>Trung bình</option><option value="high">Cao</option></select></div>
         <div class="field"><label>Điểm trừ nếu trễ</label><input class="input" name="score_value" type="number" value="10" min="0" max="100"></div>
-        <div class="field"><label>Giao cho nhiều nhân viên</label><select name="assignee_ids" id="assigneeSelect" multiple size="5" required>${usersInStore(storeId).map(u => `<option value="${u.id}">${esc(u.full_name)} - ${esc(u.store_name || '')}</option>`).join('')}</select><span class="hint">Giữ Ctrl để chọn nhiều người.</span></div>
+        <div class="field"><label>Hạn hoàn thành mỗi ngày</label><input class="input" name="due_time" type="time" value="22:00"><span class="hint">Dùng cho giao cố định/nhiều ngày.</span></div>
+        <div class="field"><label>Từ ngày</label><input class="input" name="start_date" type="date"></div>
+        <div class="field"><label>Đến ngày</label><input class="input" name="end_date" type="date"></div>
+        <div class="field"><label>Lặp lại</label><select name="repeat_every_days"><option value="1">Mỗi ngày</option><option value="2">2 ngày/lần</option><option value="3">3 ngày/lần</option><option value="7">Mỗi tuần</option></select></div>
+        <div class="field"><label>Chọn ca để giao việc</label><select name="shift_ids" id="taskShiftSelect" multiple size="4">${shiftOptions}</select><span class="hint">Nếu chọn ca, hệ thống tự lấy nhân viên đã được phân lịch ca đó trong từng ngày.</span></div>
+        <div class="field"><label>Chọn thêm nhân viên thủ công</label><select name="assignee_ids" id="assigneeSelect" multiple size="5">${usersInStore(storeId).map(u => `<option value="${u.id}">${esc(u.full_name)} - ${esc(u.store_name || '')}</option>`).join('')}</select><span class="hint">Có thể chọn nhiều người cùng lúc. Nếu đã chọn ca thì phần này có thể để trống.</span></div>
         <div class="field" style="grid-column:1/-1"><label>Mô tả / yêu cầu</label><textarea name="description" placeholder="Nội dung, tiêu chuẩn hoàn thành, chứng từ cần đính kèm..."></textarea></div>
         <div style="grid-column:1/-1"><button class="btn">Tạo & giao việc</button></div>
       </form>
     </div>` : '';
   const grouped = tasks.map(t => taskCard(t)).join('') || '<div class="empty">Chưa có công việc</div>';
-  shell(`${assignForm}<div class="card" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">Danh sách công việc</h3>${can('can_export') ? '<button class="btn secondary" data-export="tasks">Tải CSV</button>' : ''}</div><div class="grid">${grouped}</div></div>`, 'Công việc', 'Nhân viên chỉ thấy việc của mình; quản lý giao việc cho nhiều người');
+  shell(`${assignForm}<div class="card" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">Danh sách công việc</h3>${can('can_export') ? '<button class="btn secondary" data-export="tasks">Tải CSV</button>' : ''}</div><div class="grid">${grouped}</div></div>`, 'Công việc', 'Giao việc 1 lần, giao nhiều ngày, giao theo ca hoặc nhiều nhân viên cùng lúc');
   $('#taskStore')?.addEventListener('change', e => {
     $('#assigneeSelect').innerHTML = usersInStore(e.target.value).map(u => `<option value="${u.id}">${esc(u.full_name)} - ${esc(u.store_name || '')}</option>`).join('');
   });
@@ -589,7 +696,7 @@ function taskCard(t) {
   const canComplete = (Number(t.assignee_id) === Number(state.user.id) || state.user.role !== 'employee') && !t.completed_at;
   return `<div class="card task-card">
     <div class="task-head">
-      <div><h4>${esc(t.title)}</h4><div class="meta"><span>${esc(t.store_name || '')}</span><span>Giao cho: ${esc(t.assignee_name)}</span><span>Hạn: ${dt(t.due_at)}</span><span>Điểm trừ: ${t.score_value}</span></div></div>
+      <div><h4>${esc(t.title)}</h4><div class="meta"><span>${esc(t.store_name || '')}</span>${t.task_date ? `<span>Ngày việc: ${dOnly(t.task_date)}</span>` : ''}${t.shift_label ? `<span>Ca: ${esc(t.shift_label)}</span>` : ''}${t.recurrence_label ? `<span>${esc(t.recurrence_label)}</span>` : ''}<span>Giao cho: ${esc(t.assignee_name)}</span><span>Hạn: ${dt(t.due_at)}</span><span>Điểm trừ: ${t.score_value}</span></div></div>
       ${statusBadge(t.status)}
     </div>
     ${t.description ? `<p>${esc(t.description)}</p>` : ''}
@@ -602,10 +709,23 @@ async function submitTask(e) {
   e.preventDefault();
   const fd = new FormData(e.target);
   const assignee_ids = $$('#assigneeSelect option:checked').map(o => Number(o.value));
+  const shift_ids = $$('#taskShiftSelect option:checked').map(o => Number(o.value));
   const payload = Object.fromEntries(fd);
   payload.assignee_ids = assignee_ids;
-  if (state.user.role !== 'admin') payload.store_id = state.user.store_id;
-  try { await api('/api/tasks', { method: 'POST', body: JSON.stringify(payload) }); toast('Đã giao việc thành công'); renderTasks(); } catch (err) { toast(err.message, 'danger'); }
+  payload.shift_ids = shift_ids;
+  payload.store_id = $('#taskStore')?.value || state.user.store_id;
+  if (!payload.start_date || !payload.end_date) {
+    delete payload.start_date;
+    delete payload.end_date;
+    delete payload.repeat_every_days;
+    delete payload.due_time;
+  }
+  try {
+    const res = await api('/api/tasks', { method: 'POST', body: JSON.stringify(payload) });
+    const count = Number(res.created_assignments || 0);
+    toast(count ? `Đã giao ${count} đầu việc cho nhân viên` : 'Đã giao việc thành công');
+    renderTasks();
+  } catch (err) { toast(err.message, 'danger'); }
 }
 
 async function submitCompleteTask(e) {
@@ -1332,42 +1452,40 @@ async function renderReports() {
 
 async function renderAdmin() {
   const data = await api('/api/users');
-  const permBoxes = Object.entries(PERM_LABELS).map(([key, label]) => `<label class="perm-item"><input type="checkbox" name="${key}"> <span>${label}</span></label>`).join('');
-  const storeOptions = selected => `<option value="">Không gắn cửa hàng</option>${state.boot.stores.map(s => `<option value="${s.id}" ${Number(selected || 0) === Number(s.id) ? 'selected' : ''}>${esc(s.name)}</option>`).join('')}`;
-  const roleOptions = role => `<option value="employee" ${role === 'employee' ? 'selected' : ''}>Nhân viên</option><option value="manager" ${role === 'manager' ? 'selected' : ''}>Quản lý</option><option value="admin" ${role === 'admin' ? 'selected' : ''}>Admin</option>`;
-  const form = `<div class="card"><h3>Cấp tài khoản / phân quyền</h3><form id="userForm" class="grid three"><div class="field"><label>Họ tên</label><input class="input" name="full_name" required></div><div class="field"><label>Tài khoản</label><input class="input" name="username" required></div><div class="field"><label>Mật khẩu</label><input class="input" name="password" value="123456" required></div><div class="field"><label>Vai trò</label><select name="role">${roleOptions('employee')}</select></div><div class="field"><label>Cửa hàng</label><select name="store_id">${storeOptions('')}</select></div><div class="field" style="grid-column:1/-1"><label>Quyền mở rộng</label><div class="perm-grid">${permBoxes}</div></div><div style="grid-column:1/-1"><button class="btn">Tạo tài khoản</button></div></form></div>`;
-  const editingUser = data.users.find(u => Number(u.id) === Number(state.adminEditUserId));
-  const editCard = editingUser ? `<div class="card edit-user-card" style="margin-top:16px" id="editUserCard"><div class="toolbar"><h3 style="margin-right:auto">Sửa quyền: ${esc(editingUser.full_name)}</h3><button class="btn small secondary cancelEditUserBtn" type="button">Đóng</button></div><form id="editUserForm" class="grid three"><div class="field"><label>Họ tên</label><input class="input" name="full_name" value="${esc(editingUser.full_name)}" required></div><div class="field"><label>Tài khoản</label><input class="input" value="${esc(editingUser.username)}" disabled></div><div class="field"><label>Reset mật khẩu nếu cần</label><input class="input" name="password" placeholder="Để trống nếu không đổi"></div><div class="field"><label>Vai trò</label><select name="role">${roleOptions(editingUser.role)}</select></div><div class="field"><label>Cửa hàng</label><select name="store_id">${storeOptions(editingUser.store_id)}</select></div><div class="field"><label>Trạng thái</label><select name="status"><option value="active" ${editingUser.status !== 'inactive' ? 'selected' : ''}>Đang dùng</option><option value="inactive" ${editingUser.status === 'inactive' ? 'selected' : ''}>Tạm khóa</option></select></div><div class="field" style="grid-column:1/-1"><label>Danh sách quyền</label><div class="perm-grid">${Object.entries(PERM_LABELS).map(([key, label]) => `<label class="perm-item"><input type="checkbox" name="${key}" ${Number(editingUser.permissions?.[key]) === 1 ? 'checked' : ''}> <span>${label}</span></label>`).join('')}</div></div><div class="row" style="grid-column:1/-1"><button class="btn">Lưu quyền</button><button class="btn secondary cancelEditUserBtn" type="button">Hủy</button></div></form></div>` : '';
-  const table = `<div class="table-wrap"><table><thead><tr><th>Họ tên</th><th>Tài khoản</th><th>Vai trò</th><th>Cửa hàng</th><th>Trạng thái</th><th>Quyền</th><th>Thao tác</th></tr></thead><tbody>${data.users.map(u => { const hasView = Number(u.permissions.can_view_sales_target) === 1 && Number(u.permissions.can_view_store_sales_summary) === 1 && Number(u.permissions.can_view_bonuses) === 1; const hasTarget = Number(u.permissions.can_set_sales_targets) === 1; const action = Number(u.id) === Number(state.user.id) ? '<span class="hint">Tài khoản hiện tại</span>' : `<div class="row"><button class="btn small editUserBtn" data-id="${u.id}">Sửa quyền</button><button class="btn small secondary quickPermBtn" data-id="${u.id}" data-mode="${hasView ? 'revoke' : 'grant'}">${hasView ? 'Thu hồi xem %/thưởng' : 'Cấp xem %/thưởng'}</button><button class="btn small secondary quickTargetBtn" data-id="${u.id}" data-mode="${hasTarget ? 'revoke' : 'grant'}">${hasTarget ? 'Thu hồi set target' : 'Cấp set target'}</button><button class="btn small danger deleteUserBtn" data-id="${u.id}" data-name="${esc(u.full_name)}">Xóa</button></div>`; return `<tr><td><b>${esc(u.full_name)}</b></td><td>${esc(u.username)}</td><td>${roleLabel(u.role)}</td><td>${esc(u.store_name || '')}</td><td><span class="badge ok">Đang dùng</span></td><td>${Object.entries(PERM_LABELS).filter(([k]) => Number(u.permissions[k]) === 1).map(([,l]) => `<span class="badge">${esc(l)}</span>`).join(' ') || '<span class="hint">Chưa cấp quyền mở rộng</span>'}</td><td>${action}</td></tr>`; }).join('')}</tbody></table></div>`;
+  const permBoxes = Object.entries(PERM_LABELS).map(([key, label]) => `<label><input type="checkbox" name="${key}"> ${label}</label>`).join(' ');
+  const form = `<div class="card"><h3>Cấp tài khoản / phân quyền</h3><form id="userForm" class="grid three"><div class="field"><label>Họ tên</label><input class="input" name="full_name" required></div><div class="field"><label>Tài khoản</label><input class="input" name="username" required></div><div class="field"><label>Mật khẩu</label><input class="input" name="password" value="123456" required></div><div class="field"><label>Vai trò</label><select name="role"><option value="employee">Nhân viên</option><option value="manager">Quản lý</option><option value="admin">Admin</option></select></div><div class="field"><label>Cửa hàng áp dụng (chọn nhiều)</label><select name="store_ids" multiple size="5">${renderStoreMultiOptions([])}</select><div class="hint">Giữ Ctrl hoặc chọn nhiều trên máy tính. Trên điện thoại có thể chọn lần lượt.</div></div><div class="field"><label>Quyền mở rộng</label><div class="hint perm-check-grid">${permBoxes}</div></div><div style="grid-column:1/-1"><button class="btn">Tạo tài khoản</button></div></form></div>`;
+  const editUser = data.users.find(u => Number(u.id) === Number(state.adminEditUserId));
+  const editBoxes = editUser ? Object.entries(PERM_LABELS).map(([key, label]) => `<label><input type="checkbox" name="${key}" ${Number(editUser.permissions?.[key]) === 1 ? 'checked' : ''}> ${label}</label>`).join(' ') : '';
+  const editCard = editUser ? `<div class="card" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">Sửa quyền / thông tin tài khoản</h3><button class="btn secondary" id="cancelEditUserBtn">Đóng</button></div><form id="editUserForm" class="grid three"><input type="hidden" name="id" value="${editUser.id}"><div class="field"><label>Họ tên</label><input class="input" name="full_name" value="${esc(editUser.full_name)}" required></div><div class="field"><label>Vai trò</label><select name="role"><option value="employee" ${editUser.role === 'employee' ? 'selected' : ''}>Nhân viên</option><option value="manager" ${editUser.role === 'manager' ? 'selected' : ''}>Quản lý</option><option value="admin" ${editUser.role === 'admin' ? 'selected' : ''}>Admin</option></select></div><div class="field"><label>Cửa hàng áp dụng (chọn nhiều)</label><select name="store_ids" multiple size="5">${renderStoreMultiOptions(editUser.store_ids || (editUser.store_id ? [editUser.store_id] : []))}</select><div class="hint">Có thể cấp cùng lúc nhiều cửa hàng, ví dụ Quận 1 và Quận 7.</div></div><div class="field"><label>Reset mật khẩu (không bắt buộc)</label><input class="input" name="password" placeholder="Để trống nếu không đổi"></div><div class="field" style="grid-column:span 2"><label>Quyền chi tiết</label><div class="hint perm-check-grid">${editBoxes}</div></div><div style="grid-column:1/-1" class="row"><button class="btn">Lưu quyền</button><button class="btn secondary" type="button" id="cancelEditUserBtn2">Hủy</button></div></form></div>` : '';
+  const table = `<div class="table-wrap"><table><thead><tr><th>Họ tên</th><th>Tài khoản</th><th>Vai trò</th><th>Cửa hàng áp dụng</th><th>Trạng thái</th><th>Quyền</th><th>Thao tác</th></tr></thead><tbody>${data.users.map(u => { const hasView = Number(u.permissions.can_view_sales_target) === 1 && Number(u.permissions.can_view_store_sales_summary) === 1 && Number(u.permissions.can_view_bonuses) === 1; const hasTarget = Number(u.permissions.can_set_sales_targets) === 1; const action = Number(u.id) === Number(state.user.id) ? '<span class="hint">Tài khoản hiện tại</span>' : `<div class="row wrap"><button class="btn small secondary editUserBtn" data-id="${u.id}">Sửa quyền</button><button class="btn small secondary quickPermBtn" data-id="${u.id}" data-mode="${hasView ? 'revoke' : 'grant'}">${hasView ? 'Thu hồi xem %/thưởng' : 'Cấp xem %/thưởng'}</button><button class="btn small secondary quickTargetBtn" data-id="${u.id}" data-mode="${hasTarget ? 'revoke' : 'grant'}">${hasTarget ? 'Thu hồi set target' : 'Cấp set target'}</button><button class="btn small danger deleteUserBtn" data-id="${u.id}" data-name="${esc(u.full_name)}">Xóa</button></div>`; return `<tr><td><b>${esc(u.full_name)}</b></td><td>${esc(u.username)}</td><td>${roleLabel(u.role)}</td><td>${esc((u.store_names && u.store_names.length ? u.store_names.join(' • ') : (u.store_name || '')))}</td><td><span class="badge ok">Đang dùng</span></td><td>${Object.entries(PERM_LABELS).filter(([k]) => Number(u.permissions[k]) === 1).map(([,l]) => `<span class="badge">${esc(l)}</span>`).join(' ')}</td><td>${action}</td></tr>`; }).join('')}</tbody></table></div>`;
   const exports = `<div class="card" style="margin-top:16px"><h3>Tải dữ liệu</h3><div class="export-grid"><button class="btn secondary" data-export="tasks">Công việc</button><button class="btn secondary" data-export="violations">Vi phạm</button><button class="btn secondary" data-export="assessments">Checklist</button><button class="btn secondary" data-export="sales">Doanh thu cập nhật</button><button class="btn secondary" data-export="sales_targets">Target tháng</button><button class="btn secondary" data-export="sales_daily_targets">Target ngày</button><button class="btn secondary" data-export="bonuses">Tiền thưởng</button><button class="btn secondary" data-export="documents">Tài liệu</button><button class="btn secondary" data-export="orders">Order hàng</button><button class="btn secondary" data-export="online_orders">Đơn online</button><button class="btn secondary" data-export="product_feedback_summary">Tổng hợp đánh giá SP</button><button class="btn secondary" data-export="product_feedback">Chi tiết đánh giá SP</button><button class="btn secondary" data-export="product_collections">List BST/SKU</button><button class="btn secondary" data-export="product_trainings">Đào tạo SP</button><button class="btn secondary" data-export="product_training_attempts">Kết quả kiểm tra SP</button><button class="btn secondary" data-export="shifts">Ca làm</button><button class="btn secondary" data-export="work_schedules">Lịch làm việc</button><button class="btn secondary" data-export="performance">Tổng hợp điểm</button></div></div>`;
-  shell(`${form}<div class="card" style="margin-top:16px"><h3>Danh sách tài khoản</h3>${table}</div>${editCard}${exports}`, 'Admin', 'Cấp quyền, sửa quyền và tải dữ liệu');
-  $('#userForm')?.addEventListener('submit', async e => { e.preventDefault(); const fd = new FormData(e.target); const permissions = {}; Object.keys(PERM_LABELS).forEach(k => permissions[k] = fd.get(k) ? 1 : 0); const payload = { full_name: fd.get('full_name'), username: fd.get('username'), password: fd.get('password'), role: fd.get('role'), store_id: fd.get('store_id') || null, permissions }; try { await api('/api/users', { method: 'POST', body: JSON.stringify(payload) }); toast('Đã tạo tài khoản'); await loadBase(); renderAdmin(); } catch (err) { toast(err.message, 'danger'); } });
+  shell(`${form}${editCard}<div class="card" style="margin-top:16px"><h3>Danh sách tài khoản</h3>${table}</div>${exports}`, 'Admin', 'Cấp quyền, phân quyền xem và tải dữ liệu');
+  $('#userForm')?.addEventListener('submit', async e => { e.preventDefault(); const fd = new FormData(e.target); const permissions = {}; Object.keys(PERM_LABELS).forEach(k => permissions[k] = fd.get(k) ? 1 : 0); const payload = { full_name: fd.get('full_name'), username: fd.get('username'), password: fd.get('password'), role: fd.get('role'), store_ids: selectedValues(e.target.querySelector('[name="store_ids"]')), permissions }; try { await api('/api/users', { method: 'POST', body: JSON.stringify(payload) }); toast('Đã tạo tài khoản'); await loadBase(); renderAdmin(); } catch (err) { toast(err.message, 'danger'); } });
+  $$('.editUserBtn').forEach(btn => btn.addEventListener('click', () => { state.adminEditUserId = Number(btn.dataset.id); renderAdmin(); window.scrollTo({ top: 0, behavior: 'smooth' }); }));
+  $('#cancelEditUserBtn')?.addEventListener('click', () => { state.adminEditUserId = null; renderAdmin(); });
+  $('#cancelEditUserBtn2')?.addEventListener('click', () => { state.adminEditUserId = null; renderAdmin(); });
   $('#editUserForm')?.addEventListener('submit', async e => {
     e.preventDefault();
-    if (!editingUser) return;
     const fd = new FormData(e.target);
     const permissions = {};
     Object.keys(PERM_LABELS).forEach(k => permissions[k] = fd.get(k) ? 1 : 0);
-    const payload = { full_name: fd.get('full_name'), role: fd.get('role'), store_id: fd.get('store_id') || null, status: fd.get('status') || 'active', permissions };
-    const nextPassword = String(fd.get('password') || '').trim();
-    if (nextPassword) payload.password = nextPassword;
+    const payload = { full_name: fd.get('full_name'), role: fd.get('role'), store_ids: selectedValues(e.target.querySelector('[name="store_ids"]')), permissions };
+    if (String(fd.get('password') || '').trim()) payload.password = String(fd.get('password')).trim();
     try {
-      await api(`/api/users/${editingUser.id}`, { method: 'PATCH', body: JSON.stringify(payload) });
-      toast('Đã lưu quyền tài khoản');
+      await api(`/api/users/${fd.get('id')}`, { method: 'PATCH', body: JSON.stringify(payload) });
+      toast('Đã cập nhật tài khoản / quyền');
       state.adminEditUserId = null;
       await loadBase();
       renderAdmin();
     } catch (err) { toast(err.message, 'danger'); }
   });
-  $$('.cancelEditUserBtn').forEach(btn => btn.addEventListener('click', () => { state.adminEditUserId = null; renderAdmin(); }));
-  $$('.editUserBtn').forEach(btn => btn.addEventListener('click', () => { state.adminEditUserId = Number(btn.dataset.id); renderAdmin(); setTimeout(() => $('#editUserCard')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50); }));
   $$('.quickPermBtn').forEach(btn => btn.addEventListener('click', async () => {
     const u = data.users.find(x => Number(x.id) === Number(btn.dataset.id));
     if (!u) return;
     const grant = btn.dataset.mode === 'grant';
     const permissions = { ...u.permissions, can_view_sales_target: grant ? 1 : 0, can_view_store_sales_summary: grant ? 1 : 0, can_view_bonuses: grant ? 1 : 0 };
     try {
-      await api(`/api/users/${u.id}`, { method: 'PATCH', body: JSON.stringify({ role: u.role, store_id: u.store_id || null, permissions }) });
+      await api(`/api/users/${u.id}`, { method: 'PATCH', body: JSON.stringify({ full_name: u.full_name, role: u.role, store_ids: u.store_ids || (u.store_id ? [u.store_id] : []), permissions }) });
       toast(grant ? 'Đã cấp quyền xem % target, tổng cửa hàng và tiền thưởng' : 'Đã thu hồi quyền xem % target, tổng cửa hàng và tiền thưởng');
       await loadBase();
       renderAdmin();
@@ -1379,7 +1497,7 @@ async function renderAdmin() {
     const grant = btn.dataset.mode === 'grant';
     const permissions = { ...u.permissions, can_set_sales_targets: grant ? 1 : 0 };
     try {
-      await api(`/api/users/${u.id}`, { method: 'PATCH', body: JSON.stringify({ role: u.role, store_id: u.store_id || null, permissions }) });
+      await api(`/api/users/${u.id}`, { method: 'PATCH', body: JSON.stringify({ full_name: u.full_name, role: u.role, store_ids: u.store_ids || (u.store_id ? [u.store_id] : []), permissions }) });
       toast(grant ? 'Đã cấp quyền set target' : 'Đã thu hồi quyền set target');
       await loadBase();
       renderAdmin();
@@ -1391,7 +1509,6 @@ async function renderAdmin() {
     try {
       await api(`/api/users/${btn.dataset.id}`, { method: 'DELETE' });
       toast('Đã xóa tài khoản');
-      if (Number(state.adminEditUserId) === Number(btn.dataset.id)) state.adminEditUserId = null;
       await loadBase();
       renderAdmin();
     } catch (err) { toast(err.message, 'danger'); }

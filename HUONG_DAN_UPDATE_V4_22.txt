@@ -1,0 +1,1 @@
+Bản V4.22: giữ chức năng cấp nhiều cửa hàng, trả màu menu về tông cũ và giảm size chữ danh mục nhỏ. Upload đè code lên GitHub rồi deploy lại Render.

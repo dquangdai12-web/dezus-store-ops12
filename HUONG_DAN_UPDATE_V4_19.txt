@@ -1,0 +1,28 @@
+BẢN V4.19 - MOBILE UI GỌN THEO DANH MỤC
+
+Bản này chỉ chỉnh giao diện app.js/style.css/index.html, không thay đổi database hay cấu trúc dữ liệu.
+
+Điểm mới:
+- Giao diện điện thoại cân đối hơn, giống app: header gọn, card bo tròn, màu xanh sáng.
+- Menu điện thoại có thanh dưới: Tổng quan / Doanh thu / Sản phẩm / Công việc / Thêm.
+- Menu máy tính được chia nhóm rõ:
+  + Tổng quan
+  + Doanh thu
+  + Sản phẩm
+  + Công việc
+  + Tài liệu
+  + Hệ thống
+- Bảng trên điện thoại dễ vuốt ngang, form và nút bấm lớn hơn.
+- Dashboard điện thoại gọn hơn, card KPI rõ hơn.
+
+Cách cập nhật:
+1. Giải nén zip.
+2. Upload toàn bộ file/thư mục bên trong lên GitHub repo dezus-store-ops.
+3. Commit changes.
+4. Render -> Manual Deploy -> Deploy latest commit.
+5. Mở web và bấm Ctrl + F5.
+
+Lưu ý:
+- Không xoá Render service.
+- Không xoá Persistent Disk.
+- Không xoá Environment Variables.
