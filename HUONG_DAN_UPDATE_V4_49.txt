@@ -1,0 +1,4 @@
+V4.49 - Mobile icons
+- Tối ưu icon bản điện thoại sát nội dung từng danh mục.
+- Dùng icon dạng SVG nét rõ, đồng bộ với font Inter.
+- Làm nổi bật icon bằng nền màu, viền mềm và bóng nhẹ.

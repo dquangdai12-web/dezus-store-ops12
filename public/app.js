@@ -389,6 +389,31 @@ function navItems() {
   });
 }
 
+
+function appUiIcon(name) {
+  const attrs = 'class="app-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.05" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"';
+  const icons = {
+    home: `<svg ${attrs}><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V21h5v-6h3v6h5V9.5"/></svg>`,
+    tasks: `<svg ${attrs}><rect x="4" y="3.5" width="16" height="17" rx="3"/><path d="M9 3v3h6V3"/><path d="m8.2 12.2 1.8 1.8 4-4"/><path d="M8 17h8"/></svg>`,
+    checklist: `<svg ${attrs}><rect x="4" y="3.5" width="16" height="17" rx="3"/><path d="M8 8h8"/><path d="m8 12 1.2 1.2L11 11.4"/><path d="M13 12h3"/><path d="m8 16 1.2 1.2L11 15.4"/><path d="M13 16h3"/></svg>`,
+    calendar: `<svg ${attrs}><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M8 3.5v3"/><path d="M16 3.5v3"/><path d="M3.5 9h17"/><path d="M8 13h3"/><path d="M13 13h3"/><path d="M8 17h3"/></svg>`,
+    alert: `<svg ${attrs}><path d="M12 3.5 21 19H3L12 3.5Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>`,
+    revenue: `<svg ${attrs}><path d="M4 19V5"/><path d="M4 19h16"/><rect x="7" y="12" width="3" height="5" rx="1"/><rect x="12" y="8" width="3" height="9" rx="1"/><rect x="17" y="5" width="3" height="12" rx="1"/></svg>`,
+    weekly: `<svg ${attrs}><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 9h8"/><path d="M8 13h3"/><path d="M8 17h6"/><path d="M16 13l2 2 3-4"/></svg>`,
+    online: `<svg ${attrs}><path d="M4 5h2l1.4 9.2A2 2 0 0 0 9.4 16H17a2 2 0 0 0 1.9-1.4L20 9H7"/><circle cx="10" cy="20" r="1.3"/><circle cx="17" cy="20" r="1.3"/><path d="M12 5h6"/><path d="M15 2v6"/></svg>`,
+    bonus: `<svg ${attrs}><rect x="4" y="9" width="16" height="11" rx="2"/><path d="M4 13h16"/><path d="M12 9v11"/><path d="M12 9s-3.5-.8-3.5-3A2 2 0 0 1 12 4.8"/><path d="M12 9s3.5-.8 3.5-3A2 2 0 0 0 12 4.8"/></svg>`,
+    product: `<svg ${attrs}><path d="m12 3 8 4.2v9.6L12 21l-8-4.2V7.2L12 3Z"/><path d="m4.5 7.5 7.5 4 7.5-4"/><path d="M12 11.5V21"/></svg>`,
+    feedback: `<svg ${attrs}><path d="M5 5h14v10H8l-3 3V5Z"/><path d="M9 9h6"/><path d="M9 12h4"/><path d="m17.5 17.5 1 2 2.2.3-1.6 1.5.4 2.2-2-1-2 1 .4-2.2-1.6-1.5 2.2-.3 1-2Z" transform="scale(.75) translate(7 4)"/></svg>`,
+    training: `<svg ${attrs}><path d="M4 5.5A3 3 0 0 1 7 3h13v16H7a3 3 0 0 0-3 2V5.5Z"/><path d="M8 7h8"/><path d="M8 11h7"/><path d="M8 15h5"/></svg>`,
+    document: `<svg ${attrs}><path d="M7 3.5h7l4 4V20a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 6 20V5A1.5 1.5 0 0 1 7.5 3.5Z"/><path d="M14 3.5V8h4"/><path d="M9 12h6"/><path d="M9 16h6"/></svg>`,
+    score: `<svg ${attrs}><path d="M4 19h16"/><path d="M6 17V9"/><path d="M12 17V5"/><path d="M18 17v-6"/><path d="M8 5h8"/><path d="M12 3v4"/></svg>`,
+    key: `<svg ${attrs}><circle cx="8" cy="15" r="4"/><path d="M11 12 20 3"/><path d="M16 7l2 2"/><path d="M14 9l2 2"/></svg>`,
+    admin: `<svg ${attrs}><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2 3.4-.2-.1a1.7 1.7 0 0 0-2.1.4l-.1.1a1.7 1.7 0 0 0-.4 1.2H9a1.7 1.7 0 0 0-.4-1.2l-.1-.1a1.7 1.7 0 0 0-2.1-.4l-.2.1-2-3.4.1-.1A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.1-1.5H3.3V10h.2a1.7 1.7 0 0 0 1.1-1.5 1.7 1.7 0 0 0-.3-1.9l-.1-.1 2-3.4.2.1a1.7 1.7 0 0 0 2.1-.4l.1-.1A1.7 1.7 0 0 0 9 1.5h6a1.7 1.7 0 0 0 .4 1.2l.1.1a1.7 1.7 0 0 0 2.1.4l.2-.1 2 3.4-.1.1a1.7 1.7 0 0 0-.3 1.9A1.7 1.7 0 0 0 20.5 10h.2v3.5h-.2A1.7 1.7 0 0 0 19.4 15Z" opacity=".28"/></svg>`,
+    more: `<svg ${attrs}><rect x="4" y="4" width="6" height="6" rx="1.5"/><rect x="14" y="4" width="6" height="6" rx="1.5"/><rect x="4" y="14" width="6" height="6" rx="1.5"/><rect x="14" y="14" width="6" height="6" rx="1.5"/></svg>`,
+  };
+  return icons[name] || icons.more;
+}
+
 function navGroups() {
   return [
     { key:'overview', label:'Tổng quan', icon:'⌂', ids:['dashboard'] },
@@ -402,33 +427,33 @@ function navGroups() {
 
 function mobileNavGroups() {
   return [
-    { key:'overview', label:'Tổng quan', icon:'⌂', ids:['dashboard'] },
-    { key:'work', label:'Công việc', icon:'☑', ids:['tasks','checklists','schedule','violations'] },
-    { key:'revenue', label:'Doanh thu', icon:'▥', ids:['sales','weekly_report','online_orders','bonuses'] },
-    { key:'product', label:'Sản phẩm', icon:'▣', ids:['orders','product_feedback','product_training'] },
-    { key:'more', label:'Thêm', icon:'▦', ids:['documents','reports','account','admin'] },
+    { key:'overview', label:'Tổng quan', icon:appUiIcon('home'), ids:['dashboard'] },
+    { key:'work', label:'Công việc', icon:appUiIcon('tasks'), ids:['tasks','checklists','schedule','violations'] },
+    { key:'revenue', label:'Doanh thu', icon:appUiIcon('revenue'), ids:['sales','weekly_report','online_orders','bonuses'] },
+    { key:'product', label:'Sản phẩm', icon:appUiIcon('product'), ids:['orders','product_feedback','product_training'] },
+    { key:'more', label:'Thêm', icon:appUiIcon('more'), ids:['documents','reports','account','admin'] },
   ];
 }
 
 function mobileIconFor(id) {
   return ({
-    dashboard:'⌂',
-    tasks:'✓',
-    checklists:'★',
-    schedule:'↗',
-    violations:'!',
-    sales:'₫',
-    weekly_report:'▥',
-    online_orders:'OL',
-    bonuses:'₫',
-    orders:'SKU',
-    product_feedback:'FB',
-    product_training:'EDU',
-    documents:'☰',
-    reports:'100',
-    account:'KEY',
-    admin:'⚙',
-  })[id] || '•';
+    dashboard:appUiIcon('home'),
+    tasks:appUiIcon('tasks'),
+    checklists:appUiIcon('checklist'),
+    schedule:appUiIcon('calendar'),
+    violations:appUiIcon('alert'),
+    sales:appUiIcon('revenue'),
+    weekly_report:appUiIcon('weekly'),
+    online_orders:appUiIcon('online'),
+    bonuses:appUiIcon('bonus'),
+    orders:appUiIcon('product'),
+    product_feedback:appUiIcon('feedback'),
+    product_training:appUiIcon('training'),
+    documents:appUiIcon('document'),
+    reports:appUiIcon('score'),
+    account:appUiIcon('key'),
+    admin:appUiIcon('admin'),
+  })[id] || appUiIcon('more');
 }
 
 function availableGroupItems(group, items = navItems()) {
@@ -463,7 +488,7 @@ function shell(content, title = 'Tổng quan', subtitle = 'Vận hành cửa hà
   const openGroup = groups.find(g => g.key === state.navOpenGroup) || groups.find(g => g.key === activeGroup) || groups[0];
   const mobileOpenGroup = mobileGroups.find(g => g.key === state.navOpenGroup && availableGroupItems(g, items).length) || mobileGroups.find(g => g.key === mobileActiveGroup && availableGroupItems(g, items).length) || mobileGroups[0];
   const mobileTitle = mobileOpenGroup?.label || title;
-  const mobileSubnav = mobileOpenGroup ? `<div class="mobile-subnav mobile-menu-list">${availableGroupItems(mobileOpenGroup, items).map(([id,label,,groupKey]) => `<button class="mobile-subitem group-${groupKey || mobileOpenGroup.key} ${state.route === id ? 'active' : ''}" data-route="${id}"><span class="mobile-subitem-icon">${mobileIconFor(id)}</span><span class="mobile-subitem-label">${label}</span><span class="mobile-subitem-arrow">›</span></button>`).join('')}</div>` : '';
+  const mobileSubnav = mobileOpenGroup ? `<div class="mobile-subnav mobile-menu-list">${availableGroupItems(mobileOpenGroup, items).map(([id,label,,groupKey]) => `<button class="mobile-subitem group-${groupKey || mobileOpenGroup.key} route-${id} ${state.route === id ? 'active' : ''}" data-route="${id}"><span class="mobile-subitem-icon">${mobileIconFor(id)}</span><span class="mobile-subitem-label">${label}</span><span class="mobile-subitem-arrow">›</span></button>`).join('')}</div>` : '';
   app.innerHTML = `
     <div class="app-shell">
       <aside class="sidebar">

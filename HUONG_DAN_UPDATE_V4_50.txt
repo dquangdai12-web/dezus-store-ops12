@@ -1,0 +1,13 @@
+BẢN V4.50 - MOBILE COMPACT SIZE
+
+Nội dung chỉnh:
+- Thu nhỏ nhẹ giao diện điện thoại để nhìn gọn hơn.
+- Giảm chiều cao card danh mục, icon, title và bottom menu.
+- Giữ font Inter và bộ icon SVG ở bản V4.49.
+- Không ảnh hưởng layout iPad/Mac/PC.
+
+Cách cập nhật:
+1. Giải nén file zip.
+2. Upload đè toàn bộ file/folder lên GitHub.
+3. Commit changes.
+4. Render -> Manual Deploy -> Deploy latest commit.
