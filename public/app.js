@@ -400,6 +400,37 @@ function navGroups() {
   ].map(g => ({...g, label: g.navLabel || g.label }));
 }
 
+function mobileNavGroups() {
+  return [
+    { key:'overview', label:'Tổng quan', icon:'⌂', ids:['dashboard'] },
+    { key:'work', label:'Công việc', icon:'☑', ids:['tasks','checklists','schedule','violations'] },
+    { key:'revenue', label:'Doanh thu', icon:'▥', ids:['sales','weekly_report','online_orders','bonuses'] },
+    { key:'product', label:'Sản phẩm', icon:'▣', ids:['orders','product_feedback','product_training'] },
+    { key:'more', label:'Thêm', icon:'▦', ids:['documents','reports','account','admin'] },
+  ];
+}
+
+function mobileIconFor(id) {
+  return ({
+    dashboard:'⌂',
+    tasks:'✓',
+    checklists:'★',
+    schedule:'↗',
+    violations:'!',
+    sales:'₫',
+    weekly_report:'▥',
+    online_orders:'OL',
+    bonuses:'₫',
+    orders:'SKU',
+    product_feedback:'FB',
+    product_training:'EDU',
+    documents:'☰',
+    reports:'100',
+    account:'KEY',
+    admin:'⚙',
+  })[id] || '•';
+}
+
 function availableGroupItems(group, items = navItems()) {
   return group.ids.map(id => items.find(item => item[0] === id)).filter(Boolean);
 }
@@ -424,18 +455,15 @@ function shell(content, title = 'Tổng quan', subtitle = 'Vận hành cửa hà
     const open = state.navOpenGroup === group.key || activeGroup === group.key;
     return `<div class="nav-group ${open ? 'open' : ''} group-${group.key}"><button class="nav-group-btn group-${group.key} ${activeGroup === group.key ? 'active' : ''}" data-group="${group.key}"><span class="nav-group-main"><b>${group.icon}</b><strong>${group.label}</strong></span><span class="nav-group-caret">${open ? '−' : '+'}</span></button><div class="nav-sub ${open ? 'show' : ''}">${groupItems.map(([id, label, dot]) => `<button class="nav-btn ${state.route === id ? 'active' : ''}" data-route="${id}"><span>${label}</span><span class="nav-dot">${dot}</span></button>`).join('')}</div></div>`;
   }).join('');
-  const bottomGroups = ['overview','work','revenue','product','system'].map(key => groups.find(g => g.key === key)).filter(Boolean);
-  const mobileBottom = bottomGroups.map(group => {
-    const count = availableGroupItems(group, items).length;
-    return `<button class="mobile-tab group-${group.key} ${activeGroup === group.key ? 'active' : ''}" data-group="${group.key}"><span class="mobile-tab-icon">${group.icon}</span><span>${group.key === 'system' ? 'Thêm' : group.label}</span>${count > 1 ? `<small>${count}</small>` : ''}</button>`;
-  }).join('');
-  const mobileCats = groups.map(group => {
-    const count = availableGroupItems(group, items).length;
-    if (!count) return '';
-    return `<button class="mobile-cat group-${group.key} ${activeGroup === group.key ? 'active' : ''}" data-group="${group.key}"><b>${group.icon}</b><span>${group.label}</span><small>${count} mục</small></button>`;
-  }).join('');
+  const mobileGroups = mobileNavGroups();
+  const mobileActiveGroup = mobileGroups.find(g => g.ids.includes(state.route) && availableGroupItems(g, items).length)?.key || activeGroup;
+  const bottomGroups = mobileGroups.filter(g => availableGroupItems(g, items).length);
+  const mobileBottom = bottomGroups.map(group => `<button class="mobile-tab group-${group.key} ${mobileActiveGroup === group.key ? 'active' : ''}" data-group="${group.key}"><span class="mobile-tab-icon">${group.icon}</span><span>${group.label}</span></button>`).join('');
+  const mobileCats = '';
   const openGroup = groups.find(g => g.key === state.navOpenGroup) || groups.find(g => g.key === activeGroup) || groups[0];
-  const mobileSubnav = openGroup ? `<div class="mobile-subnav">${availableGroupItems(openGroup, items).map(([id,label]) => `<button class="mobile-subitem ${state.route === id ? 'active' : ''}" data-route="${id}">${label}</button>`).join('')}</div>` : '';
+  const mobileOpenGroup = mobileGroups.find(g => g.key === state.navOpenGroup && availableGroupItems(g, items).length) || mobileGroups.find(g => g.key === mobileActiveGroup && availableGroupItems(g, items).length) || mobileGroups[0];
+  const mobileTitle = mobileOpenGroup?.label || title;
+  const mobileSubnav = mobileOpenGroup ? `<div class="mobile-subnav mobile-menu-list">${availableGroupItems(mobileOpenGroup, items).map(([id,label,,groupKey]) => `<button class="mobile-subitem group-${groupKey || mobileOpenGroup.key} ${state.route === id ? 'active' : ''}" data-route="${id}"><span class="mobile-subitem-icon">${mobileIconFor(id)}</span><span class="mobile-subitem-label">${label}</span><span class="mobile-subitem-arrow">›</span></button>`).join('')}</div>` : '';
   app.innerHTML = `
     <div class="app-shell">
       <aside class="sidebar">
@@ -458,6 +486,7 @@ function shell(content, title = 'Tổng quan', subtitle = 'Vận hành cửa hà
           <div class="page-title"><h2>${esc(title)}</h2>${subtitle ? `<p>${esc(subtitle)}</p>` : ''}</div>
           <div class="row mobile-top"><button class="btn secondary" id="logoutBtn3">Đăng xuất</button></div>
         </div>
+        <div class="mobile-page-title"><h2>${esc(mobileTitle)}</h2></div>
         <div class="mobile-cats">${mobileCats}</div>
         ${mobileSubnav}
         ${content}
