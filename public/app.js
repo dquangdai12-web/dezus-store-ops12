@@ -289,7 +289,13 @@ async function api(path, opts = {}) {
   const res = await fetch(apiUrl(path), { ...opts, headers });
   const type = res.headers.get('content-type') || '';
   const data = type.includes('application/json') ? await res.json() : await res.text();
-  if (!res.ok) throw new Error(data.error || data || 'Có lỗi xảy ra');
+  if (!res.ok) {
+    let message = data?.error || data || 'Có lỗi xảy ra';
+    if (typeof message === 'string' && /<!DOCTYPE|<html|Internal Server Error|<pre>/i.test(message)) {
+      message = 'Lỗi server khi lưu/lấy dữ liệu. Vui lòng tải lại trang và thử lại. Nếu vẫn lỗi, kiểm tra Render Logs.';
+    }
+    throw new Error(message);
+  }
   return data;
 }
 

@@ -2720,6 +2720,34 @@ app.get('/api/export/:type.csv', requireAuth, requirePerm('can_export'), (req, r
   res.send('\uFEFF' + toCsv(rows));
 });
 
+
+// V4.57.3 - Luôn trả lỗi API dạng JSON, tránh hiện nguyên trang HTML Internal Server Error trên giao diện.
+app.use((err, req, res, _next) => {
+  const rawMessage = err && err.message ? String(err.message) : '';
+  console.error('[DEZUS_API_ERROR]', req.method, req.originalUrl, err && (err.stack || err.message || err));
+  let status = Number(err && (err.status || err.statusCode)) || 500;
+  let message = rawMessage || 'Lỗi server, vui lòng thử lại.';
+  if (err instanceof multer.MulterError) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      status = 413;
+      message = 'File quá nặng. Vui lòng chọn file dưới 12MB.';
+    } else if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+      status = 400;
+      message = 'Trường upload file không hợp lệ. Vui lòng tải lại trang và thử lại.';
+    } else {
+      status = 400;
+      message = 'Lỗi upload file: ' + (rawMessage || err.code || 'không xác định');
+    }
+  } else if (err && (err.type === 'entity.too.large' || err.status === 413)) {
+    status = 413;
+    message = 'Nội dung gửi lên quá lớn. Vui lòng giảm dung lượng file/nội dung rồi thử lại.';
+  }
+  if (status >= 500 && /ENOENT|EACCES|permission|rename|copyfile|mkdir/i.test(rawMessage)) {
+    message = 'Lỗi lưu dữ liệu/file trên server. Kiểm tra lại Disk/Storage trên Render hoặc báo PKD.';
+  }
+  res.status(status).json({ error: message });
+});
+
 app.get('*', (_req, res) => res.sendFile(path.join(ROOT, 'public', 'index.html')));
 
 app.listen(PORT, () => {

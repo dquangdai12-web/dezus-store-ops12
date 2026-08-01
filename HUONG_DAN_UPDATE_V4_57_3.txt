@@ -1,0 +1,17 @@
+BẢN V4.57.3 - FIX INTERNAL SERVER ERROR HTML
+
+Đã sửa:
+- Bọc lỗi server để không còn hiện nguyên HTML: <!DOCTYPE html> ... Internal Server Error.
+- Khi upload/lưu dữ liệu lỗi, web trả thông báo tiếng Việt dễ hiểu hơn.
+- Giữ nguyên fix Báo cáo tuần: nút Sửa feedback bấm lại được.
+- Giữ nguyên: bỏ % tỷ trọng DT ở Tổng quan, Báo cáo ngày ca sáng/ca tối, order size.
+
+Cập nhật:
+1. Giải nén file zip.
+2. Upload đè toàn bộ file/thư mục lên GitHub.
+3. Commit changes.
+4. Render > Manual Deploy > Deploy latest commit.
+
+Lưu ý:
+- Không xoá Persistent Disk.
+- Không xoá biến môi trường STORAGE_ROOT.
