@@ -3379,3 +3379,18 @@ body{letter-spacing:-.008em}
   .daily-report-table-wrap table th:nth-child(3),
   .daily-report-table-wrap table td:nth-child(3){width:150px}
 }
+
+
+/* ==== V4.56 DAILY REPORT STORE SITUATION ==== */
+.daily-situation-card{border-left:4px solid #2563eb!important;background:linear-gradient(180deg,#ffffff,#f8fbff)!important}
+.daily-situation-grid{align-items:stretch}
+.daily-situation-input{min-height:84px!important;resize:vertical;line-height:1.5!important;padding-top:11px!important}
+.daily-situation-overview b{display:block;margin-bottom:7px;color:#7c2d12}
+.daily-situation-notes{display:grid;gap:6px}
+.daily-situation-notes p{margin:0;white-space:pre-wrap;line-height:1.48}
+.daily-situation-notes strong{font-weight:800;color:#9a3412}
+@media (max-width:699px){
+  .daily-situation-card{padding:13px!important;border-radius:16px!important}
+  .daily-situation-grid{grid-template-columns:1fr!important;gap:9px!important}
+  .daily-situation-input{min-height:76px!important;font-size:12.5px!important}
+}

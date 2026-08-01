@@ -1,0 +1,12 @@
+DEZUS STORE OPS - UPDATE V4.56
+
+Noi dung update:
+- Doi "Ghi chu cua hang" trong Bao cao ngay thanh "Tinh hinh cua hang".
+- Tach thanh 2 muc: Ca sang va Ca toi.
+- Khung tong quan sau khi luu hien rieng tinh hinh ca sang/ca toi de chup man hinh gui nhom.
+
+Cach cap nhat:
+1. Giai nen file zip.
+2. Upload de toan bo file/folder vao GitHub.
+3. Commit changes.
+4. Render -> Manual Deploy -> Deploy latest commit.

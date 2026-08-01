@@ -1876,12 +1876,17 @@ function buildDailyReport(user, rawDate, rawStoreId) {
   storeTotal.asp = storeTotal.item_count ? Math.round(storeTotal.revenue / storeTotal.item_count) : 0;
   storeTotal.cr = customerCount ? Math.round((storeTotal.bill_count / customerCount) * 10000) / 100 : 0;
   storeTotal.target_note = targetDay.note || '';
+  const legacyStoreNote = report ? String(report.store_note || '').trim() : (storeDay ? String(storeDay.note || '').trim() : '');
+  const morningSituation = report && report.store_situation_morning !== undefined ? String(report.store_situation_morning || '').trim() : (!report && legacyStoreNote ? legacyStoreNote : '');
+  const eveningSituation = report && report.store_situation_evening !== undefined ? String(report.store_situation_evening || '').trim() : '';
   return {
     store_id: storeId,
     store_name: store.name,
     report_date: reportDate,
     customer_count: customerCount,
-    store_note: storeDay ? (storeDay.note || '') : '',
+    store_note: legacyStoreNote,
+    store_situation_morning: morningSituation,
+    store_situation_evening: eveningSituation,
     daily_target: targetDay,
     store_total: storeTotal,
     sales_entries,
@@ -1911,7 +1916,12 @@ function dailyReportZaloText(payload) {
   });
   lines.push(`Tổng: ${fmt(total.revenue)}đ | Bill ${fmt(total.bill_count)} | Món ${fmt(total.item_count)} | Lượt khách ${fmt(payload.customer_count || 0)}`);
   lines.push(`UPT: ${total.bill_count ? Math.round((total.item_count / total.bill_count) * 100) / 100 : 0} | ATV: ${total.bill_count ? fmt(Math.round(total.revenue / total.bill_count)) + 'đ' : '0đ'} | ASP: ${total.item_count ? fmt(Math.round(total.revenue / total.item_count)) + 'đ' : '0đ'} | CR: ${payload.customer_count ? Math.round((total.bill_count / Number(payload.customer_count || 0)) * 10000) / 100 : 0}%`);
-  if (payload.store_note) lines.push(`Ghi chú: ${payload.store_note}`);
+  if (payload.store_situation_morning || payload.store_situation_evening || payload.store_note) {
+    lines.push('Tình hình cửa hàng:');
+    if (payload.store_situation_morning) lines.push(`- Ca sáng: ${payload.store_situation_morning}`);
+    if (payload.store_situation_evening) lines.push(`- Ca tối: ${payload.store_situation_evening}`);
+    if (!payload.store_situation_morning && !payload.store_situation_evening && payload.store_note) lines.push(`- ${payload.store_note}`);
+  }
   const missing = normalizeMissingSizeItems(payload.missing_size_items || []);
   lines.push('');
   lines.push('2. SẢN PHẨM THIẾU SIZE / CẦN ORDER');
@@ -1935,7 +1945,7 @@ app.get('/api/daily-report', requireAuth, (req, res) => {
 });
 
 app.post('/api/daily-report', requireAuth, requireAnyPerm('can_manage_daily_report','can_manage_sales'), (req, res) => {
-  const { store_id, report_date, customer_count, store_note, sales_entries, missing_size_items, product_feedback_items } = req.body || {};
+  const { store_id, report_date, customer_count, store_note, store_situation_morning, store_situation_evening, sales_entries, missing_size_items, product_feedback_items } = req.body || {};
   const storeId = req.user.role === 'admin' ? Number(store_id || getPrimaryStoreId(req.user)) : Number(getPrimaryStoreId(req.user));
   const store = getStore(storeId);
   if (!store) return res.status(400).json({ error: 'Cửa hàng không hợp lệ' });
@@ -1949,7 +1959,10 @@ app.post('/api/daily-report', requireAuth, requireAnyPerm('can_manage_daily_repo
     if (!employee || employee.role !== 'employee' || Number(getPrimaryStoreId(employee)) !== Number(storeId)) return;
     savedSales.push(upsertSalesRow(employee, d, entry, req.user.id));
   });
-  upsertStoreSalesDay(storeId, d, customer_count, store_note || '', req.user.id);
+  const morningSituation = String(store_situation_morning || '').trim();
+  const eveningSituation = String(store_situation_evening || '').trim();
+  const combinedStoreNote = String(store_note || [morningSituation ? `Ca sáng: ${morningSituation}` : '', eveningSituation ? `Ca tối: ${eveningSituation}` : ''].filter(Boolean).join('\n')).trim();
+  upsertStoreSalesDay(storeId, d, customer_count, combinedStoreNote, req.user.id);
 
   const missingItems = normalizeMissingSizeItems(missing_size_items);
   const feedbackItems = normalizeDailyFeedbackItems(product_feedback_items);
@@ -2025,9 +2038,11 @@ app.post('/api/daily-report', requireAuth, requireAnyPerm('can_manage_daily_repo
     generatedFeedbackIds.push(id);
   });
 
-  const summaryPayload = { report_date: d, store_name: store.name, customer_count, store_note, sales_entries: cleanSales, missing_size_items: missingItems, product_feedback_items: feedbackItems };
+  const summaryPayload = { report_date: d, store_name: store.name, customer_count, store_note: combinedStoreNote, store_situation_morning: morningSituation, store_situation_evening: eveningSituation, sales_entries: cleanSales, missing_size_items: missingItems, product_feedback_items: feedbackItems };
   row.customer_count = toNumber(customer_count, 0);
-  row.store_note = String(store_note || '').trim();
+  row.store_note = combinedStoreNote;
+  row.store_situation_morning = morningSituation;
+  row.store_situation_evening = eveningSituation;
   row.sales_entries = cleanSales;
   row.missing_size_items = missingItems;
   row.product_feedback_items = feedbackItems;
