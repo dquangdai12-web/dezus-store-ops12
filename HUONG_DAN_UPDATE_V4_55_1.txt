@@ -1,0 +1,10 @@
+V4.55.1 - FIX FILE KHÔNG CHẠY
+
+Đã sửa lỗi thiếu middleware phân quyền requireAnyPerm làm server không chạy khi deploy.
+
+Cách cập nhật:
+1. Giải nén file zip.
+2. Upload toàn bộ file/folder BÊN TRONG thư mục này lên GitHub, không upload nguyên file zip.
+3. Commit changes.
+4. Render → Manual Deploy → Deploy latest commit.
+5. Không xóa Disk / Env Vars / Service Render.

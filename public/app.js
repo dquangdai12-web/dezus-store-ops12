@@ -38,7 +38,9 @@ const PERM_LABELS = {
   can_assign_tasks: 'Giao việc',
   can_manage_violations: 'Ghi vi phạm',
   can_grade_checklists: 'Chấm checklist',
-  can_manage_sales: 'Nhập doanh thu',
+  can_manage_sales: 'Nhập doanh thu chung',
+  can_manage_total_sales: 'Nhập doanh thu tổng',
+  can_manage_daily_report: 'Nhập báo cáo ngày',
   can_set_sales_targets: 'Set target doanh thu',
   can_manage_weekly_report: 'Nhập báo cáo tuần',
   can_view_weekly_report: 'Xem báo cáo tuần',
@@ -355,6 +357,9 @@ function salesStaffInStore(storeId) {
 function can(p) {
   return state.user?.role === 'admin' || Number(state.user?.permissions?.[p]) === 1;
 }
+function canAny(...perms) {
+  return state.user?.role === 'admin' || perms.some(p => Number(state.user?.permissions?.[p]) === 1);
+}
 
 function navItems() {
   const items = [
@@ -378,7 +383,7 @@ function navItems() {
   ];
   return items.filter(([id]) => {
     if (id === 'dashboard' || id === 'account' || id === 'tasks' || id === 'violations' || id === 'checklists' || id === 'sales') return true;
-    if (id === 'daily_report') return can('can_manage_sales') || can('can_view_store_sales_summary') || can('can_view_weekly_report') || can('can_manage_weekly_report');
+    if (id === 'daily_report') return canAny('can_manage_daily_report','can_manage_sales','can_view_store_sales_summary','can_view_weekly_report','can_manage_weekly_report');
     if (id === 'weekly_report') return can('can_view_weekly_report') || can('can_manage_weekly_report');
     if (id === 'online_orders') return can('can_view_online_orders') || can('can_manage_online_orders');
     if (id === 'orders') return can('can_view_orders') || can('can_manage_orders');
@@ -775,20 +780,30 @@ async function downloadWeeklyReport() {
 }
 
 
-function dailyMissingRows(items = []) {
+function splitSizes(value) {
+  if (Array.isArray(value)) return value.map(v => String(v || '').trim()).filter(Boolean);
+  return String(value || '').split(/[,+/|;]/).map(v => v.trim()).filter(Boolean);
+}
+function dailySizeInputs(item = {}) {
+  const sizes = splitSizes(item.size || item.sizes || '').slice(0, 4);
+  while (sizes.length < 4) sizes.push('');
+  return `<div class="daily-size-boxes">${sizes.map(v => `<input class="input daily-missing-size" value="${esc(v)}" maxlength="4" placeholder="Size">`).join('')}</div>`;
+}
+function dailyMissingRows(items = [], minRows = 2) {
   const rows = [...items];
-  while (rows.length < 5) rows.push({ sku:'', product_name:'', quantity:'', note:'' });
+  while (rows.length < minRows) rows.push({ sku:'', product_name:'', quantity:'', size:'', sizes:[], note:'' });
   return rows.map((item, i) => `<tr class="daily-missing-row">
     <td><input class="input daily-missing-sku" value="${esc(item.sku || '')}" placeholder="SKU"></td>
     <td><input class="input daily-missing-name" value="${esc(item.product_name || '')}" placeholder="Tên sản phẩm thiếu size"></td>
+    <td>${dailySizeInputs(item)}</td>
     <td><input class="input daily-missing-qty" type="text" inputmode="numeric" data-number-format value="${item.quantity ? money(item.quantity) : ''}" placeholder="SL"></td>
-    <td><input class="input daily-missing-note" value="${esc(item.note || '')}" placeholder="VD: thiếu size M/L, khách hỏi nhiều"></td>
+    <td><input class="input daily-missing-note" value="${esc(item.note || '')}" placeholder="Ghi chú"></td>
   </tr>`).join('');
 }
 
-function dailyFeedbackRows(items = []) {
+function dailyFeedbackRows(items = [], minRows = 2) {
   const rows = [...items];
-  while (rows.length < 5) rows.push({ sku:'', product_name:'', product_errors:'', customer_feedback:'', note:'' });
+  while (rows.length < minRows) rows.push({ sku:'', product_name:'', product_errors:'', customer_feedback:'', note:'' });
   return rows.map((item, i) => `<tr class="daily-feedback-row">
     <td><input class="input daily-feedback-sku" value="${esc(item.sku || '')}" placeholder="SKU"></td>
     <td><input class="input daily-feedback-name" value="${esc(item.product_name || '')}" placeholder="Tên sản phẩm"></td>
@@ -801,14 +816,14 @@ function dailyFeedbackRows(items = []) {
 function dailyReportOverviewBox(data = {}) {
   const total = data.store_total || {};
   const sales = (data.sales_entries || []).filter(r => Number(r.revenue || 0) || Number(r.bill_count || 0) || Number(r.item_count || 0) || r.note);
-  const missing = (data.missing_size_items || []).filter(x => x.sku || x.product_name || Number(x.quantity || 0) || x.note);
+  const missing = (data.missing_size_items || []).filter(x => x.sku || x.product_name || Number(x.quantity || 0) || x.size || x.note);
   const feedback = (data.product_feedback_items || []).filter(x => x.sku || x.product_name || x.product_errors || x.customer_feedback || x.note);
   const hasContent = data.report || Number(total.revenue || 0) || sales.length || missing.length || feedback.length || data.store_note;
   if (!hasContent) return '<div id="dailyReportSummaryBox"></div>';
   const target = Number(total.target_revenue || data.daily_target?.target_revenue || 0);
   const percent = target ? Math.round((Number(total.revenue || 0) / target) * 10000) / 100 : 0;
   const salesHtml = sales.length ? sales.map(r => `<div class="daily-overview-row"><div><b>${esc(r.full_name || '')}</b><small>${esc(r.note || '')}</small></div><div class="daily-overview-numbers"><strong>${money(r.revenue || 0)}đ</strong><span>Bill ${money(r.bill_count || 0)} • Món ${money(r.item_count || 0)}</span></div></div>`).join('') : '<div class="daily-overview-empty">Chưa có doanh thu nhân viên</div>';
-  const missingHtml = missing.length ? missing.map((item, i) => `<div class="daily-overview-chip"><b>${i + 1}. ${esc(item.sku || '')}${item.sku && item.product_name ? ' - ' : ''}${esc(item.product_name || '')}</b><span>SL ${money(item.quantity || 0)}${item.note ? ` • ${esc(item.note)}` : ''}</span></div>`).join('') : '<div class="daily-overview-empty">Không có sản phẩm thiếu size</div>';
+  const missingHtml = missing.length ? missing.map((item, i) => `<div class="daily-overview-chip"><b>${i + 1}. ${esc(item.sku || '')}${item.sku && item.product_name ? ' - ' : ''}${esc(item.product_name || '')}</b><span>${item.size ? `Size ${esc(item.size)} • ` : ''}SL ${money(item.quantity || 0)}${item.note ? ` • ${esc(item.note)}` : ''}</span></div>`).join('') : '<div class="daily-overview-empty">Không có sản phẩm thiếu size</div>';
   const feedbackHtml = feedback.length ? feedback.map((item, i) => `<div class="daily-overview-chip"><b>${i + 1}. ${esc(item.sku || '')}${item.sku && item.product_name ? ' - ' : ''}${esc(item.product_name || '')}</b><span>${item.product_errors ? `Lỗi: ${esc(item.product_errors)}` : ''}${item.product_errors && item.customer_feedback ? ' • ' : ''}${item.customer_feedback ? `KH: ${esc(item.customer_feedback)}` : ''}${item.note ? ` • ${esc(item.note)}` : ''}</span></div>`).join('') : '<div class="daily-overview-empty">Không có sản phẩm lỗi / feedback khách</div>';
   return `<section id="dailyReportSummaryBox" class="card daily-overview-card" style="margin-top:16px">
     <div class="daily-overview-title"><div><span class="badge ok">Chụp màn hình gửi nhóm</span><h3>Tổng quan báo cáo ngày</h3><p>${esc(data.store_name || '')} • ${dOnly(data.report_date || '')}</p></div><div class="daily-overview-percent"><b>${percent}%</b><span>về target ngày</span></div></div>
@@ -839,7 +854,7 @@ async function renderDailyReport() {
   const data = await api(`/api/daily-report?report_date=${encodeURIComponent(reportDate)}${defaultStoreId ? `&store_id=${encodeURIComponent(defaultStoreId)}` : ''}`);
   const storeOptions = state.boot.stores.map(s => `<option value="${s.id}" ${Number(s.id) === Number(data.store_id) ? 'selected' : ''}>${esc(s.name)}</option>`).join('');
   const storeFilter = state.user.role === 'admin' ? `<div class="field"><label>Cửa hàng</label><select class="input" id="dailyReportStoreFilter" name="store_id">${storeOptions}</select></div>` : `<input type="hidden" name="store_id" value="${esc(data.store_id)}">`;
-  const canEdit = can('can_manage_sales');
+  const canEdit = canAny('can_manage_daily_report','can_manage_sales');
   const salesRows = (data.sales_entries || []).map(r => `<tr class="daily-sales-row" data-user="${r.user_id}">
     <td class="daily-sticky-name"><b>${esc(r.full_name || '')}</b><div class="hint">${esc(r.store_name || data.store_name || '')}</div></td>
     <td><input class="input daily-sale-revenue" type="text" inputmode="numeric" data-number-format value="${r.revenue ? money(r.revenue) : '0'}" ${canEdit ? '' : 'disabled'}></td>
@@ -850,15 +865,15 @@ async function renderDailyReport() {
   const form = `<form id="dailyReportForm">
     <div class="card daily-report-head"><div class="toolbar"><div class="field"><label>Ngày báo cáo</label><input class="input" id="dailyReportDateFilter" name="report_date" type="date" value="${esc(data.report_date || reportDate)}" required></div>${storeFilter}<div class="field"><label>Lượt khách tổng cửa hàng</label><input class="input" type="text" inputmode="numeric" data-number-format name="customer_count" value="${money(data.customer_count || 0)}"></div><div class="field daily-store-note"><label>Ghi chú cửa hàng</label><input class="input" name="store_note" value="${esc(data.store_note || '')}" placeholder="VD: mưa, vắng khách, khách hỏi size..."></div></div><p class="hint">Lưu báo cáo ngày sẽ tự cập nhật vào Doanh thu tháng, tự chuyển thiếu size sang Order hàng và chuyển lỗi/feedback khách sang Đánh giá sản phẩm.</p></div>
     <div class="card" style="margin-top:16px"><div class="section-title"><h3>1. Doanh thu & chỉ số trong ngày</h3><span class="badge">Tự về báo cáo tháng</span></div><div class="table-wrap revenue-sticky-name daily-report-table-wrap"><table><thead><tr><th>Nhân viên</th><th>Doanh thu</th><th>Số bill</th><th>Số món</th><th>Ghi chú</th></tr></thead><tbody>${salesRows}</tbody></table></div></div>
-    <div class="card" style="margin-top:16px"><div class="section-title"><h3>2. Sản phẩm thiếu size / cần order</h3><span class="badge warn">Tự chuyển Order hàng</span></div><div class="table-wrap daily-report-table-wrap"><table><thead><tr><th>SKU</th><th>Tên sản phẩm</th><th>SL cần order</th><th>Size / ghi chú</th></tr></thead><tbody id="dailyMissingBody">${dailyMissingRows(data.missing_size_items || [])}</tbody></table></div><button type="button" class="btn secondary small" id="dailyAddMissingBtn" style="margin-top:10px">Thêm dòng thiếu size</button></div>
-    <div class="card" style="margin-top:16px"><div class="section-title"><h3>3. Sản phẩm lỗi / feedback từ khách</h3><span class="badge">Tự chuyển Feedback SP</span></div><div class="table-wrap daily-report-table-wrap"><table><thead><tr><th>SKU</th><th>Tên sản phẩm</th><th>Sản phẩm lỗi</th><th>Feedback khách</th><th>Ghi chú</th></tr></thead><tbody id="dailyFeedbackBody">${dailyFeedbackRows(data.product_feedback_items || [])}</tbody></table></div><button type="button" class="btn secondary small" id="dailyAddFeedbackBtn" style="margin-top:10px">Thêm dòng feedback</button></div>
+    <div class="card" style="margin-top:16px"><div class="section-title"><h3>2. Sản phẩm thiếu size / cần order</h3><span class="badge warn">Tự chuyển Order hàng</span></div><div class="table-wrap daily-report-table-wrap"><table><thead><tr><th>SKU</th><th>Tên sản phẩm</th><th>Size thiếu</th><th>SL cần order</th><th>Ghi chú</th></tr></thead><tbody id="dailyMissingBody">${dailyMissingRows(data.missing_size_items || [], 2)}</tbody></table></div><button type="button" class="btn secondary small" id="dailyAddMissingBtn" style="margin-top:10px">Thêm dòng thiếu size</button></div>
+    <div class="card" style="margin-top:16px"><div class="section-title"><h3>3. Sản phẩm lỗi / feedback từ khách</h3><span class="badge">Tự chuyển Feedback SP</span></div><div class="table-wrap daily-report-table-wrap"><table><thead><tr><th>SKU</th><th>Tên sản phẩm</th><th>Sản phẩm lỗi</th><th>Feedback khách</th><th>Ghi chú</th></tr></thead><tbody id="dailyFeedbackBody">${dailyFeedbackRows(data.product_feedback_items || [], 2)}</tbody></table></div><button type="button" class="btn secondary small" id="dailyAddFeedbackBtn" style="margin-top:10px">Thêm dòng feedback</button></div>
     ${canEdit ? '<div style="margin-top:16px"><button class="btn daily-save-btn">Lưu báo cáo ngày</button></div>' : '<div class="empty" style="margin-top:16px">Tài khoản này chỉ được xem báo cáo ngày.</div>'}
   </form>`;
   shell(`${form}${dailyReportOverviewBox(data)}`, 'Báo cáo ngày', `Nhập báo cáo ngày ${dOnly(data.report_date || reportDate)} - ${esc(data.store_name || '')}`);
   $('#dailyReportDateFilter')?.addEventListener('change', e => { state.dailyReportDate = e.target.value; renderDailyReport(); });
   $('#dailyReportStoreFilter')?.addEventListener('change', e => { state.dailyReportStoreId = e.target.value; renderDailyReport(); });
-  $('#dailyAddMissingBtn')?.addEventListener('click', () => { $('#dailyMissingBody')?.insertAdjacentHTML('beforeend', dailyMissingRows([{}])); setupNumberFormat($('#dailyMissingBody')); });
-  $('#dailyAddFeedbackBtn')?.addEventListener('click', () => { $('#dailyFeedbackBody')?.insertAdjacentHTML('beforeend', dailyFeedbackRows([{}])); });
+  $('#dailyAddMissingBtn')?.addEventListener('click', () => { $('#dailyMissingBody')?.insertAdjacentHTML('beforeend', dailyMissingRows([{}], 0)); setupNumberFormat($('#dailyMissingBody')); });
+  $('#dailyAddFeedbackBtn')?.addEventListener('click', () => { $('#dailyFeedbackBody')?.insertAdjacentHTML('beforeend', dailyFeedbackRows([{}], 0)); });
   $('#dailyReportForm')?.addEventListener('submit', async e => {
     e.preventDefault();
     const fd = new FormData(e.target);
@@ -869,12 +884,17 @@ async function renderDailyReport() {
       item_count: cleanNumberInput($('.daily-sale-item', row)?.value),
       note: $('.daily-sale-note', row)?.value || ''
     }));
-    const missing_size_items = $$('.daily-missing-row', e.target).map(row => ({
-      sku: $('.daily-missing-sku', row)?.value || '',
-      product_name: $('.daily-missing-name', row)?.value || '',
-      quantity: cleanNumberInput($('.daily-missing-qty', row)?.value),
-      note: $('.daily-missing-note', row)?.value || ''
-    })).filter(x => (x.sku || x.product_name) && x.quantity);
+    const missing_size_items = $$('.daily-missing-row', e.target).map(row => {
+      const sizes = $$('.daily-missing-size', row).map(inp => inp.value.trim()).filter(Boolean);
+      return {
+        sku: $('.daily-missing-sku', row)?.value || '',
+        product_name: $('.daily-missing-name', row)?.value || '',
+        size: sizes.join(', '),
+        sizes,
+        quantity: cleanNumberInput($('.daily-missing-qty', row)?.value),
+        note: $('.daily-missing-note', row)?.value || ''
+      };
+    }).filter(x => (x.sku || x.product_name) && x.quantity);
     const product_feedback_items = $$('.daily-feedback-row', e.target).map(row => ({
       sku: $('.daily-feedback-sku', row)?.value || '',
       product_name: $('.daily-feedback-name', row)?.value || '',
@@ -1206,7 +1226,7 @@ async function renderSales() {
   const todayIso = new Date().toISOString().slice(0,10);
   const dailyTargetForm = can('can_set_sales_targets') ? `<div class="card" style="margin-top:16px"><h3>Set target doanh thu theo ngày - tổng cửa hàng</h3><p class="hint">Chọn từng ngày muốn set target, có thể chọn nhiều ngày không liền nhau. UPT / ATV / CR tự lấy theo target tháng, không cần set riêng từng ngày.</p><form id="dailyTargetForm" class="grid four daily-target-pick-form">${storeSelectTarget}<div class="field" style="grid-column:span 2"><label>Chọn ngày cần set</label><div class="row daily-date-add-row"><input class="input" type="date" id="dailyTargetDatePicker" value="${todayIso}"><button type="button" class="btn secondary" id="dailyTargetAddDateBtn">Thêm ngày</button></div></div><div class="field"><label>Target doanh thu/ngày</label><input class="input" type="text" inputmode="numeric" data-number-format name="target_revenue" required placeholder="VD: 10.000.000"></div><div class="field" style="grid-column:1/-1"><label>Ngày đã chọn</label><div class="row daily-target-actions"><button type="button" class="btn secondary small" id="dailyTargetAddTodayBtn">Thêm hôm nay</button><button type="button" class="btn ghost small" id="dailyTargetClearDatesBtn">Xóa chọn</button><span class="hint">Bấm Thêm ngày nhiều lần để chọn các ngày rời rạc.</span></div><div id="dailyTargetDateList" class="daily-date-list"></div></div><div class="field" style="grid-column:span 3"><label>Ghi chú target ngày</label><input class="input" name="note" placeholder="VD: Target cuối tuần / ngày sale"></div><div class="field" style="align-self:end"><button class="btn">Lưu target ngày đã chọn</button></div></form></div>` : '';
   const rowsInputs = salesStaff.map(u => `<tr data-user="${u.id}"><td><b>${esc(u.full_name)}</b><div class="hint">${esc(u.store_name || '')}</div></td><td><input class="input" name="revenue_${u.id}" type="text" inputmode="numeric" data-number-format value="0"></td><td><input class="input" name="bill_${u.id}" type="text" inputmode="numeric" data-number-format value="0"></td><td><input class="input" name="item_${u.id}" type="text" inputmode="numeric" data-number-format value="0"></td><td><input class="input" name="note_${u.id}" placeholder="Ghi chú NV"></td></tr>`).join('') || '<tr><td colspan="5"><div class="empty">Chưa có nhân viên bán hàng trong cửa hàng này</div></td></tr>';
-  const salesForm = can('can_manage_sales') ? `<div class="card" style="margin-top:16px"><h3>Nhập doanh thu từng ngày</h3><p class="hint">Mỗi ngày cửa hàng nhập doanh thu từng nhân viên: doanh thu, số bill, số món. Lượt khách nhập 1 lần theo tổng cửa hàng. Nếu nhập lại cùng ngày, hệ thống sẽ cập nhật thay vì cộng trùng.</p><form id="dailySalesForm"><div class="grid four">${storeSelect}<div class="field"><label>Ngày bán</label><input class="input" type="date" name="sale_date" value="${new Date().toISOString().slice(0,10)}" required></div><div class="field"><label>Lượt khách tổng cửa hàng</label><input class="input" type="text" inputmode="numeric" data-number-format name="customer_count" value="0"></div><div class="field"><label>Ghi chú cửa hàng</label><input class="input" name="note" placeholder="VD: Cuối ngày / ca tối"></div></div><div class="table-wrap revenue-sticky-name" style="margin-top:12px"><table><thead><tr><th>Nhân viên</th><th>Doanh thu</th><th>Số bill</th><th>Số món</th><th>Ghi chú</th></tr></thead><tbody>${rowsInputs}</tbody></table></div><div style="margin-top:12px"><button class="btn">Lưu doanh thu ngày</button></div></form></div>` : '';
+  const salesForm = canAny('can_manage_total_sales','can_manage_sales') ? `<div class="card" style="margin-top:16px"><h3>Nhập doanh thu từng ngày</h3><p class="hint">Mỗi ngày cửa hàng nhập doanh thu từng nhân viên: doanh thu, số bill, số món. Lượt khách nhập 1 lần theo tổng cửa hàng. Nếu nhập lại cùng ngày, hệ thống sẽ cập nhật thay vì cộng trùng.</p><form id="dailySalesForm"><div class="grid four">${storeSelect}<div class="field"><label>Ngày bán</label><input class="input" type="date" name="sale_date" value="${new Date().toISOString().slice(0,10)}" required></div><div class="field"><label>Lượt khách tổng cửa hàng</label><input class="input" type="text" inputmode="numeric" data-number-format name="customer_count" value="0"></div><div class="field"><label>Ghi chú cửa hàng</label><input class="input" name="note" placeholder="VD: Cuối ngày / ca tối"></div></div><div class="table-wrap revenue-sticky-name" style="margin-top:12px"><table><thead><tr><th>Nhân viên</th><th>Doanh thu</th><th>Số bill</th><th>Số món</th><th>Ghi chú</th></tr></thead><tbody>${rowsInputs}</tbody></table></div><div style="margin-top:12px"><button class="btn">Lưu doanh thu ngày</button></div></form></div>` : '';
   const tabs = `<div class="pillbar"><button data-period="month" class="${state.leaderboardPeriod === 'month' ? 'active' : ''}">Tháng</button><button data-period="quarter" class="${state.leaderboardPeriod === 'quarter' ? 'active' : ''}">Quý</button><button data-period="year" class="${state.leaderboardPeriod === 'year' ? 'active' : ''}">Năm</button></div>`;
   const monthFilter = `<div class="toolbar" style="margin-bottom:12px"><div class="field"><label>Tháng xem tổng hợp</label><input class="input" id="salesMonthFilter" type="month" value="${currentMonth}"></div>${state.user.role === 'admin' ? `<div class="field"><label>Cửa hàng xem tổng</label><select class="input" id="salesStoreSummaryFilter">${storeOptions}</select></div>` : ''}</div>`;
   const summaryBlock = summary ? `<div class="card" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">Tổng hợp doanh thu tháng ${esc(summary.month)} - ${esc(summary.store_name)}</h3></div><p class="hint">Bảng này cộng từng ngày đã nhập để theo dõi doanh thu ngày; UPT, ATV, ASP, CR mặc định so với target tháng. Timeline dự kiến tính theo tốc độ doanh thu hiện tại và số ngày còn lại trong kỳ.</p>${tableStoreSalesSummary(summary)}</div>` : '<div class="card" style="margin-top:16px"><h3>Tổng hợp doanh thu cửa hàng</h3><div class="empty">Tài khoản này chưa được cấp quyền xem tổng doanh thu cửa hàng</div></div>';
@@ -1327,6 +1347,7 @@ function orderInputRows(count = 8) {
   return Array.from({ length: count }, (_, i) => `<tr>
     <td><input class="input orderSku" placeholder="SKU ${i + 1}"></td>
     <td><input class="input orderName" placeholder="Tên sản phẩm"></td>
+    <td><input class="input orderSize size-mini-input" placeholder="Size"></td>
     <td><input class="input orderQty" type="text" inputmode="numeric" data-number-format value="0"></td>
     <td><input class="input orderNote" placeholder="Ghi chú dòng"></td>
   </tr>`).join('');
@@ -1360,13 +1381,14 @@ function groupOrdersByBatch(orders) {
     if (o.order_status) g.statuses.add(o.order_status);
     if (o.note) g.notes.add(o.note);
 
-    const itemKey = `${String(o.sku || '').toLowerCase()}||${String(o.product_name || '').toLowerCase()}`;
+    const itemKey = `${String(o.sku || '').toLowerCase()}||${String(o.product_name || '').toLowerCase()}||${String(o.size || '').toLowerCase()}`;
     let item = g.rows.find(x => x.key === itemKey);
     if (!item) {
       item = {
         key: itemKey,
         sku: o.sku || '',
         product_name: o.product_name || '',
+        size: o.size || '',
         quantity: 0,
         ids: [],
         first_date: o.order_date || '',
@@ -1486,7 +1508,7 @@ async function renderOrders() {
   const storeOptions = state.boot.stores.map(s => `<option value="${s.id}" ${Number(s.id) === Number(defaultStoreId) ? 'selected' : ''}>${esc(s.name)}</option>`).join('');
   const batchOptions = batches.map(b => `<option value="${esc(b)}"></option>`).join('');
   const storeSelect = allScope ? `<div class="field"><label>Cửa hàng</label><select class="input" id="orderStoreFilter" name="store_id">${storeOptions}</select></div>` : `<input type="hidden" name="store_id" value="${esc(defaultStoreId)}">`;
-  const form = can('can_manage_orders') ? `<div class="card"><h3>Tạo order hàng theo lần</h3><p class="hint">Nhập cùng một tên lần/tag để gom order nhiều ngày vào chung 1 lần. Ví dụ: <b>Lần 1 - Tuần 31</b>. Nếu ngày 1 nhập 1, ngày 2 nhập 1 cùng SKU và cùng lần, bảng sẽ cộng thành tổng 2 sản phẩm trong tag đó.</p><form id="orderForm"><div class="grid four">${storeSelect}<div class="field"><label>Lần / tag order</label><input class="input" name="batch_name" list="orderBatchList" placeholder="VD: Lần 1 - Tuần 31" required><datalist id="orderBatchList">${batchOptions}</datalist></div><div class="field"><label>Ngày order</label><input class="input" type="date" name="order_date" value="${new Date().toISOString().slice(0,10)}" required></div><div class="field" style="align-self:end"><button class="btn">Lưu vào lần</button></div></div><div class="table-wrap" style="margin-top:12px"><table><thead><tr><th>SKU</th><th>Tên SP</th><th>Số lượng</th><th>Ghi chú</th></tr></thead><tbody>${orderInputRows(8)}</tbody></table></div></form></div>` : '';
+  const form = can('can_manage_orders') ? `<div class="card"><h3>Tạo order hàng theo lần</h3><p class="hint">Nhập cùng một tên lần/tag để gom order nhiều ngày vào chung 1 lần. Ví dụ: <b>Lần 1 - Tuần 31</b>. Nếu ngày 1 nhập 1, ngày 2 nhập 1 cùng SKU và cùng lần, bảng sẽ cộng thành tổng 2 sản phẩm trong tag đó.</p><form id="orderForm"><div class="grid four">${storeSelect}<div class="field"><label>Lần / tag order</label><input class="input" name="batch_name" list="orderBatchList" placeholder="VD: Lần 1 - Tuần 31" required><datalist id="orderBatchList">${batchOptions}</datalist></div><div class="field"><label>Ngày order</label><input class="input" type="date" name="order_date" value="${new Date().toISOString().slice(0,10)}" required></div><div class="field" style="align-self:end"><button class="btn">Lưu vào lần</button></div></div><div class="table-wrap" style="margin-top:12px"><table><thead><tr><th>SKU</th><th>Tên SP</th><th>Size</th><th>Số lượng</th><th>Ghi chú</th></tr></thead><tbody>${orderInputRows(8)}</tbody></table></div></form></div>` : '';
   const filters = `<div class="toolbar"><h3 style="margin-right:auto">Danh sách order hàng theo lần</h3>${allScope ? `<div class="field"><label>Lọc cửa hàng</label><select class="input" id="orderStoreFilter2">${storeOptions}</select></div>` : ''}${can('can_export') ? '<button class="btn secondary" data-export="orders">Tải CSV order tổng theo lần</button>' : ''}</div>`;
   const rows = groups.length ? groups.map(g => `<div class="order-batch-card">
     <div class="order-batch-head">
@@ -1494,7 +1516,7 @@ async function renderOrders() {
       <div class="order-batch-kpis"><span><b>${money(g.total_quantity)}</b><small>Tổng SL</small></span>${orderStatusBadge(g.status)}</div>
       ${can('can_manage_orders') ? `<div class="row order-batch-actions"><button class="btn small secondary orderStatusBtn" data-ids="${g.ids.join(',')}" data-status="done">Đã làm lần</button><button class="btn small secondary orderStatusBtn" data-ids="${g.ids.join(',')}" data-status="waiting">Chờ hàng nhập</button><button class="btn small secondary orderStatusBtn" data-ids="${g.ids.join(',')}" data-status="received">Đã nhập</button><button class="btn small secondary orderNoteBtn" data-ids="${g.ids.join(',')}" data-note="${esc(g.note || '')}">Ghi chú lần</button><button class="btn small danger orderDeleteBtn" data-ids="${g.ids.join(',')}">Xóa lần</button></div>` : ''}
     </div>
-    <div class="table-wrap order-batch-table-wrap"><table class="order-batch-table"><thead><tr><th>SKU</th><th>Tên SP</th><th>Tổng SL trong lần</th><th>Ngày nhập</th><th>Trạng thái</th><th>Ghi chú</th><th>Người tạo</th><th>Thao tác</th></tr></thead><tbody>${g.rows.map(item => `<tr><td><b>${esc(item.sku || '')}</b></td><td>${esc(item.product_name || '')}</td><td><b>${money(item.quantity || 0)}</b></td><td>${dateRangeText(item.first_date, item.last_date)}</td><td>${orderStatusBadge(item.status)}</td><td>${esc(item.note || '')}</td><td>${esc(item.created_by_name || '')}</td><td>${can('can_manage_orders') ? `<div class="row"><button class="btn small secondary orderStatusBtn" data-ids="${item.ids.join(',')}" data-status="done">Đã làm</button><button class="btn small secondary orderStatusBtn" data-ids="${item.ids.join(',')}" data-status="waiting">Chờ hàng nhập</button><button class="btn small secondary orderStatusBtn" data-ids="${item.ids.join(',')}" data-status="received">Đã nhập</button><button class="btn small secondary orderNoteBtn" data-ids="${item.ids.join(',')}" data-note="${esc(item.note || '')}">Ghi chú</button><button class="btn small danger orderDeleteBtn" data-ids="${item.ids.join(',')}">Xóa</button></div>` : ''}</td></tr>`).join('')}</tbody></table></div>
+    <div class="table-wrap order-batch-table-wrap"><table class="order-batch-table"><thead><tr><th>SKU</th><th>Tên SP</th><th>Size</th><th>Tổng SL trong lần</th><th>Ngày nhập</th><th>Trạng thái</th><th>Ghi chú</th><th>Người tạo</th><th>Thao tác</th></tr></thead><tbody>${g.rows.map(item => `<tr><td><b>${esc(item.sku || '')}</b></td><td>${esc(item.product_name || '')}</td><td><span class="size-badge">${esc(item.size || '')}</span></td><td><b>${money(item.quantity || 0)}</b></td><td>${dateRangeText(item.first_date, item.last_date)}</td><td>${orderStatusBadge(item.status)}</td><td>${esc(item.note || '')}</td><td>${esc(item.created_by_name || '')}</td><td>${can('can_manage_orders') ? `<div class="row"><button class="btn small secondary orderStatusBtn" data-ids="${item.ids.join(',')}" data-status="done">Đã làm</button><button class="btn small secondary orderStatusBtn" data-ids="${item.ids.join(',')}" data-status="waiting">Chờ hàng nhập</button><button class="btn small secondary orderStatusBtn" data-ids="${item.ids.join(',')}" data-status="received">Đã nhập</button><button class="btn small secondary orderNoteBtn" data-ids="${item.ids.join(',')}" data-note="${esc(item.note || '')}">Ghi chú</button><button class="btn small danger orderDeleteBtn" data-ids="${item.ids.join(',')}">Xóa</button></div>` : ''}</td></tr>`).join('')}</tbody></table></div>
   </div>`).join('') : '<div class="empty">Chưa có order hàng</div>';
   shell(`${form}<div class="card" style="margin-top:16px">${filters}${rows}</div>`, 'Order hàng', 'Tạo order theo lần/tag, tự cộng số lượng trong cùng lần và tải dữ liệu tổng để xử lý nhập hàng');
   $('#orderStoreFilter')?.addEventListener('change', e => { state.orderStoreId = e.target.value; renderOrders(); });
@@ -1505,6 +1527,7 @@ async function renderOrders() {
     const items = $$('#orderForm tbody tr').map(tr => ({
       sku: $('.orderSku', tr)?.value || '',
       product_name: $('.orderName', tr)?.value || '',
+      size: $('.orderSize', tr)?.value || '',
       quantity: cleanNumberInput($('.orderQty', tr)?.value),
       note: $('.orderNote', tr)?.value || '',
     })).filter(x => (x.sku || x.product_name) && Number(x.quantity || 0) > 0);

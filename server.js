@@ -44,15 +44,15 @@ app.use(express.static(path.join(ROOT, 'public')));
 const ROLE_DEFAULTS = {
   admin: {
     can_assign_tasks: 1, can_manage_violations: 1, can_grade_checklists: 1,
-    can_manage_sales: 1, can_set_sales_targets: 1, can_manage_weekly_report: 1, can_view_weekly_report: 1, can_view_reports: 1, can_manage_users: 1, can_export: 1, can_view_sales_target: 1, can_view_store_sales_summary: 1, can_manage_bonuses: 1, can_view_bonuses: 1, can_manage_documents: 1, can_view_documents: 1, can_manage_shifts: 1, can_manage_schedule: 1, can_view_schedule: 1, can_manage_orders: 1, can_view_orders: 1, can_manage_online_orders: 1, can_view_online_orders: 1, can_manage_product_feedback: 1, can_view_product_feedback: 1, can_manage_product_collections: 1, can_manage_product_training: 1, can_view_product_training: 1
+    can_manage_sales: 1, can_manage_total_sales: 1, can_manage_daily_report: 1, can_set_sales_targets: 1, can_manage_weekly_report: 1, can_view_weekly_report: 1, can_view_reports: 1, can_manage_users: 1, can_export: 1, can_view_sales_target: 1, can_view_store_sales_summary: 1, can_manage_bonuses: 1, can_view_bonuses: 1, can_manage_documents: 1, can_view_documents: 1, can_manage_shifts: 1, can_manage_schedule: 1, can_view_schedule: 1, can_manage_orders: 1, can_view_orders: 1, can_manage_online_orders: 1, can_view_online_orders: 1, can_manage_product_feedback: 1, can_view_product_feedback: 1, can_manage_product_collections: 1, can_manage_product_training: 1, can_view_product_training: 1
   },
   manager: {
     can_assign_tasks: 1, can_manage_violations: 1, can_grade_checklists: 1,
-    can_manage_sales: 1, can_set_sales_targets: 0, can_manage_weekly_report: 1, can_view_weekly_report: 1, can_view_reports: 1, can_manage_users: 0, can_export: 1, can_view_sales_target: 0, can_view_store_sales_summary: 1, can_manage_bonuses: 0, can_view_bonuses: 1, can_manage_documents: 1, can_view_documents: 1, can_manage_shifts: 0, can_manage_schedule: 1, can_view_schedule: 1, can_manage_orders: 1, can_view_orders: 1, can_manage_online_orders: 1, can_view_online_orders: 1, can_manage_product_feedback: 1, can_view_product_feedback: 1, can_manage_product_collections: 0, can_manage_product_training: 0, can_view_product_training: 1
+    can_manage_sales: 1, can_manage_total_sales: 1, can_manage_daily_report: 1, can_set_sales_targets: 0, can_manage_weekly_report: 1, can_view_weekly_report: 1, can_view_reports: 1, can_manage_users: 0, can_export: 1, can_view_sales_target: 0, can_view_store_sales_summary: 1, can_manage_bonuses: 0, can_view_bonuses: 1, can_manage_documents: 1, can_view_documents: 1, can_manage_shifts: 0, can_manage_schedule: 1, can_view_schedule: 1, can_manage_orders: 1, can_view_orders: 1, can_manage_online_orders: 1, can_view_online_orders: 1, can_manage_product_feedback: 1, can_view_product_feedback: 1, can_manage_product_collections: 0, can_manage_product_training: 0, can_view_product_training: 1
   },
   employee: {
     can_assign_tasks: 0, can_manage_violations: 0, can_grade_checklists: 0,
-    can_manage_sales: 0, can_set_sales_targets: 0, can_manage_weekly_report: 0, can_view_weekly_report: 0, can_view_reports: 0, can_manage_users: 0, can_export: 0, can_view_sales_target: 0, can_view_store_sales_summary: 0, can_manage_bonuses: 0, can_view_bonuses: 0, can_manage_documents: 0, can_view_documents: 1, can_manage_shifts: 0, can_manage_schedule: 0, can_view_schedule: 1, can_manage_orders: 0, can_view_orders: 1, can_manage_online_orders: 0, can_view_online_orders: 0, can_manage_product_feedback: 1, can_view_product_feedback: 1, can_manage_product_collections: 0, can_manage_product_training: 0, can_view_product_training: 1
+    can_manage_sales: 0, can_manage_total_sales: 0, can_manage_daily_report: 0, can_set_sales_targets: 0, can_manage_weekly_report: 0, can_view_weekly_report: 0, can_view_reports: 0, can_manage_users: 0, can_export: 0, can_view_sales_target: 0, can_view_store_sales_summary: 0, can_manage_bonuses: 0, can_view_bonuses: 0, can_manage_documents: 0, can_view_documents: 1, can_manage_shifts: 0, can_manage_schedule: 0, can_view_schedule: 1, can_manage_orders: 0, can_view_orders: 1, can_manage_online_orders: 0, can_view_online_orders: 0, can_manage_product_feedback: 1, can_view_product_feedback: 1, can_manage_product_collections: 0, can_manage_product_training: 0, can_view_product_training: 1
   }
 };
 
@@ -264,6 +264,14 @@ function requirePerm(permission) {
     return res.status(403).json({ error: 'Không có quyền thao tác mục này' });
   };
 }
+function requireAnyPerm(...permissions) {
+  return (req, res, next) => {
+    if (req.user.role === 'admin') return next();
+    const ok = permissions.some(permission => Number(req.user.permissions?.[permission]) === 1);
+    if (ok) return next();
+    return res.status(403).json({ error: 'Không có quyền thao tác mục này' });
+  };
+}
 
 function saveUploadedFile(file) {
   if (!file) return null;
@@ -367,7 +375,8 @@ function aggregateOrderRows(rows) {
     const batchName = normalizeOrderBatchName(o.batch_name || o.order_batch);
     const sku = String(o.sku || '').trim();
     const productName = String(o.product_name || '').trim();
-    const key = [Number(o.store_id || 0), batchName.toLowerCase(), sku.toLowerCase(), productName.toLowerCase()].join('||');
+    const size = String(o.size || '').trim();
+    const key = [Number(o.store_id || 0), batchName.toLowerCase(), sku.toLowerCase(), productName.toLowerCase(), size.toLowerCase()].join('||');
     if (!map.has(key)) {
       map.set(key, {
         batch_name: batchName,
@@ -375,6 +384,7 @@ function aggregateOrderRows(rows) {
         store_name: o.store_name || getStore(o.store_id)?.name || '',
         sku,
         product_name: productName,
+        size,
         total_quantity: 0,
         first_order_date: o.order_date || '',
         last_order_date: o.order_date || '',
@@ -1441,7 +1451,7 @@ app.get('/api/checklist/assessments/:id', requireAuth, (req, res) => {
   res.json({ assessment: a, items });
 });
 
-app.post('/api/sales', requireAuth, requirePerm('can_manage_sales'), (req, res) => {
+app.post('/api/sales', requireAuth, requireAnyPerm('can_manage_total_sales','can_manage_sales'), (req, res) => {
   const { user_id, sale_date, revenue, bill_count, item_count, customer_count, note } = req.body || {};
   const employee = getActiveUser(Number(user_id));
   if (!employee || employee.role !== 'employee') return res.status(400).json({ error: 'Chỉ nhập doanh thu cho nhân viên bán hàng' });
@@ -1581,7 +1591,7 @@ function buildWeeklyReport(user, rawWeekStart, rawStoreId) {
   return { store_id: storeId, store_name: store.name, week_start, week_end, totals, days: daysRows, employees: employeeRows, top_products, promotions, feedback: { ...feedback, top_products, promotions } };
 }
 
-app.post('/api/sales/daily', requireAuth, requirePerm('can_manage_sales'), (req, res) => {
+app.post('/api/sales/daily', requireAuth, requireAnyPerm('can_manage_total_sales','can_manage_sales'), (req, res) => {
   const { store_id, sale_date, customer_count, note, entries } = req.body || {};
   const storeId = req.user.role === 'admin' ? Number(store_id || getPrimaryStoreId(req.user)) : Number(getPrimaryStoreId(req.user));
   const store = getStore(storeId);
@@ -1814,12 +1824,17 @@ function normalizeDailySalesEntries(value) {
     note: String(item.note || '').trim()
   })).filter(item => item.user_id);
 }
+function normalizeOrderSizeValue(value) {
+  if (Array.isArray(value)) return value.map(v => String(v || '').trim()).filter(Boolean).slice(0, 4).join(', ');
+  return String(value || '').split(/[,+/|;]/).map(v => v.trim()).filter(Boolean).slice(0, 4).join(', ');
+}
 function normalizeMissingSizeItems(value) {
   return parseWeeklyList(value).map(item => ({
     sku: String(item.sku || '').trim(),
     product_name: String(item.product_name || item.name || '').trim(),
+    size: normalizeOrderSizeValue(item.sizes || item.size || item.size_note || ''),
     quantity: Math.max(0, Math.round(toNumber(item.quantity || item.qty, 0))),
-    note: String(item.note || item.size_note || '').trim()
+    note: String(item.note || '').trim()
   })).filter(item => (item.sku || item.product_name) && item.quantity).slice(0, 30);
 }
 function normalizeDailyFeedbackItems(value) {
@@ -1900,7 +1915,7 @@ function dailyReportZaloText(payload) {
   const missing = normalizeMissingSizeItems(payload.missing_size_items || []);
   lines.push('');
   lines.push('2. SẢN PHẨM THIẾU SIZE / CẦN ORDER');
-  if (missing.length) missing.forEach((item, i) => lines.push(`- ${i + 1}. ${item.sku ? item.sku + ' - ' : ''}${item.product_name || ''}: SL ${fmt(item.quantity)}${item.note ? ` | ${item.note}` : ''}`));
+  if (missing.length) missing.forEach((item, i) => lines.push(`- ${i + 1}. ${item.sku ? item.sku + ' - ' : ''}${item.product_name || ''}: ${item.size ? `Size ${item.size} | ` : ''}SL ${fmt(item.quantity)}${item.note ? ` | ${item.note}` : ''}`));
   else lines.push('- Không có');
   const feedback = normalizeDailyFeedbackItems(payload.product_feedback_items || []);
   lines.push('');
@@ -1919,7 +1934,7 @@ app.get('/api/daily-report', requireAuth, (req, res) => {
   }
 });
 
-app.post('/api/daily-report', requireAuth, requirePerm('can_manage_sales'), (req, res) => {
+app.post('/api/daily-report', requireAuth, requireAnyPerm('can_manage_daily_report','can_manage_sales'), (req, res) => {
   const { store_id, report_date, customer_count, store_note, sales_entries, missing_size_items, product_feedback_items } = req.body || {};
   const storeId = req.user.role === 'admin' ? Number(store_id || getPrimaryStoreId(req.user)) : Number(getPrimaryStoreId(req.user));
   const store = getStore(storeId);
@@ -1968,6 +1983,7 @@ app.post('/api/daily-report', requireAuth, requirePerm('can_manage_sales'), (req
         batch_name: batchName,
         sku: item.sku,
         product_name: item.product_name,
+        size: item.size || '',
         quantity: item.quantity,
         order_status: 'new',
         note: item.note ? `Từ báo cáo ngày: ${item.note}` : 'Từ báo cáo ngày - thiếu size',
@@ -2194,6 +2210,7 @@ app.post('/api/orders', requireAuth, requirePerm('can_manage_orders'), (req, res
   items.forEach(item => {
     const sku = String(item.sku || '').trim();
     const productName = String(item.product_name || '').trim();
+    const size = normalizeOrderSizeValue(item.size || item.sizes || '');
     const quantity = Math.max(0, Math.round(toNumber(item.quantity, 0)));
     if (!sku && !productName) return;
     if (!quantity) return;
@@ -2204,6 +2221,7 @@ app.post('/api/orders', requireAuth, requirePerm('can_manage_orders'), (req, res
       batch_name: batchName,
       sku,
       product_name: productName,
+      size,
       quantity,
       order_status: 'new',
       note: String(item.note || '').trim(),
@@ -2224,13 +2242,14 @@ app.patch('/api/orders/:id', requireAuth, requirePerm('can_manage_orders'), (req
   const row = (db.orders || []).find(o => Number(o.id) === Number(req.params.id));
   if (!row || row.status === 'deleted') return res.status(404).json({ error: 'Không tìm thấy order' });
   if (!canManageOrderScope(req.user, row.store_id)) return res.status(403).json({ error: 'Không có quyền sửa order này' });
-  const { order_status, note, quantity, sku, product_name, batch_name } = req.body || {};
+  const { order_status, note, quantity, sku, product_name, size, batch_name } = req.body || {};
   if (order_status && !['new', 'done', 'waiting', 'received', 'cancelled'].includes(order_status)) return res.status(400).json({ error: 'Trạng thái order không hợp lệ' });
   if (order_status) row.order_status = order_status;
   if (note !== undefined) row.note = String(note || '');
   if (quantity !== undefined) row.quantity = Math.max(0, Math.round(toNumber(quantity, 0)));
   if (sku !== undefined) row.sku = String(sku || '').trim();
   if (product_name !== undefined) row.product_name = String(product_name || '').trim();
+  if (size !== undefined) row.size = normalizeOrderSizeValue(size);
   if (batch_name !== undefined) row.batch_name = String(batch_name || 'Chưa gắn lần').trim() || 'Chưa gắn lần';
   row.updated_by = req.user.id;
   row.updated_at = nowIso();
@@ -2659,7 +2678,7 @@ app.get('/api/export/:type.csv', requireAuth, requirePerm('can_export'), (req, r
     if (req.user.role === 'employee') rows = rows.filter(r => r.employee_name === req.user.full_name);
     rows = rows.sort((a, b) => String(b.work_date).localeCompare(String(a.work_date)) || String(a.store_name).localeCompare(String(b.store_name), 'vi'));
   } else if (type === 'orders') {
-    rows = aggregateOrderRows(orderRowsForUser(req.user)).map(o => ({ lan_order: o.batch_name, store_id: o.store_id, store_name: o.store_name, sku: o.sku || '', product_name: o.product_name || '', tong_so_luong: Number(o.total_quantity || 0), ngay_dau: o.first_order_date || '', ngay_cuoi: o.last_order_date || '', trang_thai: o.status_label, ghi_chu: o.note || '', so_dong_gop: Number(o.source_count || 0), nguoi_tao: o.created_by_name || '' }));
+    rows = aggregateOrderRows(orderRowsForUser(req.user)).map(o => ({ lan_order: o.batch_name, store_id: o.store_id, store_name: o.store_name, sku: o.sku || '', product_name: o.product_name || '', size: o.size || '', tong_so_luong: Number(o.total_quantity || 0), ngay_dau: o.first_order_date || '', ngay_cuoi: o.last_order_date || '', trang_thai: o.status_label, ghi_chu: o.note || '', so_dong_gop: Number(o.source_count || 0), nguoi_tao: o.created_by_name || '' }));
   } else if (type === 'online_orders') {
     rows = onlineOrderRowsForUser(req.user).map(o => ({ id: o.id, ngay: o.order_date || '', cua_hang: o.store_name || '', so_hoa_don: o.invoice_no || '', gia_tri_don: Number(o.order_value || 0), doanh_thu_huong_30: Number(o.benefit_revenue || 0), nhan_vien_dong: o.packer_name || '', ghi_chu: o.note || '', nguoi_nhap: o.created_by_name || '', ngay_cap_nhat: o.updated_at || o.created_at || '' }));
   } else if (type === 'product_feedback') {

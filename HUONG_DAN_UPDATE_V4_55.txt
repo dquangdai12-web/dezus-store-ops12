@@ -1,0 +1,17 @@
+V4.55 - Phân quyền báo cáo ngày + Size order
+
+1. Phân quyền mới
+- Nhập doanh thu tổng: dùng cho màn Doanh thu / nhập doanh thu từng ngày.
+- Nhập báo cáo ngày: dùng cho màn Báo cáo ngày.
+- Quyền Nhập doanh thu chung vẫn giữ để tương thích dữ liệu cũ.
+
+2. Báo cáo ngày
+- Mục 2 Sản phẩm thiếu size mặc định 2 dòng.
+- Mục 3 Sản phẩm lỗi / feedback khách mặc định 2 dòng.
+- Cửa hàng có thêm sản phẩm thì bấm Thêm dòng.
+- Size thiếu có 4 ô nhỏ để nhập nhanh S / M / L / XL.
+
+3. Order hàng
+- Thêm cột Size trong form nhập order.
+- Order tổng hợp cũng hiển thị Size.
+- Dữ liệu thiếu size từ Báo cáo ngày tự chuyển sang Order hàng kèm Size.

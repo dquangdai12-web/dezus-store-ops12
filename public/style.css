@@ -3323,3 +3323,59 @@ body{letter-spacing:-.008em}
   .daily-overview-row{display:block}
   .daily-overview-numbers{text-align:left;margin-top:6px}
 }
+
+/* ==== V4.55 DAILY REPORT PERMISSIONS + ORDER SIZE POLISH ==== */
+.daily-size-boxes{
+  display:flex;
+  align-items:center;
+  gap:5px;
+  flex-wrap:nowrap;
+}
+.daily-size-boxes .daily-missing-size,
+.size-mini-input{
+  width:42px!important;
+  min-width:42px!important;
+  max-width:42px!important;
+  text-align:center!important;
+  padding-left:4px!important;
+  padding-right:4px!important;
+  text-transform:uppercase;
+  font-weight:700;
+  letter-spacing:.01em;
+}
+.size-badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:30px;
+  min-height:24px;
+  padding:2px 8px;
+  border-radius:999px;
+  background:#f1f5f9;
+  color:#334155;
+  font-size:12px;
+  font-weight:700;
+  line-height:1;
+  white-space:nowrap;
+}
+.size-badge:empty{
+  display:none;
+}
+.daily-report-table-wrap table th:nth-child(3),
+.daily-report-table-wrap table td:nth-child(3){
+  width:190px;
+}
+@media (max-width:699px){
+  .daily-size-boxes{gap:4px}
+  .daily-size-boxes .daily-missing-size,
+  .size-mini-input{
+    width:34px!important;
+    min-width:34px!important;
+    max-width:34px!important;
+    min-height:34px!important;
+    font-size:11px!important;
+  }
+  .size-badge{font-size:11px;min-height:22px;padding:2px 7px}
+  .daily-report-table-wrap table th:nth-child(3),
+  .daily-report-table-wrap table td:nth-child(3){width:150px}
+}
