@@ -785,14 +785,15 @@ async function renderTasks() {
   const storeId = allowedStores[0]?.id || state.user.store_id || state.boot.stores[0]?.id || '';
   const storeOptions = allowedStores.map(s => `<option value="${s.id}" ${Number(s.id) === Number(storeId) ? 'selected' : ''}>${esc(s.name)}</option>`).join('');
   const shiftOptions = shifts.map(sh => `<option value="${sh.id}">${esc(sh.code || sh.name)} • ${esc(sh.start_time || '')}-${esc(sh.end_time || '')}</option>`).join('');
+  const taskUserPicker = (id, users, hint = '') => `<div class="task-user-picker" id="${id}" role="group" aria-label="Chọn nhân viên">${users.map(u => `<label class="task-user-option"><input type="checkbox" value="${u.id}"><span class="task-user-dot" aria-hidden="true"></span><span class="task-user-info"><b>${esc(u.full_name)}</b><small>${esc(u.store_name || '')}</small></span></label>`).join('') || '<div class="empty compact">Chưa có nhân viên trong cửa hàng này</div>'}</div>${hint ? `<span class="hint">${hint}</span>` : ''}`;
   const assignForm = can('can_assign_tasks') ? `
     <div class="card task-create-card"><div class="section-title"><h3>Giao việc mới</h3><span class="badge">Chọn loại trước</span></div>
       <form id="taskForm" class="task-advanced-form">
         <input type="hidden" name="task_mode" id="taskMode" value="single">
         <div class="task-mode-chooser" role="tablist" aria-label="Chọn cách giao việc">
-          <button type="button" class="taskModeBtn active" data-mode="single"><b>⏱</b><span>Thời gian cụ thể</span><small>Giao 1 lần, có hạn giờ/ngày rõ ràng</small></button>
-          <button type="button" class="taskModeBtn" data-mode="multi"><b>🔁</b><span>Việc lặp lại</span><small>Tạo nhiều ngày theo chu kỳ</small></button>
-          <button type="button" class="taskModeBtn" data-mode="shift"><b>🗓</b><span>Theo ca làm</span><small>Lấy nhân viên theo lịch ca đã phân</small></button>
+          <button type="button" class="taskModeBtn active" data-mode="single"><b>⏱</b><span>Thời gian cụ thể</span><small>Giao một lần theo hạn ngày/giờ</small></button>
+          <button type="button" class="taskModeBtn" data-mode="multi"><b>🔁</b><span>Việc lặp lại</span><small>Tự tạo việc theo nhiều ngày</small></button>
+          <button type="button" class="taskModeBtn" data-mode="shift"><b>🗓</b><span>Theo ca làm</span><small>Lấy nhân viên theo ca đã xếp</small></button>
         </div>
 
         <div class="grid two task-basic-grid">
@@ -805,7 +806,7 @@ async function renderTasks() {
         <div class="task-mode-panel active" data-task-panel="single">
           <div class="grid two">
             <div class="field"><label>Hạn hoàn thành cụ thể</label><input class="input" name="due_at" type="datetime-local"><span class="hint">Dùng cho việc giao 1 lần.</span></div>
-            <div class="field"><label>Nhân viên nhận việc</label><select name="assignee_ids" id="assigneeSelect" multiple size="5">${usersInStore(storeId).map(u => `<option value="${u.id}">${esc(u.full_name)} - ${esc(u.store_name || '')}</option>`).join('')}</select><span class="hint">Có thể chọn nhiều người cùng lúc.</span></div>
+            <div class="field"><label>Nhân viên nhận việc</label>${taskUserPicker('assigneeSelect', usersInStore(storeId), 'Tick tròn để chọn 1 hoặc nhiều nhân viên.')}</div>
           </div>
         </div>
 
@@ -815,7 +816,7 @@ async function renderTasks() {
             <div class="field"><label>Đến ngày</label><input class="input" name="multi_end_date" type="date"></div>
             <div class="field"><label>Hạn hoàn thành mỗi ngày</label><input class="input" name="multi_due_time" type="time" value="22:00"></div>
             <div class="field"><label>Lặp lại</label><select name="multi_repeat_every_days"><option value="1">Mỗi ngày</option><option value="2">2 ngày/lần</option><option value="3">3 ngày/lần</option><option value="7">Mỗi tuần</option></select></div>
-            <div class="field" style="grid-column:span 2"><label>Nhân viên nhận việc</label><select id="multiAssigneeSelect" multiple size="5">${usersInStore(storeId).map(u => `<option value="${u.id}">${esc(u.full_name)} - ${esc(u.store_name || '')}</option>`).join('')}</select><span class="hint">Tạo việc theo từng ngày cho các nhân viên đã chọn.</span></div>
+            <div class="field" style="grid-column:span 2"><label>Nhân viên nhận việc</label>${taskUserPicker('multiAssigneeSelect', usersInStore(storeId), 'Tick tròn để chọn người nhận việc lặp lại.')}</div>
           </div>
         </div>
 
@@ -826,7 +827,7 @@ async function renderTasks() {
             <div class="field"><label>Hạn hoàn thành mỗi ngày</label><input class="input" name="shift_due_time" type="time" value="22:00"></div>
             <div class="field"><label>Lặp lại</label><select name="shift_repeat_every_days"><option value="1">Mỗi ngày</option><option value="2">2 ngày/lần</option><option value="3">3 ngày/lần</option><option value="7">Mỗi tuần</option></select></div>
             <div class="field"><label>Chọn ca</label><select name="shift_ids" id="taskShiftSelect" multiple size="5">${shiftOptions}</select><span class="hint">Hệ thống tự lấy nhân viên đã được phân lịch ca đó.</span></div>
-            <div class="field"><label>Thêm nhân viên thủ công nếu cần</label><select id="shiftAssigneeSelect" multiple size="5">${usersInStore(storeId).map(u => `<option value="${u.id}">${esc(u.full_name)} - ${esc(u.store_name || '')}</option>`).join('')}</select><span class="hint">Có thể để trống nếu chỉ giao theo ca.</span></div>
+            <div class="field"><label>Thêm nhân viên thủ công nếu cần</label>${taskUserPicker('shiftAssigneeSelect', usersInStore(storeId), 'Có thể để trống nếu chỉ giao theo ca.')}</div>
           </div>
         </div>
 
@@ -837,8 +838,9 @@ async function renderTasks() {
   const grouped = tasks.map(t => taskCard(t)).join('') || '<div class="empty">Chưa có công việc</div>';
   shell(`${assignForm}<div class="card" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">Danh sách công việc</h3>${can('can_export') ? '<button class="btn secondary" data-export="tasks">Tải CSV</button>' : ''}</div><div class="grid">${grouped}</div></div>`, 'Công việc', 'Giao việc 1 lần, giao nhiều ngày, giao theo ca hoặc nhiều nhân viên cùng lúc');
   function refreshTaskAssignees(storeValue) {
-    const html = usersInStore(storeValue).map(u => `<option value="${u.id}">${esc(u.full_name)} - ${esc(u.store_name || '')}</option>`).join('');
-    ['assigneeSelect', 'multiAssigneeSelect', 'shiftAssigneeSelect'].forEach(id => { const el = $('#' + id); if (el) el.innerHTML = html; });
+    const users = usersInStore(storeValue);
+    const renderOptions = () => users.map(u => `<label class="task-user-option"><input type="checkbox" value="${u.id}"><span class="task-user-dot" aria-hidden="true"></span><span class="task-user-info"><b>${esc(u.full_name)}</b><small>${esc(u.store_name || '')}</small></span></label>`).join('') || '<div class="empty compact">Chưa có nhân viên trong cửa hàng này</div>';
+    ['assigneeSelect', 'multiAssigneeSelect', 'shiftAssigneeSelect'].forEach(id => { const el = $('#' + id); if (el) el.innerHTML = renderOptions(); });
   }
   function setTaskMode(mode) {
     const input = $('#taskMode');
@@ -874,7 +876,13 @@ async function submitTask(e) {
   const mode = payload.task_mode || 'single';
   payload.store_id = $('#taskStore')?.value || state.user.store_id;
 
-  const selectedFrom = (id) => $$('#' + id + ' option:checked').map(o => Number(o.value)).filter(Boolean);
+  const selectedFrom = (id) => {
+    const box = $('#' + id);
+    if (!box) return [];
+    const checked = $$('input[type="checkbox"]:checked', box).map(o => Number(o.value)).filter(Boolean);
+    if (checked.length || box.matches('.task-user-picker')) return checked;
+    return $$('#' + id + ' option:checked').map(o => Number(o.value)).filter(Boolean);
+  };
   payload.shift_ids = [];
 
   if (mode === 'single') {
