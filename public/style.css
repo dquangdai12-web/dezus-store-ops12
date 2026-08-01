@@ -2081,3 +2081,107 @@ textarea.input{min-height:92px;resize:vertical;line-height:1.45}
     min-width:0;
   }
 }
+
+/* ==== V4.46 SCHEDULE DATE FIX + COMPACT TASK MODE ==== */
+.schedule-table th{
+  text-align:center!important;
+  vertical-align:middle!important;
+}
+.schedule-table th .hint{
+  display:block!important;
+  margin-top:3px!important;
+  font-size:11px!important;
+  color:#6f7f91!important;
+  font-weight:700!important;
+}
+.schedule-week-title span{
+  white-space:normal!important;
+}
+.task-create-card .section-title{
+  margin-bottom:12px!important;
+}
+.task-advanced-form{
+  display:block!important;
+}
+.task-mode-chooser{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+  margin:10px 0 14px;
+}
+.taskModeBtn{
+  text-align:left;
+  border:1px solid #d8e2ee;
+  background:linear-gradient(180deg,#ffffff,#f6f9fc);
+  border-radius:16px;
+  padding:13px 14px;
+  cursor:pointer;
+  display:grid;
+  gap:4px;
+  min-height:104px;
+  color:#1e3349;
+  box-shadow:0 8px 18px rgba(17,24,39,.05);
+  transition:.15s ease;
+}
+.taskModeBtn b{
+  width:34px;
+  height:34px;
+  display:grid;
+  place-items:center;
+  border-radius:12px;
+  background:#eaf4ff;
+  font-size:17px;
+}
+.taskModeBtn span{
+  font-weight:800;
+  font-size:14px;
+  white-space:nowrap;
+}
+.taskModeBtn small{
+  color:#697a8d;
+  font-size:11.5px;
+  line-height:1.35;
+}
+.taskModeBtn.active{
+  border-color:#7db5ed;
+  background:linear-gradient(135deg,#eaf5ff,#ffffff);
+  box-shadow:0 12px 28px rgba(45,122,192,.14);
+}
+.taskModeBtn.active b{
+  background:#d7ecff;
+}
+.task-basic-grid{
+  margin-bottom:12px;
+}
+.task-mode-panel{
+  display:none;
+  border:1px solid #dce6f0;
+  background:#fbfdff;
+  border-radius:18px;
+  padding:14px;
+  margin-top:10px;
+}
+.task-mode-panel.active{
+  display:block;
+}
+.task-submit-row{
+  margin-top:12px;
+  display:flex;
+  justify-content:flex-end;
+}
+.task-submit-row .btn{
+  min-width:160px;
+}
+@media (max-width:900px){
+  .task-mode-chooser{
+    grid-template-columns:1fr;
+  }
+  .taskModeBtn{
+    min-height:auto;
+    grid-template-columns:38px 1fr;
+    align-items:center;
+  }
+  .taskModeBtn small{
+    grid-column:2;
+  }
+}

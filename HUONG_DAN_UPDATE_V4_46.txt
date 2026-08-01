@@ -1,0 +1,17 @@
+V4.46 - Fix lịch làm việc và bố cục giao việc
+
+1. Lịch làm việc
+- Sửa lỗi ngày/thứ hiển thị sai do lệch timezone trên trình duyệt.
+- Lịch tháng hiển thị đúng thứ/ngày theo thực tế.
+- Các ngày trong lịch được xử lý theo ngày local, không bị lệch sang ngày trước/sau.
+
+2. Giao việc
+- Form giao việc được chia thành 3 danh mục:
+  + Thời gian cụ thể
+  + Việc lặp lại
+  + Theo ca làm
+- Chỉ khi chọn danh mục thì phần nhập tương ứng mới hiện ra.
+- Giao diện gọn hơn, tránh nhập nhầm giữa giao 1 lần, giao lặp lại và giao theo ca.
+
+Cách cập nhật:
+Giải nén file zip, upload toàn bộ nội dung bên trong lên GitHub, Commit changes, sau đó vào Render > Manual Deploy > Deploy latest commit.

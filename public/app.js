@@ -11,8 +11,8 @@ const state = {
   leaderboardPeriod: 'month',
   salesMonth: new Date().toISOString().slice(0, 7),
   salesStoreId: '',
-  scheduleDate: new Date().toISOString().slice(0, 10),
-  scheduleMonth: new Date().toISOString().slice(0, 7),
+  scheduleDate: isoDateLocal(new Date()),
+  scheduleMonth: currentMonthLocal(),
   scheduleStoreId: '',
   orderStoreId: '',
   feedbackStoreId: '',
@@ -20,7 +20,7 @@ const state = {
   feedbackCollectionId: '',
   trainingStoreId: '',
   trainingQuiz: null,
-  weeklyWeekStart: mondayOf(new Date().toISOString().slice(0, 10)),
+  weeklyWeekStart: mondayOf(isoDateLocal(new Date())),
   weeklyStoreId: '',
   weeklyEditMode: false,
   onlineOrderStoreId: '',
@@ -127,24 +127,27 @@ function dt(v) {
   return d.toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
+function parseLocalDate(v) {
+  const raw = String(v || '').slice(0, 10);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+    const [y, m, d] = raw.split('-').map(Number);
+    return new Date(y, m - 1, d);
+  }
+  const dt = new Date(v);
+  if (Number.isNaN(dt.getTime())) return null;
+  return new Date(dt.getFullYear(), dt.getMonth(), dt.getDate());
+}
+
 function dOnly(v) {
   if (!v) return '';
+  const raw = String(v).slice(0, 10);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+    const [y, m, d] = raw.split('-');
+    return `${d}/${m}/${y}`;
+  }
   const d = new Date(v);
   if (Number.isNaN(d.getTime())) return esc(v);
   return d.toLocaleDateString('vi-VN');
-}
-
-function addDays(dateStr, days) {
-  const d = new Date(`${dateStr}T00:00:00`);
-  d.setDate(d.getDate() + days);
-  return d.toISOString().slice(0, 10);
-}
-
-function weekLabel(dateStr, idx) {
-  const labels = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
-  const d = new Date(`${dateStr}T00:00:00`);
-  const day = d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
-  return `${labels[idx]}<br><span class="hint">${day}</span>`;
 }
 
 function isoDateLocal(d) {
@@ -154,8 +157,26 @@ function isoDateLocal(d) {
   return `${y}-${m}-${day}`;
 }
 
+function currentMonthLocal() {
+  return isoDateLocal(new Date()).slice(0, 7);
+}
+
+function addDays(dateStr, days) {
+  const d = parseLocalDate(dateStr) || new Date();
+  d.setDate(d.getDate() + Number(days || 0));
+  return isoDateLocal(d);
+}
+
+function weekLabel(dateStr) {
+  const labels = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+  const d = parseLocalDate(dateStr);
+  if (!d) return '';
+  const day = d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+  return `${labels[d.getDay()]}<br><span class="hint">${day}</span>`;
+}
+
 function mondayOf(dateStr) {
-  const d = new Date(`${dateStr}T00:00:00`);
+  const d = parseLocalDate(dateStr) || new Date();
   const day = d.getDay();
   const diff = day === 0 ? -6 : 1 - day;
   d.setDate(d.getDate() + diff);
@@ -163,7 +184,7 @@ function mondayOf(dateStr) {
 }
 
 function scheduleMonthWeeks(monthStr) {
-  const safe = /^\d{4}-\d{2}$/.test(monthStr || '') ? monthStr : new Date().toISOString().slice(0, 7);
+  const safe = /^\d{4}-\d{2}$/.test(monthStr || '') ? monthStr : currentMonthLocal();
   const [year, month] = safe.split('-').map(Number);
   const first = new Date(year, month - 1, 1);
   const last = new Date(year, month, 0);
@@ -173,8 +194,8 @@ function scheduleMonthWeeks(monthStr) {
     const dates = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
     if (dates.some(d => d.startsWith(safe))) weeks.push({ week_start: weekStart, dates });
     const next = addDays(weekStart, 7);
-    if (new Date(`${next}T00:00:00`) > last && !dates.some(d => d.startsWith(safe))) break;
-    if (new Date(`${weekStart}T00:00:00`) > last) break;
+    if ((parseLocalDate(next) > last) && !dates.some(d => d.startsWith(safe))) break;
+    if (parseLocalDate(weekStart) > last) break;
     weekStart = next;
     if (weeks.length > 6) break;
   }
@@ -182,7 +203,7 @@ function scheduleMonthWeeks(monthStr) {
 }
 
 function monthLabel(monthStr) {
-  const safe = /^\d{4}-\d{2}$/.test(monthStr || '') ? monthStr : new Date().toISOString().slice(0, 7);
+  const safe = /^\d{4}-\d{2}$/.test(monthStr || '') ? monthStr : currentMonthLocal();
   const [y, m] = safe.split('-');
   return `Tháng ${Number(m)}/${y}`;
 }
@@ -765,28 +786,70 @@ async function renderTasks() {
   const storeOptions = allowedStores.map(s => `<option value="${s.id}" ${Number(s.id) === Number(storeId) ? 'selected' : ''}>${esc(s.name)}</option>`).join('');
   const shiftOptions = shifts.map(sh => `<option value="${sh.id}">${esc(sh.code || sh.name)} • ${esc(sh.start_time || '')}-${esc(sh.end_time || '')}</option>`).join('');
   const assignForm = can('can_assign_tasks') ? `
-    <div class="card"><h3>Giao việc mới</h3>
-      <form id="taskForm" class="grid two task-advanced-form">
-        <div class="field"><label>Tiêu đề công việc</label><input class="input" name="title" required placeholder="VD: Kiểm tra VM đầu ca"></div>
-        <div class="field"><label>Cửa hàng</label><select name="store_id" id="taskStore" ${allowedStores.length <= 1 ? 'disabled' : ''}>${storeOptions}</select></div>
-        <div class="field"><label>Hạn hoàn thành 1 lần</label><input class="input" name="due_at" type="datetime-local"><span class="hint">Dùng khi chỉ giao 1 lần. Nếu có khoảng ngày bên dưới thì hệ thống sẽ dùng hạn theo từng ngày.</span></div>
-        <div class="field"><label>Mức độ</label><select name="priority"><option value="low">Thấp</option><option value="medium" selected>Trung bình</option><option value="high">Cao</option></select></div>
-        <div class="field"><label>Điểm trừ nếu trễ</label><input class="input" name="score_value" type="number" value="10" min="0" max="100"></div>
-        <div class="field"><label>Hạn hoàn thành mỗi ngày</label><input class="input" name="due_time" type="time" value="22:00"><span class="hint">Dùng cho giao cố định/nhiều ngày.</span></div>
-        <div class="field"><label>Từ ngày</label><input class="input" name="start_date" type="date"></div>
-        <div class="field"><label>Đến ngày</label><input class="input" name="end_date" type="date"></div>
-        <div class="field"><label>Lặp lại</label><select name="repeat_every_days"><option value="1">Mỗi ngày</option><option value="2">2 ngày/lần</option><option value="3">3 ngày/lần</option><option value="7">Mỗi tuần</option></select></div>
-        <div class="field"><label>Chọn ca để giao việc</label><select name="shift_ids" id="taskShiftSelect" multiple size="4">${shiftOptions}</select><span class="hint">Nếu chọn ca, hệ thống tự lấy nhân viên đã được phân lịch ca đó trong từng ngày.</span></div>
-        <div class="field"><label>Chọn thêm nhân viên thủ công</label><select name="assignee_ids" id="assigneeSelect" multiple size="5">${usersInStore(storeId).map(u => `<option value="${u.id}">${esc(u.full_name)} - ${esc(u.store_name || '')}</option>`).join('')}</select><span class="hint">Có thể chọn nhiều người cùng lúc. Nếu đã chọn ca thì phần này có thể để trống.</span></div>
-        <div class="field" style="grid-column:1/-1"><label>Mô tả / yêu cầu</label><textarea name="description" placeholder="Nội dung, tiêu chuẩn hoàn thành, chứng từ cần đính kèm..."></textarea></div>
-        <div style="grid-column:1/-1"><button class="btn">Tạo & giao việc</button></div>
+    <div class="card task-create-card"><div class="section-title"><h3>Giao việc mới</h3><span class="badge">Chọn loại trước</span></div>
+      <form id="taskForm" class="task-advanced-form">
+        <input type="hidden" name="task_mode" id="taskMode" value="single">
+        <div class="task-mode-chooser" role="tablist" aria-label="Chọn cách giao việc">
+          <button type="button" class="taskModeBtn active" data-mode="single"><b>⏱</b><span>Thời gian cụ thể</span><small>Giao 1 lần, có hạn giờ/ngày rõ ràng</small></button>
+          <button type="button" class="taskModeBtn" data-mode="multi"><b>🔁</b><span>Việc lặp lại</span><small>Tạo nhiều ngày theo chu kỳ</small></button>
+          <button type="button" class="taskModeBtn" data-mode="shift"><b>🗓</b><span>Theo ca làm</span><small>Lấy nhân viên theo lịch ca đã phân</small></button>
+        </div>
+
+        <div class="grid two task-basic-grid">
+          <div class="field"><label>Tiêu đề công việc</label><input class="input" name="title" required placeholder="VD: Kiểm tra VM đầu ca"></div>
+          <div class="field"><label>Cửa hàng</label><select name="store_id" id="taskStore" ${allowedStores.length <= 1 ? 'disabled' : ''}>${storeOptions}</select></div>
+          <div class="field"><label>Mức độ</label><select name="priority"><option value="low">Thấp</option><option value="medium" selected>Trung bình</option><option value="high">Cao</option></select></div>
+          <div class="field"><label>Điểm trừ nếu trễ</label><input class="input" name="score_value" type="number" value="10" min="0" max="100"></div>
+        </div>
+
+        <div class="task-mode-panel active" data-task-panel="single">
+          <div class="grid two">
+            <div class="field"><label>Hạn hoàn thành cụ thể</label><input class="input" name="due_at" type="datetime-local"><span class="hint">Dùng cho việc giao 1 lần.</span></div>
+            <div class="field"><label>Nhân viên nhận việc</label><select name="assignee_ids" id="assigneeSelect" multiple size="5">${usersInStore(storeId).map(u => `<option value="${u.id}">${esc(u.full_name)} - ${esc(u.store_name || '')}</option>`).join('')}</select><span class="hint">Có thể chọn nhiều người cùng lúc.</span></div>
+          </div>
+        </div>
+
+        <div class="task-mode-panel" data-task-panel="multi">
+          <div class="grid three">
+            <div class="field"><label>Từ ngày</label><input class="input" name="multi_start_date" type="date"></div>
+            <div class="field"><label>Đến ngày</label><input class="input" name="multi_end_date" type="date"></div>
+            <div class="field"><label>Hạn hoàn thành mỗi ngày</label><input class="input" name="multi_due_time" type="time" value="22:00"></div>
+            <div class="field"><label>Lặp lại</label><select name="multi_repeat_every_days"><option value="1">Mỗi ngày</option><option value="2">2 ngày/lần</option><option value="3">3 ngày/lần</option><option value="7">Mỗi tuần</option></select></div>
+            <div class="field" style="grid-column:span 2"><label>Nhân viên nhận việc</label><select id="multiAssigneeSelect" multiple size="5">${usersInStore(storeId).map(u => `<option value="${u.id}">${esc(u.full_name)} - ${esc(u.store_name || '')}</option>`).join('')}</select><span class="hint">Tạo việc theo từng ngày cho các nhân viên đã chọn.</span></div>
+          </div>
+        </div>
+
+        <div class="task-mode-panel" data-task-panel="shift">
+          <div class="grid three">
+            <div class="field"><label>Từ ngày</label><input class="input" name="shift_start_date" type="date"></div>
+            <div class="field"><label>Đến ngày</label><input class="input" name="shift_end_date" type="date"></div>
+            <div class="field"><label>Hạn hoàn thành mỗi ngày</label><input class="input" name="shift_due_time" type="time" value="22:00"></div>
+            <div class="field"><label>Lặp lại</label><select name="shift_repeat_every_days"><option value="1">Mỗi ngày</option><option value="2">2 ngày/lần</option><option value="3">3 ngày/lần</option><option value="7">Mỗi tuần</option></select></div>
+            <div class="field"><label>Chọn ca</label><select name="shift_ids" id="taskShiftSelect" multiple size="5">${shiftOptions}</select><span class="hint">Hệ thống tự lấy nhân viên đã được phân lịch ca đó.</span></div>
+            <div class="field"><label>Thêm nhân viên thủ công nếu cần</label><select id="shiftAssigneeSelect" multiple size="5">${usersInStore(storeId).map(u => `<option value="${u.id}">${esc(u.full_name)} - ${esc(u.store_name || '')}</option>`).join('')}</select><span class="hint">Có thể để trống nếu chỉ giao theo ca.</span></div>
+          </div>
+        </div>
+
+        <div class="field" style="margin-top:12px"><label>Mô tả / yêu cầu</label><textarea name="description" placeholder="Nội dung, tiêu chuẩn hoàn thành, chứng từ cần đính kèm..."></textarea></div>
+        <div class="task-submit-row"><button class="btn">Tạo & giao việc</button></div>
       </form>
     </div>` : '';
   const grouped = tasks.map(t => taskCard(t)).join('') || '<div class="empty">Chưa có công việc</div>';
   shell(`${assignForm}<div class="card" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">Danh sách công việc</h3>${can('can_export') ? '<button class="btn secondary" data-export="tasks">Tải CSV</button>' : ''}</div><div class="grid">${grouped}</div></div>`, 'Công việc', 'Giao việc 1 lần, giao nhiều ngày, giao theo ca hoặc nhiều nhân viên cùng lúc');
-  $('#taskStore')?.addEventListener('change', e => {
-    $('#assigneeSelect').innerHTML = usersInStore(e.target.value).map(u => `<option value="${u.id}">${esc(u.full_name)} - ${esc(u.store_name || '')}</option>`).join('');
-  });
+  function refreshTaskAssignees(storeValue) {
+    const html = usersInStore(storeValue).map(u => `<option value="${u.id}">${esc(u.full_name)} - ${esc(u.store_name || '')}</option>`).join('');
+    ['assigneeSelect', 'multiAssigneeSelect', 'shiftAssigneeSelect'].forEach(id => { const el = $('#' + id); if (el) el.innerHTML = html; });
+  }
+  function setTaskMode(mode) {
+    const input = $('#taskMode');
+    if (!input) return;
+    input.value = mode;
+    $$('.taskModeBtn').forEach(btn => btn.classList.toggle('active', btn.dataset.mode === mode));
+    $$('.task-mode-panel').forEach(panel => panel.classList.toggle('active', panel.dataset.taskPanel === mode));
+  }
+  $('#taskStore')?.addEventListener('change', e => refreshTaskAssignees(e.target.value));
+  $$('.taskModeBtn').forEach(btn => btn.addEventListener('click', () => setTaskMode(btn.dataset.mode)));
+  setTaskMode($('#taskMode')?.value || 'single');
   $('#taskForm')?.addEventListener('submit', submitTask);
   $$('.completeForm').forEach(f => f.addEventListener('submit', submitCompleteTask));
 }
@@ -807,18 +870,35 @@ function taskCard(t) {
 async function submitTask(e) {
   e.preventDefault();
   const fd = new FormData(e.target);
-  const assignee_ids = $$('#assigneeSelect option:checked').map(o => Number(o.value));
-  const shift_ids = $$('#taskShiftSelect option:checked').map(o => Number(o.value));
   const payload = Object.fromEntries(fd);
-  payload.assignee_ids = assignee_ids;
-  payload.shift_ids = shift_ids;
+  const mode = payload.task_mode || 'single';
   payload.store_id = $('#taskStore')?.value || state.user.store_id;
-  if (!payload.start_date || !payload.end_date) {
-    delete payload.start_date;
-    delete payload.end_date;
-    delete payload.repeat_every_days;
-    delete payload.due_time;
+
+  const selectedFrom = (id) => $$('#' + id + ' option:checked').map(o => Number(o.value)).filter(Boolean);
+  payload.shift_ids = [];
+
+  if (mode === 'single') {
+    payload.assignee_ids = selectedFrom('assigneeSelect');
+    delete payload.start_date; delete payload.end_date; delete payload.due_time; delete payload.repeat_every_days;
+  } else if (mode === 'multi') {
+    payload.assignee_ids = selectedFrom('multiAssigneeSelect');
+    payload.start_date = payload.multi_start_date;
+    payload.end_date = payload.multi_end_date;
+    payload.due_time = payload.multi_due_time || '22:00';
+    payload.repeat_every_days = payload.multi_repeat_every_days || '1';
+    delete payload.due_at;
+  } else if (mode === 'shift') {
+    payload.assignee_ids = selectedFrom('shiftAssigneeSelect');
+    payload.shift_ids = selectedFrom('taskShiftSelect');
+    payload.start_date = payload.shift_start_date;
+    payload.end_date = payload.shift_end_date;
+    payload.due_time = payload.shift_due_time || '22:00';
+    payload.repeat_every_days = payload.shift_repeat_every_days || '1';
+    delete payload.due_at;
   }
+
+  ['task_mode','multi_start_date','multi_end_date','multi_due_time','multi_repeat_every_days','shift_start_date','shift_end_date','shift_due_time','shift_repeat_every_days'].forEach(k => delete payload[k]);
+
   try {
     const res = await api('/api/tasks', { method: 'POST', body: JSON.stringify(payload) });
     const count = Number(res.created_assignments || 0);
@@ -1437,7 +1517,7 @@ async function renderProductTraining() {
 }
 
 async function renderSchedule() {
-  const month = state.scheduleMonth || new Date().toISOString().slice(0, 7);
+  const month = state.scheduleMonth || currentMonthLocal();
   const weeks = scheduleMonthWeeks(month);
   const firstWeek = weeks[0]?.week_start || mondayOf(`${month}-01`);
   const storeId = state.user.role === 'admin' ? (state.scheduleStoreId || state.boot.stores[0]?.id || '') : state.user.store_id;
@@ -1478,7 +1558,7 @@ async function renderSchedule() {
     return `<tr><td class="schedule-person"><b>${esc(emp.full_name)}</b><span>${roleLabel(emp.role)}</span></td>${cells}</tr>`;
   }).join('') || `<tr><td colspan="8"><div class="empty">Chưa có nhân sự trong cửa hàng</div></td></tr>`;
   const legend = `<div class="schedule-legend">${shifts.map(sh => `<span>${shiftChip(sh)} <small>${esc(sh.start_time || '')}-${esc(sh.end_time || '')}</small></span>`).join('')}<span><span class="shift-chip off">OFF</span><small>Nghỉ/chưa phân ca</small></span></div>`;
-  const weekTables = weeks.map((week, idx) => `<div class="schedule-week-block"><div class="schedule-week-title">Tuần ${idx + 1} <span>${week.dates.filter(d => d.startsWith(month)).map(dOnly).join(' - ')}</span></div><div class="table-wrap schedule-wrap"><table class="schedule-table"><thead><tr><th>Nhân sự</th>${week.dates.map((d, i) => `<th class="${d.startsWith(month) ? '' : 'schedule-out-month'}">${d.startsWith(month) ? weekLabel(d, i) : ''}</th>`).join('')}</tr></thead><tbody>${makeRows(week)}</tbody></table></div></div>`).join('');
+  const weekTables = weeks.map((week, idx) => `<div class="schedule-week-block"><div class="schedule-week-title">Tuần ${idx + 1} <span>${week.dates.filter(d => d.startsWith(month)).map(dOnly).join(' - ')}</span></div><div class="table-wrap schedule-wrap"><table class="schedule-table"><thead><tr><th>Nhân sự</th>${week.dates.map((d) => `<th class="${d.startsWith(month) ? '' : 'schedule-out-month'}">${d.startsWith(month) ? weekLabel(d) : ''}</th>`).join('')}</tr></thead><tbody>${makeRows(week)}</tbody></table></div></div>`).join('');
   const scheduleTable = `<div class="card" style="margin-top:16px"><form id="scheduleForm"><div class="toolbar"><h3 style="margin-right:auto">Bảng phân ca theo tháng</h3>${isEditing ? '<span class="badge warning">Đang sửa</span>' : '<span class="badge ok">Đang xem</span>'}</div>${legend}${weekTables}</form></div>`;
   const shiftForm = can('can_manage_shifts') ? `<div class="card" style="margin-top:16px"><h3>Admin set ca và giờ của ca</h3><form id="shiftForm" class="grid three simple-shift-form"><div class="field"><label>Mã ca</label><input class="input" name="code" placeholder="S / C / G1" required></div><div class="field"><label>Giờ bắt đầu</label><input class="input" type="time" name="start_time" required></div><div class="field"><label>Giờ kết thúc</label><input class="input" type="time" name="end_time" required></div><input type="hidden" name="name"><div style="grid-column:1/-1"><button class="btn">Thêm ca</button></div></form><div class="shift-admin-list">${shifts.map(sh => `<div class="shift-admin-card"><div class="shift-admin-code">${shiftChip(sh)}</div><div class="grid three"><div class="field"><label>Mã ca</label><input class="input shiftField" data-id="${sh.id}" data-field="code" value="${esc(shiftCode(sh))}"></div><div class="field"><label>Bắt đầu</label><input class="input shiftField" data-id="${sh.id}" data-field="start_time" type="time" value="${esc(sh.start_time || '')}"></div><div class="field"><label>Kết thúc</label><input class="input shiftField" data-id="${sh.id}" data-field="end_time" type="time" value="${esc(sh.end_time || '')}"></div><input type="hidden" class="shiftField" data-id="${sh.id}" data-field="name" value="Ca ${esc(shiftCode(sh))}"><div class="row" style="grid-column:1/-1"><button type="button" class="btn small secondary saveShiftBtn" data-id="${sh.id}">Lưu</button><button type="button" class="btn small danger deleteShiftBtn" data-id="${sh.id}" data-name="${esc(shiftCode(sh))}">Xóa</button></div></div></div>`).join('')}</div></div>` : '';
   shell(`${filter}${scheduleTable}${shiftForm}`, 'Lịch làm việc', 'Ấn Sửa lịch mới hiện ô chọn ca/ghi chú; sau khi lưu quay về bảng xem gọn');

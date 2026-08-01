@@ -57,7 +57,14 @@ const ROLE_DEFAULTS = {
 };
 
 function nowIso() { return new Date().toISOString(); }
-function dateOnly(d) { return new Date(d).toISOString().slice(0, 10); }
+function dateOnly(d) {
+  if (d === null || d === undefined || d === '') return new Date().toISOString().slice(0, 10);
+  const raw = String(d);
+  const m = raw.match(/^(\d{4}-\d{2}-\d{2})/);
+  if (m) return m[1];
+  const dt = new Date(d);
+  return Number.isNaN(dt.getTime()) ? new Date().toISOString().slice(0, 10) : dt.toISOString().slice(0, 10);
+}
 function monthKey(v) { return dateOnly((v || new Date())).slice(0, 7); }
 function monthKeysBetween(start, end) {
   const out = [];
@@ -972,9 +979,11 @@ function loadChecklists() {
 function dateVal(v) { return dateOnly(v || new Date()); }
 
 function addDaysIso(dateStr, days) {
-  const d = new Date(`${dateStr}T00:00:00`);
-  d.setDate(d.getDate() + Number(days || 0));
-  return d.toISOString().slice(0, 10);
+  const raw = dateOnly(dateStr);
+  const [y, m, d] = raw.split('-').map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  dt.setUTCDate(dt.getUTCDate() + Number(days || 0));
+  return dt.toISOString().slice(0, 10);
 }
 function dateRangeEvery(start, end, every = 1) {
   const out = [];
