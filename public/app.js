@@ -1,5 +1,5 @@
-const $ = (sel, root = document) => root.querySelector(sel);
-const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+const $ = (sel, root = document) => root ? root.querySelector(sel) : null;
+const $$ = (sel, root = document) => root ? Array.from(root.querySelectorAll(sel)) : [];
 
 const state = {
   token: localStorage.getItem('dezus_ops_token') || '',
