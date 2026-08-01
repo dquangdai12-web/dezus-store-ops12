@@ -253,7 +253,10 @@ function renderFiles(value) {
   } catch (_err) {
     files = [value];
   }
-  return files.filter(Boolean).map((file, index) => `<a class="filelink" href="${esc(file)}" target="_blank">File ${index + 1}</a>`).join(' • ');
+  return files.filter(Boolean).map((file, index) => {
+    const label = /^https?:\/\//i.test(String(file || '')) ? `Link Drive ${index + 1}` : `File ${index + 1}`;
+    return `<a class="filelink" href="${esc(file)}" target="_blank" rel="noopener">${label}</a>`;
+  }).join(' • ');
 }
 
 function fmt2(v) {
@@ -1078,7 +1081,7 @@ function taskCard(t) {
     </div>
     ${t.description ? `<p>${esc(t.description)}</p>` : ''}
     ${t.evidence_path ? `<div class="hint">Chứng từ: ${renderFiles(t.evidence_path)} • ${esc(t.evidence_note || '')}</div>` : ''}
-    ${canComplete ? `<form class="completeForm row" data-id="${t.assignment_id}" enctype="multipart/form-data"><input class="input" name="note" placeholder="Ghi chú hoàn thành"><input class="input" name="evidence" type="file" accept="image/*,.pdf,.xlsx,.docx" multiple><button class="btn small">Hoàn thành</button></form>` : ''}
+    ${canComplete ? `<form class="completeForm row" data-id="${t.assignment_id}" enctype="multipart/form-data"><input class="input" name="note" placeholder="Ghi chú hoàn thành"><input class="input" name="evidence" type="file" accept="image/*,.pdf,.xlsx,.docx" multiple><input class="input" name="evidence_link" placeholder="Link Drive nếu file >12MB"><button class="btn small">Hoàn thành</button></form>` : ''}
   </div>`;
 }
 
@@ -1131,6 +1134,7 @@ async function submitTask(e) {
 async function submitCompleteTask(e) {
   e.preventDefault();
   const form = e.target;
+  if (hasFileOverLimit(form)) return;
   const fd = new FormData(form);
   try { const res = await api(`/api/tasks/${form.dataset.id}/complete`, { method: 'POST', body: fd }); toast(res.status === 'completed_late' ? 'Hoàn thành nhưng đã trễ hạn, hệ thống tự trừ điểm' : 'Đã hoàn thành đúng hạn'); renderTasks(); } catch (err) { toast(err.message, 'danger'); }
 }
@@ -1143,14 +1147,15 @@ async function renderViolations() {
         <div class="field"><label>Nhân viên</label><select name="user_id" required>${usersInStore(state.user.role === 'admin' ? '' : state.user.store_id).map(u => `<option value="${u.id}">${esc(u.full_name)} - ${esc(u.store_name || '')}</option>`).join('')}</select></div>
         <div class="field"><label>Loại vi phạm</label><input class="input" name="violation_type" placeholder="VD: Quy trình thu ngân / Grooming / Hàng hóa" required></div>
         <div class="field"><label>Điểm trừ</label><input class="input" type="number" name="points_deducted" value="5" min="0" max="100"></div>
-        <div class="field"><label>Ảnh/chứng từ</label><input class="input" type="file" name="evidence" accept="image/*,.pdf,.xlsx,.docx" multiple></div>
+        <div class="field"><label>Ảnh/chứng từ dưới 12MB</label><input class="input" type="file" name="evidence" accept="image/*,.pdf,.xlsx,.docx" multiple></div>
+        <div class="field"><label>Link Google Drive</label><input class="input" name="evidence_link" placeholder="Dán link nếu file nặng / video"></div>
         <div class="field" style="grid-column:1/-1"><label>Nội dung vi phạm</label><textarea name="description" required placeholder="Mô tả lỗi, thời gian, tình huống, yêu cầu khắc phục"></textarea></div>
         <div style="grid-column:1/-1"><button class="btn danger">Lưu vi phạm</button></div>
       </form>
     </div>` : '';
   const list = data.violations.length ? `<div class="table-wrap"><table><thead><tr><th>Ngày</th><th>Nhân viên</th><th>Cửa hàng</th><th>Loại</th><th>Điểm trừ</th><th>Nội dung</th><th>Chứng từ</th></tr></thead><tbody>${data.violations.map(v => `<tr><td>${dt(v.created_at)}</td><td><b>${esc(v.employee_name)}</b></td><td>${esc(v.store_name || '')}</td><td>${esc(v.violation_type)}</td><td><span class="badge danger">-${v.points_deducted}</span></td><td>${esc(v.description || '')}</td><td>${v.evidence_path ? renderFiles(v.evidence_path) : ''}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Chưa có vi phạm</div>';
   shell(`${form}<div class="card" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">Danh sách vi phạm</h3>${can('can_export') ? '<button class="btn secondary" data-export="violations">Tải CSV</button>' : ''}</div>${list}</div>`, 'Vi phạm', 'Quản lý ghi nhận; nhân viên chỉ xem vi phạm của mình');
-  $('#violationForm')?.addEventListener('submit', async e => { e.preventDefault(); try { await api('/api/violations', { method: 'POST', body: new FormData(e.target) }); toast('Đã lưu vi phạm'); renderViolations(); } catch (err) { toast(err.message, 'danger'); } });
+  $('#violationForm')?.addEventListener('submit', async e => { e.preventDefault(); if (hasFileOverLimit(e.target)) return; try { await api('/api/violations', { method: 'POST', body: new FormData(e.target) }); toast('Đã lưu vi phạm'); renderViolations(); } catch (err) { toast(err.message, 'danger'); } });
 }
 
 async function renderChecklists() {
@@ -1318,12 +1323,34 @@ function fileSizeLabel(bytes) {
   return n + ' B';
 }
 
+function hasFileOverLimit(form, maxMb = 12) {
+  const limit = maxMb * 1024 * 1024;
+  const inputs = [...form.querySelectorAll('input[type="file"]')];
+  for (const input of inputs) {
+    for (const file of [...(input.files || [])]) {
+      if (file.size > limit) {
+        toast(`File ${file.name} quá ${maxMb}MB. Hãy tải file lên Google Drive rồi dán link Drive để không tốn kho lưu trữ.`, 'danger');
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 async function downloadDocument(id, name = 'tai-lieu') {
   try {
     const res = await fetch(`/api/documents/${id}/download`, { headers: { Authorization: `Bearer ${state.token}` } });
+    const type = res.headers.get('content-type') || '';
     if (!res.ok) {
       const text = await res.text();
       throw new Error(text || 'Không tải được tài liệu');
+    }
+    if (type.includes('application/json')) {
+      const data = await res.json();
+      if (data.external_url) {
+        window.open(data.external_url, '_blank', 'noopener');
+        return;
+      }
     }
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);
@@ -1856,16 +1883,21 @@ async function renderDocuments() {
         <div class="field"><label>Nhóm tài liệu</label><select class="input" name="category">${categoryOptions}</select></div>
         <div class="field"><label>Áp dụng cho</label>${state.user.role === 'admin' ? `<select class="input" name="store_id">${storeOptions}</select>` : `<input type="hidden" name="store_id" value="${esc(state.user.store_id || '')}"><input class="input" value="${esc(state.user.store_name || '')}" disabled>`}</div>
         <div class="field"><label>Phiên bản / ngày hiệu lực</label><input class="input" name="version" placeholder="VD: V1 - 30/07/2026"></div>
-        <div class="field"><label>File tài liệu</label><input class="input" name="file" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.jpg,.jpeg,.png,.webp" required></div>
+        <div class="field"><label>File tài liệu dưới 12MB</label><input class="input" name="file" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.jpg,.jpeg,.png,.webp"><span class="hint">File nặng nên đưa lên Google Drive rồi dán link để không tốn kho lưu trữ.</span></div>
+        <div class="field"><label>Hoặc link Google Drive</label><input class="input" name="external_url" placeholder="https://drive.google.com/..."></div>
         <div class="field"><label>Ghi chú</label><input class="input" name="description" placeholder="Nội dung chính / lưu ý khi áp dụng"></div>
-        <div style="grid-column:1/-1"><button class="btn">Tải tài liệu lên</button></div>
+        <div style="grid-column:1/-1"><button class="btn">Lưu tài liệu / link</button></div>
       </form>
     </div>` : '';
-  const rows = docs.length ? `<div class="table-wrap"><table><thead><tr><th>Tài liệu</th><th>Nhóm</th><th>Phạm vi</th><th>Phiên bản</th><th>File</th><th>Lượt tải</th><th>Người tải lên</th><th>Ngày cập nhật</th><th>Thao tác</th></tr></thead><tbody>${docs.map(d => `<tr><td><b>${esc(d.title)}</b><br><span class="hint">${esc(d.description || '')}</span></td><td><span class="badge dark">${esc(d.category || 'Quy trình')}</span></td><td>${esc(d.store_name || 'Toàn hệ thống')}</td><td>${esc(d.version || '-')}</td><td>${esc(d.original_name || '')}<br><span class="hint">${fileSizeLabel(d.size)}</span></td><td>${money(d.download_count || 0)}</td><td>${esc(d.created_by_name || '')}</td><td>${dt(d.updated_at || d.created_at)}</td><td><div class="row"><button class="btn small docDownloadBtn" data-id="${d.id}" data-name="${esc(d.original_name || d.title || 'tai-lieu')}">Tải về</button>${can('can_manage_documents') ? `<button class="btn small danger docDeleteBtn" data-id="${d.id}" data-name="${esc(d.title)}">Xóa</button>` : ''}</div></td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Chưa có tài liệu/quy trình nào</div>';
+  const rows = docs.length ? `<div class="table-wrap"><table><thead><tr><th>Tài liệu</th><th>Nhóm</th><th>Phạm vi</th><th>Phiên bản</th><th>File</th><th>Lượt tải</th><th>Người tải lên</th><th>Ngày cập nhật</th><th>Thao tác</th></tr></thead><tbody>${docs.map(d => `<tr><td><b>${esc(d.title)}</b><br><span class="hint">${esc(d.description || '')}</span></td><td><span class="badge dark">${esc(d.category || 'Quy trình')}</span></td><td>${esc(d.store_name || 'Toàn hệ thống')}</td><td>${esc(d.version || '-')}</td><td>${d.external_url ? '<b>Link Google Drive</b><br><span class="hint">Không chiếm dung lượng</span>' : `${esc(d.original_name || '')}<br><span class="hint">${fileSizeLabel(d.size)}</span>`}</td><td>${money(d.download_count || 0)}</td><td>${esc(d.created_by_name || '')}</td><td>${dt(d.updated_at || d.created_at)}</td><td><div class="row"><button class="btn small docDownloadBtn" data-id="${d.id}" data-name="${esc(d.original_name || d.title || 'tai-lieu')}">${d.external_url ? 'Mở link' : 'Tải về'}</button>${can('can_manage_documents') ? `<button class="btn small danger docDeleteBtn" data-id="${d.id}" data-name="${esc(d.title)}">Xóa</button>` : ''}</div></td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Chưa có tài liệu/quy trình nào</div>';
   shell(`${uploadForm}<div class="card" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">Thư viện tài liệu / quy trình</h3>${can('can_export') ? '<button class="btn secondary" data-export="documents">Tải CSV danh sách</button>' : ''}</div>${rows}</div>`, 'Tài liệu / Quy trình', 'Lưu quy trình, biểu mẫu, file đào tạo để cửa hàng tải về khi cần');
   $('#documentForm')?.addEventListener('submit', async e => {
     e.preventDefault();
+    if (hasFileOverLimit(e.target)) return;
     const fd = new FormData(e.target);
+    const hasFile = [...(e.target.querySelector('input[name="file"]')?.files || [])].length > 0;
+    const hasLink = String(fd.get('external_url') || '').trim();
+    if (!hasFile && !hasLink) { toast('Anh chọn file dưới 12MB hoặc dán link Google Drive nhé.', 'danger'); return; }
     try {
       await api('/api/documents', { method: 'POST', body: fd });
       toast('Đã tải tài liệu lên hệ thống');

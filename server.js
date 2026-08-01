@@ -286,6 +286,35 @@ function saveUploadedFiles(files) {
   return saved.length ? JSON.stringify(saved) : null;
 }
 
+// V4.58 - Cho phép dùng link Google Drive/URL thay vì upload file nặng, giúp tiết kiệm dung lượng Disk.
+function normalizeExternalUrl(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+  if (!/^https?:\/\//i.test(raw)) return '';
+  try {
+    const u = new URL(raw);
+    if (!['http:', 'https:'].includes(u.protocol)) return '';
+    return u.toString();
+  } catch (_err) {
+    return '';
+  }
+}
+function externalLinksFromText(value) {
+  return String(value || '')
+    .split(/[\n,]+/)
+    .map(v => normalizeExternalUrl(v))
+    .filter(Boolean);
+}
+function mergeStoredFilesAndLinks(storedJson, linksText) {
+  let items = [];
+  if (storedJson) {
+    try { items = JSON.parse(storedJson); } catch (_err) { items = [storedJson]; }
+  }
+  const links = externalLinksFromText(linksText);
+  const merged = [...items, ...links].filter(Boolean);
+  return merged.length ? JSON.stringify(merged) : null;
+}
+
 function saveDocumentFile(file) {
   if (!file) return null;
   const ext = path.extname(file.originalname || '').slice(0, 16) || '';
@@ -1373,7 +1402,7 @@ app.post('/api/tasks/:assignmentId/complete', requireAuth, upload.array('evidenc
   const isOwner = Number(ta.user_id) === Number(req.user.id);
   const canManagerAct = req.user.role !== 'employee' && canAccessStore(req, t.store_id);
   if (!isOwner && !canManagerAct) return res.status(403).json({ error: 'Chỉ nhân viên được giao hoặc quản lý cửa hàng được hoàn thành việc này' });
-  const evidencePath = saveUploadedFiles(req.files);
+  const evidencePath = mergeStoredFilesAndLinks(saveUploadedFiles(req.files), req.body.evidence_link);
   const completedAt = nowIso();
   const late = new Date(completedAt) > new Date(t.due_at);
   ta.completed_at = completedAt;
@@ -1392,7 +1421,7 @@ app.post('/api/violations', requireAuth, requirePerm('can_manage_violations'), u
   if (!target) return res.status(400).json({ error: 'Nhân viên không hợp lệ' });
   if (req.user.role !== 'admin' && !userHasStore(req.user, target.store_id)) return res.status(403).json({ error: 'Không có quyền ghi nhận vi phạm nhân viên này' });
   const id = nextId('violations');
-  db.violations.push({ id, user_id: target.id, store_id: target.store_id, violation_type: violation_type || 'Vi phạm vận hành', description: description || '', points_deducted: Math.abs(Number(points_deducted || 0)), evidence_path: saveUploadedFiles(req.files), created_by: req.user.id, created_at: nowIso() });
+  db.violations.push({ id, user_id: target.id, store_id: target.store_id, violation_type: violation_type || 'Vi phạm vận hành', description: description || '', points_deducted: Math.abs(Number(points_deducted || 0)), evidence_path: mergeStoredFilesAndLinks(saveUploadedFiles(req.files), req.body.evidence_link), created_by: req.user.id, created_at: nowIso() });
   saveDb();
   res.json({ ok: true, id });
 });
@@ -2362,13 +2391,15 @@ app.get('/api/documents', requireAuth, (req, res) => {
 });
 
 app.post('/api/documents', requireAuth, requirePerm('can_manage_documents'), upload.single('file'), (req, res) => {
-  const { title, category, store_id, description, version } = req.body || {};
-  if (!req.file) return res.status(400).json({ error: 'Chưa chọn file tài liệu' });
+  const { title, category, store_id, description, version, external_url } = req.body || {};
+  const link = normalizeExternalUrl(external_url);
+  if (!req.file && !link) return res.status(400).json({ error: 'Chưa chọn file hoặc dán link Google Drive/tài liệu' });
+  if (external_url && !link) return res.status(400).json({ error: 'Link tài liệu chưa đúng. Link cần bắt đầu bằng http:// hoặc https://' });
   if (!title) return res.status(400).json({ error: 'Chưa nhập tên tài liệu' });
   const storeId = store_id ? Number(store_id) : null;
   if (storeId && !getStore(storeId)) return res.status(400).json({ error: 'Cửa hàng không hợp lệ' });
   if (!canManageDocumentScope(req.user, storeId)) return res.status(403).json({ error: 'Không có quyền tải tài liệu cho phạm vi này' });
-  const stored_name = saveDocumentFile(req.file);
+  const stored_name = req.file ? saveDocumentFile(req.file) : null;
   const id = nextId('documents');
   db.documents = db.documents || [];
   db.documents.push({
@@ -2378,10 +2409,12 @@ app.post('/api/documents', requireAuth, requirePerm('can_manage_documents'), upl
     store_id: storeId,
     description: description || '',
     version: version || '',
-    original_name: req.file.originalname || '',
+    original_name: req.file ? (req.file.originalname || '') : (link ? 'Google Drive / Link' : ''),
     stored_name,
-    mime_type: req.file.mimetype || '',
-    size: Number(req.file.size || 0),
+    external_url: link || '',
+    storage_type: link && !req.file ? 'link' : 'file',
+    mime_type: req.file ? (req.file.mimetype || '') : 'link',
+    size: req.file ? Number(req.file.size || 0) : 0,
     download_count: 0,
     status: 'active',
     created_by: req.user.id,
@@ -2395,6 +2428,12 @@ app.post('/api/documents', requireAuth, requirePerm('can_manage_documents'), upl
 app.get('/api/documents/:id/download', requireAuth, (req, res) => {
   const doc = (db.documents || []).find(d => Number(d.id) === Number(req.params.id));
   if (!canAccessDocument(req.user, doc)) return res.status(404).json({ error: 'Không tìm thấy tài liệu hoặc không có quyền tải' });
+  if (doc.external_url) {
+    doc.download_count = Number(doc.download_count || 0) + 1;
+    doc.last_downloaded_at = nowIso();
+    saveDb();
+    return res.json({ external_url: doc.external_url });
+  }
   const filePath = path.join(DOC_DIR, doc.stored_name || '');
   if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'File tài liệu không còn tồn tại trên server' });
   doc.download_count = Number(doc.download_count || 0) + 1;
@@ -2707,7 +2746,7 @@ app.get('/api/export/:type.csv', requireAuth, requirePerm('can_export'), (req, r
   } else if (type === 'product_training_attempts') {
     rows = (db.product_training_attempts || []).filter(a => a.status !== 'deleted').map(a => { const t = (db.product_trainings || []).find(x => Number(x.id) === Number(a.training_id)); const u = getUser(a.user_id); return { id: a.id, bai_dao_tao: t ? `${t.sku || ''} ${t.product_name || ''}`.trim() : '', cua_hang: getStore(a.store_id)?.name || getStore(u?.store_id)?.name || '', nhan_vien: u?.full_name || '', diem: Number(a.score_percent || 0), dung: Number(a.correct_count || 0), tong_cau: Number(a.total_questions || 0), ket_qua: Number(a.passed || 0) ? 'Đạt' : 'Chưa đạt', ngay_lam_bai: a.created_at || '' }; });
   } else if (type === 'documents') {
-    rows = documentRowsForUser(req.user).map(d => ({ id: d.id, title: d.title, category: d.category, store_name: d.store_name, version: d.version || '', original_name: d.original_name || '', created_by_name: d.created_by_name || '', created_at: d.created_at || '', download_count: Number(d.download_count || 0), description: d.description || '' }));
+    rows = documentRowsForUser(req.user).map(d => ({ id: d.id, title: d.title, category: d.category, store_name: d.store_name, version: d.version || '', storage_type: d.storage_type || (d.external_url ? 'link' : 'file'), original_name: d.original_name || '', external_url: d.external_url || '', created_by_name: d.created_by_name || '', created_at: d.created_at || '', download_count: Number(d.download_count || 0), description: d.description || '' }));
   } else if (type === 'bonuses') {
     rows = bonusRowsForUser(req.user);
   } else if (type === 'performance') {
@@ -2730,7 +2769,7 @@ app.use((err, req, res, _next) => {
   if (err instanceof multer.MulterError) {
     if (err.code === 'LIMIT_FILE_SIZE') {
       status = 413;
-      message = 'File quá nặng. Vui lòng chọn file dưới 12MB.';
+      message = 'File quá nặng. Vui lòng chọn file dưới 12MB hoặc tải file lên Google Drive rồi dán link vào ô Link Drive.';
     } else if (err.code === 'LIMIT_UNEXPECTED_FILE') {
       status = 400;
       message = 'Trường upload file không hợp lệ. Vui lòng tải lại trang và thử lại.';

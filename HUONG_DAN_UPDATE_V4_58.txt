@@ -1,0 +1,13 @@
+V4.58 - xử lý file nặng / dùng Google Drive link
+
+1. Không upload file/chứng từ quá 12MB trực tiếp lên web.
+2. Với file nặng, video, ảnh dung lượng lớn:
+   - Tải file lên Google Drive.
+   - Bật quyền: Bất kỳ ai có đường liên kết đều xem được.
+   - Dán link vào ô Link Google Drive/Link Drive trên web.
+3. Các mục đã có ô link:
+   - Tài liệu / Quy trình.
+   - Hoàn thành công việc.
+   - Ghi nhận vi phạm.
+4. Link Drive không chiếm dung lượng Disk Render.
+5. File upload trực tiếp vẫn giữ dưới 12MB để tránh đầy kho lưu trữ.
