@@ -110,9 +110,9 @@ function defaultDb() {
   const permissions = users.map(u => ({ user_id: u.id, ...ROLE_DEFAULTS[u.role] }));
   return {
     version: 2,
-    nextIds: { stores: 6, users: 7, tasks: 1, task_assignees: 1, violations: 1, assessments: 1, assessment_items: 1, sales: 1, sales_targets: 1, sales_daily_targets: 1, sales_store_days: 1, bonuses: 1, documents: 1, shifts: 6, work_schedules: 1, orders: 1, online_orders: 1, product_feedback: 1, product_collections: 1, product_collection_items: 1, product_trainings: 1, product_training_attempts: 1, weekly_reports: 1 },
+    nextIds: { stores: 6, users: 7, tasks: 1, task_assignees: 1, violations: 1, assessments: 1, assessment_items: 1, sales: 1, sales_targets: 1, sales_daily_targets: 1, sales_store_days: 1, bonuses: 1, documents: 1, shifts: 6, work_schedules: 1, orders: 1, online_orders: 1, product_feedback: 1, product_collections: 1, product_collection_items: 1, product_trainings: 1, product_training_attempts: 1, weekly_reports: 1, daily_reports: 1 },
     stores, users, permissions, shifts,
-    tasks: [], task_assignees: [], violations: [], assessments: [], assessment_items: [], sales: [], sales_targets: [], sales_daily_targets: [], sales_store_days: [], bonuses: [], documents: [], orders: [], online_orders: [], product_feedback: [], product_collections: [], product_collection_items: [], product_trainings: [], product_training_attempts: [], weekly_reports: [], work_schedules: []
+    tasks: [], task_assignees: [], violations: [], assessments: [], assessment_items: [], sales: [], sales_targets: [], sales_daily_targets: [], sales_store_days: [], bonuses: [], documents: [], orders: [], online_orders: [], product_feedback: [], product_collections: [], product_collection_items: [], product_trainings: [], product_training_attempts: [], weekly_reports: [], daily_reports: [], work_schedules: []
   };
 }
 
@@ -153,6 +153,7 @@ function loadDb() {
       product_trainings: parsed.product_trainings || [],
       product_training_attempts: parsed.product_training_attempts || [],
       weekly_reports: parsed.weekly_reports || [],
+      daily_reports: parsed.daily_reports || [],
       shifts: parsed.shifts || base.shifts,
       work_schedules: parsed.work_schedules || []
     };
@@ -1798,6 +1799,230 @@ app.get('/api/sales/store-summary', requireAuth, (req, res) => {
 });
 
 
+
+
+function dailyReportRow(storeId, reportDate) {
+  db.daily_reports = db.daily_reports || [];
+  return db.daily_reports.find(r => Number(r.store_id) === Number(storeId) && String(r.report_date) === String(dateOnly(reportDate))) || null;
+}
+function normalizeDailySalesEntries(value) {
+  return parseWeeklyList(value).map(item => ({
+    user_id: toNumber(item.user_id, 0),
+    revenue: toNumber(item.revenue, 0),
+    bill_count: toNumber(item.bill_count, 0),
+    item_count: toNumber(item.item_count, 0),
+    note: String(item.note || '').trim()
+  })).filter(item => item.user_id);
+}
+function normalizeMissingSizeItems(value) {
+  return parseWeeklyList(value).map(item => ({
+    sku: String(item.sku || '').trim(),
+    product_name: String(item.product_name || item.name || '').trim(),
+    quantity: Math.max(0, Math.round(toNumber(item.quantity || item.qty, 0))),
+    note: String(item.note || item.size_note || '').trim()
+  })).filter(item => (item.sku || item.product_name) && item.quantity).slice(0, 30);
+}
+function normalizeDailyFeedbackItems(value) {
+  return parseWeeklyList(value).map(item => ({
+    sku: String(item.sku || '').trim(),
+    product_name: String(item.product_name || item.name || '').trim(),
+    product_errors: String(item.product_errors || item.error || '').trim(),
+    customer_feedback: String(item.customer_feedback || item.feedback || '').trim(),
+    note: String(item.note || '').trim()
+  })).filter(item => item.sku || item.product_name || item.product_errors || item.customer_feedback).slice(0, 30);
+}
+function buildDailyReport(user, rawDate, rawStoreId) {
+  const reportDate = dateOnly(rawDate || new Date());
+  const storeId = user.role === 'admin' ? Number(rawStoreId || getPrimaryStoreId(user) || db.stores[0]?.id) : Number(getPrimaryStoreId(user));
+  const store = getStore(storeId);
+  if (!store) throw new Error('Cửa hàng không hợp lệ');
+  if (user.role !== 'admin' && !userHasStore(user, storeId)) throw new Error('Không có quyền xem báo cáo ngày cửa hàng này');
+  const report = dailyReportRow(storeId, reportDate) || null;
+  const salesRows = (db.sales || []).filter(sa => Number(sa.store_id) === Number(storeId) && dateVal(sa.sale_date) === reportDate);
+  const storeDay = (db.sales_store_days || []).find(x => Number(x.store_id) === Number(storeId) && dateVal(x.sale_date) === reportDate) || null;
+  const staff = salesStaffForStore(storeId);
+  const sales_entries = staff.map(u => {
+    const r = salesRows.find(x => Number(x.user_id) === Number(u.id));
+    return { user_id: u.id, full_name: u.full_name, store_name: store.name, revenue: r ? Number(r.revenue || 0) : 0, bill_count: r ? Number(r.bill_count || 0) : 0, item_count: r ? Number(r.item_count || 0) : 0, note: r ? (r.note || '') : '' };
+  });
+  const customerCount = storeDay ? Number(storeDay.customer_count || 0) : 0;
+  const targetDay = storeDailyTarget(storeId, reportDate);
+  const storeTotal = sales_entries.reduce((acc, r) => {
+    acc.revenue += Number(r.revenue || 0);
+    acc.bill_count += Number(r.bill_count || 0);
+    acc.item_count += Number(r.item_count || 0);
+    return acc;
+  }, { revenue: 0, bill_count: 0, item_count: 0 });
+  storeTotal.customer_count = customerCount;
+  storeTotal.target_revenue = Number(targetDay.target_revenue || 0);
+  storeTotal.achievement_percent = storeTotal.target_revenue ? Math.round((storeTotal.revenue / storeTotal.target_revenue) * 10000) / 100 : 0;
+  storeTotal.upt = storeTotal.bill_count ? Math.round((storeTotal.item_count / storeTotal.bill_count) * 100) / 100 : 0;
+  storeTotal.atv = storeTotal.bill_count ? Math.round(storeTotal.revenue / storeTotal.bill_count) : 0;
+  storeTotal.asp = storeTotal.item_count ? Math.round(storeTotal.revenue / storeTotal.item_count) : 0;
+  storeTotal.cr = customerCount ? Math.round((storeTotal.bill_count / customerCount) * 10000) / 100 : 0;
+  storeTotal.target_note = targetDay.note || '';
+  return {
+    store_id: storeId,
+    store_name: store.name,
+    report_date: reportDate,
+    customer_count: customerCount,
+    store_note: storeDay ? (storeDay.note || '') : '',
+    daily_target: targetDay,
+    store_total: storeTotal,
+    sales_entries,
+    missing_size_items: normalizeMissingSizeItems(report?.missing_size_items || []),
+    product_feedback_items: normalizeDailyFeedbackItems(report?.product_feedback_items || []),
+    summary_text: report?.summary_text || '',
+    report: report ? { id: report.id, updated_at: report.updated_at || report.created_at || '', created_at: report.created_at || '' } : null
+  };
+}
+function dailyReportZaloText(payload) {
+  const lines = [];
+  lines.push(`BÁO CÁO NGÀY ${dateOnly(payload.report_date)} - ${payload.store_name || ''}`.trim());
+  lines.push('');
+  lines.push('1. DOANH THU & CHỈ SỐ');
+  const sales = normalizeDailySalesEntries(payload.sales_entries || []);
+  const total = sales.reduce((acc, r) => {
+    acc.revenue += Number(r.revenue || 0);
+    acc.bill_count += Number(r.bill_count || 0);
+    acc.item_count += Number(r.item_count || 0);
+    return acc;
+  }, { revenue: 0, bill_count: 0, item_count: 0 });
+  const fmt = n => new Intl.NumberFormat('vi-VN').format(Number(n || 0));
+  sales.forEach(r => {
+    const u = getUser(r.user_id);
+    if (!u) return;
+    lines.push(`- ${u.full_name}: ${fmt(r.revenue)}đ | Bill ${fmt(r.bill_count)} | Món ${fmt(r.item_count)}${r.note ? ` | ${r.note}` : ''}`);
+  });
+  lines.push(`Tổng: ${fmt(total.revenue)}đ | Bill ${fmt(total.bill_count)} | Món ${fmt(total.item_count)} | Lượt khách ${fmt(payload.customer_count || 0)}`);
+  lines.push(`UPT: ${total.bill_count ? Math.round((total.item_count / total.bill_count) * 100) / 100 : 0} | ATV: ${total.bill_count ? fmt(Math.round(total.revenue / total.bill_count)) + 'đ' : '0đ'} | ASP: ${total.item_count ? fmt(Math.round(total.revenue / total.item_count)) + 'đ' : '0đ'} | CR: ${payload.customer_count ? Math.round((total.bill_count / Number(payload.customer_count || 0)) * 10000) / 100 : 0}%`);
+  if (payload.store_note) lines.push(`Ghi chú: ${payload.store_note}`);
+  const missing = normalizeMissingSizeItems(payload.missing_size_items || []);
+  lines.push('');
+  lines.push('2. SẢN PHẨM THIẾU SIZE / CẦN ORDER');
+  if (missing.length) missing.forEach((item, i) => lines.push(`- ${i + 1}. ${item.sku ? item.sku + ' - ' : ''}${item.product_name || ''}: SL ${fmt(item.quantity)}${item.note ? ` | ${item.note}` : ''}`));
+  else lines.push('- Không có');
+  const feedback = normalizeDailyFeedbackItems(payload.product_feedback_items || []);
+  lines.push('');
+  lines.push('3. SẢN PHẨM LỖI / FEEDBACK KHÁCH');
+  if (feedback.length) feedback.forEach((item, i) => lines.push(`- ${i + 1}. ${item.sku ? item.sku + ' - ' : ''}${item.product_name || ''}${item.product_errors ? ` | Lỗi: ${item.product_errors}` : ''}${item.customer_feedback ? ` | KH: ${item.customer_feedback}` : ''}${item.note ? ` | ${item.note}` : ''}`));
+  else lines.push('- Không có');
+  return lines.join('\n');
+}
+
+
+app.get('/api/daily-report', requireAuth, (req, res) => {
+  try {
+    res.json(buildDailyReport(req.user, req.query.report_date || req.query.date, req.query.store_id));
+  } catch (err) {
+    res.status(403).json({ error: err.message || 'Không lấy được báo cáo ngày' });
+  }
+});
+
+app.post('/api/daily-report', requireAuth, requirePerm('can_manage_sales'), (req, res) => {
+  const { store_id, report_date, customer_count, store_note, sales_entries, missing_size_items, product_feedback_items } = req.body || {};
+  const storeId = req.user.role === 'admin' ? Number(store_id || getPrimaryStoreId(req.user)) : Number(getPrimaryStoreId(req.user));
+  const store = getStore(storeId);
+  if (!store) return res.status(400).json({ error: 'Cửa hàng không hợp lệ' });
+  if (req.user.role !== 'admin' && !userHasStore(req.user, storeId)) return res.status(403).json({ error: 'Không có quyền nhập báo cáo ngày cửa hàng này' });
+  const d = dateOnly(report_date || new Date());
+  const cleanSales = normalizeDailySalesEntries(sales_entries);
+  if (!cleanSales.length) return res.status(400).json({ error: 'Chưa có dòng doanh thu nhân viên' });
+  const savedSales = [];
+  cleanSales.forEach(entry => {
+    const employee = getActiveUser(Number(entry.user_id));
+    if (!employee || employee.role !== 'employee' || Number(getPrimaryStoreId(employee)) !== Number(storeId)) return;
+    savedSales.push(upsertSalesRow(employee, d, entry, req.user.id));
+  });
+  upsertStoreSalesDay(storeId, d, customer_count, store_note || '', req.user.id);
+
+  const missingItems = normalizeMissingSizeItems(missing_size_items);
+  const feedbackItems = normalizeDailyFeedbackItems(product_feedback_items);
+  db.daily_reports = db.daily_reports || [];
+  let row = dailyReportRow(storeId, d);
+  if (row) {
+    // Khi sửa báo cáo ngày, đồng bộ lại các dòng tự chuyển để tránh bị nhân đôi.
+    (row.generated_order_ids || []).forEach(id => {
+      const order = (db.orders || []).find(o => Number(o.id) === Number(id));
+      if (order && order.daily_report_id === row.id) { order.status = 'deleted'; order.updated_by = req.user.id; order.updated_at = nowIso(); }
+    });
+    (row.generated_feedback_ids || []).forEach(id => {
+      const fb = (db.product_feedback || []).find(o => Number(o.id) === Number(id));
+      if (fb && fb.daily_report_id === row.id) { fb.status = 'deleted'; fb.updated_by = req.user.id; fb.updated_at = nowIso(); }
+    });
+  } else {
+    row = { id: nextId('daily_reports'), store_id: storeId, report_date: d, created_by: req.user.id, created_at: nowIso() };
+    db.daily_reports.push(row);
+  }
+
+  db.orders = db.orders || [];
+  const generatedOrderIds = [];
+  if (missingItems.length) {
+    const batchName = normalizeOrderBatchName(`Thiếu size ${d}`);
+    missingItems.forEach(item => {
+      const id = nextId('orders');
+      db.orders.push({
+        id,
+        store_id: storeId,
+        order_date: d,
+        batch_name: batchName,
+        sku: item.sku,
+        product_name: item.product_name,
+        quantity: item.quantity,
+        order_status: 'new',
+        note: item.note ? `Từ báo cáo ngày: ${item.note}` : 'Từ báo cáo ngày - thiếu size',
+        status: 'active',
+        daily_report_id: row.id,
+        created_by: req.user.id,
+        created_at: nowIso(),
+        updated_by: req.user.id,
+        updated_at: nowIso()
+      });
+      generatedOrderIds.push(id);
+    });
+  }
+
+  db.product_feedback = db.product_feedback || [];
+  const generatedFeedbackIds = [];
+  feedbackItems.forEach(item => {
+    const id = nextId('product_feedback');
+    db.product_feedback.push({
+      id,
+      store_id: storeId,
+      feedback_date: d,
+      collection_id: null,
+      sku: item.sku,
+      product_name: item.product_name,
+      style_feedback: '',
+      material_feedback: '',
+      product_errors: item.product_errors,
+      customer_feedback: item.customer_feedback,
+      restock_wish: 'Chưa đánh giá',
+      note: item.note ? `Từ báo cáo ngày: ${item.note}` : 'Từ báo cáo ngày',
+      status: 'active',
+      daily_report_id: row.id,
+      created_by: req.user.id,
+      created_at: nowIso(),
+      updated_by: req.user.id,
+      updated_at: nowIso()
+    });
+    generatedFeedbackIds.push(id);
+  });
+
+  const summaryPayload = { report_date: d, store_name: store.name, customer_count, store_note, sales_entries: cleanSales, missing_size_items: missingItems, product_feedback_items: feedbackItems };
+  row.customer_count = toNumber(customer_count, 0);
+  row.store_note = String(store_note || '').trim();
+  row.sales_entries = cleanSales;
+  row.missing_size_items = missingItems;
+  row.product_feedback_items = feedbackItems;
+  row.generated_order_ids = generatedOrderIds;
+  row.generated_feedback_ids = generatedFeedbackIds;
+  row.summary_text = dailyReportZaloText(summaryPayload);
+  row.updated_by = req.user.id;
+  row.updated_at = nowIso();
+  saveDb();
+  res.json({ ok: true, id: row.id, sales_count: savedSales.length, order_count: generatedOrderIds.length, feedback_count: generatedFeedbackIds.length, summary_text: row.summary_text });
+});
 
 
 app.get('/api/weekly-report', requireAuth, (req, res) => {

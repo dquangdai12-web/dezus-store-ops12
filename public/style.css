@@ -3086,3 +3086,240 @@ body{letter-spacing:-.008em}
     .mobile-subitem.active .mobile-subitem-icon{background:#f2f6fb!important}
   }
 }
+
+/* ==== V4.53 DAILY REPORT + MOBILE STICKY REVENUE ==== */
+.daily-report-head .toolbar{align-items:flex-end;gap:12px}
+.daily-store-note{min-width:240px;flex:1}
+.daily-report-table-wrap table{min-width:860px}
+.daily-zalo-card{border-left:4px solid #2563eb!important;background:linear-gradient(180deg,#ffffff,#f8fbff)!important}
+.daily-zalo-text{white-space:pre-wrap;margin:0;padding:14px;border-radius:14px;background:#f3f6fb;border:1px solid #dbe5f1;color:#213043;font:500 13px/1.65 var(--font, Inter, Arial, sans-serif);max-height:none;overflow:visible}
+.daily-save-btn{min-width:190px}
+.daily-missing-row input,.daily-feedback-row input{min-width:140px}
+.revenue-sticky-name table th:first-child,
+.revenue-sticky-name table td:first-child{background:#fff}
+
+@media (max-width:699px){
+  .daily-report-head .toolbar{display:grid!important;grid-template-columns:1fr!important;gap:8px!important}
+  .daily-report-head .field,.daily-store-note{min-width:0!important;width:100%!important}
+  .daily-report-table-wrap table{min-width:760px!important}
+  .daily-zalo-card{padding:13px!important}
+  .daily-zalo-text{font-size:12px;line-height:1.58;padding:12px;border-radius:12px}
+  .daily-save-btn{width:100%;min-width:0}
+
+  .revenue-sticky-name,
+  .leaderboard-wrap{position:relative}
+  .revenue-sticky-name table th:first-child,
+  .revenue-sticky-name table td:first-child{
+    position:sticky!important;
+    left:0!important;
+    z-index:4!important;
+    min-width:132px!important;
+    max-width:132px!important;
+    box-shadow:8px 0 16px rgba(15,23,42,.08)!important;
+    background:#ffffff!important;
+  }
+  .revenue-sticky-name table th:first-child{z-index:6!important;background:#f8fbff!important}
+  .leaderboard-wrap table th:nth-child(2),
+  .leaderboard-wrap table td:nth-child(2){
+    position:sticky!important;
+    left:0!important;
+    z-index:5!important;
+    min-width:150px!important;
+    max-width:150px!important;
+    background:#ffffff!important;
+    box-shadow:8px 0 16px rgba(15,23,42,.08)!important;
+  }
+  .leaderboard-wrap table th:nth-child(2){z-index:7!important;background:#f8fbff!important}
+  .leaderboard-wrap table td.employee-name-cell b,
+  .revenue-sticky-name table td:first-child b{white-space:normal!important;line-height:1.25!important;display:block;overflow:visible!important;text-overflow:initial!important}
+}
+
+/* ==== V4.54 DAILY REPORT SCREENSHOT OVERVIEW ==== */
+.daily-overview-card{
+  border-left:4px solid #2563eb!important;
+  background:linear-gradient(180deg,#ffffff,#f8fbff)!important;
+  box-shadow:0 16px 34px rgba(37,99,235,.08)!important;
+}
+.daily-overview-title{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:14px;
+}
+.daily-overview-title h3{
+  margin:8px 0 4px;
+  font-size:20px;
+  letter-spacing:-.04em;
+}
+.daily-overview-title p{
+  margin:0;
+  color:#64748b;
+  font-size:13px;
+  font-weight:600;
+}
+.daily-overview-percent{
+  min-width:118px;
+  padding:12px 14px;
+  border-radius:18px;
+  background:linear-gradient(135deg,#eff6ff,#dbeafe);
+  text-align:center;
+  border:1px solid #bfdbfe;
+}
+.daily-overview-percent b{
+  display:block;
+  color:#1d4ed8;
+  font-size:25px;
+  line-height:1;
+  letter-spacing:-.05em;
+}
+.daily-overview-percent span{
+  display:block;
+  margin-top:5px;
+  color:#475569;
+  font-size:11px;
+  font-weight:700;
+}
+.daily-overview-kpis{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:10px;
+  margin-bottom:14px;
+}
+.daily-overview-kpis > div{
+  min-width:0;
+  padding:12px;
+  border-radius:16px;
+  background:#f8fafc;
+  border:1px solid #e2e8f0;
+}
+.daily-overview-kpis span{
+  display:block;
+  color:#64748b;
+  font-size:11px;
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.daily-overview-kpis b{
+  display:block;
+  margin-top:7px;
+  color:#0f172a;
+  font-size:17px;
+  line-height:1.15;
+  letter-spacing:-.03em;
+  white-space:normal;
+}
+.daily-overview-note{
+  padding:11px 12px;
+  margin-bottom:14px;
+  border-radius:14px;
+  background:#fff7ed;
+  border:1px solid #fed7aa;
+  color:#7c2d12;
+  font-size:13px;
+  line-height:1.45;
+}
+.daily-overview-grid{
+  display:grid;
+  grid-template-columns:1.1fr 1fr 1fr;
+  gap:12px;
+}
+.daily-overview-section{
+  min-width:0;
+  padding:13px;
+  border-radius:17px;
+  background:#ffffff;
+  border:1px solid #e2e8f0;
+}
+.daily-overview-section h4{
+  margin:0 0 10px;
+  font-size:14px;
+  color:#0f172a;
+  letter-spacing:-.02em;
+}
+.daily-overview-row{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:10px;
+  padding:10px 0;
+  border-top:1px solid #eef2f7;
+}
+.daily-overview-row:first-of-type{border-top:0}
+.daily-overview-row b,
+.daily-overview-chip b{
+  display:block;
+  color:#172033;
+  font-size:13px;
+  line-height:1.25;
+}
+.daily-overview-row small{
+  display:block;
+  margin-top:3px;
+  color:#64748b;
+  font-size:11.5px;
+  line-height:1.35;
+}
+.daily-overview-numbers{
+  text-align:right;
+  flex:0 0 auto;
+}
+.daily-overview-numbers strong{
+  display:block;
+  color:#0f766e;
+  font-size:13px;
+  white-space:nowrap;
+}
+.daily-overview-numbers span{
+  display:block;
+  margin-top:3px;
+  color:#64748b;
+  font-size:11px;
+  white-space:nowrap;
+}
+.daily-overview-chip{
+  padding:10px 0;
+  border-top:1px solid #eef2f7;
+}
+.daily-overview-chip:first-of-type{border-top:0}
+.daily-overview-chip span{
+  display:block;
+  margin-top:4px;
+  color:#475569;
+  font-size:12px;
+  line-height:1.45;
+  white-space:normal;
+}
+.daily-overview-empty{
+  padding:12px;
+  border-radius:14px;
+  background:#f8fafc;
+  border:1px dashed #cbd5e1;
+  color:#64748b;
+  font-size:12px;
+  line-height:1.4;
+}
+@media (max-width:1180px){
+  .daily-overview-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .daily-overview-grid{grid-template-columns:1fr}
+}
+@media (max-width:699px){
+  .daily-overview-card{padding:13px!important;border-radius:18px!important}
+  .daily-overview-title{gap:10px;margin-bottom:12px}
+  .daily-overview-title h3{font-size:17px}
+  .daily-overview-title p{font-size:12px}
+  .daily-overview-percent{min-width:92px;padding:10px 9px;border-radius:15px}
+  .daily-overview-percent b{font-size:21px}
+  .daily-overview-percent span{font-size:10px}
+  .daily-overview-kpis{gap:8px}
+  .daily-overview-kpis > div{padding:10px;border-radius:14px}
+  .daily-overview-kpis span{font-size:9.8px}
+  .daily-overview-kpis b{font-size:14px}
+  .daily-overview-section{padding:11px;border-radius:15px}
+  .daily-overview-row{display:block}
+  .daily-overview-numbers{text-align:left;margin-top:6px}
+}

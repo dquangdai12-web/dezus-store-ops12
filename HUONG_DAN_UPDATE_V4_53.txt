@@ -1,0 +1,12 @@
+V4.53 - Báo cáo ngày riêng + sticky tên doanh thu mobile
+
+1. Thêm mục riêng: Báo cáo ngày.
+2. Báo cáo ngày có thể lưu và sửa theo cửa hàng/ngày.
+3. Khi lưu báo cáo ngày:
+   - Doanh thu nhân viên tự cập nhật vào phần Doanh thu / báo cáo tháng.
+   - Sản phẩm thiếu size tự chuyển sang Order hàng.
+   - Sản phẩm lỗi / feedback khách tự chuyển sang Đánh giá sản phẩm.
+   - Sinh nội dung tổng hợp để copy gửi nhóm Zalo.
+4. Mobile: khi kéo ngang bảng doanh thu, cột tên nhân viên được giữ cố định.
+
+Cập nhật: upload đè toàn bộ file lên GitHub, Commit changes, Render Manual Deploy.

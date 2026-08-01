@@ -8,22 +8,23 @@
     "violations": 1,
     "assessments": 1,
     "assessment_items": 1,
-    "sales": 1,
+    "sales": 3,
     "sales_targets": 1,
     "sales_daily_targets": 1,
-    "sales_store_days": 1,
+    "sales_store_days": 2,
     "bonuses": 1,
     "documents": 1,
     "shifts": 6,
     "work_schedules": 1,
-    "orders": 1,
+    "orders": 2,
     "online_orders": 1,
-    "product_feedback": 1,
+    "product_feedback": 2,
     "product_collections": 1,
     "product_collection_items": 1,
     "product_trainings": 1,
     "product_training_attempts": 1,
-    "weekly_reports": 1
+    "weekly_reports": 1,
+    "daily_reports": 2
   },
   "stores": [
     {
@@ -62,61 +63,61 @@
       "id": 1,
       "full_name": "Admin PKD",
       "username": "admin",
-      "password_hash": "$2a$10$qRI9TiEtnD8zCPdSJhKemOneX.SH4LxDqml6Caw.o5lwK0eouqvwS",
+      "password_hash": "$2a$10$lIuINqb45wi68aHjqv84muSgUu6/yhkJFRUHkGOWltT.s2LpE4Zbi",
       "role": "admin",
       "store_id": null,
       "status": "active",
-      "created_at": "2026-07-31T13:08:02.935Z"
+      "created_at": "2026-08-01T07:33:11.337Z"
     },
     {
       "id": 2,
       "full_name": "QL Bà Triệu",
       "username": "qly.bt",
-      "password_hash": "$2a$10$qRI9TiEtnD8zCPdSJhKemOneX.SH4LxDqml6Caw.o5lwK0eouqvwS",
+      "password_hash": "$2a$10$lIuINqb45wi68aHjqv84muSgUu6/yhkJFRUHkGOWltT.s2LpE4Zbi",
       "role": "manager",
       "store_id": 1,
       "status": "active",
-      "created_at": "2026-07-31T13:08:02.936Z"
+      "created_at": "2026-08-01T07:33:11.337Z"
     },
     {
       "id": 3,
       "full_name": "ĐSKD Bà Triệu 01",
       "username": "nv.bt1",
-      "password_hash": "$2a$10$qRI9TiEtnD8zCPdSJhKemOneX.SH4LxDqml6Caw.o5lwK0eouqvwS",
+      "password_hash": "$2a$10$lIuINqb45wi68aHjqv84muSgUu6/yhkJFRUHkGOWltT.s2LpE4Zbi",
       "role": "employee",
       "store_id": 1,
       "status": "active",
-      "created_at": "2026-07-31T13:08:02.936Z"
+      "created_at": "2026-08-01T07:33:11.337Z"
     },
     {
       "id": 4,
       "full_name": "ĐSKD Bà Triệu 02",
       "username": "nv.bt2",
-      "password_hash": "$2a$10$qRI9TiEtnD8zCPdSJhKemOneX.SH4LxDqml6Caw.o5lwK0eouqvwS",
+      "password_hash": "$2a$10$lIuINqb45wi68aHjqv84muSgUu6/yhkJFRUHkGOWltT.s2LpE4Zbi",
       "role": "employee",
       "store_id": 1,
       "status": "active",
-      "created_at": "2026-07-31T13:08:02.936Z"
+      "created_at": "2026-08-01T07:33:11.337Z"
     },
     {
       "id": 5,
       "full_name": "QL Đà Nẵng",
       "username": "qly.dn",
-      "password_hash": "$2a$10$qRI9TiEtnD8zCPdSJhKemOneX.SH4LxDqml6Caw.o5lwK0eouqvwS",
+      "password_hash": "$2a$10$lIuINqb45wi68aHjqv84muSgUu6/yhkJFRUHkGOWltT.s2LpE4Zbi",
       "role": "manager",
       "store_id": 2,
       "status": "active",
-      "created_at": "2026-07-31T13:08:02.936Z"
+      "created_at": "2026-08-01T07:33:11.337Z"
     },
     {
       "id": 6,
       "full_name": "ĐSKD Đà Nẵng 01",
       "username": "nv.dn1",
-      "password_hash": "$2a$10$qRI9TiEtnD8zCPdSJhKemOneX.SH4LxDqml6Caw.o5lwK0eouqvwS",
+      "password_hash": "$2a$10$lIuINqb45wi68aHjqv84muSgUu6/yhkJFRUHkGOWltT.s2LpE4Zbi",
       "role": "employee",
       "store_id": 2,
       "status": "active",
-      "created_at": "2026-07-31T13:08:02.936Z"
+      "created_at": "2026-08-01T07:33:11.337Z"
     }
   ],
   "permissions": [
@@ -316,7 +317,7 @@
       "end_time": "16:30",
       "note": "Ca sáng",
       "status": "active",
-      "created_at": "2026-07-31T13:08:02.936Z"
+      "created_at": "2026-08-01T07:33:11.337Z"
     },
     {
       "id": 2,
@@ -326,7 +327,7 @@
       "end_time": "22:00",
       "note": "Ca chiều",
       "status": "active",
-      "created_at": "2026-07-31T13:08:02.936Z"
+      "created_at": "2026-08-01T07:33:11.337Z"
     },
     {
       "id": 3,
@@ -336,7 +337,7 @@
       "end_time": "22:00",
       "note": "Ca gãy / full peak",
       "status": "active",
-      "created_at": "2026-07-31T13:08:02.936Z"
+      "created_at": "2026-08-01T07:33:11.337Z"
     },
     {
       "id": 4,
@@ -346,7 +347,7 @@
       "end_time": "17:00",
       "note": "",
       "status": "active",
-      "created_at": "2026-07-31T13:08:02.936Z"
+      "created_at": "2026-08-01T07:33:11.337Z"
     },
     {
       "id": 5,
@@ -356,7 +357,7 @@
       "end_time": "20:30",
       "note": "",
       "status": "active",
-      "created_at": "2026-07-31T13:08:02.936Z"
+      "created_at": "2026-08-01T07:33:11.337Z"
     }
   ],
   "tasks": [],
@@ -364,19 +365,152 @@
   "violations": [],
   "assessments": [],
   "assessment_items": [],
-  "sales": [],
+  "sales": [
+    {
+      "id": 1,
+      "user_id": 3,
+      "store_id": 1,
+      "sale_date": "2026-08-01",
+      "revenue": 1000000,
+      "bill_count": 1,
+      "item_count": 1,
+      "note": "",
+      "created_by": 1,
+      "created_at": "2026-08-01T07:33:45.798Z",
+      "updated_by": 1,
+      "updated_at": "2026-08-01T07:33:45.798Z"
+    },
+    {
+      "id": 2,
+      "user_id": 4,
+      "store_id": 1,
+      "sale_date": "2026-08-01",
+      "revenue": 0,
+      "bill_count": 0,
+      "item_count": 0,
+      "note": "",
+      "created_by": 1,
+      "created_at": "2026-08-01T07:33:45.798Z",
+      "updated_by": 1,
+      "updated_at": "2026-08-01T07:33:45.798Z"
+    }
+  ],
   "sales_targets": [],
   "sales_daily_targets": [],
-  "sales_store_days": [],
+  "sales_store_days": [
+    {
+      "id": 1,
+      "store_id": 1,
+      "sale_date": "2026-08-01",
+      "customer_count": 2,
+      "note": "mưua giỏ",
+      "created_by": 1,
+      "created_at": "2026-08-01T07:33:45.798Z",
+      "updated_by": 1,
+      "updated_at": "2026-08-01T07:33:45.798Z"
+    }
+  ],
   "bonuses": [],
   "documents": [],
-  "orders": [],
+  "orders": [
+    {
+      "id": 1,
+      "store_id": 1,
+      "order_date": "2026-08-01",
+      "batch_name": "Thiếu size 2026-08-01",
+      "sku": "sku",
+      "product_name": "sp 1",
+      "quantity": 1,
+      "order_status": "new",
+      "note": "Từ báo cáo ngày: hỏin",
+      "status": "active",
+      "daily_report_id": 1,
+      "created_by": 1,
+      "created_at": "2026-08-01T07:33:45.798Z",
+      "updated_by": 1,
+      "updated_at": "2026-08-01T07:33:45.798Z"
+    }
+  ],
   "online_orders": [],
-  "product_feedback": [],
+  "product_feedback": [
+    {
+      "id": 1,
+      "store_id": 1,
+      "feedback_date": "2026-08-01",
+      "collection_id": null,
+      "sku": "121",
+      "product_name": "23",
+      "style_feedback": "",
+      "material_feedback": "",
+      "product_errors": "bung khoá",
+      "customer_feedback": "",
+      "restock_wish": "Chưa đánh giá",
+      "note": "Từ báo cáo ngày",
+      "status": "active",
+      "daily_report_id": 1,
+      "created_by": 1,
+      "created_at": "2026-08-01T07:33:45.799Z",
+      "updated_by": 1,
+      "updated_at": "2026-08-01T07:33:45.799Z"
+    }
+  ],
   "product_collections": [],
   "product_collection_items": [],
   "product_trainings": [],
   "product_training_attempts": [],
   "weekly_reports": [],
+  "daily_reports": [
+    {
+      "id": 1,
+      "store_id": 1,
+      "report_date": "2026-08-01",
+      "created_by": 1,
+      "created_at": "2026-08-01T07:33:45.798Z",
+      "customer_count": 2,
+      "store_note": "mưua giỏ",
+      "sales_entries": [
+        {
+          "user_id": 3,
+          "revenue": 1000000,
+          "bill_count": 1,
+          "item_count": 1,
+          "note": ""
+        },
+        {
+          "user_id": 4,
+          "revenue": 0,
+          "bill_count": 0,
+          "item_count": 0,
+          "note": ""
+        }
+      ],
+      "missing_size_items": [
+        {
+          "sku": "sku",
+          "product_name": "sp 1",
+          "quantity": 1,
+          "note": "hỏin"
+        }
+      ],
+      "product_feedback_items": [
+        {
+          "sku": "121",
+          "product_name": "23",
+          "product_errors": "bung khoá",
+          "customer_feedback": "",
+          "note": ""
+        }
+      ],
+      "generated_order_ids": [
+        1
+      ],
+      "generated_feedback_ids": [
+        1
+      ],
+      "summary_text": "BÁO CÁO NGÀY 2026-08-01 - Bà Triệu\n\n1. DOANH THU & CHỈ SỐ\n- ĐSKD Bà Triệu 01: 1.000.000đ | Bill 1 | Món 1\n- ĐSKD Bà Triệu 02: 0đ | Bill 0 | Món 0\nTổng: 1.000.000đ | Bill 1 | Món 1 | Lượt khách 2\nUPT: 1 | ATV: 1.000.000đ | ASP: 1.000.000đ | CR: 50%\nGhi chú: mưua giỏ\n\n2. SẢN PHẨM THIẾU SIZE / CẦN ORDER\n- 1. sku - sp 1: SL 1 | hỏin\n\n3. SẢN PHẨM LỖI / FEEDBACK KHÁCH\n- 1. 121 - 23 | Lỗi: bung khoá",
+      "updated_by": 1,
+      "updated_at": "2026-08-01T07:33:45.810Z"
+    }
+  ],
   "work_schedules": []
 }
