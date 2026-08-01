@@ -1889,8 +1889,17 @@ async function renderDocuments() {
         <div style="grid-column:1/-1"><button class="btn">Lưu tài liệu / link</button></div>
       </form>
     </div>` : '';
-  const rows = docs.length ? `<div class="table-wrap"><table><thead><tr><th>Tài liệu</th><th>Nhóm</th><th>Phạm vi</th><th>Phiên bản</th><th>File</th><th>Lượt tải</th><th>Người tải lên</th><th>Ngày cập nhật</th><th>Thao tác</th></tr></thead><tbody>${docs.map(d => `<tr><td><b>${esc(d.title)}</b><br><span class="hint">${esc(d.description || '')}</span></td><td><span class="badge dark">${esc(d.category || 'Quy trình')}</span></td><td>${esc(d.store_name || 'Toàn hệ thống')}</td><td>${esc(d.version || '-')}</td><td>${d.external_url ? '<b>Link Google Drive</b><br><span class="hint">Không chiếm dung lượng</span>' : `${esc(d.original_name || '')}<br><span class="hint">${fileSizeLabel(d.size)}</span>`}</td><td>${money(d.download_count || 0)}</td><td>${esc(d.created_by_name || '')}</td><td>${dt(d.updated_at || d.created_at)}</td><td><div class="row"><button class="btn small docDownloadBtn" data-id="${d.id}" data-name="${esc(d.original_name || d.title || 'tai-lieu')}">${d.external_url ? 'Mở link' : 'Tải về'}</button>${can('can_manage_documents') ? `<button class="btn small danger docDeleteBtn" data-id="${d.id}" data-name="${esc(d.title)}">Xóa</button>` : ''}</div></td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Chưa có tài liệu/quy trình nào</div>';
-  shell(`${uploadForm}<div class="card" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">Thư viện tài liệu / quy trình</h3>${can('can_export') ? '<button class="btn secondary" data-export="documents">Tải CSV danh sách</button>' : ''}</div>${rows}</div>`, 'Tài liệu / Quy trình', 'Lưu quy trình, biểu mẫu, file đào tạo để cửa hàng tải về khi cần');
+  const docCategoryNames = ['Quy trình', 'Biểu mẫu', 'Đào tạo', 'Thông báo', 'Khác'];
+  const docCategoryOf = d => docCategoryNames.includes(d.category || '') ? d.category : 'Quy trình';
+  const docRow = d => {
+    const searchText = [d.title, d.description, d.category, d.store_name, d.version, d.original_name, d.created_by_name].filter(Boolean).join(' ');
+    return `<tr class="doc-row" data-doc-text="${esc(searchText).toLowerCase()}"><td><b>${esc(d.title)}</b><br><span class="hint">${esc(d.description || '')}</span></td><td>${esc(d.store_name || 'Toàn hệ thống')}</td><td>${esc(d.version || '-')}</td><td>${d.external_url ? '<b>Link Google Drive</b><br><span class="hint">Không chiếm dung lượng</span>' : `${esc(d.original_name || '')}<br><span class="hint">${fileSizeLabel(d.size)}</span>`}</td><td>${money(d.download_count || 0)}</td><td>${esc(d.created_by_name || '')}</td><td>${dt(d.updated_at || d.created_at)}</td><td><div class="row"><button class="btn small docDownloadBtn" data-id="${d.id}" data-name="${esc(d.original_name || d.title || 'tai-lieu')}">${d.external_url ? 'Mở link' : 'Tải về'}</button>${can('can_manage_documents') ? `<button class="btn small danger docDeleteBtn" data-id="${d.id}" data-name="${esc(d.title)}">Xóa</button>` : ''}</div></td></tr>`;
+  };
+  const renderDocGroup = (cat, list) => `<section class="doc-category-section" id="doc-cat-${cat.replace(/\s+/g, '-').toLowerCase()}"><div class="doc-category-head"><div><h3>${esc(cat)}</h3><p>${money(list.length)} tài liệu</p></div><span class="doc-category-badge">${esc(cat)}</span></div><div class="table-wrap doc-category-table"><table><thead><tr><th>Tài liệu</th><th>Phạm vi</th><th>Phiên bản</th><th>File / Link</th><th>Lượt tải</th><th>Người tải lên</th><th>Ngày cập nhật</th><th>Thao tác</th></tr></thead><tbody>${list.map(docRow).join('')}</tbody></table></div></section>`;
+  const groupedRows = docCategoryNames.map(cat => ({ cat, list: docs.filter(d => docCategoryOf(d) === cat) })).filter(g => g.list.length);
+  const categoryTabs = docs.length ? `<div class="doc-filter-card"><div class="field doc-search-field"><label>Tìm nhanh tài liệu</label><input class="input" id="docSearch" placeholder="Nhập tên tài liệu, ghi chú, cửa hàng..."></div><div class="doc-category-tabs">${docCategoryNames.map(cat => { const count = docs.filter(d => docCategoryOf(d) === cat).length; return `<a class="doc-category-tab" href="#doc-cat-${cat.replace(/\s+/g, '-').toLowerCase()}"><span>${esc(cat)}</span><b>${money(count)}</b></a>`; }).join('')}</div></div>` : '';
+  const rows = docs.length ? `${categoryTabs}${groupedRows.map(g => renderDocGroup(g.cat, g.list)).join('')}` : '<div class="empty">Chưa có tài liệu/quy trình nào</div>';
+  shell(`${uploadForm}<div class="card" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">Thư viện tài liệu / quy trình</h3>${can('can_export') ? '<button class="btn secondary" data-export="documents">Tải CSV danh sách</button>' : ''}</div>${rows}</div>`, 'Tài liệu / Quy trình', 'Tài liệu được chia theo nhóm: Quy trình, Biểu mẫu, Đào tạo, Thông báo để cửa hàng tìm nhanh hơn');
   $('#documentForm')?.addEventListener('submit', async e => {
     e.preventDefault();
     if (hasFileOverLimit(e.target)) return;
@@ -1903,6 +1912,17 @@ async function renderDocuments() {
       toast('Đã tải tài liệu lên hệ thống');
       renderDocuments();
     } catch (err) { toast(err.message, 'danger'); }
+  });
+  $('#docSearch')?.addEventListener('input', e => {
+    const keyword = String(e.target.value || '').trim().toLowerCase();
+    $$('.doc-row').forEach(row => {
+      const matched = !keyword || String(row.dataset.docText || '').includes(keyword);
+      row.style.display = matched ? '' : 'none';
+    });
+    $$('.doc-category-section').forEach(section => {
+      const hasVisible = $$('.doc-row', section).some(row => row.style.display !== 'none');
+      section.style.display = hasVisible ? '' : 'none';
+    });
   });
   $$('.docDownloadBtn').forEach(btn => btn.addEventListener('click', () => downloadDocument(btn.dataset.id, btn.dataset.name)));
   $$('.docDeleteBtn').forEach(btn => btn.addEventListener('click', async () => {

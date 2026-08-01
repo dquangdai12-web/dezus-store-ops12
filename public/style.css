@@ -3394,3 +3394,86 @@ body{letter-spacing:-.008em}
   .daily-situation-grid{grid-template-columns:1fr!important;gap:9px!important}
   .daily-situation-input{min-height:76px!important;font-size:12.5px!important}
 }
+
+/* ==== V4.59 DOCUMENT LIBRARY GROUPED VIEW ==== */
+.doc-filter-card{
+  margin: 12px 0 16px;
+  padding: 12px;
+  border: 1px solid rgba(15, 23, 42, .08);
+  border-radius: 18px;
+  background: #f8fafc;
+}
+.doc-search-field{ margin-bottom: 10px; }
+.doc-category-tabs{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.doc-category-tab{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 11px;
+  border-radius: 999px;
+  background: #fff;
+  color: #334155;
+  border: 1px solid rgba(15, 23, 42, .08);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 700;
+}
+.doc-category-tab b{
+  min-width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #eef2f7;
+  color: #0f172a;
+  font-size: 12px;
+}
+.doc-category-section{
+  margin-top: 16px;
+  padding: 12px;
+  border: 1px solid rgba(15, 23, 42, .08);
+  border-radius: 18px;
+  background: #fff;
+}
+.doc-category-head{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.doc-category-head h3{
+  margin: 0;
+  font-size: 17px;
+  letter-spacing: -.01em;
+}
+.doc-category-head p{
+  margin: 3px 0 0;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+}
+.doc-category-badge{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: #eef2f7;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.doc-category-table{ margin: 0; }
+@media (max-width: 720px){
+  .doc-filter-card{ padding: 10px; border-radius: 16px; }
+  .doc-category-tab{ padding: 7px 10px; font-size: 12px; }
+  .doc-category-section{ padding: 10px; border-radius: 16px; }
+  .doc-category-head h3{ font-size: 16px; }
+}

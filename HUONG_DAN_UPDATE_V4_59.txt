@@ -1,0 +1,18 @@
+BẢN V4.59 - CHIA NHÓM XEM TÀI LIỆU
+
+Đã chỉnh phần Tài liệu / Quy trình:
+- Khi xem tài liệu, hệ thống chia rõ theo nhóm:
+  + Quy trình
+  + Biểu mẫu
+  + Đào tạo
+  + Thông báo
+  + Khác
+- Thêm ô Tìm nhanh tài liệu theo tên, ghi chú, cửa hàng, phiên bản.
+- Mỗi nhóm có số lượng tài liệu riêng để cửa hàng tìm nhanh hơn.
+- Vẫn giữ upload file dưới 12MB hoặc dán link Google Drive cho file nặng.
+
+Cách cập nhật:
+1. Giải nén file zip.
+2. Upload đè toàn bộ file lên GitHub.
+3. Commit changes.
+4. Render -> Manual Deploy -> Deploy latest commit.
