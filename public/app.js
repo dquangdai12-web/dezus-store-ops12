@@ -416,13 +416,13 @@ function appUiIcon(name) {
 
 function navGroups() {
   return [
-    { key:'overview', label:'Tổng quan', icon:'⌂', ids:['dashboard'] },
-    { key:'work', label:'Công việc', icon:'☑', ids:['tasks','checklists','schedule','violations'] },
-    { key:'revenue', label:'Doanh thu', icon:'₫', ids:['sales','weekly_report','online_orders','bonuses'] },
-    { key:'product', label:'▣', icon:'▣', ids:['orders','product_feedback','product_training'], navLabel:'Sản phẩm' },
-    { key:'more', label:'Tài liệu', icon:'☷', ids:['documents','reports'] },
-    { key:'system', label:'Hệ thống', icon:'⚙', ids:['account','admin'] },
-  ].map(g => ({...g, label: g.navLabel || g.label }));
+    { key:'overview', label:'Tổng quan', icon:appUiIcon('home'), ids:['dashboard'] },
+    { key:'work', label:'Công việc', icon:appUiIcon('checklist'), ids:['tasks','checklists','schedule','violations'] },
+    { key:'revenue', label:'Doanh thu', icon:appUiIcon('revenue'), ids:['sales','weekly_report','online_orders','bonuses'] },
+    { key:'product', label:'Sản phẩm', icon:appUiIcon('product'), ids:['orders','product_feedback','product_training'] },
+    { key:'more', label:'Tài liệu', icon:appUiIcon('document'), ids:['documents','reports'] },
+    { key:'system', label:'Hệ thống', icon:appUiIcon('admin'), ids:['account','admin'] },
+  ];
 }
 
 function mobileNavGroups() {

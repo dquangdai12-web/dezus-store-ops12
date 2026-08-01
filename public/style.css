@@ -2805,3 +2805,99 @@ body{letter-spacing:-.008em}
     font-size:10.2px!important;
   }
 }
+
+/* ==== V4.51 CLEAN ICON SYSTEM - WEB + MOBILE ==== */
+:root{
+  --ic-overview:#1687f7;
+  --ic-work:#10b981;
+  --ic-revenue:#f59e0b;
+  --ic-product:#6366f1;
+  --ic-more:#0ea5a4;
+  --ic-system:#64748b;
+}
+.app-ui-icon{
+  width:1em;
+  height:1em;
+  display:block;
+  stroke-width:2.15;
+}
+.nav-group-main b{
+  width:31px!important;
+  height:31px!important;
+  display:grid!important;
+  place-items:center!important;
+  border-radius:10px!important;
+  border:0!important;
+  box-shadow:none!important;
+  background:rgba(255,255,255,.08)!important;
+  color:#dbeafe!important;
+  font-size:17px!important;
+}
+.nav-group-main b .app-ui-icon{
+  width:18px!important;
+  height:18px!important;
+}
+.nav-group.group-overview .nav-group-main b{color:var(--ic-overview)!important;background:rgba(22,135,247,.15)!important}
+.nav-group.group-work .nav-group-main b{color:var(--ic-work)!important;background:rgba(16,185,129,.15)!important}
+.nav-group.group-revenue .nav-group-main b{color:var(--ic-revenue)!important;background:rgba(245,158,11,.15)!important}
+.nav-group.group-product .nav-group-main b{color:var(--ic-product)!important;background:rgba(99,102,241,.15)!important}
+.nav-group.group-more .nav-group-main b{color:var(--ic-more)!important;background:rgba(14,165,164,.15)!important}
+.nav-group.group-system .nav-group-main b{color:var(--ic-system)!important;background:rgba(148,163,184,.15)!important}
+.nav-group-btn.active .nav-group-main b{
+  background:rgba(255,255,255,.16)!important;
+  color:#ffffff!important;
+}
+
+@media (max-width:699px){
+  .mobile-subitem{
+    border:0!important;
+    box-shadow:0 7px 20px rgba(18,38,63,.07)!important;
+  }
+  .mobile-subitem.active{
+    border:0!important;
+    box-shadow:0 9px 24px rgba(22,135,247,.11)!important;
+  }
+  .mobile-subitem-icon{
+    border:0!important;
+    box-shadow:none!important;
+    background:transparent!important;
+    color:var(--mi-color,#1687f7)!important;
+    font-size:24px!important;
+  }
+  .mobile-subitem-icon .app-ui-icon{
+    width:25px!important;
+    height:25px!important;
+    filter:none!important;
+  }
+  .mobile-subitem.route-dashboard{--mi-color:#1687f7}
+  .mobile-subitem.route-tasks{--mi-color:#0ea5e9}
+  .mobile-subitem.route-checklists{--mi-color:#10b981}
+  .mobile-subitem.route-schedule{--mi-color:#f97316}
+  .mobile-subitem.route-violations{--mi-color:#ef4444}
+  .mobile-subitem.route-sales{--mi-color:#0b67c2}
+  .mobile-subitem.route-weekly_report{--mi-color:#7c3aed}
+  .mobile-subitem.route-online_orders{--mi-color:#0891b2}
+  .mobile-subitem.route-bonuses{--mi-color:#d97706}
+  .mobile-subitem.route-orders{--mi-color:#2563eb}
+  .mobile-subitem.route-product_feedback{--mi-color:#10b981}
+  .mobile-subitem.route-product_training{--mi-color:#6366f1}
+  .mobile-subitem.route-documents{--mi-color:#0f766e}
+  .mobile-subitem.route-reports{--mi-color:#db2777}
+  .mobile-subitem.route-account{--mi-color:#64748b}
+  .mobile-subitem.route-admin{--mi-color:#475569}
+
+  .mobile-tab-icon{
+    background:transparent!important;
+    border:0!important;
+    box-shadow:none!important;
+  }
+  .mobile-tab.active .mobile-tab-icon{
+    background:transparent!important;
+    box-shadow:none!important;
+    color:var(--tab-color,#1687f7)!important;
+  }
+  .mobile-tab-icon .app-ui-icon{
+    width:23px!important;
+    height:23px!important;
+  }
+}
