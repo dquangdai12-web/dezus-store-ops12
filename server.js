@@ -26,6 +26,11 @@ const RUNTIME_CHECKLIST_PATH = path.join(DATA_DIR, 'checklists.json');
 if (!fs.existsSync(RUNTIME_CHECKLIST_PATH) && fs.existsSync(SOURCE_CHECKLIST_PATH)) {
   fs.copyFileSync(SOURCE_CHECKLIST_PATH, RUNTIME_CHECKLIST_PATH);
 }
+const SOURCE_CDP_OJTI_CATALOG_PATH = path.join(ROOT, 'data', 'cdp_ojti_catalog.json');
+const RUNTIME_CDP_OJTI_CATALOG_PATH = path.join(DATA_DIR, 'cdp_ojti_catalog.json');
+if (!fs.existsSync(RUNTIME_CDP_OJTI_CATALOG_PATH) && fs.existsSync(SOURCE_CDP_OJTI_CATALOG_PATH)) {
+  fs.copyFileSync(SOURCE_CDP_OJTI_CATALOG_PATH, RUNTIME_CDP_OJTI_CATALOG_PATH);
+}
 
 const app = express();
 const upload = multer({
@@ -44,15 +49,15 @@ app.use(express.static(path.join(ROOT, 'public')));
 const ROLE_DEFAULTS = {
   admin: {
     can_assign_tasks: 1, can_manage_violations: 1, can_grade_checklists: 1,
-    can_manage_sales: 1, can_manage_total_sales: 1, can_manage_daily_report: 1, can_set_sales_targets: 1, can_manage_weekly_report: 1, can_view_weekly_report: 1, can_view_reports: 1, can_manage_users: 1, can_export: 1, can_view_sales_target: 1, can_view_store_sales_summary: 1, can_manage_bonuses: 1, can_view_bonuses: 1, can_manage_documents: 1, can_view_documents: 1, can_manage_shifts: 1, can_manage_schedule: 1, can_view_schedule: 1, can_manage_orders: 1, can_view_orders: 1, can_manage_online_orders: 1, can_view_online_orders: 1, can_manage_product_feedback: 1, can_view_product_feedback: 1, can_manage_product_collections: 1, can_manage_product_training: 1, can_view_product_training: 1
+    can_manage_sales: 1, can_manage_total_sales: 1, can_manage_daily_report: 1, can_set_sales_targets: 1, can_manage_weekly_report: 1, can_view_weekly_report: 1, can_view_reports: 1, can_manage_users: 1, can_export: 1, can_view_sales_target: 1, can_view_store_sales_summary: 1, can_manage_bonuses: 1, can_view_bonuses: 1, can_manage_documents: 1, can_view_documents: 1, can_manage_shifts: 1, can_manage_schedule: 1, can_view_schedule: 1, can_manage_orders: 1, can_view_orders: 1, can_manage_online_orders: 1, can_view_online_orders: 1, can_manage_product_feedback: 1, can_view_product_feedback: 1, can_manage_product_collections: 1, can_manage_product_training: 1, can_view_product_training: 1, can_manage_cdp_ojti: 1, can_view_cdp_ojti: 1, can_manage_cdp: 1, can_view_cdp: 1, can_manage_ojti: 1, can_view_ojti: 1
   },
   manager: {
     can_assign_tasks: 1, can_manage_violations: 1, can_grade_checklists: 1,
-    can_manage_sales: 1, can_manage_total_sales: 1, can_manage_daily_report: 1, can_set_sales_targets: 0, can_manage_weekly_report: 1, can_view_weekly_report: 1, can_view_reports: 1, can_manage_users: 0, can_export: 1, can_view_sales_target: 0, can_view_store_sales_summary: 1, can_manage_bonuses: 0, can_view_bonuses: 1, can_manage_documents: 1, can_view_documents: 1, can_manage_shifts: 0, can_manage_schedule: 1, can_view_schedule: 1, can_manage_orders: 1, can_view_orders: 1, can_manage_online_orders: 1, can_view_online_orders: 1, can_manage_product_feedback: 1, can_view_product_feedback: 1, can_manage_product_collections: 0, can_manage_product_training: 0, can_view_product_training: 1
+    can_manage_sales: 1, can_manage_total_sales: 1, can_manage_daily_report: 1, can_set_sales_targets: 0, can_manage_weekly_report: 1, can_view_weekly_report: 1, can_view_reports: 1, can_manage_users: 0, can_export: 1, can_view_sales_target: 0, can_view_store_sales_summary: 1, can_manage_bonuses: 0, can_view_bonuses: 1, can_manage_documents: 1, can_view_documents: 1, can_manage_shifts: 0, can_manage_schedule: 1, can_view_schedule: 1, can_manage_orders: 1, can_view_orders: 1, can_manage_online_orders: 1, can_view_online_orders: 1, can_manage_product_feedback: 1, can_view_product_feedback: 1, can_manage_product_collections: 0, can_manage_product_training: 0, can_view_product_training: 1, can_manage_cdp_ojti: 1, can_view_cdp_ojti: 1, can_manage_cdp: 1, can_view_cdp: 1, can_manage_ojti: 1, can_view_ojti: 1
   },
   employee: {
     can_assign_tasks: 0, can_manage_violations: 0, can_grade_checklists: 0,
-    can_manage_sales: 0, can_manage_total_sales: 0, can_manage_daily_report: 0, can_set_sales_targets: 0, can_manage_weekly_report: 0, can_view_weekly_report: 0, can_view_reports: 0, can_manage_users: 0, can_export: 0, can_view_sales_target: 0, can_view_store_sales_summary: 0, can_manage_bonuses: 0, can_view_bonuses: 0, can_manage_documents: 0, can_view_documents: 1, can_manage_shifts: 0, can_manage_schedule: 0, can_view_schedule: 1, can_manage_orders: 0, can_view_orders: 1, can_manage_online_orders: 0, can_view_online_orders: 0, can_manage_product_feedback: 1, can_view_product_feedback: 1, can_manage_product_collections: 0, can_manage_product_training: 0, can_view_product_training: 1
+    can_manage_sales: 0, can_manage_total_sales: 0, can_manage_daily_report: 0, can_set_sales_targets: 0, can_manage_weekly_report: 0, can_view_weekly_report: 0, can_view_reports: 0, can_manage_users: 0, can_export: 0, can_view_sales_target: 0, can_view_store_sales_summary: 0, can_manage_bonuses: 0, can_view_bonuses: 0, can_manage_documents: 0, can_view_documents: 1, can_manage_shifts: 0, can_manage_schedule: 0, can_view_schedule: 1, can_manage_orders: 0, can_view_orders: 1, can_manage_online_orders: 0, can_view_online_orders: 0, can_manage_product_feedback: 1, can_view_product_feedback: 1, can_manage_product_collections: 0, can_manage_product_training: 0, can_view_product_training: 1, can_manage_cdp_ojti: 0, can_view_cdp_ojti: 1, can_manage_cdp: 0, can_view_cdp: 1, can_manage_ojti: 0, can_view_ojti: 1
   }
 };
 
@@ -110,9 +115,9 @@ function defaultDb() {
   const permissions = users.map(u => ({ user_id: u.id, ...ROLE_DEFAULTS[u.role] }));
   return {
     version: 2,
-    nextIds: { stores: 6, users: 7, tasks: 1, task_assignees: 1, violations: 1, assessments: 1, assessment_items: 1, sales: 1, sales_targets: 1, sales_daily_targets: 1, sales_store_days: 1, bonuses: 1, documents: 1, shifts: 6, work_schedules: 1, orders: 1, online_orders: 1, product_feedback: 1, product_collections: 1, product_collection_items: 1, product_trainings: 1, product_training_attempts: 1, weekly_reports: 1, daily_reports: 1 },
+    nextIds: { stores: 6, users: 7, tasks: 1, task_assignees: 1, violations: 1, assessments: 1, assessment_items: 1, sales: 1, sales_targets: 1, sales_daily_targets: 1, sales_store_days: 1, bonuses: 1, documents: 1, shifts: 6, work_schedules: 1, orders: 1, online_orders: 1, product_feedback: 1, product_collections: 1, product_collection_items: 1, product_trainings: 1, product_training_attempts: 1, weekly_reports: 1, daily_reports: 1, cdp_ojti: 1 },
     stores, users, permissions, shifts,
-    tasks: [], task_assignees: [], violations: [], assessments: [], assessment_items: [], sales: [], sales_targets: [], sales_daily_targets: [], sales_store_days: [], bonuses: [], documents: [], orders: [], online_orders: [], product_feedback: [], product_collections: [], product_collection_items: [], product_trainings: [], product_training_attempts: [], weekly_reports: [], daily_reports: [], work_schedules: []
+    tasks: [], task_assignees: [], violations: [], assessments: [], assessment_items: [], sales: [], sales_targets: [], sales_daily_targets: [], sales_store_days: [], bonuses: [], documents: [], orders: [], online_orders: [], product_feedback: [], product_collections: [], product_collection_items: [], product_trainings: [], product_training_attempts: [], weekly_reports: [], daily_reports: [], cdp_ojti: [], work_schedules: []
   };
 }
 
@@ -154,6 +159,7 @@ function loadDb() {
       product_training_attempts: parsed.product_training_attempts || [],
       weekly_reports: parsed.weekly_reports || [],
       daily_reports: parsed.daily_reports || [],
+      cdp_ojti: parsed.cdp_ojti || [],
       shifts: parsed.shifts || base.shifts,
       work_schedules: parsed.work_schedules || []
     };
@@ -243,6 +249,249 @@ function publicUser(row) {
   };
 }
 function canAccessStore(req, storeId) { return userHasStore(req.user, storeId); }
+
+
+const CDP_OJTI_POSITIONS = [
+  { key: 'dskd', label: 'Đại Sứ Kinh Doanh', short: 'ĐSKD' },
+  { key: 'dscc', label: 'Đại Sứ Kinh Doanh Cấp Cao', short: 'ĐSCC' },
+  { key: 'cht', label: 'Cửa Hàng Trưởng', short: 'CHT' }
+];
+function cdpOjtiPositionLabel(key) {
+  return CDP_OJTI_POSITIONS.find(p => p.key === key)?.label || String(key || 'Chưa phân vị trí');
+}
+function canViewCdpOjti(user, type = null) {
+  if (user?.role === 'admin') return true;
+  const p = user?.permissions || {};
+  const legacy = Number(p.can_view_cdp_ojti) === 1 || Number(p.can_manage_cdp_ojti) === 1;
+  if (type === 'cdp') return legacy || Number(p.can_view_cdp) === 1 || Number(p.can_manage_cdp) === 1;
+  if (type === 'ojti') return legacy || Number(p.can_view_ojti) === 1 || Number(p.can_manage_ojti) === 1;
+  return legacy || Number(p.can_view_cdp) === 1 || Number(p.can_manage_cdp) === 1 || Number(p.can_view_ojti) === 1 || Number(p.can_manage_ojti) === 1;
+}
+function canManageCdpOjti(user, type = null) {
+  if (user?.role === 'admin') return true;
+  const p = user?.permissions || {};
+  const legacy = Number(p.can_manage_cdp_ojti) === 1;
+  if (type === 'cdp') return legacy || Number(p.can_manage_cdp) === 1;
+  if (type === 'ojti') return legacy || Number(p.can_manage_ojti) === 1;
+  return legacy || Number(p.can_manage_cdp) === 1 || Number(p.can_manage_ojti) === 1;
+}
+function normalizeIdArray(list) {
+  return Array.from(new Set((Array.isArray(list) ? list : []).map(v => Number(v)).filter(v => Number.isFinite(v) && v > 0)));
+}
+function cdpOjtiRowsForUser(user, type = null) {
+  db.cdp_ojti = db.cdp_ojti || [];
+  if (type && ['cdp', 'ojti'].includes(String(type)) && !canViewCdpOjti(user, String(type))) return [];
+  let rows = db.cdp_ojti.filter(r => r.status !== 'deleted' && canViewCdpOjti(user, String(r.type || 'cdp')));
+  if (type && ['cdp', 'ojti'].includes(String(type))) rows = rows.filter(r => String(r.type) === String(type));
+  if (user.role === 'employee') rows = rows.filter(r => normalizeIdArray(r.trainee_ids).includes(Number(user.id)) || Number(r.trainer_id) === Number(user.id));
+  else if (user.role === 'manager') rows = rows.filter(r => userHasStore(user, r.store_id));
+  return rows.map(r => {
+    const trainees = normalizeIdArray(r.trainee_ids).map(getUser).filter(Boolean);
+    const trainer = getUser(r.trainer_id);
+    const creator = getUser(r.created_by);
+    const linkedTask = r.linked_task_id ? db.tasks.find(t => Number(t.id) === Number(r.linked_task_id)) : null;
+    return {
+      ...r,
+      trainee_ids: normalizeIdArray(r.trainee_ids),
+      trainee_names: trainees.map(u => u.full_name).join(', '),
+      trainer_name: trainer?.full_name || '',
+      created_by_name: creator?.full_name || '',
+      store_name: getStore(r.store_id)?.name || '',
+      position_label: cdpOjtiPositionLabel(r.position_key),
+      linked_task_title: linkedTask?.title || '',
+      linked_task_due_at: linkedTask?.due_at || ''
+    };
+  }).sort((a, b) => String(b.plan_date || '').localeCompare(String(a.plan_date || '')) || Number(b.id) - Number(a.id));
+}
+function upsertOjtiLinkedTask(row, actor) {
+  if (!row || row.type !== 'ojti') return null;
+  const storeId = Number(row.store_id || getPrimaryStoreId(actor));
+  const trainees = normalizeIdArray(row.trainee_ids).filter(uid => {
+    const u = getActiveUser(uid);
+    return u && u.role !== 'admin' && userHasStore(u, storeId);
+  });
+  if (!trainees.length) return null;
+  const dueDate = dateOnly(row.plan_date || new Date());
+  const dueAt = `${dueDate}T${row.due_time || '22:00'}`;
+  const trainer = getUser(row.trainer_id);
+  const desc = [
+    'Tự tạo từ mục OJTI - Đào tạo thường xuyên.',
+    `Vị trí: ${cdpOjtiPositionLabel(row.position_key)}`,
+    trainer ? `Người đào tạo: ${trainer.full_name}` : '',
+    row.objective ? `Mục tiêu: ${row.objective}` : '',
+    row.content ? `Nội dung: ${row.content}` : '',
+    row.note ? `Ghi chú: ${row.note}` : ''
+  ].filter(Boolean).join('\n');
+  let task = row.linked_task_id ? db.tasks.find(t => Number(t.id) === Number(row.linked_task_id)) : null;
+  if (!task) {
+    task = { id: nextId('tasks'), created_by: actor.id, created_at: nowIso() };
+    db.tasks.push(task);
+  }
+  task.title = `[OJTI] ${row.title || cdpOjtiPositionLabel(row.position_key)}`;
+  task.description = desc;
+  task.priority = row.priority || 'medium';
+  task.due_at = dueAt;
+  task.task_date = dueDate;
+  task.store_id = storeId;
+  task.score_value = Number(row.score_value || 5);
+  task.shift_ids = [];
+  task.shift_label = '';
+  task.recurrence_batch = null;
+  task.recurrence_label = '';
+  task.updated_by = actor.id;
+  task.updated_at = nowIso();
+  db.task_assignees = (db.task_assignees || []).filter(a => Number(a.task_id) !== Number(task.id));
+  trainees.forEach(uid => db.task_assignees.push({ id: nextId('task_assignees'), task_id: task.id, user_id: uid, completed_at: null, evidence_path: null, evidence_note: '', points_delta: 0 }));
+  return task.id;
+}
+
+
+function loadCdpOjtiCatalog() {
+  const filePath = fs.existsSync(RUNTIME_CDP_OJTI_CATALOG_PATH) ? RUNTIME_CDP_OJTI_CATALOG_PATH : SOURCE_CDP_OJTI_CATALOG_PATH;
+  try {
+    const raw = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    return raw && Array.isArray(raw.positions) ? raw : { positions: [] };
+  } catch (err) {
+    console.error('Không đọc được cdp_ojti_catalog.json:', err.message);
+    return { positions: [] };
+  }
+}
+function cdpCatalogPositions() {
+  const catalog = loadCdpOjtiCatalog();
+  return (catalog.positions || []).map(p => ({ key: p.key, label: p.label, short: p.short || p.key }));
+}
+function findCdpCatalogPosition(key) {
+  const catalog = loadCdpOjtiCatalog();
+  return (catalog.positions || []).find(p => String(p.key) === String(key)) || null;
+}
+function findCdpCatalogItem(positionKey, type, code) {
+  const pos = findCdpCatalogPosition(positionKey);
+  const bucket = pos ? pos[type === 'ojti' ? 'ojti' : 'cdp'] : null;
+  if (!bucket) return null;
+  for (const section of (bucket.sections || [])) {
+    const item = (section.items || []).find(x => String(x.code) === String(code));
+    if (item) return { ...item, section_title: section.title };
+  }
+  return null;
+}
+function normalizeCdpItemValues(list) {
+  return (Array.isArray(list) ? list : []).map(v => ({
+    code: String(v.code || '').trim(),
+    score: v.score === '' || v.score === null || v.score === undefined ? '' : String(v.score).slice(0, 12),
+    training_start: v.training_start ? dateOnly(v.training_start) : '',
+    training_end: v.training_end ? dateOnly(v.training_end) : '',
+    note: String(v.note || '').trim().slice(0, 3000),
+    result: String(v.result || '').trim().slice(0, 3000),
+    task_remark: String(v.task_remark || '').trim().slice(0, 5000),
+    task_completed_at: v.task_completed_at ? String(v.task_completed_at).slice(0, 40) : '',
+    task_completed_by: v.task_completed_by ? Number(v.task_completed_by) : null,
+    task_assignment_id: v.task_assignment_id ? Number(v.task_assignment_id) : null,
+    task_points_delta: v.task_points_delta === '' || v.task_points_delta === null || v.task_points_delta === undefined ? '' : Number(v.task_points_delta || 0)
+  })).filter(v => v.code);
+}
+function mergeCdpTaskRemarks(previousValues, nextValues) {
+  const oldMap = new Map((Array.isArray(previousValues) ? previousValues : []).map(v => [String(v.code || ''), v]));
+  return (Array.isArray(nextValues) ? nextValues : []).map(v => {
+    const old = oldMap.get(String(v.code || '')) || {};
+    return {
+      ...v,
+      task_remark: v.task_remark || old.task_remark || '',
+      task_completed_at: v.task_completed_at || old.task_completed_at || '',
+      task_completed_by: v.task_completed_by || old.task_completed_by || null,
+      task_assignment_id: v.task_assignment_id || old.task_assignment_id || null,
+      task_points_delta: v.task_points_delta === '' || v.task_points_delta === null || v.task_points_delta === undefined ? (old.task_points_delta ?? '') : v.task_points_delta
+    };
+  });
+}
+function syncOjtiTaskRemarkFromAssignment(task, assignment) {
+  if (!task || !assignment) return false;
+  let changed = false;
+  db.cdp_ojti = db.cdp_ojti || [];
+  db.cdp_ojti.forEach(row => {
+    if (!row || row.status === 'deleted' || row.type !== 'ojti') return;
+    const linked = row.linked_task_ids || {};
+    let code = task.source_type === 'ojti' && Number(task.source_record_id) === Number(row.id) ? task.source_item_code : null;
+    if (!code) {
+      code = Object.keys(linked).find(k => Number(linked[k]) === Number(task.id));
+    }
+    if (!code) return;
+    row.item_values = Array.isArray(row.item_values) ? row.item_values : [];
+    let item = row.item_values.find(v => String(v.code) === String(code));
+    if (!item) {
+      item = { code: String(code), score: '', training_start: task.task_date || dateOnly(task.due_at || new Date()), training_end: '', note: '' };
+      row.item_values.push(item);
+    }
+    item.task_remark = String(assignment.evidence_note || '').trim().slice(0, 5000);
+    item.task_completed_at = assignment.completed_at || nowIso();
+    item.task_completed_by = Number(assignment.user_id || 0) || null;
+    item.task_assignment_id = Number(assignment.id || 0) || null;
+    item.task_points_delta = Number(assignment.points_delta || 0);
+    row.updated_at = nowIso();
+    changed = true;
+  });
+  return changed;
+}
+function normalizeOpenValues(obj) {
+  const out = {};
+  if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
+    Object.keys(obj).forEach(k => { out[String(k).slice(0, 80)] = String(obj[k] || '').trim().slice(0, 5000); });
+  }
+  return out;
+}
+function upsertOjtiTasksFromRecord(row, actor) {
+  if (!row || row.type !== 'ojti') return {};
+  const storeId = Number(row.store_id || getPrimaryStoreId(actor));
+  const trainees = normalizeIdArray(row.trainee_ids).filter(uid => {
+    const u = getActiveUser(uid);
+    return u && u.role !== 'admin' && userHasStore(u, storeId);
+  });
+  if (!trainees.length) return row.linked_task_ids || {};
+  const linked = { ...(row.linked_task_ids || {}) };
+  const trainer = getUser(row.trainer_id);
+  const posLabel = cdpOjtiPositionLabel(row.position_key);
+  (row.item_values || []).forEach(v => {
+    const dueDate = v.training_end || v.training_start;
+    if (!dueDate) return;
+    const item = findCdpCatalogItem(row.position_key, 'ojti', v.code) || {};
+    const itemTitle = item.competency || item.group || v.code;
+    let task = linked[v.code] ? db.tasks.find(t => Number(t.id) === Number(linked[v.code])) : null;
+    if (!task) {
+      task = { id: nextId('tasks'), created_by: actor.id, created_at: nowIso() };
+      db.tasks.push(task);
+    }
+    task.title = `[OJTI] ${v.code} - ${String(itemTitle).slice(0, 100)}`;
+    task.description = [
+      'Tự tạo từ ngày training trong mục OJTI.',
+      `Vị trí: ${posLabel}`,
+      item.section_title ? `Nhóm: ${item.section_title}` : '',
+      trainer ? `Người đào tạo: ${trainer.full_name}` : '',
+      item.criteria ? `Tiêu chí: ${item.criteria}` : '',
+      v.note ? `Ghi chú: ${v.note}` : ''
+    ].filter(Boolean).join('\n');
+    task.priority = row.priority || 'medium';
+    task.due_at = `${dateOnly(dueDate)}T${row.due_time || '22:00'}`;
+    task.task_date = dateOnly(dueDate);
+    task.store_id = storeId;
+    task.score_value = Number(row.score_value || 5);
+    task.shift_ids = [];
+    task.shift_label = '';
+    task.recurrence_batch = null;
+    task.recurrence_label = 'Tạo từ OJTI';
+    task.source_type = 'ojti';
+    task.source_record_id = row.id;
+    task.source_item_code = v.code;
+    task.updated_by = actor.id;
+    task.updated_at = nowIso();
+    const existingAssignments = (db.task_assignees || []).filter(a => Number(a.task_id) === Number(task.id));
+    db.task_assignees = (db.task_assignees || []).filter(a => Number(a.task_id) !== Number(task.id));
+    trainees.forEach(uid => {
+      const oldAssignment = existingAssignments.find(a => Number(a.user_id) === Number(uid));
+      db.task_assignees.push(oldAssignment || { id: nextId('task_assignees'), task_id: task.id, user_id: uid, completed_at: null, evidence_path: null, evidence_note: '', points_delta: 0 });
+    });
+    linked[v.code] = task.id;
+  });
+  return linked;
+}
 
 function requireAuth(req, res, next) {
   const header = req.headers.authorization || '';
@@ -1338,6 +1587,161 @@ app.delete('/api/users/:id', requireAuth, requirePerm('can_manage_users'), (req,
 
 app.get('/api/tasks', requireAuth, (req, res) => res.json({ tasks: taskRowsForUser(req.user) }));
 
+
+
+app.get('/api/cdp-ojti-catalog', requireAuth, (req, res) => {
+  if (!canViewCdpOjti(req.user)) return res.status(403).json({ error: 'Không có quyền xem CDP/OJTI' });
+  const catalog = loadCdpOjtiCatalog();
+  res.json({ ...catalog, positions: catalog.positions || [], can_manage: canManageCdpOjti(req.user), can_manage_cdp: canManageCdpOjti(req.user, 'cdp'), can_manage_ojti: canManageCdpOjti(req.user, 'ojti'), can_view_cdp: canViewCdpOjti(req.user, 'cdp'), can_view_ojti: canViewCdpOjti(req.user, 'ojti') });
+});
+
+app.get('/api/cdp-ojti-records', requireAuth, (req, res) => {
+  const type = String(req.query.type || 'cdp') === 'ojti' ? 'ojti' : 'cdp';
+  if (!canViewCdpOjti(req.user, type)) return res.status(403).json({ error: `Không có quyền xem ${type === 'ojti' ? 'OJTI' : 'CDP'}` });
+  let rows = cdpOjtiRowsForUser(req.user, type).filter(r => Number(r.catalog_mode || 0) === 1);
+  const storeId = req.query.store_id ? Number(req.query.store_id) : null;
+  const pos = req.query.position_key ? String(req.query.position_key) : '';
+  const traineeId = req.query.trainee_id ? Number(req.query.trainee_id) : null;
+  if (storeId) rows = rows.filter(r => Number(r.store_id) === storeId);
+  if (pos) rows = rows.filter(r => String(r.position_key) === pos);
+  if (traineeId) rows = rows.filter(r => normalizeIdArray(r.trainee_ids).includes(traineeId));
+  res.json({ items: rows, can_manage: canManageCdpOjti(req.user, type) });
+});
+
+app.post('/api/cdp-ojti-record', requireAuth, (req, res) => {
+  const body = req.body || {};
+  const type = String(body.type || 'cdp') === 'ojti' ? 'ojti' : 'cdp';
+  if (!canManageCdpOjti(req.user, type)) return res.status(403).json({ error: `Không có quyền nhập ${type === 'ojti' ? 'OJTI' : 'CDP'}` });
+  const validPositions = cdpCatalogPositions().map(p => p.key);
+  const positionKey = validPositions.includes(String(body.position_key)) ? String(body.position_key) : (validPositions[0] || 'dskd');
+  const storeId = req.user.role === 'admin' ? Number(body.store_id || getPrimaryStoreId(req.user) || db.stores[0]?.id) : Number(getPrimaryStoreId(req.user));
+  if (!storeId || !canAccessStore(req, storeId)) return res.status(403).json({ error: 'Không có quyền nhập cửa hàng này' });
+  const id = body.id ? Number(body.id) : null;
+  let row = id ? (db.cdp_ojti || []).find(r => Number(r.id) === id && r.status !== 'deleted') : null;
+  if (row && !canAccessStore(req, row.store_id)) return res.status(403).json({ error: 'Không có quyền sửa cửa hàng này' });
+  const trainees = normalizeIdArray(body.trainee_ids).filter(uid => { const u = getActiveUser(uid); return u && userHasStore(u, storeId); }).slice(0, 1);
+  const trainerId = body.trainer_id ? Number(body.trainer_id) : req.user.id;
+  let itemValues = normalizeCdpItemValues(body.item_values);
+  const openValues = normalizeOpenValues(body.open_values);
+  if (!row) {
+    row = {
+      id: nextId('cdp_ojti'),
+      created_by: req.user.id,
+      created_at: nowIso(),
+      status: 'active',
+      linked_task_ids: {}
+    };
+    db.cdp_ojti = db.cdp_ojti || [];
+    db.cdp_ojti.push(row);
+  }
+  row.catalog_mode = 1;
+  row.type = type;
+  row.store_id = storeId;
+  row.position_key = positionKey;
+  row.trainee_ids = trainees;
+  row.trainer_id = trainerId;
+  row.plan_date = dateOnly(body.plan_date || new Date());
+  row.due_time = String(body.due_time || row.due_time || '22:00').slice(0, 5);
+  row.title = String(body.title || '').trim() || (type === 'ojti' ? `OJTI ${cdpOjtiPositionLabel(positionKey)}` : `CDP ${cdpOjtiPositionLabel(positionKey)}`);
+  row.objective = String(body.objective || '').trim();
+  row.content = String(body.content || '').trim();
+  row.result = String(body.result || '').trim();
+  row.note = String(body.note || '').trim();
+  row.status_label = String(body.status_label || row.status_label || 'doing').trim();
+  row.priority = String(body.priority || row.priority || 'medium');
+  row.item_values = mergeCdpTaskRemarks(row.item_values, itemValues);
+  row.open_values = openValues;
+  if (type === 'ojti') row.linked_task_ids = upsertOjtiTasksFromRecord(row, req.user);
+  row.linked_task_id = row.linked_task_ids ? Object.values(row.linked_task_ids).filter(Boolean)[0] || null : row.linked_task_id || null;
+  row.updated_by = req.user.id;
+  row.updated_at = nowIso();
+  saveDb();
+  res.json({ ok: true, id: row.id, linked_task_ids: row.linked_task_ids || {} });
+});
+
+app.get('/api/cdp-ojti', requireAuth, (req, res) => {
+  const type = ['cdp', 'ojti'].includes(String(req.query.type || '')) ? String(req.query.type) : null;
+  if (!canViewCdpOjti(req.user, type)) return res.status(403).json({ error: 'Không có quyền xem CDP/OJTI' });
+  let rows = cdpOjtiRowsForUser(req.user, type);
+  const storeId = req.query.store_id ? Number(req.query.store_id) : null;
+  if (storeId) rows = rows.filter(r => Number(r.store_id) === Number(storeId));
+  res.json({ positions: cdpCatalogPositions(), items: rows, can_manage: canManageCdpOjti(req.user, type) });
+});
+
+app.post('/api/cdp-ojti', requireAuth, (req, res) => {
+  const body = req.body || {};
+  const type = String(body.type || 'cdp') === 'ojti' ? 'ojti' : 'cdp';
+  if (!canManageCdpOjti(req.user, type)) return res.status(403).json({ error: `Không có quyền nhập ${type === 'ojti' ? 'OJTI' : 'CDP'}` });
+  const storeId = req.user.role === 'admin' ? Number(body.store_id || getPrimaryStoreId(req.user) || db.stores[0]?.id) : Number(getPrimaryStoreId(req.user));
+  if (!storeId || !canAccessStore(req, storeId)) return res.status(403).json({ error: 'Không có quyền nhập cửa hàng này' });
+  const id = nextId('cdp_ojti');
+  const row = {
+    id,
+    type,
+    store_id: storeId,
+    position_key: CDP_OJTI_POSITIONS.some(p => p.key === body.position_key) ? body.position_key : 'dskd',
+    trainee_ids: normalizeIdArray(body.trainee_ids).filter(uid => { const u = getActiveUser(uid); return u && userHasStore(u, storeId); }).slice(0, 1),
+    trainer_id: body.trainer_id ? Number(body.trainer_id) : req.user.id,
+    plan_date: dateOnly(body.plan_date || new Date()),
+    due_time: String(body.due_time || '22:00').slice(0, 5),
+    title: String(body.title || '').trim() || (type === 'ojti' ? 'Lịch đào tạo OJTI' : 'Kế hoạch CDP'),
+    objective: String(body.objective || '').trim(),
+    content: String(body.content || '').trim(),
+    result: String(body.result || '').trim(),
+    note: String(body.note || '').trim(),
+    status_label: String(body.status_label || 'planned').trim(),
+    priority: String(body.priority || 'medium'),
+    link_task: type === 'ojti' && Number(body.link_task || 0) === 1 ? 1 : 0,
+    linked_task_id: null,
+    created_by: req.user.id,
+    created_at: nowIso(),
+    updated_by: req.user.id,
+    updated_at: nowIso(),
+    status: 'active'
+  };
+  db.cdp_ojti = db.cdp_ojti || [];
+  if (row.link_task) row.linked_task_id = upsertOjtiLinkedTask(row, req.user);
+  db.cdp_ojti.push(row);
+  saveDb();
+  res.json({ ok: true, id, linked_task_id: row.linked_task_id || null });
+});
+
+app.patch('/api/cdp-ojti/:id', requireAuth, (req, res) => {
+  const row = (db.cdp_ojti || []).find(r => Number(r.id) === Number(req.params.id) && r.status !== 'deleted');
+  if (!row) return res.status(404).json({ error: 'Không tìm thấy nội dung CDP/OJTI' });
+  if (!canManageCdpOjti(req.user, String(row.type || 'cdp'))) return res.status(403).json({ error: `Không có quyền sửa ${String(row.type) === 'ojti' ? 'OJTI' : 'CDP'}` });
+  if (!canAccessStore(req, row.store_id)) return res.status(403).json({ error: 'Không có quyền sửa cửa hàng này' });
+  const body = req.body || {};
+  const nextStoreId = req.user.role === 'admin' ? Number(body.store_id || row.store_id) : Number(row.store_id);
+  if (!nextStoreId || !canAccessStore(req, nextStoreId)) return res.status(403).json({ error: 'Không có quyền chuyển cửa hàng này' });
+  row.store_id = nextStoreId;
+  row.type = String(body.type || row.type) === 'ojti' ? 'ojti' : 'cdp';
+  if (CDP_OJTI_POSITIONS.some(p => p.key === body.position_key)) row.position_key = body.position_key;
+  row.trainee_ids = normalizeIdArray(body.trainee_ids).filter(uid => { const u = getActiveUser(uid); return u && userHasStore(u, nextStoreId); }).slice(0, 1);
+  row.trainer_id = body.trainer_id ? Number(body.trainer_id) : row.trainer_id || req.user.id;
+  row.plan_date = dateOnly(body.plan_date || row.plan_date || new Date());
+  row.due_time = String(body.due_time || row.due_time || '22:00').slice(0, 5);
+  ['title','objective','content','result','note','status_label','priority'].forEach(k => { if (body[k] !== undefined) row[k] = String(body[k] || '').trim(); });
+  row.link_task = row.type === 'ojti' && Number(body.link_task || 0) === 1 ? 1 : 0;
+  if (row.link_task) row.linked_task_id = upsertOjtiLinkedTask(row, req.user);
+  row.updated_by = req.user.id;
+  row.updated_at = nowIso();
+  saveDb();
+  res.json({ ok: true, id: row.id, linked_task_id: row.linked_task_id || null });
+});
+
+app.delete('/api/cdp-ojti/:id', requireAuth, (req, res) => {
+  const row = (db.cdp_ojti || []).find(r => Number(r.id) === Number(req.params.id));
+  if (!row) return res.status(404).json({ error: 'Không tìm thấy nội dung CDP/OJTI' });
+  if (!canManageCdpOjti(req.user, String(row.type || 'cdp'))) return res.status(403).json({ error: `Không có quyền xóa ${String(row.type) === 'ojti' ? 'OJTI' : 'CDP'}` });
+  if (!canAccessStore(req, row.store_id)) return res.status(403).json({ error: 'Không có quyền xóa cửa hàng này' });
+  row.status = 'deleted';
+  row.deleted_by = req.user.id;
+  row.deleted_at = nowIso();
+  saveDb();
+  res.json({ ok: true });
+});
+
 app.post('/api/tasks', requireAuth, requirePerm('can_assign_tasks'), (req, res) => {
   const { title, description, due_at, priority, store_id, assignee_ids, score_value, start_date, end_date, due_time, repeat_every_days, shift_ids } = req.body || {};
   const manualAssignees = Array.isArray(assignee_ids) ? assignee_ids.map(Number).filter(Boolean) : [];
@@ -1409,6 +1813,7 @@ app.post('/api/tasks/:assignmentId/complete', requireAuth, upload.array('evidenc
   if (evidencePath) ta.evidence_path = evidencePath;
   ta.evidence_note = req.body.note || '';
   ta.points_delta = late ? -Math.abs(Number(t.score_value || 10)) : 0;
+  syncOjtiTaskRemarkFromAssignment(t, ta);
   saveDb();
   res.json({ ok: true, status: late ? 'completed_late' : 'completed_on_time', points_delta: ta.points_delta });
 });
@@ -2745,6 +3150,42 @@ app.get('/api/export/:type.csv', requireAuth, requirePerm('can_export'), (req, r
     rows = productTrainingRowsForUser(req.user).map(r => ({ id: r.id, pham_vi: r.store_name || '', bat_buoc_hoc: Number(r.is_required || 0) ? 'Có' : 'Không', han_hoc: r.due_at || '', ty_le_dat: Number(r.pass_percent || 90), so_cau_hoi: Number(r.quiz_question_count || 0), sku: r.sku || '', ten_sp: r.product_name || '', ngay_hang_ve: r.arrival_date || '', chat_lieu: r.material || '', kieu_dang_form: r.style_info || '', diem_ban_hang: r.selling_points || '', huong_dan_bao_quan_tu_van: r.care_instruction || '', loi_can_luu_y: r.common_errors || '', ghi_chu_dao_tao: r.training_note || '', trang_thai: r.status_label || '', nguoi_nhap: r.created_by_name || '', ngay_cap_nhat: r.updated_at || r.created_at || '' }));
   } else if (type === 'product_training_attempts') {
     rows = (db.product_training_attempts || []).filter(a => a.status !== 'deleted').map(a => { const t = (db.product_trainings || []).find(x => Number(x.id) === Number(a.training_id)); const u = getUser(a.user_id); return { id: a.id, bai_dao_tao: t ? `${t.sku || ''} ${t.product_name || ''}`.trim() : '', cua_hang: getStore(a.store_id)?.name || getStore(u?.store_id)?.name || '', nhan_vien: u?.full_name || '', diem: Number(a.score_percent || 0), dung: Number(a.correct_count || 0), tong_cau: Number(a.total_questions || 0), ket_qua: Number(a.passed || 0) ? 'Đạt' : 'Chưa đạt', ngay_lam_bai: a.created_at || '' }; });
+  } else if (type === 'cdp_ojti') {
+    rows = [];
+    cdpOjtiRowsForUser(req.user).forEach(r => {
+      const linked = r.linked_task_ids || {};
+      if (Number(r.catalog_mode || 0) === 1 && Array.isArray(r.item_values) && r.item_values.length) {
+        r.item_values.forEach(v => {
+          const item = findCdpCatalogItem(r.position_key, r.type, v.code) || {};
+          const hasData = v.score || v.note || v.training_start || v.training_end || v.task_remark;
+          if (!hasData) return;
+          rows.push({
+            id: r.id,
+            loai: r.type === 'ojti' ? 'OJTI' : 'CDP',
+            cua_hang: r.store_name || '',
+            vi_tri: r.position_label || '',
+            nhan_su: r.trainee_names || '',
+            nguoi_dao_tao: r.trainer_name || '',
+            ma_tieu_chi: v.code || '',
+            nhom: item.section_title || item.group || '',
+            nang_luc: item.competency || '',
+            tieu_chi: item.criteria || '',
+            diem: v.score || '',
+            ngay_training: v.training_end || v.training_start || '',
+            remark_cong_viec_hang_ngay: v.task_remark || '',
+            ngay_hoan_thanh_cong_viec: v.task_completed_at || '',
+            link_cong_viec: linked[v.code] || '',
+            ghi_chu_training: v.note || '',
+            trang_thai: r.status_label || '',
+            ghi_chu_chung: r.note || '',
+            nguoi_nhap: r.created_by_name || '',
+            ngay_cap_nhat: r.updated_at || r.created_at || ''
+          });
+        });
+      } else {
+        rows.push({ id: r.id, loai: r.type === 'ojti' ? 'OJTI' : 'CDP', cua_hang: r.store_name || '', vi_tri: r.position_label || '', nhan_su: r.trainee_names || '', nguoi_dao_tao: r.trainer_name || '', ngay_ke_hoach: r.plan_date || '', gio_han: r.due_time || '', tieu_de: r.title || '', muc_tieu: r.objective || '', noi_dung: r.content || '', ket_qua: r.result || '', trang_thai: r.status_label || '', link_cong_viec: r.linked_task_id || '', ghi_chu: r.note || '', nguoi_nhap: r.created_by_name || '', ngay_cap_nhat: r.updated_at || r.created_at || '' });
+      }
+    });
   } else if (type === 'documents') {
     rows = documentRowsForUser(req.user).map(d => ({ id: d.id, title: d.title, category: d.category, store_name: d.store_name, version: d.version || '', storage_type: d.storage_type || (d.external_url ? 'link' : 'file'), original_name: d.original_name || '', external_url: d.external_url || '', created_by_name: d.created_by_name || '', created_at: d.created_at || '', download_count: Number(d.download_count || 0), description: d.description || '' }));
   } else if (type === 'bonuses') {

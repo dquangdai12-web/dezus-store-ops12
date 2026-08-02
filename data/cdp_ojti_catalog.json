@@ -1,0 +1,2187 @@
+{
+  "source_file": "ĐÀO TẠO CDP(1).xlsx",
+  "version": "v4.61",
+  "positions": [
+    {
+      "key": "dskd",
+      "label": "Đại Sứ Kinh Doanh",
+      "short": "ĐSKD",
+      "cdp": {
+        "sheet": "CDP ĐSKD",
+        "role": "Đại Sứ Kinh Doanh",
+        "role_description": "Vai trò: Cá nhân có động lực cao, hướng tới dịch vụ, có trách nhiệm trong việc đạt được mục tiêu bán hàng, cung cấp dịch vụ xuất sắc, thúc đẩy sự đổi mới, đảm bảo hoạt động vận hành xuất sắc và mang lại trải nghiệm khách hàng liền mạch, đồng thời quản lý quy trình thực hiện đơn hàng trong cửa hàng.",
+        "sections": [
+          {
+            "title": "1. Con ngườI",
+            "items": [
+              {
+                "code": "1.1",
+                "group": "Năng lực chuyên môn",
+                "competency": "TẦM NHÌN/SỨ MỆNH - Thể hiện mục đích THƯƠNG HIỆU",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 13
+              },
+              {
+                "code": "1.2",
+                "group": "Năng lực chuyên môn",
+                "competency": "GIÁ TRỊ CỐT LÕI - Thể hiện Giá trị cốt lõi của nhãn hàng bằng cách đưa ra các ví dụ rõ ràng về tầm quan trọng của chúng đối với bản thân, đồng nghiệp và khách hàng.",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 14
+              },
+              {
+                "code": "1.3",
+                "group": "Năng lực chuyên môn",
+                "competency": "PASSION - Thể hiện PASSION bằng cách đưa ra những ví dụ rõ ràng về tầm quan trọng của nó đối với bản thân, đồng nghiệp và khách hàng.",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 15
+              },
+              {
+                "code": "1.4",
+                "group": "Năng lực chuyên môn",
+                "competency": "Thể hiện sự nhất quán, tuân thủ các chính sách và nội quy tại nơi làm việc, và có khả năng xử lý, phản hồi nhanh chóng các thông báo và yêu cầu chính thức từ cấp trên",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 16
+              }
+            ]
+          },
+          {
+            "title": "2. Bán lẻ",
+            "items": [
+              {
+                "code": "2.1",
+                "group": "FPK",
+                "competency": "Có kiến thức chuyên sâu về sản phẩm",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 20
+              },
+              {
+                "code": "2.2",
+                "group": "GUESTS",
+                "competency": "Mang đến dịch vụ khách hàng đặc biệt thông qua quy trình G.U.E.S.T.S.",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 21
+              },
+              {
+                "code": "2.3",
+                "group": "Lời khen",
+                "competency": "Đạt được mục tiêu và nhận được lời khen ngợi.",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 22
+              },
+              {
+                "code": "2.4",
+                "group": "Truyền cảm hứng thời trang",
+                "competency": "Thể hiện sự hiểu biết sâu về kiến thức Trends & Looks của mùa hiện tại.\n(Xu hướng thiết kế, phong cách, tư vấn thời trang và bộ sưu tập chủ đạo)",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 23
+              },
+              {
+                "code": "2.5",
+                "group": "VM",
+                "competency": "Thể hiện sự thành thạo trong việc áp dụng các tiêu chuẩn VM\n(Tạo ra những cách trưng bày hấp dẫn về mặt trực quan, thu hút khách hàng và duy trì tính nhất quán của thương hiệu theo tiêu chuẩn VM)",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 24
+              },
+              {
+                "code": "2.6",
+                "group": "Đồng phục",
+                "competency": "Nhất quán trong việc duy trì tiêu chuẩn hình ảnh theo quy định của nhãn hàng",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 25
+              },
+              {
+                "code": "2.7",
+                "group": "Đổi mới & Năng suất",
+                "competency": "Hoàn thành khóa đào tạo và đúng thời hạn",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 26
+              },
+              {
+                "code": "2.8",
+                "group": "Huddle",
+                "competency": "Tham gia vào các cuộc họp đầu ca hàng ngày và cập nhật các chỉ số, thông tin chi tiết, và giải pháp để thúc đẩy tiến độ của cửa hàng.",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 27
+              },
+              {
+                "code": "2.9",
+                "group": "SOP thu ngân",
+                "competency": "Thể hiện sự tuân thủ các quy trình vận hành tiêu chuẩn của nhân viên thu ngân (SOP) để đảm bảo tiêu chuẩn.",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 28
+              },
+              {
+                "code": "2.10",
+                "group": "An ninh & an toàn",
+                "competency": "Tuân thủ các quy trình đã được quy định để đảm bảo an ninh bên trong và bên ngoài cửa hàng.",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 29
+              },
+              {
+                "code": "2.11",
+                "group": "Sản phẩm",
+                "competency": "Có kiến thức về sản phẩm bán chạy, sản phẩm không bán chạy và các sản phẩm mới hàng tuần.",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 30
+              },
+              {
+                "code": "2.12",
+                "group": "Kho hàng",
+                "competency": "Sắp xếp hàng tồn kho một cách gọn gàng và theo SOP quy định",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 31
+              },
+              {
+                "code": "2.13",
+                "group": "Kho hàng",
+                "competency": "Duy trì các quy trình an toàn trong kho.",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 32
+              }
+            ]
+          },
+          {
+            "title": "3. Kinh doanh",
+            "items": [
+              {
+                "code": "3.1",
+                "group": "Mục tiêu bán hàng",
+                "competency": "Đạt được doanh số bán hàng cá nhân",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 36
+              }
+            ]
+          }
+        ],
+        "open_fields": [
+          {
+            "key": "1_i_m_m_nh_c_a_nh_n_vi_n",
+            "label": "1.Điểm mạnh của nhân viên"
+          },
+          {
+            "key": "2_c_h_i_c_i_thi_n",
+            "label": "2.Cơ hội cải thiện"
+          },
+          {
+            "key": "3_k_ho_ch_h_nh_ng_theo_m_h_nh_grow_m_c_t",
+            "label": "3. Kế hoạch hành động theo mô hình GROW (Mục tiêu – Thực trạng – Giải pháp – Hành động)"
+          },
+          {
+            "key": "i_m_m_nh_c_a_nh_n_vi_n",
+            "label": "Điểm mạnh của nhân viên"
+          },
+          {
+            "key": "c_h_i_c_i_thi_n",
+            "label": "Cơ hội cải thiện"
+          },
+          {
+            "key": "k_ho_ch_h_nh_ng_theo_m_h_nh_grow",
+            "label": "Kế hoạch hành động theo mô hình GROW"
+          }
+        ]
+      },
+      "ojti": {
+        "sheet": "ĐSKD_OJT",
+        "role": "Đại Sứ Kinh Doanh",
+        "role_description": "",
+        "sections": [
+          {
+            "title": "1. Con người",
+            "items": [
+              {
+                "code": "1.1",
+                "group": "Năng lực chuyên môn",
+                "competency": "TẦM NHÌN/SỨ MỆNH - Thể hiện mục đích THƯƠNG HIỆU",
+                "criteria": "1. Không thể trình bày mục đích THƯƠNG HIỆU\n2. Trình bày được mục đích THƯƠNG HIỆU nhưng có một số mơ hồ\n3. Trình bày được mục đích THƯƠNG HIỆU một cách rõ ràng\n4. Trình bày rõ ràng mạch lạc mục đích THƯƠNG HIỆU và tầm quan trọng của nó",
+                "levels": [
+                  "Đạt được 1",
+                  "Đạt được 2",
+                  "Đạt được3",
+                  "Đạt được 4"
+                ],
+                "source_row": 13,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              },
+              {
+                "code": "1.2",
+                "group": "Năng lực chuyên môn",
+                "competency": "GIÁ TRỊ CỐT LÕI - Thể hiện Giá trị cốt lõi của Công ty bằng cách đưa ra các ví dụ rõ ràng về tầm quan trọng của chúng đối với bản thân, đồng nghiệp và khách hàng.",
+                "criteria": "1. Trình bày 5 Giá trị Cốt lõi.\n2. Đưa ra ví dụ về việc cá nhân thực hiện các giá trị cốt lõi \n3. Cung cấp ví dụ minh họa cam kết cá nhân, nỗ lực đội nhóm và trải nghiệm khách hàng tích cực thể hiện được các giá trị cốt lõi.\n4. Liên tục điều chỉnh hành động và hành vi theo Giá trị Cốt lõi của nhãn hàng.",
+                "levels": [
+                  "Đạt được1",
+                  "Đạt được 2",
+                  "Đạt được3",
+                  "Đạt được 4"
+                ],
+                "source_row": 14,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              },
+              {
+                "code": "1.3",
+                "group": "Năng lực chuyên môn",
+                "competency": "PASSION - Thể hiện PASSION bằng cách đưa ra những ví dụ rõ ràng về tầm quan trọng của nó đối với bản thân, đồng nghiệp và khách hàng.",
+                "criteria": "1. Trình bày PASSION\n2. Đưa ra ví dụ về việc cá nhân thực hiện PASSION\n3. Cung cấp ví dụ minh họa cam kết cá nhân, nỗ lực đội nhóm và trải nghiệm khách hàng tích cực thể hiện được PASSION\n4. Liên tục điều chỉnh hành động và hành vi theo PASSION của nhãn hàng.",
+                "levels": [
+                  "Đạt được1",
+                  "Đạt được 2",
+                  "Đạt được3",
+                  "Đạt được 4"
+                ],
+                "source_row": 15,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              },
+              {
+                "code": "1.4",
+                "group": "Năng lực chuyên môn",
+                "competency": "Thể hiện sự nhất quán, tuân thủ các chính sách và nội quy tại nơi làm việc, và có khả năng xử lý, phản hồi nhanh chóng các thông báo và yêu cầu chính thức từ cấp trên",
+                "criteria": "1. Kiểm tra vấn đề đúng giờ.\n2. Không có AWOL (nghỉ không phép) hoặc thư cảnh cáo nào được ban hành.\n3. Không có khả năng xử lý, phản hồi nhanh chóng các thông báo và yêu cầu chính thức",
+                "levels": [
+                  ">3\nVấn đề kỷ luật",
+                  "2 \nVấn đề kỷ luật",
+                  "1 \nVấn đề kỷ luật",
+                  "0 \nVấn đề kỷ luật"
+                ],
+                "source_row": 16,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              }
+            ]
+          },
+          {
+            "title": "2. Bán lẻ",
+            "items": [
+              {
+                "code": "2.1",
+                "group": "Kiến thức cơ bản về sản phẩm",
+                "competency": "Có kiến thức chuyên sâu về sản phẩm",
+                "criteria": "Đánh giá FPK trên với số điểm tối thiểu là 80%.",
+                "levels": [
+                  "Dưới 69%",
+                  "70-79%",
+                  "80-89%",
+                  "90-100%"
+                ],
+                "source_row": 18,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              },
+              {
+                "code": "2.2",
+                "group": "GUEST",
+                "competency": "Mang đến dịch vụ khách hàng đặc biệt thông qua quy trình G.U.E.S.T.S.",
+                "criteria": "Điểm trung bình mục GUESTS trong bản MCC trong 2 tháng",
+                "levels": [
+                  "Dưới 69%",
+                  "70-79%",
+                  "80-89%",
+                  "90-100%"
+                ],
+                "source_row": 19,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              },
+              {
+                "code": "2.3",
+                "group": "Lời khen",
+                "competency": "Đạt được mục tiêu và nhận được lời khen ngợi.",
+                "criteria": "Lời khen nhận được từ khách hàng qua kênh chính thức của Công ty.",
+                "levels": [
+                  "0 lời khen",
+                  "1 lời khen",
+                  "2 lời khen",
+                  "3 lời khen"
+                ],
+                "source_row": 20,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              },
+              {
+                "code": "2.4",
+                "group": "Truyền cảm hứng thời trang",
+                "competency": "Thể hiện sự hiểu biết sâu về kiến thức Trends & Looks của mùa hiện tại.\n(Xu hướng thiết kế, phong cách, tư vấn thời trang và bộ sưu tập chủ đạo)",
+                "criteria": "Điểm trung bình mục Fashion Knowledge từ 8 đến 11 câu trong bản MCC trong thời gian OJT",
+                "levels": [
+                  "Dưới 69%",
+                  "70-79%",
+                  "80-89%",
+                  "90-100%"
+                ],
+                "source_row": 21,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              },
+              {
+                "code": "2.5",
+                "group": "VM",
+                "competency": "Thể hiện sự thành thạo trong việc áp dụng các tiêu chuẩn VM.",
+                "criteria": "Đạt mức trung bình tối thiểu 80% trongVM checklist cơ bản trong thời gian OJT",
+                "levels": [
+                  "Dưới 69%",
+                  "70-79%",
+                  "80-89%",
+                  "90-100%"
+                ],
+                "source_row": 22,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              },
+              {
+                "code": "2.6",
+                "group": "Đồng phục",
+                "competency": "Nhất quán trong việc duy trì tiêu chuẩn hình ảnh theo quy định của nhãn hàng",
+                "criteria": "Follow tiêu chuẩn hình ảnh của nhãn hàng",
+                "levels": [
+                  ">3 lần không tuân thủ",
+                  "2 lần không tuân thủ",
+                  "1 lần không tuân thủ",
+                  "0 lần không tuân thủ"
+                ],
+                "source_row": 23,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              },
+              {
+                "code": "2.7",
+                "group": "Đổi mới & Năng suất",
+                "competency": "Hoàn thành khóa đào tạo và đúng thời hạn",
+                "criteria": "Hoàn thành 100%: Trends & Looks, Product Manual và các khóa học bắt buộc khác.",
+                "levels": [
+                  "Dưới 69%",
+                  "70-79%",
+                  "80-89%",
+                  "90-100%"
+                ],
+                "source_row": 24,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              },
+              {
+                "code": "2.8",
+                "group": "Huddle",
+                "competency": "Tham gia vào các cuộc họp đầu ca hàng ngày và cập nhật các chỉ số, thông tin chi tiết, và giải pháp để thúc đẩy tiến độ của cửa hàng.",
+                "criteria": "1. Chia sẻ tin TỐT\n2. Chia sẻ câu chuyện thành công - Tổ chức kỷ niệm các thành tựu, các tương tác tích cực với khách hàng để TRUYỀN CẢM HỨNG cho người khác.\n3. ƯU TIÊN - Am hiểu mục tiêu doanh số của cửa hàng, tỷ lệ chuyển đổi và QPR/ROS.\n4. Hiểu và thực hiện hiệu quả các CHỦ ĐỀ hàng ngày.",
+                "levels": [
+                  "Đóng góp <1 chia sẻ",
+                  "Đóng góp >2 chia sẻ",
+                  "Đóng góp >3 chia sẻ",
+                  "Đóng góp >4 chia sẻ"
+                ],
+                "source_row": 25,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              },
+              {
+                "code": "2.9",
+                "group": "SOP thu ngân",
+                "competency": "Thể hiện sự tuân thủ các quy trình vận hành tiêu chuẩn của nhân viên thu ngân (SOP) để đảm bảo tiêu chuẩn.",
+                "criteria": "1.Gọn gàng, ngăn nắp - Các mặt hàng đã mua đã được xác nhận được sắp xếp phía sau quầy và không có nhãn dán hay giấy tờ nào trên quầy.\n2. Tiền mặt và chứng từ được kiểm đếm và ghi chép đầy đủ.\n3. Túi giấy được cất gọn gàng.\n4. Hộp két luôn được khóa an toàn.",
+                "levels": [
+                  "<1 trên 4",
+                  "2 trên 4",
+                  "3 trên 4",
+                  "4 trên 4"
+                ],
+                "source_row": 26,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              },
+              {
+                "code": "2.10",
+                "group": "An ninh & an toàn",
+                "competency": "Tuân thủ các quy trình đã được quy định để đảm bảo an ninh bên trong và bên ngoài cửa hàng.",
+                "criteria": "1. Kiểm tra thường xuyên khi ra vào cửa hàng (ví dụ: kiểm tra túi của nhân viên).\n2. Nhân viên phải kịp thời xử lý các hoạt động đáng ngờ.\n3. Kiểm soát nghiêm ngặt, chỉ cho phép nhân viên được ủy quyền vào khu vực hạn chế.\n4. Toàn bộ đội ngũ nắm rõ vị trí của các bình chữa cháy và đảm bảo không có vật cản.\n5. Báo cáo kịp thời và theo dõi sâu sát với các hạng mục sửa chữa cần thiết.",
+                "levels": [
+                  ">3 tiêu chí không đảm bảo",
+                  "2 tiêu chí không đảm bảo",
+                  "1 tiêu chí không đảm bảo",
+                  "đảm bảo toàn bộ tiêu chí"
+                ],
+                "source_row": 27,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              },
+              {
+                "code": "2.11",
+                "group": "Sản phẩm",
+                "competency": "Có kiến thức về sản phẩm bán chạy, sản phẩm không bán chạy và các sản phẩm mới hàng tuần.",
+                "criteria": "1.Nắm được các sản phẩm bán chạy nhất.\n2. Am biết về cả mặt hàng bán chạy nhất và không bán chạy.\n3. Hiểu biết sâu rộng về những sản phẩm bán chạy nhất, những sản phẩm không bán chạy và những sản phẩm mới đến hàng tuần.",
+                "levels": [
+                  "Không đạt được tiêu chí nào",
+                  "Đạt được 1",
+                  "Đạt được 2",
+                  "Đạt được 3"
+                ],
+                "source_row": 28,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              },
+              {
+                "code": "2.12",
+                "group": "Stockroom\nKho hàng",
+                "competency": "Sắp xếp hàng tồn kho một cách gọn gàng và theo SOP quy định",
+                "criteria": "1. Sắp xếp hàng hóa gọn gàng trên kệ.\n2. Đường chạy kho theo “hình rắn” \n3. Chấm tròn được dán đúng tiêu chuẩn\n4. Label (ví dụ: mũi tên, nhãn sản phẩm túi...) được dán đầy đủ được duy trì và thực hiện.",
+                "levels": [
+                  "<1 trên 4",
+                  "2 trên 4",
+                  "3 trên 4",
+                  "4 trên 4"
+                ],
+                "source_row": 29,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              },
+              {
+                "code": "2.13",
+                "group": "Stockroom\nKho hàng",
+                "competency": "Duy trì các quy trình an toàn trong kho.",
+                "criteria": "1. Thang được cất giữ an toàn, không cản trở lối đi.\n2. Sàn phòng kho gọn gàng, sạch sẽ.\n3. Đảm bảo đường dây điện và hộp server được thông thoáng\n4. Lối thoát hiểm luôn thông thoáng, không bị cản trở.",
+                "levels": [
+                  "<1 trên 4",
+                  "2 trên 4",
+                  "3 trên 4",
+                  "4 trên 4"
+                ],
+                "source_row": 30,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              }
+            ]
+          },
+          {
+            "title": "3. Kinh doanh",
+            "items": [
+              {
+                "code": "3.1",
+                "group": "Mục tiêu bán hàng",
+                "competency": "Đạt được doanh số bán hàng cá nhân",
+                "criteria": "Đạt 100% mục tiêu doanh số cá nhân do CHT đặt ra trong 2 tháng qua",
+                "levels": [
+                  "79% trở xuống",
+                  "80-89%",
+                  "90 - 99%",
+                  "1"
+                ],
+                "source_row": 32,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              }
+            ]
+          }
+        ],
+        "open_fields": [
+          {
+            "key": "i_m_m_nh_c_a_nh_n_vi_n",
+            "label": "Điểm mạnh của nhân viên"
+          },
+          {
+            "key": "c_h_i_c_i_thi_n",
+            "label": "Cơ hội cải thiện"
+          },
+          {
+            "key": "3_k_ho_ch_h_nh_ng_theo_m_h_nh_grow_m_c_t",
+            "label": "3. Kế hoạch hành động theo mô hình GROW (Mục tiêu – Thực trạng – Giải pháp – Hành động)"
+          },
+          {
+            "key": "k_ho_ch_h_nh_ng_theo_m_h_nh_grow",
+            "label": "Kế hoạch hành động theo mô hình GROW"
+          },
+          {
+            "key": "xu_t_ph_t_tri_n_h_nh_ng_c_i_thi_n",
+            "label": "Đề xuất phát triển & hành động cải thiện"
+          }
+        ]
+      }
+    },
+    {
+      "key": "dscc",
+      "label": "Đại Sứ Kinh Doanh Cấp Cao",
+      "short": "ĐSCC",
+      "cdp": {
+        "sheet": "CDP_ĐSCC",
+        "role": "",
+        "role_description": "Đại Sứ Kinh Doanh Cấp Cao",
+        "sections": [
+          {
+            "title": "1. Con ngườI",
+            "items": [
+              {
+                "code": "1.1",
+                "group": "Năng lực chuyên môn",
+                "competency": "TẦM NHÌN/SỨ MỆNH - Thể hiện mục đích THƯƠNG HIỆU",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 12
+              },
+              {
+                "code": "1.2",
+                "group": "Năng lực chuyên môn",
+                "competency": "GIÁ TRỊ CỐT LÕI - Thể hiện Giá trị cốt lõi của nhãn hàng bằng cách đưa ra các ví dụ rõ ràng về tầm quan trọng của chúng đối với bản thân, đồng nghiệp và khách hàng.",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 13
+              },
+              {
+                "code": "1.3",
+                "group": "Năng lực chuyên môn",
+                "competency": "PASSION - Thể hiện PASSION bằng cách đưa ra những ví dụ rõ ràng về tầm quan trọng của nó đối với bản thân, đồng nghiệp và khách hàng.",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 14
+              },
+              {
+                "code": "1.4",
+                "group": "Năng lực chuyên môn",
+                "competency": "Thể hiện sự nhất quán, tuân thủ các chính sách và nội quy tại nơi làm việc, và có khả năng xử lý, phản hồi nhanh chóng các thông báo và yêu cầu chính thức từ cấp trên",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 15
+              }
+            ]
+          },
+          {
+            "title": "2. Bán lẻ",
+            "items": [
+              {
+                "code": "2.1",
+                "group": "FPK",
+                "competency": "Có kiến thức chuyên sâu về sản phẩm",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 19
+              },
+              {
+                "code": "2.2",
+                "group": "GUESTS",
+                "competency": "Mang đến dịch vụ khách hàng đặc biệt thông qua quy trình G.U.E.S.T.S.",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 20
+              },
+              {
+                "code": "2.3",
+                "group": "Lời khen",
+                "competency": "Đạt được mục tiêu và nhận được lời khen ngợi.",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 21
+              },
+              {
+                "code": "2.4",
+                "group": "Truyền cảm hứng thời trang",
+                "competency": "Thể hiện sự hiểu biết sâu về kiến thức Trends & Looks của mùa hiện tại.\n(Xu hướng thiết kế, phong cách, tư vấn thời trang và bộ sưu tập chủ đạo)",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 22
+              },
+              {
+                "code": "2.5",
+                "group": "VM",
+                "competency": "Thể hiện sự thành thạo trong việc áp dụng các tiêu chuẩn VM\n(Tạo ra những cách trưng bày hấp dẫn về mặt trực quan, thu hút khách hàng và duy trì tính nhất quán của thương hiệu theo tiêu chuẩn VM)",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 23
+              },
+              {
+                "code": "2.6",
+                "group": "Đồng phục",
+                "competency": "Nhất quán trong việc duy trì tiêu chuẩn hình ảnh theo quy định của nhãn hàng",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 24
+              },
+              {
+                "code": "2.7",
+                "group": "Trải nghiệm khách hàng",
+                "competency": "Đạt được Trải nghiệm khách hàng xuất sắc tại cửa hàng thông qua kết quả CEE.",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 25
+              },
+              {
+                "code": "2.8",
+                "group": "Đổi mới & Năng suất",
+                "competency": "Hoàn thành khóa đào tạo và đúng thời hạn",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 26
+              },
+              {
+                "code": "2.9",
+                "group": "Huddle",
+                "competency": "Hỗ trợ SIC lập kế hoạch và thực hiện kế hoạch hàng ngày một cách hiệu quả",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 27
+              },
+              {
+                "code": "2.10",
+                "group": "Huddle",
+                "competency": "Tham gia vào các cuộc họp đầu ca hàng ngày và cập nhật các chỉ số, thông tin chi tiết, và giải pháp để thúc đẩy tiến độ của cửa hàng.",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 28
+              },
+              {
+                "code": "2.11",
+                "group": "SOP thu ngân",
+                "competency": "Vận hành các chức năng POS, CRM và thu ngân theo SOP",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 29
+              },
+              {
+                "code": "2.12",
+                "group": "An ninh & an toàn",
+                "competency": "Tuân thủ các quy trình đã được quy định để đảm bảo an ninh bên trong và bên ngoài cửa hàng.",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 30
+              },
+              {
+                "code": "2.13",
+                "group": "Sản phẩm",
+                "competency": "Có kiến thức về sản phẩm bán chạy, sản phẩm không bán chạy và các sản phẩm mới hàng tuần.",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 31
+              },
+              {
+                "code": "2.14",
+                "group": "Sản phẩm",
+                "competency": "Quản lý các hàng đặt của khách hàng một cách hiệu quả.",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 32
+              },
+              {
+                "code": "2.15",
+                "group": "Sản phẩm",
+                "competency": "Quản lý sản phẩm lỗi trong cửa hàng",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 33
+              },
+              {
+                "code": "2.16",
+                "group": "Kho hàng",
+                "competency": "Giám sát kho và sắp xếp hàng tồn kho theo tiêu chuẩn kho hàng.",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 34
+              },
+              {
+                "code": "2.17",
+                "group": "Kho hàng",
+                "competency": "Duy trì các quy trình an toàn trong kho.",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 35
+              }
+            ]
+          },
+          {
+            "title": "3. Kinh doanh",
+            "items": [
+              {
+                "code": "3.1",
+                "group": "Mục tiêu bán hàng",
+                "competency": "Đạt được doanh số bán hàng cá nhân.",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  "4"
+                ],
+                "source_row": 39
+              }
+            ]
+          }
+        ],
+        "open_fields": [
+          {
+            "key": "i_m_m_nh_c_a_nh_n_vi_n",
+            "label": "Điểm mạnh của nhân viên"
+          },
+          {
+            "key": "c_h_i_c_i_thi_n",
+            "label": "Cơ hội cải thiện"
+          },
+          {
+            "key": "3_k_ho_ch_h_nh_ng_theo_m_h_nh_grow_m_c_t",
+            "label": "3. Kế hoạch hành động theo mô hình GROW (Mục tiêu – Thực trạng – Giải pháp – Hành động)"
+          },
+          {
+            "key": "xu_t_ph_t_tri_n_h_nh_ng_c_i_thi_n",
+            "label": "Đề xuất phát triển & hành động cải thiện"
+          },
+          {
+            "key": "k_ho_ch_h_nh_ng_theo_m_h_nh_grow",
+            "label": "Kế hoạch hành động theo mô hình GROW"
+          }
+        ]
+      },
+      "ojti": {
+        "sheet": "ĐSCC_OJT",
+        "role": "Đại Sứ Kinh Doanh Cấp Cao",
+        "role_description": "Vai trò: Cá nhân có động lực cao, hướng tới dịch vụ, có trách nhiệm trong việc đạt được mục tiêu bán hàng, cung cấp dịch vụ xuất sắc, thúc đẩy sự đổi mới, đảm bảo hoạt động vận hành xuất sắc và mang lại trải nghiệm khách hàng liền mạch, đồng thời quản lý quy trình thực hiện đơn hàng trong cửa hàng",
+        "sections": [
+          {
+            "title": "1. Con người",
+            "items": [
+              {
+                "code": "1.1",
+                "group": "Năng lực chuyên môn",
+                "competency": "TẦM NHÌN/SỨ MỆNH - Thể hiện mục đích THƯƠNG HIỆU",
+                "criteria": "1.Không thể hiện được mục đích của THƯƠNG HIỆU\n2.Thể hiện mục đích của THƯƠNG HIỆU nhưng có một số điều mơ hồ\n3.Thể hiện mục đích của THƯƠNG HIỆU một cách rõ ràng\n4. Thể hiện rõ ràng mục đích và tầm quan trọng của THƯƠNG HIỆU",
+                "levels": [
+                  "Đạt được 1",
+                  "Đạt được 2",
+                  "Đạt được3",
+                  "Đạt được 4"
+                ],
+                "source_row": 14,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              },
+              {
+                "code": "1.2",
+                "group": "Năng lực chuyên môn",
+                "competency": "GIÁ TRỊ CỐT LÕI - Thể hiện Giá trị cốt lõi của Công ty bằng cách đưa ra các ví dụ rõ ràng về tầm quan trọng của chúng đối với bản thân, đồng nghiệp và khách hàng.",
+                "criteria": "1. Xác định 5 giá trị cốt lõi.\n2. Đưa ra các ví dụ cơ bản về việc cá nhân tuân thủ các giá trị cốt lõi.\n3. Đưa ra các ví dụ đầy đủ minh họa cho cam kết cá nhân, nỗ lực của đội nhóm và trải nghiệm tích cực của khách hàng phản ánh các giá trị cốt lõi.\n4. Thống nhất nhất quán các hành động và hành vi với Giá trị cốt lõi.",
+                "levels": [
+                  "Đạt được 1",
+                  "Đạt được 2",
+                  "Đạt được3",
+                  "Đạt được 4"
+                ],
+                "source_row": 15,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              },
+              {
+                "code": "1.3",
+                "group": "Năng lực chuyên môn",
+                "competency": "PASSION - Thể hiện PASSION bằng cách đưa ra những ví dụ rõ ràng về tầm quan trọng của nó đối với bản thân, đồng nghiệp và khách hàng.",
+                "criteria": "1. Xác định PASSION\n2. Đưa ra những ví dụ cơ bản về việc cá nhân tuân thủ PASSION\n3. Đưa ra các ví dụ đầy đủ minh họa cho cam kết cá nhân, nỗ lực của đội nhóm hoặc trải nghiệm tích cực của khách hàng phản ánh PASSION\n4. Luôn điều chỉnh các hành động và hành vi phù hợp với Lời hứa Dịch vụ của công ty: PASSION",
+                "levels": [
+                  "Đạt được 1",
+                  "Đạt được 2",
+                  "Đạt được3",
+                  "Đạt được 4"
+                ],
+                "source_row": 16,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              },
+              {
+                "code": "1.4",
+                "group": "Năng lực chuyên môn",
+                "competency": "Thể hiện sự nhất quán, tuân thủ các chính sách và nội quy tại nơi làm việc, và có khả năng xử lý, phản hồi nhanh chóng các thông báo và yêu cầu chính thức từ cấp trên",
+                "criteria": "1. Kiểm tra vấn đề đúng giờ.\n2. Không có AWOL (nghỉ không phép) hoặc thư cảnh cáo nào được ban hành.\n3. Không có khả năng xử lý, phản hồi nhanh chóng các thông báo và yêu cầu chính thức",
+                "levels": [
+                  ">3\nVấn đề kỷ luật",
+                  "2 \nVấn đề kỷ luật",
+                  "1 \nVấn đề kỷ luật",
+                  "0 \nVấn đề kỷ luật"
+                ],
+                "source_row": 17,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              }
+            ]
+          },
+          {
+            "title": "2. Bán lẻ",
+            "items": [
+              {
+                "code": "2.1",
+                "group": "Kiến thức cơ bản về sản phẩm",
+                "competency": "Có kiến thức chuyên sâu về sản phẩm",
+                "criteria": "Đánh giá FPK trên LMS với số điểm tối thiểu là 80%.",
+                "levels": [
+                  "Dưới 69%",
+                  "70-79%",
+                  "80-89%",
+                  "90-100%"
+                ],
+                "source_row": 19,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              },
+              {
+                "code": "2.2",
+                "group": "GUEST",
+                "competency": "Mang đến dịch vụ khách hàng đặc biệt thông qua quy trình G.U.E.S.T.S.",
+                "criteria": "Điểm trung bình mục GUESTS trong bản MCC trong thời gian OJT",
+                "levels": [
+                  "Dưới 69%",
+                  "70-79%",
+                  "80-89%",
+                  "90-100%"
+                ],
+                "source_row": 20,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              },
+              {
+                "code": "2.3",
+                "group": "Compliment\nLời khen",
+                "competency": "Đạt được mục tiêu và nhận được lời khen ngợi.",
+                "criteria": "Lời khen nhận được từ khách hàng qua kênh chính thức của Công ty.",
+                "levels": [
+                  "0 lời khen",
+                  "1 lời khen",
+                  "2 lời khen",
+                  "3 lời khen"
+                ],
+                "source_row": 21,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              },
+              {
+                "code": "2.4",
+                "group": "Truyền cảm hứng thời trang",
+                "competency": "Thể hiện sự hiểu biết sâu về kiến thức Trends & Looks của mùa hiện tại.\n(Xu hướng thiết kế, phong cách, tư vấn thời trang và bộ sưu tập chủ đạo)",
+                "criteria": "Điểm trung bình mục Fashion Knowledge từ 8 đến 11 câu trong bản MCC trong thời gian OJT",
+                "levels": [
+                  "Dưới 69%",
+                  "70-79%",
+                  "80-89%",
+                  "90-100%"
+                ],
+                "source_row": 22,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              },
+              {
+                "code": "2.5",
+                "group": "VM",
+                "competency": "Thể hiện sự thành thạo trong việc áp dụng các tiêu chuẩn VM.",
+                "criteria": "Đạt mức trung bình tối thiểu 80% trongVM checklist cơ bản trong 2 tháng qua",
+                "levels": [
+                  "Dưới 69%",
+                  "70-79%",
+                  "80-89%",
+                  "90-100%"
+                ],
+                "source_row": 23,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              },
+              {
+                "code": "2.6",
+                "group": "Đồng phục",
+                "competency": "Nhất quán trong việc duy trì tiêu chuẩn hình ảnh theo quy định của nhãn hàng",
+                "criteria": "Follow tiêu chuẩn hình ảnh của nhãn hàng",
+                "levels": [
+                  ">3 lần không tuân thủ",
+                  "2 lần không tuân thủ",
+                  "1 lần không tuân thủ",
+                  "0 lần không tuân thủ"
+                ],
+                "source_row": 24,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              },
+              {
+                "code": "2.7",
+                "group": "Trải nghiệm khách hàng",
+                "competency": "Đạt được Trải nghiệm khách hàng xuất sắc tại cửa hàng thông qua kết quả CEE.",
+                "criteria": "Đảm bảo dịch vụ nhanh chóng, giải quyết vấn đề hiệu quả và tương tác thân thiện giữa nhân viên, hướng tới tỷ lệ hài lòng từ 80% trở lên.",
+                "levels": [
+                  "<69%",
+                  "70-79%",
+                  "80-89%",
+                  "> 90%"
+                ],
+                "source_row": 25,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              },
+              {
+                "code": "2.8",
+                "group": "Đổi mới & Năng suất",
+                "competency": "Hoàn thành khóa đào tạo và đúng thời hạn",
+                "criteria": "Hoàn thành 100%: Trends & Looks, Product Manual và các khóa học bắt buộc khác.",
+                "levels": [
+                  "Hoàn thành 79% trở xuống",
+                  "Hoàn thành 80-89%",
+                  "Hoàn thành 90 - 99%",
+                  "Hoàn thành 100%"
+                ],
+                "source_row": 26,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              },
+              {
+                "code": "2.9",
+                "group": "Huddle",
+                "competency": "Hỗ trợ SIC lập kế hoạch và thực hiện kế hoạch hàng ngày một cách hiệu quả",
+                "criteria": "1. Kế hoạch hàng ngày được thực hiện theo nhiệm vụ.\n2. Quy hoạch nhân lực đầy đủ.\n3. Phân bổ hiệu quả thời gian giải lao.\n4. Thể hiện sự linh hoạt để xử lý những thay đổi không lường trước được.",
+                "levels": [
+                  "<1 trên 4",
+                  "2 trên 4",
+                  "3 trên 4",
+                  "4 trên 4"
+                ],
+                "source_row": 27,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              },
+              {
+                "code": "2.10",
+                "group": "Huddle",
+                "competency": "Tham gia vào các cuộc họp đầu ca hàng ngày và cập nhật các chỉ số, thông tin chi tiết, và giải pháp để thúc đẩy tiến độ của cửa hàng.",
+                "criteria": "1. Chia sẻ tin TỐT\n2. Chia sẻ câu chuyện thành công - Tổ chức kỷ niệm các thành tựu, các tương tác tích cực với khách hàng để TRUYỀN CẢM HỨNG cho người khác.\n3. ƯU TIÊN - Am hiểu mục tiêu doanh số của cửa hàng, tỷ lệ chuyển đổi và QPR/ROS.\n4. Hiểu và thực hiện hiệu quả các CHỦ ĐỀ hàng ngày.",
+                "levels": [
+                  "Đóng góp <1 chia sẻ",
+                  "Đóng góp >2 chia sẻ",
+                  "Đóng góp >3 chia sẻ",
+                  "Đóng góp >4 chia sẻ"
+                ],
+                "source_row": 28,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              },
+              {
+                "code": "2.11",
+                "group": "SOP thu ngân",
+                "competency": "Thực hiện các thao tác, quy trình POS, CRM và thu ngân theo SOP",
+                "criteria": "1. Độ chính xác của giao dịch:\nĐảm bảo xử lý giao dịch chính xác và không xảy ra lỗi, và giảm thiểu sự chênh lệch tiền mặt.\n2. Tuân thủ SOP:\nThể hiện sự hiểu biết về các chính sách và quy định của công ty.\n3. Hiệu quả và nhanh chóng:\nGiảm thiểu thời gian chờ đợi của khách hàng tại quầy thu ngân.\n4. Kiến thức về Sản phẩm và Dịch vụ Khách hàng:\nLuôn lấy khách hàng làm trung tâm, giải quyết các câu hỏi và vấn đề một cách chuyên nghiệp.",
+                "levels": [
+                  "<1 trên 4",
+                  "2 trên 4",
+                  "3 trên 4",
+                  "4 trên 4"
+                ],
+                "source_row": 29,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              },
+              {
+                "code": "2.12",
+                "group": "An ninh & an toàn",
+                "competency": "Tuân thủ các quy trình đã được quy định để đảm bảo an ninh bên trong và bên ngoài cửa hàng.",
+                "criteria": "1. Kiểm tra thường xuyên khi ra vào cửa hàng (ví dụ: kiểm tra túi của nhân viên).\n2. Nhân viên phải kịp thời xử lý các hoạt động đáng ngờ.\n3. Kiểm soát nghiêm ngặt, chỉ cho phép nhân viên được ủy quyền vào khu vực hạn chế.\n4. Toàn bộ đội ngũ nắm rõ vị trí của các bình chữa cháy và đảm bảo không có vật cản.\n5. Báo cáo kịp thời và theo dõi sâu sát với các hạng mục sửa chữa cần thiết.",
+                "levels": [
+                  ">3 tiêu chí không đảm bảo",
+                  "2 tiêu chí không đảm bảo",
+                  "1 tiêu chí không đảm bảo",
+                  "đảm bảo toàn bộ tiêu chí"
+                ],
+                "source_row": 30,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              },
+              {
+                "code": "2.13",
+                "group": "Sản phẩm",
+                "competency": "Có kiến thức về sản phẩm bán chạy, sản phẩm không bán chạy và các sản phẩm mới hàng tuần.",
+                "criteria": "1.Nắm được các sản phẩm bán chạy nhất.\n2. Am biết về cả mặt hàng bán chạy nhất và không bán chạy.\n3. Hiểu biết sâu rộng về những sản phẩm bán chạy nhất, những sản phẩm không bán chạy và những sản phẩm mới đến hàng tuần.",
+                "levels": [
+                  "Không đạt được tiêu chí nào",
+                  "Đạt được 1",
+                  "Đạt được 2",
+                  "Đạt được 3"
+                ],
+                "source_row": 31,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              },
+              {
+                "code": "2.14",
+                "group": "Sản phẩm",
+                "competency": "Quản lý các đơn đặt hàng của khách hàng một cách hiệu quả.",
+                "criteria": "1. Ghi đầy đủ thông tin trong phiếu đặt hàng\n2. Đảm bảo rằng tất cả nhân viên đều có thể giao tiếp hiệu quả với nhau để chia sẻ thông tin về hàng đặ kịp thời và tránh sai sót hoặc nhầm lẫn với khách hàng\n3. Truyền đạt rõ ràng về quy định đặt hàng, bao gồm cả việc hủy đặt, đặt cọc hay các quy định khác trước khi khách hàng quyết định đặt hàng.\n4. Theo sát hàng đặt, thông báo tới khách hàng tránh việc quá hạn ngày giữ hàng.",
+                "levels": [
+                  "<1 trên 4",
+                  "2 trên 4",
+                  "3 trên 4",
+                  "4 trên 4"
+                ],
+                "source_row": 32,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              },
+              {
+                "code": "2.15",
+                "group": "Sản phẩm",
+                "competency": "Quản lý sản phẩm lỗi trong cửa hàng",
+                "criteria": "1. Lưu hàng đúng vị trí\n2. Có khả năng nhận diện sản phẩm bị lỗi\n3. Phiếu xuất hàng - Tuân thủ quy trình chuyển sản phẩm bị lỗi ra khỏi cửa hàng\n4. Đảm bảo việc chuyển hàng được chuyển đến đúng bộ phận.",
+                "levels": [
+                  "<1 trên 4",
+                  "2 trên 4",
+                  "3 trên 4",
+                  "4 trên 4"
+                ],
+                "source_row": 33,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              },
+              {
+                "code": "2.16",
+                "group": "Kho hàng",
+                "competency": "Giám sát kho và sắp xếp hàng tồn kho theo tiêu chuẩn kho hàng.",
+                "criteria": "1. Đảm bảo tổ chức hiệu quả và truy xuất hàng tồn kho chính xác cho khách hàng\n2. Lặp lại - Đảm bảo tối ưu hóa và tổ chức không gian hiệu quả.\n3.Pullback - Pullback đúng theo số lượng do Inventory đặt ra.\n4. Tạo điều kiện và tham gia kiểm kê/Giảm giá",
+                "levels": [
+                  "<1 trên 4",
+                  "2 trên 4",
+                  "3 trên 4",
+                  "4 trên 4"
+                ],
+                "source_row": 34,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              },
+              {
+                "code": "2.17",
+                "group": "Kho hàng",
+                "competency": "Duy trì các quy trình an toàn trong kho.",
+                "criteria": "1. Thang được cất giữ an toàn, không cản trở lối đi.\n2. Sàn phòng kho gọn gàng, sạch sẽ.\n3. Đảm bảo đường dây điện và hộp server được thông thoáng\n4. Lối thoát hiểm luôn thông thoáng, không bị cản trở.",
+                "levels": [
+                  "<1 trên 4",
+                  "2 trên 4",
+                  "3 trên 4",
+                  "4 trên 4"
+                ],
+                "source_row": 35,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              }
+            ]
+          },
+          {
+            "title": "3. Kinh doanh",
+            "items": [
+              {
+                "code": "3.1",
+                "group": "Mục tiêu bán hàng",
+                "competency": "Đạt được doanh số bán hàng cá nhân.",
+                "criteria": "Đạt 100% mục tiêu doanh số cá nhân do CHT đặt ra trong 2 tháng qua",
+                "levels": [
+                  "79% trở xuống",
+                  "80-89%",
+                  "90 - 99%",
+                  "1"
+                ],
+                "source_row": 37,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              }
+            ]
+          }
+        ],
+        "open_fields": [
+          {
+            "key": "1_i_m_m_nh_c_a_nh_n_vi_n",
+            "label": "1.Điểm mạnh của nhân viên"
+          },
+          {
+            "key": "2_c_h_i_c_i_thi_n",
+            "label": "2.Cơ hội cải thiện"
+          },
+          {
+            "key": "3_k_ho_ch_h_nh_ng_theo_m_h_nh_grow_m_c_t",
+            "label": "3. Kế hoạch hành động theo mô hình GROW (Mục tiêu – Thực trạng – Giải pháp – Hành động)"
+          },
+          {
+            "key": "i_m_m_nh_c_a_nh_n_vi_n",
+            "label": "Điểm mạnh của nhân viên"
+          },
+          {
+            "key": "c_h_i_c_i_thi_n",
+            "label": "Cơ hội cải thiện"
+          },
+          {
+            "key": "k_ho_ch_h_nh_ng_theo_m_h_nh_grow",
+            "label": "Kế hoạch hành động theo mô hình GROW"
+          }
+        ]
+      }
+    },
+    {
+      "key": "cht",
+      "label": "Cửa Hàng Trưởng",
+      "short": "CHT",
+      "cdp": {
+        "sheet": "CDP_CHT",
+        "role": "Cửa Hàng Trưởng",
+        "role_description": "Vai trò: Quản lý vận hành để tối đa hóa hiệu suất kinh doanh và tiềm năng của đội ngũ nhằm đạt được các chỉ số hiệu quả vận hành (KPIs), đồng thời thúc đẩy Tầm nhìn, Sứ mệnh và Giá trị cốt lõi của Thương hiệu.",
+        "sections": [
+          {
+            "title": "1. Con Người",
+            "items": [
+              {
+                "code": "1.1",
+                "group": "Năng lực chuyên môn",
+                "competency": "Giá trị cốt lõi - Thể hiện giá trị cốt lõi của công ty bằng cách đưa ra các ví dụ rõ ràng về tầm quan trọng của chúng đối với cá nhân, đội nhóm và khách hàng.",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 11
+              },
+              {
+                "code": "1.2",
+                "group": "Năng lực chuyên môn",
+                "competency": "Giao tiếp - Giao tiếp rõ ràng và hiệu quả với đội nhóm, đồng nghiệp và cấp trên",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 12
+              },
+              {
+                "code": "1.3",
+                "group": "Năng lực chuyên môn",
+                "competency": "Quản lý thời gian/ Sắp xếp mức độ ưu tiên - Thể hiện khả năng hoàn thành nhiệm vụ và nộp báo cáo đúng hạn",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 13
+              },
+              {
+                "code": "1.4",
+                "group": "Năng lực chuyên môn",
+                "competency": "Thể hiện khả năng lãnh đạo đội nhóm có mục đích",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 14
+              },
+              {
+                "code": "1.5",
+                "group": "Phát triển",
+                "competency": "Thể hiện năng lực và tính nhất quán trong vai trò hướng dẫn OJT thông qua quy trình GOAL",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 15
+              },
+              {
+                "code": "1.6",
+                "group": "Phát triển",
+                "competency": "Đảm bảo việc huấn luyện/theo sát phù hợp và nhất quán cho tất cả nhân viên",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 16
+              },
+              {
+                "code": "1.7",
+                "group": "Quản lý",
+                "competency": "Thể hiện sự nhất quán, tuân thủ các chính sách và nội quy tại nơi làm việc, và có khả năng xử lý, phản hồi nhanh chóng các thông báo và yêu cầu chính thức",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 17
+              },
+              {
+                "code": "1.8",
+                "group": "Quản lý",
+                "competency": "Giảm thiểu và cải thiện tỷ lệ nhân viên nghỉ việc theo mục tiêu đề ra",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 18
+              }
+            ]
+          },
+          {
+            "title": "2. Bán Lẻ",
+            "items": [
+              {
+                "code": "2.1",
+                "group": "GUESTS",
+                "competency": "Thúc đẩy sự xuất sắc trong trải nghiệm của khách hàng thông qua việc trở thành hình mẫu của GUESTS (cửa hàng)",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 22
+              },
+              {
+                "code": "2.2",
+                "group": "GUESTS",
+                "competency": "Thể hiện sự xuất sắc ở vị trí một hình mẫu của GUESTS (cá nhân)",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 23
+              },
+              {
+                "code": "2.3",
+                "group": "EASE",
+                "competency": "Cho thấy khả năng sử dụng thành thạo mô hình EASE trong việc giải quyết khiếu nại",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 24
+              },
+              {
+                "code": "2.4",
+                "group": "Trải nghiệm khách hàng",
+                "competency": "Đạt được sự xuất sắc trong trải nghiệm khách hàng tại cửa hàng thông qua kết quả CEE.",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 25
+              },
+              {
+                "code": "2.5",
+                "group": "VM",
+                "competency": "Xác định các hoạt động đã thực hiện tốt hoặc cần cải thiện với đội nhóm",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 26
+              },
+              {
+                "code": "2.6",
+                "group": "Quản lý hàng tồn kho",
+                "competency": "Thu thập, phân tích và phản hồi về các sản phẩm phù hợp cho cửa hàng - nhu cầu của khách hàng, sản phẩm bị lỗi, sản phẩm bán chạy, sản phẩm bán chậm",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 27
+              },
+              {
+                "code": "2.7",
+                "group": "Quản lý hàng tồn kho",
+                "competency": "Chuẩn bị và kiểm soát hàng tồn kho",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 28
+              },
+              {
+                "code": "2.8",
+                "group": "ACE",
+                "competency": "Đạt mức trung bình 80% cho đánh giá kết quả đào tạo",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 29
+              },
+              {
+                "code": "2.9",
+                "group": "OPS",
+                "competency": "Đạt mức trung bình 80% cho Ops Checklist",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 30
+              }
+            ]
+          },
+          {
+            "title": "3. Kinh Doanh",
+            "items": [
+              {
+                "code": "3.1",
+                "group": "Kinh Doanh",
+                "competency": "Thúc đẩy hoạt động kinh doanh của cửa hàng đạt được kết quả (doanh số, LFL, ROS, v.v.)",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 34
+              },
+              {
+                "code": "3.2",
+                "group": "Kinh Doanh",
+                "competency": "Thể hiện sự thành thạo với các con số (Doanh số, KPI, LFL)",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 35
+              },
+              {
+                "code": "3.3",
+                "group": "Kinh Doanh",
+                "competency": "Phân tích các báo cáo (KPI bán hàng, Báo cáo BI, SIR) với OPS để xác định điểm mạnh, cải tiến và tiềm năng của cửa hàng",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 36
+              },
+              {
+                "code": "3.4",
+                "group": "Kinh Doanh",
+                "competency": "Đề xuất và thực hiện các kế hoạch hành động GROW chiến lược nhằm rút ngắn khoảng cách, đạt được doanh số bán hàng ((Mục tiêu bán hàng, Chuyển đổi, QPR, LFL) và mục tiêu năng suất",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 37
+              },
+              {
+                "code": "3.5",
+                "group": "Kinh Doanh",
+                "competency": "Doanh số bán hàng LFL tăng tối thiểu. 10%",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 38
+              },
+              {
+                "code": "3.6",
+                "group": "Kinh Doanh",
+                "competency": "Có khả năng phân tích sự cạnh tranh - Sản phẩm và giá cả",
+                "criteria": "",
+                "levels": [
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "source_row": 39
+              }
+            ]
+          }
+        ],
+        "open_fields": [
+          {
+            "key": "1_i_m_m_nh_c_a_nh_n_vi_n",
+            "label": "1.Điểm mạnh của nhân viên"
+          },
+          {
+            "key": "2_c_h_i_c_i_thi_n",
+            "label": "2.Cơ hội cải thiện"
+          },
+          {
+            "key": "3_k_ho_ch_h_nh_ng_theo_m_h_nh_grow_m_c_t",
+            "label": "3. Kế hoạch hành động theo mô hình GROW (Mục tiêu – Thực trạng – Giải pháp – Hành động)"
+          },
+          {
+            "key": "xu_t_ph_t_tri_n_h_nh_ng_c_i_thi_n",
+            "label": "Đề xuất phát triển & hành động cải thiện"
+          },
+          {
+            "key": "i_m_m_nh_c_a_nh_n_vi_n",
+            "label": "Điểm mạnh của nhân viên"
+          },
+          {
+            "key": "c_h_i_c_i_thi_n",
+            "label": "Cơ hội cải thiện"
+          }
+        ]
+      },
+      "ojti": {
+        "sheet": "CHT_OJT",
+        "role": "Cửa Hàng Trưởng",
+        "role_description": "Vai trò: Quản lý vận hành để tối đa hóa hiệu suất kinh doanh và tiềm năng của đội ngũ nhằm đạt được các chỉ số hiệu quả vận hành (KPIs), đồng thời thúc đẩy Tầm nhìn, Sứ mệnh và Giá trị cốt lõi của Thương hiệu.",
+        "sections": [
+          {
+            "title": "1 - Con Người",
+            "items": [
+              {
+                "code": "1.1",
+                "group": "Năng lực chuyên môn",
+                "competency": "Giá trị cốt lõi - Thể hiện giá trị cốt lõi của nhãn hàng bằng cách đưa ra các ví dụ rõ ràng về tầm quan trọng của chúng đối với cá nhân, đội nhóm và khách hàng.",
+                "criteria": "1. Trình bày 5 Giá trị Cốt lõi.\n2. Đưa ra ví dụ về việc cá nhân thực hiện các giá trị cốt lõi \n3. Cung cấp ví dụ minh họa cam kết cá nhân, nỗ lực đội nhóm và trải nghiệm khách hàng tích cực thể hiện được các giá trị cốt lõi.\n4. Liên tục điều chỉnh hành động và hành vi theo Giá trị Cốt lõi của nhãn hàng.",
+                "levels": [
+                  "Đạt được1",
+                  "Đạt được 2",
+                  "Đạt được3",
+                  "Đạt được 4"
+                ],
+                "source_row": 12,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              },
+              {
+                "code": "1.2",
+                "group": "Năng lực chuyên môn",
+                "competency": "Giao tiếp - Giao tiếp rõ ràng và hiệu quả với đội nhóm, đồng nghiệp và cấp trên",
+                "criteria": "1. Khả năng giải quyết xung đột/thông tin sai lệch giữa các thành viên trong đội nhóm\n2. Giao tiếp rõ ràng khi sử dụng các kênh khác nhau (ví dụ: zalo,email,1o)",
+                "levels": [
+                  ">3 Mâu thuẫn/giao tiếp không hiệu quả",
+                  "Mâu thuẫn/giao tiếp không hiệu quả",
+                  "Mâu thuẫn/giao tiếp không hiệu quả",
+                  "Không có mâu thuẫn/giao tiếp hiệu quả"
+                ],
+                "source_row": 13,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              },
+              {
+                "code": "1.3",
+                "group": "Năng lực chuyên môn",
+                "competency": "Quản lý thời gian/ Quản lý ưu tiên - Thể hiện khả năng hoàn thành nhiệm vụ và nộp báo cáo đúng hạn",
+                "criteria": "Có thể hoàn thành và nộp các báo cáo cần thiết đúng thời hạn, không mắc sai sót",
+                "levels": [
+                  ">3 hoàn thành muộn",
+                  "<2 hoàn thành muộn",
+                  "<1 hoàn thành muộn",
+                  "0 hoàn thành muộn"
+                ],
+                "source_row": 14,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              },
+              {
+                "code": "1.4",
+                "group": "Năng lực chuyên môn",
+                "competency": "Thể hiện khả năng lãnh đạo đội nhóm có mục đích",
+                "criteria": "Có khả năng tạo động lực và truyền cảm hứng cho đội ngũ\nĐạt điểm trung bình 80% trong đánh giá",
+                "levels": [
+                  "< 74%",
+                  "75%-79%",
+                  "80%-84%",
+                  "> 85%"
+                ],
+                "source_row": 15,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              },
+              {
+                "code": "1.5",
+                "group": "Phát triển năng lực",
+                "competency": "Thể hiện năng lực và tính nhất quán trong vai trò hướng dẫn OJT thông qua quy trình GOAL",
+                "criteria": "Điểm trung bình khi hoàn thành CDP OJT trong Ops checklist 6 tháng qua",
+                "levels": [
+                  "< 79%",
+                  "80-89%",
+                  "90-99%",
+                  "1"
+                ],
+                "source_row": 16,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              },
+              {
+                "code": "1.6",
+                "group": "Phát triển năng lực",
+                "competency": "Đảm bảo việc huấn luyện/theo sát phù hợp và nhất quán cho tất cả nhân viên",
+                "criteria": "Điểm trung bình MCC toàn bộ nhân viên trong cửa hàng đạt 80%",
+                "levels": [
+                  "< 69%",
+                  "70%-79%",
+                  "80%-89%",
+                  "> 90%"
+                ],
+                "source_row": 17,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              },
+              {
+                "code": "1.7",
+                "group": "Quản lý & vận hành",
+                "competency": "Thể hiện sự nhất quán, tuân thủ các chính sách và nội quy tại nơi làm việc, và có khả năng xử lý, phản hồi nhanh chóng các thông báo và yêu cầu chính thức",
+                "criteria": "1. Kiểm tra vấn đề đúng giờ.\n2. Không có AWOL (nghỉ không phép) hoặc thư cảnh cáo nào được ban hành.\n3. Không có khả năng xử lý, phản hồi nhanh chóng các thông báo và yêu cầu chính thức",
+                "levels": [
+                  ">3 vấn đề kỷ luật được tính dựa trên bất kỳ tiêu chí đánh giá hiệu suất nào",
+                  "2 vấn đề kỷ luật được tính dựa trên bất kỳ tiêu chí đánh giá hiệu suất nào",
+                  "1 vấn đề kỷ luật được tính dựa trên bất kỳ tiêu chí đánh giá hiệu suất nào",
+                  "0 vấn đề kỷ luật được tính dựa trên bất kỳ tiêu chí đánh giá hiệu suất nào"
+                ],
+                "source_row": 18,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              },
+              {
+                "code": "1.8",
+                "group": "Quản lý & vận hành",
+                "competency": "Giảm thiểu và cải thiện tỷ lệ nhân viên nghỉ việc theo mục tiêu đề ra",
+                "criteria": "Đảm bảo tỷ lệ nghỉ việc của nhân viên giảm bằng cách tạo động lực và tạo ra môi trường an toàn để họ phát triển",
+                "levels": [
+                  "25% of target",
+                  "50% of target",
+                  "75% of target",
+                  "100% of target"
+                ],
+                "source_row": 19,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              }
+            ]
+          },
+          {
+            "title": "2 - Bán Lẻ",
+            "items": [
+              {
+                "code": "2.1",
+                "group": "GUESTS",
+                "competency": "Thúc đẩy sự xuất sắc trong trải nghiệm của khách hàng thông qua việc trở thành hình mẫu của GUESTS (cửa hàng)",
+                "criteria": "Duy trì trải nghiệm khách hàng xuất sắc tại CỬA HÀNG một cách nhất quán và nhận trung bình 3 lời khen trở lên và không có phàn nàn mỗi tháng",
+                "levels": [
+                  "Không nhận được lời khen nào/ nhận 1 hoặc nhiều phàn nàn mỗi tháng",
+                  "Nhận trung bình 1 lời khen mỗi tháng",
+                  "Nhận trung bình 2 lời khen mỗi tháng",
+                  "Nhận trung bình 3 lời khen mỗi tháng"
+                ],
+                "source_row": 21,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              },
+              {
+                "code": "2.2",
+                "group": "GUESTS",
+                "competency": "Thể hiện sự xuất sắc ở vị trí một hình mẫu của GUESTS (cá nhân)",
+                "criteria": "Thể hiện trải nghiệm khách hàng xuất sắc một cách nhất quán trong vai trò một hình mẫu và nhận được hơn 3 lời khen ngợi cá nhân và không có khiếu nại",
+                "levels": [
+                  "0 lời khen\nvà/hoặc\n> 1 khiếu nại",
+                  "1 Khen ngợi và không phàn nàn",
+                  "2 Khen ngợi và không phàn nàn",
+                  "3 Khen ngợi và không phàn nàn"
+                ],
+                "source_row": 22,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              },
+              {
+                "code": "2.3",
+                "group": "EASE",
+                "competency": "Cho thấy khả năng sử dụng thành thạo mô hình EASE trong việc giải quyết khiếu nại",
+                "criteria": "Có khả năng đảm bảo rằng các khiếu nại được xử lý độc lập với ít hoặc không cần sự trợ giúp từ các cấp trên.",
+                "levels": [
+                  "Đã gọi AM ≥ 3 lần để giải quyết vấn đề.",
+                  "Đã gọi AM ≥ 2 lần để giải quyết vấn đề.",
+                  "Đã gọi AM ≥ 1 lần để giải quyết vấn đề.",
+                  "Không cần gọi AM để giải quyết vấn đề."
+                ],
+                "source_row": 23,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              },
+              {
+                "code": "2.4",
+                "group": "Trải nghiệm khách hàng",
+                "competency": "Đạt được Trải nghiệm khách hàng xuất sắc tại cửa hàng thông qua kết quả CEE.",
+                "criteria": "Đảm bảo dịch vụ nhanh chóng, giải quyết vấn đề hiệu quả và tương tác thân thiện từ nhân viên, hướng tới tỷ lệ hài lòng từ 80% CEE trở lên .",
+                "levels": [
+                  "69% & thấp hơn",
+                  "70-79%",
+                  "80-89%",
+                  "90-100%"
+                ],
+                "source_row": 24,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              },
+              {
+                "code": "2.5",
+                "group": "VM",
+                "competency": "Xác định các hoạt động đã thực hiện tốt hoặc cần cải thiện với đội nhóm",
+                "criteria": "Đạt trung bình 80% VM checklist",
+                "levels": [
+                  "< 60%",
+                  "70%-79%",
+                  "80%-89%",
+                  "> 90%"
+                ],
+                "source_row": 25,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              },
+              {
+                "code": "2.6",
+                "group": "Quản lý hàng tồn kho",
+                "competency": "Thu thập, phân tích và phản hồi về các sản phẩm phù hợp cho cửa hàng - nhu cầu của khách hàng, sản phẩm bị lỗi, sản phẩm bán chạy, sản phẩm bán chậm",
+                "criteria": "Có khả năng phân tích một cách thành thạo về sản phẩm phù hợp với tệp khách hàng của cửa hàng, những sản phẩm có lỗi, các sản phẩm bán chậm, các sản phẩm bán chạy nhất, và cung cấp phân tích sâu với kế hoạch hành động hợp lý và theo dõi chặt chẽ.",
+                "levels": [
+                  "Phân tích kém không có kế hoạch hành động và theo dõi",
+                  "Phân tích kém với một số kế hoạch hành động và theo dõi",
+                  "Phân tích sâu với một số kế hoạch hành động và một số theo dõi.",
+                  "Phân tích sâu nhất quán với kế hoạch hành động hợp lý và theo dõi chặt chẽ."
+                ],
+                "source_row": 26,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              },
+              {
+                "code": "2.7",
+                "group": "Quản lý hàng tồn kho",
+                "competency": "Chuẩn bị và kiểm soát hàng tồn kho",
+                "criteria": "Đạt được tỷ lệ chính xác kho hàng lý tưởng\nQuản lý sai lệch hàng tồn",
+                "levels": [
+                  "Chỉ có thể lên kế hoạch, tổ chức và kiểm soát với sự hỗ trợ và giám sát rất gần của AM.",
+                  "Có thể lên kế hoạch, tổ chức và kiểm soát độc lập với hiệu quả và độ chính xác lên tới 50%.",
+                  "Có thể lên kế hoạch, tổ chức và kiểm soát độc lập với hiệu quả và độ chính xác lên tới 75%.",
+                  "Có thể lên kế hoạch, tổ chức và kiểm soát độc lập với hiệu quả và độ chính xác lên tới 100%."
+                ],
+                "source_row": 27,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              },
+              {
+                "code": "2.8",
+                "group": "ACE",
+                "competency": "Đạt mức trung bình 80% đánh giá kết quả đào tạo",
+                "criteria": "Luôn duy trì tỷ lệ trung bình là 80% Đánh giá kết quả đào tạo, đảm bảo TIÊU CHUẨN TOÀN CẦU được duy trì ở mức độ mong đợi",
+                "levels": [
+                  "Đạt trung bình < 65%",
+                  "Đạt trung bình ≥ 70%",
+                  "Đạt trung bình ≥ 75%",
+                  "Đạt trung bình ≥ 80%"
+                ],
+                "source_row": 28,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              },
+              {
+                "code": "2.9",
+                "group": "OPS",
+                "competency": "Đạt mức trung bình 80% Ops Checklist",
+                "criteria": "Luôn duy trì điểm trung bình của 80% OPS checklist, đảm bảo các quy trình cửa hàng được duy trì ở mức tuân thủ mong đợi.",
+                "levels": [
+                  "Đạt trung bình < 65%",
+                  "Đạt trung bình ≥ 70%",
+                  "Đạt trung bình ≥ 75%",
+                  "Đạt trung bình ≥ 80%"
+                ],
+                "source_row": 29,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              }
+            ]
+          },
+          {
+            "title": "4 - Kinh Doanh",
+            "items": [
+              {
+                "code": "3.1",
+                "group": "Kinh Doanh",
+                "competency": "Thúc đẩy hoạt động kinh doanh của cửa hàng đạt được kết quả (doanh số, LFL, ROS, v.v.)",
+                "criteria": "Cửa hàng luôn đạt được mục tiêu (100%)",
+                "levels": [
+                  "<79%",
+                  "80-89%",
+                  "90-99%",
+                  ">100%"
+                ],
+                "source_row": 31,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              },
+              {
+                "code": "3.2",
+                "group": "Kinh Doanh",
+                "competency": "Thể hiện sự thành thạo với các con số (Doanh số, KPI, LFL)",
+                "criteria": "Thành thạo về các con số bằng cách giải thích/trả lời các câu hỏi liên quan đến cửa hàng của mình:\nDoanh số\nKPI",
+                "levels": [
+                  "có thể trả lời một, nhưng không thể giải thích",
+                  "có thể trả lời cả hai, nhưng không thể giải thích",
+                  "có thể trả lời cả hai, với một số lời giải thích",
+                  "có thể trả lời cả hai, giải thích tốt và ví dụ tình huống"
+                ],
+                "source_row": 32,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              },
+              {
+                "code": "3.3",
+                "group": "Kinh Doanh",
+                "competency": "Phân tích các báo cáo (KPI bán hàng, Báo cáo BI, SIR) với OPS để xác định điểm mạnh, cải tiến và tiềm năng của cửa hàng",
+                "criteria": "Thành thạo trong việc phân tích báo cáo để đưa ra kế hoạch hành động hợp lý nhằm thu hẹp khoảng cách, đạt được mục tiêu, chỉ tiêu",
+                "levels": [
+                  "Không/không thể phân tích báo cáo",
+                  "Phân tích tốt nhưng không thể xác định được điểm mạnh và AFI",
+                  "Khả năng phân tích tốt và có thể xác định được điểm mạnh cũng như AFI trong mọi trường hợp",
+                  "Phân tích xuất sắc với kế hoạch hành động hợp lý và theo dõi chặt chẽ"
+                ],
+                "source_row": 33,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              },
+              {
+                "code": "3.4",
+                "group": "Kinh Doanh",
+                "competency": "Đề xuất và thực hiện các kế hoạch hành động GROW nhằm giảm khoảng cách, đạt được doanh số bán hàng ((Mục tiêu bán hàng, Chuyển đổi, QPR, LFL) và mục tiêu năng suất",
+                "criteria": "Khả năng tạo kế hoạch hành động hợp lý và nhất quán trong việc thực hiện các chiến lược nhằm giảm thiểu khoảng cách doanh số và đạt được các mục tiêu đã đề ra",
+                "levels": [
+                  "Không thể hỗ trợ thực hiện các kế hoạch hành động GROW",
+                  "Có thể hỗ trợ thực hiện các kế hoạch hành động GROW nhưng không nhất quán",
+                  "Có thể tạo kế hoạch hành động GROW nhưng không nhất quán với việc thực hiện và theo dõi chặt chẽ",
+                  "Có thể độc lập tạo và thực hiện kế hoạch hành động GROW với sự theo dõi chặt chẽ"
+                ],
+                "source_row": 34,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              },
+              {
+                "code": "3.5",
+                "group": "Kinh Doanh",
+                "competency": "Doanh số bán hàng LFL tăng tối thiểu. 10%",
+                "criteria": "Thúc đẩy kết quả của LFL với phân tích rõ ràng về hành động đã thực hiện",
+                "levels": [
+                  "Xem xét kế hoạch hành động dẫn đến việc duy trì HOẶC giảm LFL",
+                  "Xem xét kế hoạch hành động giúp tăng LFL >4%",
+                  "Xem xét kế hoạch hành động giúp tăng LFL >7%",
+                  "Xem xét kế hoạch hành động giúp tăng LFL >10%"
+                ],
+                "source_row": 35,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              },
+              {
+                "code": "3.6",
+                "group": "Kinh Doanh",
+                "competency": "Có khả năng phân tích sự cạnh tranh - Sản phẩm và giá cả",
+                "criteria": "Nhất quán trong phân tích chuyên sâu về chiến lược và giá cả sản phẩm của đối thủ cạnh tranh cùng với kế hoạch hành động và theo dõi. (ví dụ: duy trì thực hiện một cách thường xuyên, hàng tháng/hàng tuần)",
+                "levels": [
+                  "Phân tích yếu kém, không có kế hoạch hành động và theo dõi",
+                  "Phân tích yếu với một số kế hoạch hành động và theo dõi",
+                  "Phân tích chuyên sâu với kế hoạch hành động hợp lý cùng với một số hoạt động tiếp theo",
+                  "Có khả năng phân tích chuyên sâu với kế hoạch hành động hợp lý và theo dõi chặt chẽ"
+                ],
+                "source_row": 36,
+                "score_label": "Điểm",
+                "training_start_label": "Bắt đầu",
+                "training_end_label": "Kết thúc",
+                "note_label": "Ghi chú"
+              }
+            ]
+          }
+        ],
+        "open_fields": [
+          {
+            "key": "i_m_m_nh_c_a_nh_n_vi_n",
+            "label": "Điểm mạnh của nhân viên"
+          },
+          {
+            "key": "c_h_i_c_i_thi_n",
+            "label": "Cơ hội cải thiện"
+          },
+          {
+            "key": "3_k_ho_ch_h_nh_ng_theo_m_h_nh_grow_m_c_t",
+            "label": "3. Kế hoạch hành động theo mô hình GROW (Mục tiêu – Thực trạng – Giải pháp – Hành động)"
+          },
+          {
+            "key": "xu_t_ph_t_tri_n_h_nh_ng_c_i_thi_n",
+            "label": "Đề xuất phát triển & hành động cải thiện"
+          },
+          {
+            "key": "k_ho_ch_h_nh_ng_theo_m_h_nh_grow",
+            "label": "Kế hoạch hành động theo mô hình GROW"
+          }
+        ]
+      }
+    }
+  ]
+}

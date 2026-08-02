@@ -1,0 +1,22 @@
+V4.61 - CDP/OJTI lấy dữ liệu từ file ĐÀO TẠO CDP(1).xlsx
+
+Nội dung mới:
+- Thêm data/cdp_ojti_catalog.json được bóc từ file CDP/OJTI anh gửi.
+- Mục CDP / OJTI hiển thị giống checklist theo từng vị trí:
+  + ĐSKD
+  + ĐSCC
+  + CHT
+- CDP dùng để theo dõi năng lực, điểm, nhận xét và các phần mở như điểm mạnh/cơ hội cải thiện/GROW.
+- OJTI dùng để lên lịch training thường xuyên.
+- Trong OJTI, khi nhập ngày training ở từng dòng và bấm Lưu, hệ thống tự tạo/cập nhật công việc trong mục Công việc.
+- Có thể mở lại bản đã lưu để sửa, khi sửa ngày training thì công việc liên kết được cập nhật lại.
+
+Cách cập nhật:
+1. Giải nén zip.
+2. Upload đè toàn bộ file/folder lên GitHub.
+3. Commit changes.
+4. Render -> Manual Deploy -> Deploy latest commit.
+
+Lưu ý:
+- Không upload file Excel CDP lớn lên GitHub/Render.
+- Dữ liệu đã được chuyển thành JSON nhẹ trong thư mục data.

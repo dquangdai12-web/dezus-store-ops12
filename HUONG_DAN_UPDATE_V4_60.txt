@@ -1,0 +1,9 @@
+V4.60 - CDP/OJTI
+
+- Thêm mục CDP / OJTI trong nhóm Công việc.
+- CDP và OJTI chia theo từng vị trí.
+- OJTI có thể lên lịch đào tạo trước và tự tạo/cập nhật công việc hằng ngày cho nhân sự được chọn.
+- Có nút Lưu/Sửa/Xóa nội dung.
+- Thêm phân quyền Nhập CDP/OJTI và Xem CDP/OJTI.
+
+Cập nhật: giải nén, upload đè GitHub, Commit changes, Render Manual Deploy.

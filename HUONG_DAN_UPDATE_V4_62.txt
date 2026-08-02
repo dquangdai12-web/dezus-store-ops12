@@ -1,0 +1,21 @@
+BẢN V4.62 - CDP/OJTI GỌN HƠN + LINK REMARK CÔNG VIỆC
+
+Cập nhật:
+1. Làm gọn giao diện CDP/OJTI để không bị chồng chữ.
+2. Mỗi tiêu chí hiển thị dạng card/checklist, không ép nhiều cột như bảng cũ.
+3. Mô tả mức 1-4 đưa vào mục mở rộng "Xem mô tả mức 1 - 4" để màn hình dễ nhìn hơn.
+4. Nhân sự đào tạo chỉ được chọn 1 người cho mỗi bản CDP/OJTI.
+5. OJTI: nhập Ngày training ở từng dòng rồi bấm Lưu sẽ tự tạo/cập nhật công việc tương ứng.
+6. Khi nhân sự hoàn thành công việc OJTI và nhập ghi chú/remark, remark này tự đồng bộ về dòng OJTI tương ứng.
+7. File xuất tổng hợp CDP/OJTI có thêm cột remark_cong_viec_hang_ngay và ngày hoàn thành công việc.
+
+Cách cập nhật:
+- Giải nén file zip.
+- Upload đè toàn bộ lên GitHub.
+- Commit changes.
+- Render > Manual Deploy > Deploy latest commit.
+
+Lưu ý:
+- Không xóa service Render.
+- Không xóa Disk.
+- Không xóa biến STORAGE_ROOT.

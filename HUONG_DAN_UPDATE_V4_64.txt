@@ -1,0 +1,27 @@
+BẢN V4.64 - CDP DẠNG CHECKLIST / OJTI GIỮ NGUYÊN
+
+Nội dung cập nhật:
+1. CDP chuyển thành bản chấm năng lực giống Checklist:
+   - Có khu Lịch sử đã chấm CDP ở phía trên.
+   - Có khu Tạo mới / chấm CDP tách riêng.
+   - Chọn cửa hàng, vị trí, ngày chấm, nhân sự được chấm.
+   - Chấm mức 1 - 4 theo từng tiêu chí.
+   - Có nút Xem mô tả mức 1 - 4 ở từng dòng.
+   - Có nút Xem nội dung để mở lại bản đã chấm.
+   - CDP không còn dùng từ đào tạo và không tự tạo công việc.
+
+2. OJTI giữ nguyên luồng hiện tại:
+   - Quản lý nhập ngày training ở từng dòng.
+   - Sau khi lưu, hệ thống tự tạo/cập nhật công việc hằng ngày.
+   - Remark từ công việc hằng ngày vẫn link ngược về OJTI.
+
+3. Phân quyền rõ hơn:
+   - Xem CDP / Nhập CDP
+   - Xem OJTI / Nhập OJTI
+   - Trên màn hình CDP/OJTI có dòng hiển thị quyền hiện tại của tài khoản.
+
+Cách cập nhật:
+- Giải nén file zip.
+- Upload đè toàn bộ file lên GitHub.
+- Commit changes.
+- Render -> Manual Deploy -> Deploy latest commit.

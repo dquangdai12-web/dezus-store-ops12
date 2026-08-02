@@ -1,0 +1,17 @@
+BẢN V4.65 - ĐỔI LẠI TRẠNG THÁI OJTI CHO DỄ HIỂU
+
+Cập nhật:
+- OJTI đổi nhóm trạng thái thành:
+  1. Chưa lên lịch
+  2. Đã lên lịch training
+  3. Đang theo dõi sau training
+  4. Hoàn thành
+- Khi nhập ngày training ở bất kỳ dòng OJTI nào và bấm Lưu, hệ thống tự chuyển bản đó sang nhóm Đã lên lịch training nếu đang để Chưa lên lịch.
+- Các bản cũ đã có ngày training nhưng trạng thái cũ vẫn là doing sẽ được hiển thị đúng ở nhóm Đã lên lịch training.
+- CDP giữ nguyên dạng bản chấm giống Checklist.
+
+Cách cập nhật:
+1. Giải nén file zip.
+2. Upload đè toàn bộ code lên GitHub.
+3. Commit changes.
+4. Render > Manual Deploy > Deploy latest commit.

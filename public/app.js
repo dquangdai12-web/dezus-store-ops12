@@ -20,6 +20,10 @@ const state = {
   feedbackCollectionId: '',
   trainingStoreId: '',
   trainingQuiz: null,
+  cdpOjtiType: 'cdp',
+  cdpOjtiPosition: 'all',
+  cdpOjtiStoreId: '',
+  cdpOjtiEditId: null,
   weeklyWeekStart: mondayOf(isoDateLocal(new Date())),
   weeklyStoreId: '',
   weeklyEditMode: false,
@@ -62,6 +66,12 @@ const PERM_LABELS = {
   can_manage_product_collections: 'Set BST/List sản phẩm đánh giá',
   can_manage_product_training: 'Nhập đào tạo sản phẩm',
   can_view_product_training: 'Xem đào tạo sản phẩm',
+  can_manage_cdp_ojti: 'Nhập CDP/OJTI chung',
+  can_view_cdp_ojti: 'Xem CDP/OJTI chung',
+  can_manage_cdp: 'Nhập CDP',
+  can_view_cdp: 'Xem CDP',
+  can_manage_ojti: 'Nhập OJTI',
+  can_view_ojti: 'Xem OJTI',
   can_view_reports: 'Xem tổng hợp',
   can_manage_users: 'Quản lý TK',
   can_export: 'Tải dữ liệu',
@@ -356,7 +366,8 @@ function employees() {
 }
 
 function usersInStore(storeId) {
-  return employees().filter(u => !storeId || Number(u.store_id) === Number(storeId));
+  const sid = Number(storeId || 0);
+  return employees().filter(u => !sid || Number(u.store_id) === sid || (Array.isArray(u.store_ids) && u.store_ids.map(Number).includes(sid)));
 }
 
 function salesStaffInStore(storeId) {
@@ -381,6 +392,7 @@ function navItems() {
     ['orders', 'Order hàng', 'SKU', 'product'],
     ['product_feedback', 'Đánh giá SP', 'FB', 'product'],
     ['product_training', 'Đào tạo SP', 'EDU', 'product'],
+    ['cdp_ojti', 'CDP / OJTI', 'OJTI', 'work'],
     ['tasks', 'Công việc', '✓', 'work'],
     ['checklists', 'Checklist', '★', 'work'],
     ['schedule', 'Lịch làm việc', '↗', 'work'],
@@ -398,6 +410,7 @@ function navItems() {
     if (id === 'orders') return can('can_view_orders') || can('can_manage_orders');
     if (id === 'product_feedback') return can('can_view_product_feedback') || can('can_manage_product_feedback');
     if (id === 'product_training') return can('can_view_product_training') || can('can_manage_product_training');
+    if (id === 'cdp_ojti') return canAny('can_view_cdp_ojti','can_manage_cdp_ojti','can_view_cdp','can_manage_cdp','can_view_ojti','can_manage_ojti');
     if (id === 'schedule') return can('can_view_schedule') || can('can_manage_schedule') || can('can_manage_shifts');
     if (id === 'documents') return can('can_view_documents') || can('can_manage_documents');
     if (id === 'bonuses') return can('can_manage_bonuses') || can('can_view_bonuses') || state.user?.role !== 'employee';
@@ -423,6 +436,7 @@ function appUiIcon(name) {
     product: `<svg ${attrs}><path d="m12 3 8 4.2v9.6L12 21l-8-4.2V7.2L12 3Z"/><path d="m4.5 7.5 7.5 4 7.5-4"/><path d="M12 11.5V21"/></svg>`,
     feedback: `<svg ${attrs}><path d="M5 5h14v10H8l-3 3V5Z"/><path d="M9 9h6"/><path d="M9 12h4"/><path d="m17.5 17.5 1 2 2.2.3-1.6 1.5.4 2.2-2-1-2 1 .4-2.2-1.6-1.5 2.2-.3 1-2Z" transform="scale(.75) translate(7 4)"/></svg>`,
     training: `<svg ${attrs}><path d="M4 5.5A3 3 0 0 1 7 3h13v16H7a3 3 0 0 0-3 2V5.5Z"/><path d="M8 7h8"/><path d="M8 11h7"/><path d="M8 15h5"/></svg>`,
+    people: `<svg ${attrs}><path d="M16 20v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9.5" cy="7" r="3.5"/><path d="M22 20v-2a4 4 0 0 0-3-3.9"/><path d="M16 3.6a3.5 3.5 0 0 1 0 6.8"/></svg>`,
     document: `<svg ${attrs}><path d="M7 3.5h7l4 4V20a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 6 20V5A1.5 1.5 0 0 1 7.5 3.5Z"/><path d="M14 3.5V8h4"/><path d="M9 12h6"/><path d="M9 16h6"/></svg>`,
     score: `<svg ${attrs}><path d="M4 19h16"/><path d="M6 17V9"/><path d="M12 17V5"/><path d="M18 17v-6"/><path d="M8 5h8"/><path d="M12 3v4"/></svg>`,
     key: `<svg ${attrs}><circle cx="8" cy="15" r="4"/><path d="M11 12 20 3"/><path d="M16 7l2 2"/><path d="M14 9l2 2"/></svg>`,
@@ -435,7 +449,7 @@ function appUiIcon(name) {
 function navGroups() {
   return [
     { key:'overview', label:'Tổng quan', icon:appUiIcon('home'), ids:['dashboard'] },
-    { key:'work', label:'Công việc', icon:appUiIcon('checklist'), ids:['tasks','checklists','schedule','violations'] },
+    { key:'work', label:'Công việc', icon:appUiIcon('checklist'), ids:['tasks','cdp_ojti','checklists','schedule','violations'] },
     { key:'revenue', label:'Doanh thu', icon:appUiIcon('revenue'), ids:['sales','daily_report','weekly_report','online_orders','bonuses'] },
     { key:'product', label:'Sản phẩm', icon:appUiIcon('product'), ids:['orders','product_feedback','product_training'] },
     { key:'more', label:'Tài liệu', icon:appUiIcon('document'), ids:['documents','reports'] },
@@ -446,7 +460,7 @@ function navGroups() {
 function mobileNavGroups() {
   return [
     { key:'overview', label:'Tổng quan', icon:appUiIcon('home'), ids:['dashboard'] },
-    { key:'work', label:'Công việc', icon:appUiIcon('tasks'), ids:['tasks','checklists','schedule','violations'] },
+    { key:'work', label:'Công việc', icon:appUiIcon('tasks'), ids:['tasks','cdp_ojti','checklists','schedule','violations'] },
     { key:'revenue', label:'Doanh thu', icon:appUiIcon('revenue'), ids:['sales','daily_report','weekly_report','online_orders','bonuses'] },
     { key:'product', label:'Sản phẩm', icon:appUiIcon('product'), ids:['orders','product_feedback','product_training'] },
     { key:'more', label:'Thêm', icon:appUiIcon('more'), ids:['documents','reports','account','admin'] },
@@ -457,6 +471,7 @@ function mobileIconFor(id) {
   return ({
     dashboard:appUiIcon('home'),
     tasks:appUiIcon('tasks'),
+    cdp_ojti:appUiIcon('people'),
     checklists:appUiIcon('checklist'),
     schedule:appUiIcon('calendar'),
     violations:appUiIcon('alert'),
@@ -633,6 +648,7 @@ async function render() {
   if (active === 'orders') return renderOrders();
   if (active === 'product_feedback') return renderProductFeedback();
   if (active === 'product_training') return renderProductTraining();
+  if (active === 'cdp_ojti') return renderCdpOjti();
   if (active === 'schedule') return renderSchedule();
   if (active === 'documents') return renderDocuments();
   if (active === 'bonuses') return renderBonuses();
@@ -1160,15 +1176,33 @@ async function renderViolations() {
 
 async function renderChecklists() {
   const [history] = await Promise.all([api('/api/checklist/assessments')]);
-  const templates = state.templates;
+  const templates = state.templates || [];
   const selected = templates.find(t => t.id === state.checklistType) || templates[0];
+  if (!selected) return shell('<div class="card empty">Chưa có dữ liệu checklist.</div>', 'Checklist');
   const tabs = `<div class="pillbar">${templates.map(t => `<button data-checklist="${t.id}" class="${selected.id === t.id ? 'active' : ''}">${esc(t.id)}</button>`).join('')}</div>`;
-  const form = can('can_grade_checklists') ? checklistForm(selected) : '<div class="empty">Tài khoản này chỉ được xem lại phiếu đã chấm.</div>';
-  const list = history.assessments.length ? `<div class="table-wrap"><table><thead><tr><th>Ngày chấm</th><th>Checklist</th><th>Đối tượng</th><th>Cửa hàng</th><th>Điểm</th><th>Người chấm</th><th>Ghi chú</th><th>Chi tiết</th></tr></thead><tbody>${history.assessments.map(a => `<tr><td>${dt(a.assessed_at)}</td><td><span class="badge dark">${esc(a.template_id)}</span></td><td>${esc(a.employee_name || 'Cửa hàng')}</td><td>${esc(a.store_name || '')}</td><td><b>${a.total_score}/${a.max_score}</b> (${a.percent}%)</td><td>${esc(a.created_by_name || '')}</td><td>${esc(a.general_note || '')}</td><td><button class="btn small secondary viewAssessmentBtn" data-id="${a.id}">Xem ghi chú</button></td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Chưa có phiếu chấm</div>';
-  shell(`<div class="card"><div class="toolbar"><h3 style="margin-right:auto">Chọn checklist</h3>${tabs}</div>${form}</div><div class="card" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">Lịch sử chấm</h3>${can('can_export') ? '<button class="btn secondary" data-export="assessments">Tải CSV</button>' : ''}</div>${list}</div><div id="assessmentDetail" style="margin-top:16px"></div>`, 'Checklist', 'OPS/VM theo cửa hàng; GUESTS theo từng đại sứ kinh doanh');
+  const canGrade = can('can_grade_checklists');
+  const form = canGrade ? checklistForm(selected) : '<div class="empty">Tài khoản này chỉ được xem lại phiếu đã chấm.</div>';
+  const rows = history.assessments || [];
+  const recent = rows.slice(0, 12);
+  const historyCards = recent.length ? recent.map(a => `<div class="simple-record-card checklist-record-card">
+    <div class="record-card-main">
+      <div><span class="badge dark">${esc(a.template_id)}</span><h4>${esc(a.employee_name || 'Cửa hàng')}</h4><p>${esc(a.store_name || '')} • ${dt(a.assessed_at)}</p></div>
+      <div class="record-score"><b>${a.total_score}/${a.max_score}</b><span>${a.percent}%</span></div>
+    </div>
+    ${a.general_note ? `<p class="record-note"><b>Nhận xét:</b> ${esc(a.general_note)}</p>` : ''}
+    <div class="row"><button class="btn small secondary viewAssessmentBtn" data-id="${a.id}">Xem nội dung</button></div>
+  </div>`).join('') : '<div class="empty">Chưa có phiếu chấm</div>';
+  const quick = `<div class="quick-action-grid">
+    ${canGrade ? `<button class="quick-action-card" data-jump="#checklistCreate"><span>Tạo mới</span><b>Chấm checklist</b><em>${esc(selected.id)}</em></button>` : ''}
+    <button class="quick-action-card" data-jump="#checklistHistory"><span>Đã chấm</span><b>${rows.length}</b><em>Xem lại nhanh</em></button>
+    <button class="quick-action-card" data-jump="#assessmentDetail"><span>Chi tiết</span><b>Xem nội dung</b><em>Bấm ở từng phiếu</em></button>
+  </div>`;
+  const exportBtn = can('can_export') ? '<button class="btn secondary" data-export="assessments">Tải CSV</button>' : '';
+  shell(`${quick}<div id="checklistHistory" class="card"><div class="toolbar"><h3 style="margin-right:auto">Lịch sử đã chấm</h3>${exportBtn}</div><div class="record-card-list">${historyCards}</div></div><div id="assessmentDetail" style="margin-top:16px"></div><div id="checklistCreate" class="card" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">Tạo mới / chấm checklist</h3>${tabs}</div>${form}</div>`, 'Checklist', 'Dễ xem lại phiếu đã chấm, bấm Xem nội dung để kiểm tra chi tiết');
   $$('.pillbar button').forEach(b => b.onclick = () => { state.checklistType = b.dataset.checklist; renderChecklists(); });
   $('#checklistForm')?.addEventListener('submit', submitChecklist);
   $$('.viewAssessmentBtn').forEach(btn => btn.addEventListener('click', () => renderAssessmentDetail(btn.dataset.id)));
+  $$('[data-jump]').forEach(btn => btn.addEventListener('click', () => $(btn.dataset.jump)?.scrollIntoView({ behavior:'smooth', block:'start' })));
 }
 
 async function renderAssessmentDetail(id) {
@@ -1767,6 +1801,255 @@ async function renderProductTraining() {
   }));
 }
 
+
+
+async function renderCdpOjti() {
+  const catalog = await api('/api/cdp-ojti-catalog');
+  const positions = catalog.positions || [];
+  if (!positions.length) return shell('<div class="card empty">Chưa có dữ liệu CDP/OJTI trong file đào tạo.</div>', 'CDP / OJTI');
+
+  const canViewType = (t) => t === 'ojti'
+    ? (Number(catalog.can_view_ojti || 0) === 1 || canAny('can_view_ojti','can_manage_ojti','can_view_cdp_ojti','can_manage_cdp_ojti'))
+    : (Number(catalog.can_view_cdp || 0) === 1 || canAny('can_view_cdp','can_manage_cdp','can_view_cdp_ojti','can_manage_cdp_ojti'));
+  const canManageType = (t) => t === 'ojti'
+    ? (Number(catalog.can_manage_ojti || 0) === 1 || canAny('can_manage_ojti','can_manage_cdp_ojti'))
+    : (Number(catalog.can_manage_cdp || 0) === 1 || canAny('can_manage_cdp','can_manage_cdp_ojti'));
+  const viewTypes = [
+    { key:'cdp', label:'CDP - Bảng chấm năng lực' },
+    { key:'ojti', label:'OJTI - Đào tạo thường xuyên' }
+  ].filter(t => canViewType(t.key));
+  if (!viewTypes.length) return shell('<div class="card empty">Tài khoản này chưa được phân quyền xem CDP/OJTI.</div>', 'CDP / OJTI');
+
+  let type = state.cdpOjtiType === 'ojti' ? 'ojti' : 'cdp';
+  if (!viewTypes.some(t => t.key === type)) type = state.cdpOjtiType = viewTypes[0].key;
+  const isCdp = type === 'cdp';
+  if (!positions.some(p => p.key === state.cdpOjtiPosition)) state.cdpOjtiPosition = positions[0].key;
+  const posKey = state.cdpOjtiPosition;
+  const pos = positions.find(p => p.key === posKey) || positions[0];
+  const bucket = pos[type] || { sections: [], open_fields: [] };
+  const selectedStoreId = state.cdpOjtiStoreId || (state.user?.role === 'admin' ? (state.boot.stores[0]?.id || '') : (state.user?.store_id || ''));
+  const recordQuery = new URLSearchParams({ type, position_key: posKey });
+  if (selectedStoreId) recordQuery.set('store_id', selectedStoreId);
+  const recordData = await api(`/api/cdp-ojti-records?${recordQuery.toString()}`);
+  const records = recordData.items || [];
+  const canManage = Number(recordData.can_manage || 0) === 1 || canManageType(type);
+  const edit = records.find(r => Number(r.id) === Number(state.cdpOjtiEditId));
+  const itemMap = new Map((edit?.item_values || []).map(v => [String(v.code), v]));
+  const openValues = edit?.open_values || {};
+  const selectedTraineeId = Number((edit?.trainee_ids || [])[0] || (state.user?.role === 'employee' ? state.user.id : '') || 0);
+  const storeOptions = state.boot.stores.map(st => `<option value="${st.id}" ${Number(st.id) === Number(selectedStoreId) ? 'selected' : ''}>${esc(st.name)}</option>`).join('');
+  const people = usersInStore(selectedStoreId);
+  const traineeOptions = ['<option value="">Chọn 1 nhân sự</option>'].concat(people.map(u => `<option value="${u.id}" ${Number(selectedTraineeId) === Number(u.id) ? 'selected' : ''}>${esc(u.full_name)} - ${roleLabel(u.role)}</option>`)).join('');
+  const trainerOptions = ['<option value="">Chọn người đào tạo</option>'].concat(people.map(u => `<option value="${u.id}" ${Number(edit?.trainer_id || state.user?.id) === Number(u.id) ? 'selected' : ''}>${esc(u.full_name)}</option>`)).join('');
+  const typeTabs = `<div class="pillbar">${viewTypes.map(t => `<button class="cdpTypeBtn ${type === t.key ? 'active' : ''}" data-type="${t.key}">${esc(t.label)}</button>`).join('')}</div>`;
+  const positionTabs = `<div class="row wrap cdp-position-tabs">${positions.map(p => `<button class="btn small secondary cdpPosBtn ${posKey === p.key ? 'active' : ''}" data-pos="${esc(p.key)}">${esc(p.short || p.label)}</button>`).join('')}</div>`;
+  const editStatusForSelect = type === 'ojti' && edit ? ojtiDisplayStatus(edit) : (edit?.status_label || 'doing');
+  const statusOptions = [['doing','Chưa lên lịch'],['planned','Đã lên lịch training'],['follow','Đang theo dõi sau training'],['done','Hoàn thành']].map(([v,l]) => `<option value="${v}" ${editStatusForSelect === v ? 'selected' : ''}>${l}</option>`).join('');
+  const defaultLevels = [
+    'Mức 1: Chưa đạt / cần hướng dẫn sát, chưa tự thực hiện ổn định.',
+    'Mức 2: Đạt cơ bản, làm được phần chính nhưng vẫn cần theo dõi và nhắc lại.',
+    'Mức 3: Thành thạo, thực hiện ổn định và xử lý được phần lớn tình huống.',
+    'Mức 4: Xuất sắc, chủ động làm chuẩn và có thể hướng dẫn lại cho người khác.'
+  ];
+  const renderLevelLine = (levels) => {
+    const clean = (levels || []).map(v => String(v || '').trim()).filter(Boolean);
+    const trivial = clean.length && clean.every(v => /^đạt\s*được\s*\d+$/i.test(v.replace(/\s+/g, ' ')) || /^đạt\s*được\d+$/i.test(v.replace(/\s+/g, '')));
+    const use = (!clean.length || trivial) ? defaultLevels : clean;
+    return use.map((lv, idx) => `<div class="cdp-level-line"><span>${idx + 1}</span><p>${esc(lv)}</p></div>`).join('');
+  };
+  const catalogLookup = new Map();
+  (bucket.sections || []).forEach(section => (section.items || []).forEach(item => catalogLookup.set(String(item.code), { ...item, section_title: section.title })));
+  const hasValue = (v) => !!(v && (v.score || v.note || v.training_start || v.training_end || v.task_remark));
+  const itemCount = (bucket.sections || []).reduce((a,s)=>a+(s.items||[]).length,0);
+  const scoreStats = (r) => {
+    const vals = (r.item_values || []).filter(v => v.score !== '' && v.score !== null && v.score !== undefined && !Number.isNaN(Number(v.score)));
+    const total = vals.reduce((a,v)=>a+Number(v.score || 0),0);
+    const max = itemCount ? itemCount * 4 : vals.length * 4;
+    const percent = max ? Math.round(total / max * 100) : 0;
+    return { total, max, percent, count: vals.length };
+  };
+  const recordFilledCount = (r) => (r.item_values || []).filter(hasValue).length;
+  const sectionHtml = (bucket.sections || []).map(section => {
+    const rows = (section.items || []).map(item => {
+      const val = itemMap.get(String(item.code)) || {};
+      const remarkHtml = type === 'ojti' && val.task_remark
+        ? `<div class="cdp-task-remark"><b>Remark từ công việc hằng ngày:</b><p>${esc(val.task_remark)}</p>${val.task_completed_at ? `<span>${dOnly(val.task_completed_at)}</span>` : ''}</div>`
+        : '';
+      const noteField = type === 'ojti'
+        ? `<div class="cdp-ojti-inputs"><div class="field mini"><label>Ngày training</label><input class="input cdp-training-start" type="date" value="${esc(val.training_start || val.training_end || '')}" title="Ngày training"><input class="cdp-training-end" type="hidden" value="${esc(val.training_end || '')}"></div><div class="field grow"><label>Ghi chú training</label><textarea class="cdp-note" data-auto-resize placeholder="Ghi chú / kết quả training">${esc(val.note || '')}</textarea></div></div>${remarkHtml}`
+        : `<div class="field grow cdp-assess-note"><label>Nhận xét</label><textarea class="cdp-note" data-auto-resize placeholder="Nhận xét / minh chứng / điểm cần follow">${esc(val.note || val.result || '')}</textarea></div>`;
+      return `<div class="cdpItemRow cdp-check-row ${isCdp ? 'cdp-assessment-row' : ''}" data-code="${esc(item.code)}">
+        <div class="cdp-check-top">
+          <div class="cdp-check-code"><b>${esc(item.code)}</b><span>${esc(item.group || '')}</span></div>
+          <div class="cdp-check-title"><b>${esc(item.competency || '')}</b>${item.criteria ? `<p>${esc(item.criteria)}</p>` : ''}</div>
+          <div class="cdp-check-score"><label>Mức</label><select class="cdp-score"><option value=""></option>${[1,2,3,4].map(n => `<option value="${n}" ${String(val.score || '') === String(n) ? 'selected' : ''}>${n}</option>`).join('')}</select></div>
+        </div>
+        <details class="cdp-level-details"><summary>Xem mô tả mức 1 - 4</summary><div class="cdp-level-grid">${renderLevelLine(item.levels)}</div></details>
+        ${noteField}
+      </div>`;
+    }).join('');
+    return `<details class="check-section cdp-template-section" open><summary>${esc(section.title)} <span class="badge dark">${(section.items || []).length}</span></summary><div class="cdp-check-list">${rows}</div></details>`;
+  }).join('') || '<div class="empty">File chưa có nội dung cho vị trí này</div>';
+  const openFields = (bucket.open_fields || []).map(f => `<div class="field" style="grid-column:1/-1"><label>${esc(f.label)}</label><textarea class="cdp-open-field" data-key="${esc(f.key)}" data-auto-resize placeholder="Nhập ${esc(String(f.label).toLowerCase())}">${esc(openValues[f.key] || '')}</textarea></div>`).join('');
+
+  const renderRecordContent = (r) => {
+    const values = (r.item_values || []).filter(hasValue);
+    const open = r.open_values || {};
+    const openHtml = Object.keys(open).filter(k => String(open[k] || '').trim()).map(k => `<div class="record-open-line"><b>${esc(k.replaceAll('_',' '))}</b><p>${esc(open[k])}</p></div>`).join('');
+    const valuesHtml = values.length ? values.map(v => {
+      const item = catalogLookup.get(String(v.code)) || {};
+      return `<div class="record-detail-line">
+        <div><b>${esc(v.code || '')} ${esc(item.competency || '')}</b><p>${esc(item.criteria || '')}</p></div>
+        <div class="record-detail-meta">
+          ${v.score ? `<span class="badge dark">Mức ${esc(v.score)}</span>` : ''}
+          ${type === 'ojti' && (v.training_start || v.training_end) ? `<span class="badge warning">Training ${dOnly(v.training_end || v.training_start)}</span>` : ''}
+        </div>
+        ${v.note ? `<p class="record-note"><b>${type === 'ojti' ? 'Ghi chú training' : 'Nhận xét'}:</b> ${esc(v.note)}</p>` : ''}
+        ${v.task_remark ? `<p class="record-note record-remark"><b>Remark công việc:</b> ${esc(v.task_remark)}${v.task_completed_at ? ` • ${dOnly(v.task_completed_at)}` : ''}</p>` : ''}
+      </div>`;
+    }).join('') : '<div class="empty">Bản này chưa có dòng nào được nhập.</div>';
+    return `<div class="record-detail-box">${r.note ? `<p class="record-note"><b>Ghi chú chung:</b> ${esc(r.note)}</p>` : ''}${openHtml}${valuesHtml}</div>`;
+  };
+  const renderRecordCard = (r) => {
+    const traineeNames = r.trainee_names || 'Chưa chọn nhân sự';
+    const linkedCount = Object.keys(r.linked_task_ids || {}).length || (r.linked_task_id ? 1 : 0);
+    const stats = scoreStats(r);
+    return `<div class="simple-record-card cdp-record-card">
+      <div class="record-card-main">
+        <div><span class="badge dark">${type.toUpperCase()}</span><h4>${esc(traineeNames)}</h4><p>${esc(r.store_name || '')} • ${esc(r.position_label || pos.label)} • ${isCdp ? 'Ngày chấm' : 'Cập nhật'} ${dOnly(r.plan_date || r.updated_at || r.created_at)}</p></div>
+        <div class="record-score"><b>${isCdp ? `${stats.percent}%` : recordFilledCount(r)}</b><span>${isCdp ? `${stats.total}/${stats.max || 0}` : 'dòng nhập'}</span></div>
+      </div>
+      <div class="record-card-meta">${isCdp ? `<span class="badge ok">Đã chấm</span><span class="badge dark">${stats.count}/${itemCount} tiêu chí</span>` : `${statusCdpLabel(ojtiDisplayStatus(r))} <span class="badge ${linkedCount ? 'ok' : 'dark'}">${linkedCount} việc</span> ${r.trainer_name ? `<span class="badge dark">Trainer: ${esc(r.trainer_name)}</span>` : ''}`}</div>
+      <details class="record-content-details"><summary>Xem nội dung</summary>${renderRecordContent(r)}</details>
+      ${canManage ? `<div class="row"><button class="btn small secondary editCdpBtn" data-id="${r.id}">Sửa</button><button class="btn small danger delCdpBtn" data-id="${r.id}">Xóa</button></div>` : ''}
+    </div>`;
+  };
+
+  const summary = `<div class="grid four"><div class="card"><div class="kpi"><span class="label">Vị trí</span><span class="num small-num">${esc(pos.short || pos.label)}</span></div></div><div class="card"><div class="kpi"><span class="label">Số nhóm</span><span class="num">${(bucket.sections || []).length}</span></div></div><div class="card"><div class="kpi"><span class="label">Tiêu chí</span><span class="num">${itemCount}</span></div></div><div class="card"><div class="kpi"><span class="label">Bản đã lưu</span><span class="num">${records.length}</span></div></div></div>`;
+
+  let mainContent = '';
+  if (isCdp) {
+    const historyCards = records.length ? records.map(renderRecordCard).join('') : '<div class="empty">Chưa có bản chấm CDP.</div>';
+    const quick = `<div class="quick-action-grid cdp-quick-grid cdp-checklist-quick">
+      ${canManage ? `<button class="quick-action-card" data-jump="#cdpCreate"><span>Tạo mới</span><b>Chấm CDP</b><em>Lưu / sửa giống checklist</em></button>` : ''}
+      <button class="quick-action-card" data-jump="#cdpHistory"><span>Đã chấm</span><b>${records.length}</b><em>Xem lại nội dung</em></button>
+    </div>`;
+    const form = canManage ? `<div id="cdpCreate" class="card cdp-form-card">
+      <div class="toolbar"><h3 style="margin-right:auto">${edit ? 'Sửa bản chấm CDP' : 'Tạo mới / chấm CDP'}</h3>${edit ? '<button class="btn secondary" id="cancelCdpEditBtn">Hủy sửa</button>' : ''}</div>
+      <form id="cdpOjtiForm" class="grid three">
+        <input type="hidden" name="id" value="${edit?.id || ''}"><input type="hidden" name="type" value="cdp"><input type="hidden" name="position_key" value="${esc(posKey)}"><input type="hidden" name="status_label" value="done">
+        <div class="field"><label>Cửa hàng</label><select name="store_id" id="cdpStoreSelect" ${state.user?.role !== 'admin' ? 'disabled' : ''}>${storeOptions}</select></div>
+        <div class="field"><label>Vị trí</label><input class="input" value="${esc(pos.label)}" disabled></div>
+        <div class="field"><label>Ngày chấm</label><input class="input" type="date" name="plan_date" value="${esc(edit?.plan_date || isoDateLocal(new Date()))}"></div>
+        <div class="field"><label>Nhân sự được chấm</label><select name="trainee_id" required>${traineeOptions}</select><div class="hint">CDP là bản chấm năng lực, không tạo việc đào tạo.</div></div>
+        <div class="field" style="grid-column:span 2"><label>Nhận xét chung</label><textarea name="note" data-auto-resize placeholder="Nhận xét tổng quan sau khi chấm">${esc(edit?.note || '')}</textarea></div>
+        <div class="cdp-source-note" style="grid-column:1/-1">CDP dùng như một phiếu checklist để chấm năng lực theo vị trí. Chọn mức 1 - 4 ở từng tiêu chí, có thể bấm <b>Xem mô tả mức 1 - 4</b> để đối chiếu trước khi chấm.</div>
+        <div style="grid-column:1/-1">${sectionHtml}</div>
+        ${openFields}
+        <div style="grid-column:1/-1" class="row"><button class="btn">${edit ? 'Lưu sửa' : 'Lưu bản chấm'}</button></div>
+      </form>
+    </div>` : `<div id="cdpCreate" class="card empty">Tài khoản này chỉ được xem CDP, chưa có quyền thao tác. Admin cần bật quyền <b>Nhập CDP</b>.</div>`;
+    mainContent = `${quick}<div style="height:12px"></div>${summary}<div style="height:12px"></div><div id="cdpHistory" class="card"><div class="toolbar"><h3 style="margin-right:auto">Lịch sử đã chấm CDP</h3><span class="badge dark">${records.length}</span></div><div class="record-card-list">${historyCards}</div></div><div style="height:12px"></div>${form}`;
+  } else {
+    const statusGroups = [
+      ['doing','Chưa lên lịch'],
+      ['planned','Đã lên lịch training'],
+      ['follow','Đang theo dõi sau training'],
+      ['done','Hoàn thành']
+    ];
+    const groupCards = statusGroups.map(([key, label]) => {
+      const list = records.filter(r => ojtiDisplayStatus(r) === key);
+      return `<div class="card cdp-status-card" id="cdpStatus_${key}"><div class="toolbar"><h3 style="margin-right:auto">${esc(label)}</h3><span class="badge dark">${list.length}</span></div><div class="record-card-list">${list.length ? list.map(renderRecordCard).join('') : '<div class="empty">Chưa có dữ liệu</div>'}</div></div>`;
+    }).join('');
+    const quick = `<div class="quick-action-grid cdp-quick-grid">
+      ${canManage ? `<button class="quick-action-card" data-jump="#cdpCreate"><span>Tạo mới</span><b>OJTI</b><em>Lưu / sửa tại đây</em></button>` : ''}
+      ${statusGroups.map(([key, label]) => `<button class="quick-action-card" data-jump="#cdpStatus_${key}"><span>${esc(label)}</span><b>${records.filter(r => ojtiDisplayStatus(r) === key).length}</b><em>Xem nhanh</em></button>`).join('')}
+    </div>`;
+    const form = canManage ? `<div id="cdpCreate" class="card cdp-form-card">
+      <div class="toolbar"><h3 style="margin-right:auto">${edit ? 'Sửa' : 'Tạo mới / Lưu'} OJTI theo file đào tạo</h3>${edit ? '<button class="btn secondary" id="cancelCdpEditBtn">Hủy sửa</button>' : ''}</div>
+      <form id="cdpOjtiForm" class="grid three">
+        <input type="hidden" name="id" value="${edit?.id || ''}"><input type="hidden" name="type" value="ojti"><input type="hidden" name="position_key" value="${esc(posKey)}">
+        <div class="field"><label>Cửa hàng</label><select name="store_id" id="cdpStoreSelect" ${state.user?.role !== 'admin' ? 'disabled' : ''}>${storeOptions}</select></div>
+        <div class="field"><label>Vị trí</label><input class="input" value="${esc(pos.label)}" disabled></div>
+        <div class="field"><label>Trạng thái</label><select name="status_label">${statusOptions}</select></div>
+        <div class="field"><label>Nhân sự đào tạo</label><select name="trainee_id">${traineeOptions}</select><div class="hint">Chỉ chọn 1 nhân sự cho mỗi bản OJTI.</div></div>
+        <div class="field"><label>Người đào tạo / quản lý theo dõi</label><select name="trainer_id">${trainerOptions}</select></div>
+        <div class="field"><label>Giờ hạn công việc OJTI</label><input class="input" type="time" name="due_time" value="${esc(edit?.due_time || '22:00')}"><div class="hint">Ngày lấy theo ô Ngày training bên dưới.</div></div>
+        <div class="field" style="grid-column:1/-1"><label>Ghi chú chung</label><textarea name="note" data-auto-resize>${esc(edit?.note || '')}</textarea></div>
+        <div class="cdp-source-note" style="grid-column:1/-1">Dữ liệu hiển thị theo sheet <b>${esc(bucket.sheet || '')}</b> trong file CDP/OJTI. Nhập ngày training ở từng dòng, bấm Lưu là hệ thống tự tạo/cập nhật công việc hằng ngày. Trạng thái sẽ tự hiểu: chưa có ngày là <b>Chưa lên lịch</b>, có ngày là <b>Đã lên lịch training</b>.</div>
+        <div style="grid-column:1/-1">${sectionHtml}</div>
+        ${openFields}
+        <div style="grid-column:1/-1" class="row"><button class="btn">${edit ? 'Lưu sửa' : 'Lưu'}</button></div>
+      </form>
+    </div>` : `<div id="cdpCreate" class="card empty">Tài khoản này chỉ được xem OJTI, chưa có quyền thao tác. Admin cần bật quyền <b>Nhập OJTI</b>.</div>`;
+    mainContent = `${quick}<div style="height:12px"></div>${summary}<div style="height:12px"></div><div class="cdp-status-layout">${groupCards}</div><div style="height:12px"></div>${form}`;
+  }
+
+  shell(`${typeTabs}<div style="height:12px"></div><div class="card"><div class="toolbar"><h3 style="margin-right:auto">Danh mục vị trí</h3><div class="field" style="min-width:220px;margin:0"><select id="cdpStoreFilter">${storeOptions}</select></div></div>${positionTabs}<div class="hint" style="margin-top:8px">Phân quyền: ${canViewType('cdp') ? 'được xem CDP' : 'không xem CDP'} • ${canManageType('cdp') ? 'được nhập CDP' : 'không nhập CDP'} • ${canViewType('ojti') ? 'được xem OJTI' : 'không xem OJTI'} • ${canManageType('ojti') ? 'được nhập OJTI' : 'không nhập OJTI'}</div></div><div style="height:12px"></div>${mainContent}`, 'CDP / OJTI', isCdp ? 'CDP là bản chấm năng lực giống checklist. OJTI giữ luồng đào tạo và tự tạo công việc theo ngày training.' : 'OJTI nhập ngày training sẽ tự sinh công việc hằng ngày.' );
+  setupAutoResizeTextareas();
+  $$('.cdpTypeBtn').forEach(btn => btn.onclick = () => { state.cdpOjtiType = btn.dataset.type; state.cdpOjtiEditId = null; renderCdpOjti(); });
+  $$('.cdpPosBtn').forEach(btn => btn.onclick = () => { state.cdpOjtiPosition = btn.dataset.pos; state.cdpOjtiEditId = null; renderCdpOjti(); });
+  $('#cdpStoreFilter')?.addEventListener('change', e => { state.cdpOjtiStoreId = e.target.value; state.cdpOjtiEditId = null; renderCdpOjti(); });
+  $('#cdpStoreSelect')?.addEventListener('change', e => { state.cdpOjtiStoreId = e.target.value; state.cdpOjtiEditId = null; renderCdpOjti(); });
+  $('#cancelCdpEditBtn')?.addEventListener('click', () => { state.cdpOjtiEditId = null; renderCdpOjti(); });
+  $$('[data-jump]').forEach(btn => btn.addEventListener('click', () => $(btn.dataset.jump)?.scrollIntoView({ behavior:'smooth', block:'start' })));
+  $$('.editCdpBtn').forEach(btn => btn.onclick = async () => { state.cdpOjtiEditId = Number(btn.dataset.id); await renderCdpOjti(); $('#cdpCreate')?.scrollIntoView({ behavior:'smooth', block:'start' }); });
+  $$('.delCdpBtn').forEach(btn => btn.onclick = async () => { if (!confirm('Xóa bản CDP/OJTI này?')) return; try { await api(`/api/cdp-ojti/${btn.dataset.id}`, { method: 'DELETE' }); toast('Đã xóa'); state.cdpOjtiEditId = null; renderCdpOjti(); } catch (err) { toast(err.message, 'danger'); } });
+  $('#cdpOjtiForm')?.addEventListener('submit', async e => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const item_values = $$('.cdpItemRow', e.target).map(row => ({
+      code: row.dataset.code,
+      score: $('.cdp-score', row)?.value || '',
+      training_start: $('.cdp-training-start', row)?.value || '',
+      training_end: $('.cdp-training-end', row)?.value || '',
+      note: $('.cdp-note', row)?.value || ''
+    }));
+    const open_values = {};
+    $$('.cdp-open-field', e.target).forEach(el => { open_values[el.dataset.key] = el.value || ''; });
+    const hasTrainingDate = item_values.some(v => String(v.training_start || v.training_end || '').trim());
+    const rawStatus = fd.get('status_label') || (type === 'cdp' ? 'done' : 'doing');
+    const finalStatus = type === 'ojti' && rawStatus === 'doing' && hasTrainingDate ? 'planned' : rawStatus;
+    const payload = {
+      id: fd.get('id') || undefined,
+      type,
+      store_id: fd.get('store_id') || selectedStoreId,
+      position_key: posKey,
+      trainee_ids: fd.get('trainee_id') ? [Number(fd.get('trainee_id'))] : [],
+      trainer_id: fd.get('trainer_id') || state.user?.id,
+      plan_date: fd.get('plan_date') || isoDateLocal(new Date()),
+      due_time: fd.get('due_time') || '22:00',
+      status_label: finalStatus,
+      note: fd.get('note'),
+      item_values,
+      open_values
+    };
+    try {
+      const resp = await api('/api/cdp-ojti-record', { method: 'POST', body: JSON.stringify(payload) });
+      const linkedCount = Object.keys(resp.linked_task_ids || {}).length;
+      toast(type === 'ojti' ? `Đã lưu OJTI và cập nhật ${linkedCount} công việc` : 'Đã lưu bản chấm CDP');
+      state.cdpOjtiEditId = null;
+      renderCdpOjti();
+    } catch (err) { toast(err.message, 'danger'); }
+  });
+}
+
+function ojtiDisplayStatus(r) {
+  if (!r || typeof r === 'string') return String(r || 'doing');
+  const raw = String(r.status_label || 'doing');
+  if (raw === 'doing') {
+    const hasTrainingDate = (r.item_values || []).some(v => String(v.training_start || v.training_end || '').trim());
+    if (hasTrainingDate) return 'planned';
+  }
+  return raw;
+}
+
+function statusCdpLabel(v) {
+  const map = { planned:['Đã lên lịch training','dark'], doing:['Chưa lên lịch','warn'], done:['Hoàn thành','ok'], follow:['Đang theo dõi sau training','danger'] };
+  const [label, cls] = map[v] || [v || 'Chưa lên lịch', 'dark'];
+  return `<span class="badge ${cls}">${esc(label)}</span>`;
+}
+
 async function renderSchedule() {
   const month = state.scheduleMonth || currentMonthLocal();
   const weeks = scheduleMonthWeeks(month);
@@ -1961,7 +2244,7 @@ async function renderAdmin() {
   const editBoxes = editUser ? Object.entries(PERM_LABELS).map(([key, label]) => `<label><input type="checkbox" name="${key}" ${Number(editUser.permissions?.[key]) === 1 ? 'checked' : ''}> ${label}</label>`).join(' ') : '';
   const editCard = editUser ? `<div class="card" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">Sửa quyền / thông tin tài khoản</h3><button class="btn secondary" id="cancelEditUserBtn">Đóng</button></div><form id="editUserForm" class="grid three"><input type="hidden" name="id" value="${editUser.id}"><div class="field"><label>Họ tên</label><input class="input" name="full_name" value="${esc(editUser.full_name)}" required></div><div class="field"><label>Vai trò</label><select name="role"><option value="employee" ${editUser.role === 'employee' ? 'selected' : ''}>Nhân viên</option><option value="manager" ${editUser.role === 'manager' ? 'selected' : ''}>Quản lý</option><option value="admin" ${editUser.role === 'admin' ? 'selected' : ''}>Admin</option></select></div><div class="field"><label>Cửa hàng áp dụng (chọn nhiều)</label><select name="store_ids" multiple size="5">${renderStoreMultiOptions(editUser.store_ids || (editUser.store_id ? [editUser.store_id] : []))}</select><div class="hint">Có thể cấp cùng lúc nhiều cửa hàng, ví dụ Quận 1 và Quận 7.</div></div><div class="field"><label>Reset mật khẩu (không bắt buộc)</label><input class="input" name="password" placeholder="Để trống nếu không đổi"></div><div class="field" style="grid-column:span 2"><label>Quyền chi tiết</label><div class="hint perm-check-grid">${editBoxes}</div></div><div style="grid-column:1/-1" class="row"><button class="btn">Lưu quyền</button><button class="btn secondary" type="button" id="cancelEditUserBtn2">Hủy</button></div></form></div>` : '';
   const table = `<div class="table-wrap"><table><thead><tr><th>Họ tên</th><th>Tài khoản</th><th>Vai trò</th><th>Cửa hàng áp dụng</th><th>Trạng thái</th><th>Quyền</th><th>Thao tác</th></tr></thead><tbody>${data.users.map(u => { const hasView = Number(u.permissions.can_view_sales_target) === 1 && Number(u.permissions.can_view_store_sales_summary) === 1 && Number(u.permissions.can_view_bonuses) === 1; const hasTarget = Number(u.permissions.can_set_sales_targets) === 1; const action = Number(u.id) === Number(state.user.id) ? '<span class="hint">Tài khoản hiện tại</span>' : `<div class="row wrap"><button class="btn small secondary editUserBtn" data-id="${u.id}">Sửa quyền</button><button class="btn small secondary quickPermBtn" data-id="${u.id}" data-mode="${hasView ? 'revoke' : 'grant'}">${hasView ? 'Thu hồi xem %/thưởng' : 'Cấp xem %/thưởng'}</button><button class="btn small secondary quickTargetBtn" data-id="${u.id}" data-mode="${hasTarget ? 'revoke' : 'grant'}">${hasTarget ? 'Thu hồi set target' : 'Cấp set target'}</button><button class="btn small danger deleteUserBtn" data-id="${u.id}" data-name="${esc(u.full_name)}">Xóa</button></div>`; return `<tr><td><b>${esc(u.full_name)}</b></td><td>${esc(u.username)}</td><td>${roleLabel(u.role)}</td><td>${esc((u.store_names && u.store_names.length ? u.store_names.join(' • ') : (u.store_name || '')))}</td><td><span class="badge ok">Đang dùng</span></td><td>${Object.entries(PERM_LABELS).filter(([k]) => Number(u.permissions[k]) === 1).map(([,l]) => `<span class="badge">${esc(l)}</span>`).join(' ')}</td><td>${action}</td></tr>`; }).join('')}</tbody></table></div>`;
-  const exports = `<div class="card" style="margin-top:16px"><h3>Tải dữ liệu</h3><div class="export-grid"><button class="btn secondary" data-export="tasks">Công việc</button><button class="btn secondary" data-export="violations">Vi phạm</button><button class="btn secondary" data-export="assessments">Checklist</button><button class="btn secondary" data-export="sales">Doanh thu cập nhật</button><button class="btn secondary" data-export="sales_targets">Target tháng</button><button class="btn secondary" data-export="sales_daily_targets">Target ngày</button><button class="btn secondary" data-export="bonuses">Tiền thưởng</button><button class="btn secondary" data-export="documents">Tài liệu</button><button class="btn secondary" data-export="orders">Order hàng</button><button class="btn secondary" data-export="online_orders">Đơn online</button><button class="btn secondary" data-export="product_feedback_summary">Tổng hợp đánh giá SP</button><button class="btn secondary" data-export="product_feedback">Chi tiết đánh giá SP</button><button class="btn secondary" data-export="product_collections">List BST/SKU</button><button class="btn secondary" data-export="product_trainings">Đào tạo SP</button><button class="btn secondary" data-export="product_training_attempts">Kết quả kiểm tra SP</button><button class="btn secondary" data-export="shifts">Ca làm</button><button class="btn secondary" data-export="work_schedules">Lịch làm việc</button><button class="btn secondary" data-export="performance">Tổng hợp điểm</button></div></div>`;
+  const exports = `<div class="card" style="margin-top:16px"><h3>Tải dữ liệu</h3><div class="export-grid"><button class="btn secondary" data-export="tasks">Công việc</button><button class="btn secondary" data-export="violations">Vi phạm</button><button class="btn secondary" data-export="assessments">Checklist</button><button class="btn secondary" data-export="sales">Doanh thu cập nhật</button><button class="btn secondary" data-export="sales_targets">Target tháng</button><button class="btn secondary" data-export="sales_daily_targets">Target ngày</button><button class="btn secondary" data-export="bonuses">Tiền thưởng</button><button class="btn secondary" data-export="documents">Tài liệu</button><button class="btn secondary" data-export="orders">Order hàng</button><button class="btn secondary" data-export="online_orders">Đơn online</button><button class="btn secondary" data-export="product_feedback_summary">Tổng hợp đánh giá SP</button><button class="btn secondary" data-export="product_feedback">Chi tiết đánh giá SP</button><button class="btn secondary" data-export="product_collections">List BST/SKU</button><button class="btn secondary" data-export="product_trainings">Đào tạo SP</button><button class="btn secondary" data-export="product_training_attempts">Kết quả kiểm tra SP</button><button class="btn secondary" data-export="cdp_ojti">CDP/OJTI</button><button class="btn secondary" data-export="shifts">Ca làm</button><button class="btn secondary" data-export="work_schedules">Lịch làm việc</button><button class="btn secondary" data-export="performance">Tổng hợp điểm</button></div></div>`;
   shell(`${form}${editCard}<div class="card" style="margin-top:16px"><h3>Danh sách tài khoản</h3>${table}</div>${exports}`, 'Admin', 'Cấp quyền, phân quyền xem và tải dữ liệu');
   $('#userForm')?.addEventListener('submit', async e => { e.preventDefault(); const fd = new FormData(e.target); const permissions = {}; Object.keys(PERM_LABELS).forEach(k => permissions[k] = fd.get(k) ? 1 : 0); const payload = { full_name: fd.get('full_name'), username: fd.get('username'), password: fd.get('password'), role: fd.get('role'), store_ids: selectedValues(e.target.querySelector('[name="store_ids"]')), permissions }; try { await api('/api/users', { method: 'POST', body: JSON.stringify(payload) }); toast('Đã tạo tài khoản'); await loadBase(); renderAdmin(); } catch (err) { toast(err.message, 'danger'); } });
   $$('.editUserBtn').forEach(btn => btn.addEventListener('click', () => { state.adminEditUserId = Number(btn.dataset.id); renderAdmin(); window.scrollTo({ top: 0, behavior: 'smooth' }); }));

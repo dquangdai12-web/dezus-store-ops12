@@ -1,0 +1,29 @@
+BẢN V4.63 - CDP/OJTI DỄ DÙNG + PHÂN QUYỀN RIÊNG
+
+Các điểm đã chỉnh:
+1. CDP/OJTI
+- Bổ sung phần Xem mô tả mức 1 - 4 rõ ràng hơn.
+- Chia nhanh thành các khu: Tạo mới, Đang thực hiện, Đã lên lịch, Cần theo dõi, Hoàn thành.
+- Các bản đã lưu hiển thị ở phía trên, không cần kéo xuống cuối mới xem được.
+- Thêm nút Xem nội dung ở từng bản CDP/OJTI.
+- OJTI vẫn tự tạo/cập nhật công việc khi nhập Ngày training.
+- Remark từ công việc hằng ngày vẫn link ngược về dòng OJTI.
+
+2. Checklist
+- Chỉnh lại bố cục tương tự CDP/OJTI.
+- Lịch sử đã chấm đưa lên trên, có nút Xem nội dung.
+- Khu Tạo mới/chấm checklist tách riêng, dễ thao tác hơn.
+
+3. Phân quyền
+- Thêm quyền riêng:
+  + Xem CDP
+  + Nhập CDP
+  + Xem OJTI
+  + Nhập OJTI
+- Quyền CDP/OJTI chung cũ vẫn giữ để không lỗi tài khoản cũ.
+
+Cách cập nhật:
+1. Giải nén file zip.
+2. Upload đè toàn bộ lên GitHub.
+3. Commit changes.
+4. Render > Manual Deploy > Deploy latest commit.
