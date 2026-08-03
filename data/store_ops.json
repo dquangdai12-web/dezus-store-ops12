@@ -8,10 +8,10 @@
     "violations": 1,
     "assessments": 1,
     "assessment_items": 1,
-    "sales": 3,
+    "sales": 1,
     "sales_targets": 1,
     "sales_daily_targets": 1,
-    "sales_store_days": 2,
+    "sales_store_days": 1,
     "bonuses": 1,
     "documents": 1,
     "shifts": 6,
@@ -24,7 +24,8 @@
     "product_trainings": 1,
     "product_training_attempts": 1,
     "weekly_reports": 1,
-    "daily_reports": 2
+    "daily_reports": 1,
+    "cdp_ojti": 1
   },
   "stores": [
     {
@@ -63,61 +64,61 @@
       "id": 1,
       "full_name": "Admin PKD",
       "username": "admin",
-      "password_hash": "$2a$10$w2vf4o9kLYoqf809UY8og.Z0iqZ5.ioThNIJ3Ie777lC56SWQhL9K",
+      "password_hash": "$2a$10$k0UvEnRlKYHaQxXhx6X41e2wHnwW/XCwNayouAtx7Na0GdYxzKroK",
       "role": "admin",
       "store_id": null,
       "status": "active",
-      "created_at": "2026-08-01T08:25:56.492Z"
+      "created_at": "2026-08-03T05:37:38.102Z"
     },
     {
       "id": 2,
       "full_name": "QL Bà Triệu",
       "username": "qly.bt",
-      "password_hash": "$2a$10$w2vf4o9kLYoqf809UY8og.Z0iqZ5.ioThNIJ3Ie777lC56SWQhL9K",
+      "password_hash": "$2a$10$k0UvEnRlKYHaQxXhx6X41e2wHnwW/XCwNayouAtx7Na0GdYxzKroK",
       "role": "manager",
       "store_id": 1,
       "status": "active",
-      "created_at": "2026-08-01T08:25:56.492Z"
+      "created_at": "2026-08-03T05:37:38.103Z"
     },
     {
       "id": 3,
       "full_name": "ĐSKD Bà Triệu 01",
       "username": "nv.bt1",
-      "password_hash": "$2a$10$w2vf4o9kLYoqf809UY8og.Z0iqZ5.ioThNIJ3Ie777lC56SWQhL9K",
+      "password_hash": "$2a$10$k0UvEnRlKYHaQxXhx6X41e2wHnwW/XCwNayouAtx7Na0GdYxzKroK",
       "role": "employee",
       "store_id": 1,
       "status": "active",
-      "created_at": "2026-08-01T08:25:56.492Z"
+      "created_at": "2026-08-03T05:37:38.103Z"
     },
     {
       "id": 4,
       "full_name": "ĐSKD Bà Triệu 02",
       "username": "nv.bt2",
-      "password_hash": "$2a$10$w2vf4o9kLYoqf809UY8og.Z0iqZ5.ioThNIJ3Ie777lC56SWQhL9K",
+      "password_hash": "$2a$10$k0UvEnRlKYHaQxXhx6X41e2wHnwW/XCwNayouAtx7Na0GdYxzKroK",
       "role": "employee",
       "store_id": 1,
       "status": "active",
-      "created_at": "2026-08-01T08:25:56.492Z"
+      "created_at": "2026-08-03T05:37:38.103Z"
     },
     {
       "id": 5,
       "full_name": "QL Đà Nẵng",
       "username": "qly.dn",
-      "password_hash": "$2a$10$w2vf4o9kLYoqf809UY8og.Z0iqZ5.ioThNIJ3Ie777lC56SWQhL9K",
+      "password_hash": "$2a$10$k0UvEnRlKYHaQxXhx6X41e2wHnwW/XCwNayouAtx7Na0GdYxzKroK",
       "role": "manager",
       "store_id": 2,
       "status": "active",
-      "created_at": "2026-08-01T08:25:56.492Z"
+      "created_at": "2026-08-03T05:37:38.103Z"
     },
     {
       "id": 6,
       "full_name": "ĐSKD Đà Nẵng 01",
       "username": "nv.dn1",
-      "password_hash": "$2a$10$w2vf4o9kLYoqf809UY8og.Z0iqZ5.ioThNIJ3Ie777lC56SWQhL9K",
+      "password_hash": "$2a$10$k0UvEnRlKYHaQxXhx6X41e2wHnwW/XCwNayouAtx7Na0GdYxzKroK",
       "role": "employee",
       "store_id": 2,
       "status": "active",
-      "created_at": "2026-08-01T08:25:56.492Z"
+      "created_at": "2026-08-03T05:37:38.103Z"
     }
   ],
   "permissions": [
@@ -152,7 +153,13 @@
       "can_view_product_feedback": 1,
       "can_manage_product_collections": 1,
       "can_manage_product_training": 1,
-      "can_view_product_training": 1
+      "can_view_product_training": 1,
+      "can_manage_cdp_ojti": 1,
+      "can_view_cdp_ojti": 1,
+      "can_manage_cdp": 1,
+      "can_view_cdp": 1,
+      "can_manage_ojti": 1,
+      "can_view_ojti": 1
     },
     {
       "user_id": 2,
@@ -185,7 +192,13 @@
       "can_view_product_feedback": 1,
       "can_manage_product_collections": 0,
       "can_manage_product_training": 0,
-      "can_view_product_training": 1
+      "can_view_product_training": 1,
+      "can_manage_cdp_ojti": 1,
+      "can_view_cdp_ojti": 1,
+      "can_manage_cdp": 1,
+      "can_view_cdp": 1,
+      "can_manage_ojti": 1,
+      "can_view_ojti": 1
     },
     {
       "user_id": 3,
@@ -218,7 +231,13 @@
       "can_view_product_feedback": 1,
       "can_manage_product_collections": 0,
       "can_manage_product_training": 0,
-      "can_view_product_training": 1
+      "can_view_product_training": 1,
+      "can_manage_cdp_ojti": 0,
+      "can_view_cdp_ojti": 1,
+      "can_manage_cdp": 0,
+      "can_view_cdp": 1,
+      "can_manage_ojti": 0,
+      "can_view_ojti": 1
     },
     {
       "user_id": 4,
@@ -251,7 +270,13 @@
       "can_view_product_feedback": 1,
       "can_manage_product_collections": 0,
       "can_manage_product_training": 0,
-      "can_view_product_training": 1
+      "can_view_product_training": 1,
+      "can_manage_cdp_ojti": 0,
+      "can_view_cdp_ojti": 1,
+      "can_manage_cdp": 0,
+      "can_view_cdp": 1,
+      "can_manage_ojti": 0,
+      "can_view_ojti": 1
     },
     {
       "user_id": 5,
@@ -284,7 +309,13 @@
       "can_view_product_feedback": 1,
       "can_manage_product_collections": 0,
       "can_manage_product_training": 0,
-      "can_view_product_training": 1
+      "can_view_product_training": 1,
+      "can_manage_cdp_ojti": 1,
+      "can_view_cdp_ojti": 1,
+      "can_manage_cdp": 1,
+      "can_view_cdp": 1,
+      "can_manage_ojti": 1,
+      "can_view_ojti": 1
     },
     {
       "user_id": 6,
@@ -317,7 +348,13 @@
       "can_view_product_feedback": 1,
       "can_manage_product_collections": 0,
       "can_manage_product_training": 0,
-      "can_view_product_training": 1
+      "can_view_product_training": 1,
+      "can_manage_cdp_ojti": 0,
+      "can_view_cdp_ojti": 1,
+      "can_manage_cdp": 0,
+      "can_view_cdp": 1,
+      "can_manage_ojti": 0,
+      "can_view_ojti": 1
     }
   ],
   "shifts": [
@@ -329,7 +366,7 @@
       "end_time": "16:30",
       "note": "Ca sáng",
       "status": "active",
-      "created_at": "2026-08-01T08:25:56.492Z"
+      "created_at": "2026-08-03T05:37:38.103Z"
     },
     {
       "id": 2,
@@ -339,7 +376,7 @@
       "end_time": "22:00",
       "note": "Ca chiều",
       "status": "active",
-      "created_at": "2026-08-01T08:25:56.492Z"
+      "created_at": "2026-08-03T05:37:38.103Z"
     },
     {
       "id": 3,
@@ -349,7 +386,7 @@
       "end_time": "22:00",
       "note": "Ca gãy / full peak",
       "status": "active",
-      "created_at": "2026-08-01T08:25:56.492Z"
+      "created_at": "2026-08-03T05:37:38.103Z"
     },
     {
       "id": 4,
@@ -359,7 +396,7 @@
       "end_time": "17:00",
       "note": "",
       "status": "active",
-      "created_at": "2026-08-01T08:25:56.492Z"
+      "created_at": "2026-08-03T05:37:38.103Z"
     },
     {
       "id": 5,
@@ -369,7 +406,7 @@
       "end_time": "20:30",
       "note": "",
       "status": "active",
-      "created_at": "2026-08-01T08:25:56.492Z"
+      "created_at": "2026-08-03T05:37:38.103Z"
     }
   ],
   "tasks": [],
@@ -377,51 +414,10 @@
   "violations": [],
   "assessments": [],
   "assessment_items": [],
-  "sales": [
-    {
-      "id": 1,
-      "user_id": 3,
-      "store_id": 1,
-      "sale_date": "2026-08-01",
-      "revenue": 0,
-      "bill_count": 0,
-      "item_count": 0,
-      "note": "",
-      "created_by": 1,
-      "created_at": "2026-08-01T08:28:05.398Z",
-      "updated_by": 1,
-      "updated_at": "2026-08-01T08:28:05.398Z"
-    },
-    {
-      "id": 2,
-      "user_id": 4,
-      "store_id": 1,
-      "sale_date": "2026-08-01",
-      "revenue": 0,
-      "bill_count": 0,
-      "item_count": 0,
-      "note": "",
-      "created_by": 1,
-      "created_at": "2026-08-01T08:28:05.398Z",
-      "updated_by": 1,
-      "updated_at": "2026-08-01T08:28:05.398Z"
-    }
-  ],
+  "sales": [],
   "sales_targets": [],
   "sales_daily_targets": [],
-  "sales_store_days": [
-    {
-      "id": 1,
-      "store_id": 1,
-      "sale_date": "2026-08-01",
-      "customer_count": 0,
-      "note": "Ca sáng: ádhahsdha\nCa tối: 12312312312",
-      "created_by": 1,
-      "created_at": "2026-08-01T08:28:05.398Z",
-      "updated_by": 1,
-      "updated_at": "2026-08-01T08:28:05.398Z"
-    }
-  ],
+  "sales_store_days": [],
   "bonuses": [],
   "documents": [],
   "orders": [],
@@ -432,41 +428,7 @@
   "product_trainings": [],
   "product_training_attempts": [],
   "weekly_reports": [],
-  "daily_reports": [
-    {
-      "id": 1,
-      "store_id": 1,
-      "report_date": "2026-08-01",
-      "created_by": 1,
-      "created_at": "2026-08-01T08:28:05.398Z",
-      "customer_count": 0,
-      "store_note": "Ca sáng: ádhahsdha\nCa tối: 12312312312",
-      "store_situation_morning": "ádhahsdha",
-      "store_situation_evening": "12312312312",
-      "sales_entries": [
-        {
-          "user_id": 3,
-          "revenue": 0,
-          "bill_count": 0,
-          "item_count": 0,
-          "note": ""
-        },
-        {
-          "user_id": 4,
-          "revenue": 0,
-          "bill_count": 0,
-          "item_count": 0,
-          "note": ""
-        }
-      ],
-      "missing_size_items": [],
-      "product_feedback_items": [],
-      "generated_order_ids": [],
-      "generated_feedback_ids": [],
-      "summary_text": "BÁO CÁO NGÀY 2026-08-01 - Bà Triệu\n\n1. DOANH THU & CHỈ SỐ\n- ĐSKD Bà Triệu 01: 0đ | Bill 0 | Món 0\n- ĐSKD Bà Triệu 02: 0đ | Bill 0 | Món 0\nTổng: 0đ | Bill 0 | Món 0 | Lượt khách 0\nUPT: 0 | ATV: 0đ | ASP: 0đ | CR: 0%\nTình hình cửa hàng:\n- Ca sáng: ádhahsdha\n- Ca tối: 12312312312\n\n2. SẢN PHẨM THIẾU SIZE / CẦN ORDER\n- Không có\n\n3. SẢN PHẨM LỖI / FEEDBACK KHÁCH\n- Không có",
-      "updated_by": 1,
-      "updated_at": "2026-08-01T08:28:05.404Z"
-    }
-  ],
+  "daily_reports": [],
+  "cdp_ojti": [],
   "work_schedules": []
 }

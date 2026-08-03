@@ -1,0 +1,14 @@
+V4.66 - KHỐI VĂN PHÒNG + BÁO CÁO TUẦN GỌN HƠN
+
+ĐÃ CẬP NHẬT:
+1. Tạo tài khoản có thêm vai trò: Khối văn phòng.
+2. Khối văn phòng được xem / thao tác theo phân quyền như Quản lý, nhưng phạm vi cửa hàng là toàn hệ thống.
+3. Khi chọn vai trò Khối văn phòng ở màn tạo tài khoản, hệ thống tự tick nhóm quyền mặc định như Quản lý.
+4. Báo cáo tuần - Top 5 sản phẩm bán chạy bỏ SKU và Số bill, chỉ giữ Sản phẩm, Số món, Ghi chú.
+5. Tổng quan - Top % đạt target tháng này: Top 2 có thêm icon cup bạc.
+
+CÁCH CẬP NHẬT:
+- Giải nén file zip.
+- Upload đè toàn bộ lên GitHub.
+- Commit changes.
+- Render > Manual Deploy > Deploy latest commit.

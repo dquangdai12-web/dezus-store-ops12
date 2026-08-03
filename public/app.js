@@ -77,6 +77,46 @@ const PERM_LABELS = {
   can_export: 'Tải dữ liệu',
 };
 
+
+const ROLE_PERMISSION_PRESETS = {
+  employee: {},
+  manager: {
+    can_assign_tasks: 1, can_manage_violations: 1, can_grade_checklists: 1,
+    can_manage_sales: 1, can_manage_total_sales: 1, can_manage_daily_report: 1,
+    can_manage_weekly_report: 1, can_view_weekly_report: 1, can_view_reports: 1,
+    can_export: 1, can_view_store_sales_summary: 1, can_view_bonuses: 1,
+    can_manage_documents: 1, can_view_documents: 1, can_manage_schedule: 1,
+    can_view_schedule: 1, can_manage_orders: 1, can_view_orders: 1,
+    can_manage_online_orders: 1, can_view_online_orders: 1,
+    can_manage_product_feedback: 1, can_view_product_feedback: 1,
+    can_view_product_training: 1, can_manage_cdp_ojti: 1, can_view_cdp_ojti: 1,
+    can_manage_cdp: 1, can_view_cdp: 1, can_manage_ojti: 1, can_view_ojti: 1
+  },
+  office: {
+    can_assign_tasks: 1, can_manage_violations: 1, can_grade_checklists: 1,
+    can_manage_sales: 1, can_manage_total_sales: 1, can_manage_daily_report: 1,
+    can_manage_weekly_report: 1, can_view_weekly_report: 1, can_view_reports: 1,
+    can_export: 1, can_view_store_sales_summary: 1, can_view_bonuses: 1,
+    can_manage_documents: 1, can_view_documents: 1, can_manage_schedule: 1,
+    can_view_schedule: 1, can_manage_orders: 1, can_view_orders: 1,
+    can_manage_online_orders: 1, can_view_online_orders: 1,
+    can_manage_product_feedback: 1, can_view_product_feedback: 1,
+    can_view_product_training: 1, can_manage_cdp_ojti: 1, can_view_cdp_ojti: 1,
+    can_manage_cdp: 1, can_view_cdp: 1, can_manage_ojti: 1, can_view_ojti: 1
+  },
+  admin: Object.fromEntries(Object.keys(PERM_LABELS).map(k => [k, 1]))
+};
+
+function applyRolePermissionPreset(form) {
+  if (!form) return;
+  const role = form.querySelector('[name="role"]')?.value || 'employee';
+  const preset = ROLE_PERMISSION_PRESETS[role] || {};
+  Object.keys(PERM_LABELS).forEach(k => {
+    const el = form.querySelector(`[name="${k}"]`);
+    if (el) el.checked = Number(preset[k] || 0) === 1;
+  });
+}
+
 function toast(message, type = 'ok') {
   const el = $('#toast');
   el.textContent = message;
@@ -119,6 +159,32 @@ function setupNumberFormat(root = document) {
       input.value = formatIntegerDots(input.value);
     });
   });
+}
+
+function customerTotalValue(newVal, oldVal, fallbackVal = 0) {
+  const n = cleanNumberInput(newVal);
+  const o = cleanNumberInput(oldVal);
+  const fallback = cleanNumberInput(fallbackVal);
+  return (n || o) ? n + o : fallback;
+}
+
+function attachCustomerTotalSync(root = document) {
+  const customerNew = $('[name="customer_new_count"]', root);
+  const customerOld = $('[name="customer_old_count"]', root);
+  const customerTotal = $('[name="customer_count"]', root);
+  if (!customerNew || !customerOld || !customerTotal) return;
+  const initialTotal = cleanNumberInput(customerTotal.value);
+  let edited = false;
+  const updateTotal = () => {
+    const n = cleanNumberInput(customerNew.value);
+    const o = cleanNumberInput(customerOld.value);
+    const total = (!edited && !n && !o) ? initialTotal : n + o;
+    customerTotal.value = formatIntegerDots(total);
+  };
+  const markEdited = () => { edited = true; updateTotal(); };
+  customerNew.addEventListener('input', markEdited);
+  customerOld.addEventListener('input', markEdited);
+  updateTotal();
 }
 
 function setupAutoResizeTextareas(root = document) {
@@ -340,7 +406,14 @@ function statusBadge(status) {
 }
 
 function roleLabel(role) {
-  return role === 'admin' ? 'Admin' : role === 'manager' ? 'Quản lý' : 'Nhân viên';
+  if (role === 'admin') return 'Admin';
+  if (role === 'office') return 'Khối văn phòng';
+  if (role === 'manager') return 'Quản lý';
+  return 'Nhân viên';
+}
+
+function isAllStoreUser(user = state.user) {
+  return user?.role === 'admin' || user?.role === 'office';
 }
 
 function storeName(id) {
@@ -362,7 +435,7 @@ function renderStoreMultiOptions(selectedIds = []) {
 }
 
 function employees() {
-  return state.boot.users.filter(u => u.role !== 'admin');
+  return state.boot.users.filter(u => u.role !== 'admin' && u.role !== 'office');
 }
 
 function usersInStore(storeId) {
@@ -743,21 +816,21 @@ function tableLeaderboard(rows, showAmounts = false) {
   // V4.57-1: Tổng quan không hiển thị % tỷ trọng DT, nhưng trang Doanh thu vẫn giữ.
   const revenueShareHead = showAmounts ? '<th>% tỷ trọng DT</th>' : '';
   const revenueShareBody = r => showAmounts ? `<td>${Number(r.revenue_percent || 0)}%</td>` : '';
-  const podium = rows.slice(0, 3).map(r => `<div class="rank-card rank-${r.rank}">${r.rank === 1 ? `<div class="rank-cup" aria-hidden="true">🏆</div>` : ""}<div class="rank-no">Top ${r.rank}</div><b class="employee-name-line">${esc(r.full_name)}</b><span>${esc(r.store_name || '')}</span><strong>${Number(r.achievement_percent || 0)}%</strong></div>`).join('');
+  const podium = rows.slice(0, 3).map(r => `<div class="rank-card rank-${r.rank}">${r.rank === 1 ? `<div class="rank-cup rank-cup-gold" aria-hidden="true">🏆</div>` : (r.rank === 2 ? `<div class="rank-cup rank-cup-silver" aria-hidden="true">🏆</div>` : "")}<div class="rank-no">Top ${r.rank}</div><b class="employee-name-line">${esc(r.full_name)}</b><span>${esc(r.store_name || '')}</span><strong>${Number(r.achievement_percent || 0)}%</strong></div>`).join('');
   return `<div class="leaderboard-premium">${podium}</div><div class="table-wrap leaderboard-wrap"><table class="leaderboard-table"><thead><tr><th>Top</th><th>Nhân viên</th><th>Cửa hàng</th><th>% đạt target</th>${moneyColsHead}${revenueShareHead}<th>Bill</th><th>Món</th><th>UPT</th><th>ATV</th><th>ASP</th><th>GUESTS</th></tr></thead><tbody>${rows.map(r => `<tr><td><span class="badge dark">Top ${r.rank}</span></td><td class="employee-name-cell"><b>${esc(r.full_name)}</b></td><td class="store-name-cell">${esc(r.store_name || '')}</td><td>${percentBadge(r.achievement_percent || 0)}</td>${moneyColsBody(r)}${revenueShareBody(r)}<td>${money(r.bill_count || 0)}</td><td>${money(r.item_count || 0)}</td><td class="metric-badge-cell">${targetBadge(r.upt || 0, r.target_upt || 0, '', 2)}</td><td class="metric-badge-cell">${targetBadge(r.atv || 0, r.target_atv || 0, 'đ')}</td><td>${money(r.asp || 0)}đ</td><td>${Math.round(r.guests_percent || 0)}%</td></tr>`).join('')}</tbody></table></div>`;
 }
 
 function tableStoreSalesSummary(summary) {
   if (!summary || !summary.rows?.length) return '<div class="empty">Chưa có dữ liệu doanh thu ngày trong tháng này</div>';
   const t = summary.totals || {};
-  const kpis = `<div class="grid four dash-kpis" style="margin-bottom:14px"><div class="card kpi"><div class="label">Doanh thu thực đạt</div><div class="num">${money(t.revenue || 0)}đ</div><div class="hint">Target tháng: ${money(summary.monthly_target || 0)}đ • ${percentBadge(t.achievement_percent || 0)}</div></div><div class="card kpi"><div class="label">Timeline dự kiến</div><div class="num">${Number(t.pace_percent || 0)}%</div><div class="hint">Dự kiến về: ${money(t.projected_revenue || 0)}đ</div></div><div class="card kpi"><div class="label">Cần bán/ngày</div><div class="num">${money(t.daily_needed || 0)}đ</div><div class="hint">Còn ${money(t.days_remaining || 0)} ngày để về 100%</div></div><div class="card kpi"><div class="label">Target ngày đã set</div><div class="num">${money(t.daily_target || 0)}đ</div><div class="hint">Theo tổng target ngày trong tháng • ${percentBadge(t.daily_achievement_percent || 0)}</div></div><div class="card kpi"><div class="label">UPT</div><div class="num">${fmt2(t.upt || 0)}</div><div class="hint">${targetBadge(t.upt || 0, t.target_upt || 0, '', 2)}</div></div><div class="card kpi"><div class="label">ATV</div><div class="num">${money(t.atv || 0)}đ</div><div class="hint">${targetBadge(t.atv || 0, t.target_atv || 0, 'đ')}</div></div><div class="card kpi"><div class="label">ASP</div><div class="num">${money(t.asp || 0)}đ</div><div class="hint">Doanh thu / số món</div></div><div class="card kpi"><div class="label">CR</div><div class="num">${Number(t.cr || 0)}%</div><div class="hint">${targetBadge(t.cr || 0, t.target_cr || 0, '%', 2)}</div></div><div class="card kpi"><div class="label">Lượt khách cửa hàng</div><div class="num">${money(t.customer_count || 0)}</div><div class="hint">CR = bill / lượt khách</div></div></div>`;
-  const rows = summary.rows.map(r => `<tr><td><b>${dOnly(r.sale_date)}</b></td><td>${money(r.revenue || 0)}</td><td>${money(r.daily_target || 0)}</td><td>${percentBadge(r.daily_achievement_percent || 0)}</td><td>${money(r.bill_count || 0)}</td><td>${money(r.item_count || 0)}</td><td>${money(r.customer_count || 0)}</td><td>${targetBadge(r.upt || 0, r.daily_target_upt || r.target_upt || 0, '', 2)}</td><td>${targetBadge(r.atv || 0, r.daily_target_atv || r.target_atv || 0, 'đ')}</td><td>${money(r.asp || 0)}đ</td><td>${targetBadge(r.cr || 0, r.daily_target_cr || r.target_cr || 0, '%', 2)}</td><td>${percentBadge(r.achievement_percent || 0)}</td><td>${esc(r.note || r.daily_target_note || '')}</td></tr>`).join('');
-  return `${kpis}<div class="table-wrap"><table><thead><tr><th>Ngày</th><th>Doanh thu ngày</th><th>Target ngày</th><th>% ngày</th><th>Bill</th><th>Món</th><th>Lượt khách CH</th><th>UPT</th><th>ATV</th><th>ASP</th><th>CR</th><th>% lũy kế tháng</th><th>Ghi chú</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  const kpis = `<div class="grid four dash-kpis" style="margin-bottom:14px"><div class="card kpi"><div class="label">Doanh thu thực đạt</div><div class="num">${money(t.revenue || 0)}đ</div><div class="hint">Target tháng: ${money(summary.monthly_target || 0)}đ • ${percentBadge(t.achievement_percent || 0)}</div></div><div class="card kpi"><div class="label">Timeline dự kiến</div><div class="num">${Number(t.pace_percent || 0)}%</div><div class="hint">Dự kiến về: ${money(t.projected_revenue || 0)}đ</div></div><div class="card kpi"><div class="label">Cần bán/ngày</div><div class="num">${money(t.daily_needed || 0)}đ</div><div class="hint">Còn ${money(t.days_remaining || 0)} ngày để về 100%</div></div><div class="card kpi"><div class="label">Target ngày đã set</div><div class="num">${money(t.daily_target || 0)}đ</div><div class="hint">Theo tổng target ngày trong tháng • ${percentBadge(t.daily_achievement_percent || 0)}</div></div><div class="card kpi"><div class="label">UPT</div><div class="num">${fmt2(t.upt || 0)}</div><div class="hint">${targetBadge(t.upt || 0, t.target_upt || 0, '', 2)}</div></div><div class="card kpi"><div class="label">ATV</div><div class="num">${money(t.atv || 0)}đ</div><div class="hint">${targetBadge(t.atv || 0, t.target_atv || 0, 'đ')}</div></div><div class="card kpi"><div class="label">ASP</div><div class="num">${money(t.asp || 0)}đ</div><div class="hint">Doanh thu / số món</div></div><div class="card kpi"><div class="label">CR</div><div class="num">${Number(t.cr || 0)}%</div><div class="hint">${targetBadge(t.cr || 0, t.target_cr || 0, '%', 2)}</div></div><div class="card kpi"><div class="label">Khách mới</div><div class="num">${money(t.customer_new_count || 0)}</div><div class="hint">TF khách mới trong tháng</div></div><div class="card kpi"><div class="label">Khách cũ</div><div class="num">${money(t.customer_old_count || 0)}</div><div class="hint">TF khách cũ trong tháng</div></div><div class="card kpi"><div class="label">Lượt khách tổng</div><div class="num">${money(t.customer_count || 0)}</div><div class="hint">Khách mới + khách cũ</div></div></div>`;
+  const rows = summary.rows.map(r => `<tr><td><b>${dOnly(r.sale_date)}</b></td><td>${money(r.revenue || 0)}</td><td>${money(r.daily_target || 0)}</td><td>${percentBadge(r.daily_achievement_percent || 0)}</td><td>${money(r.bill_count || 0)}</td><td>${money(r.item_count || 0)}</td><td>${money(r.customer_new_count || 0)}</td><td>${money(r.customer_old_count || 0)}</td><td>${money(r.customer_count || 0)}</td><td>${targetBadge(r.upt || 0, r.daily_target_upt || r.target_upt || 0, '', 2)}</td><td>${targetBadge(r.atv || 0, r.daily_target_atv || r.target_atv || 0, 'đ')}</td><td>${money(r.asp || 0)}đ</td><td>${targetBadge(r.cr || 0, r.daily_target_cr || r.target_cr || 0, '%', 2)}</td><td>${percentBadge(r.achievement_percent || 0)}</td><td>${esc(r.note || r.daily_target_note || '')}</td></tr>`).join('');
+  return `${kpis}<div class="table-wrap"><table><thead><tr><th>Ngày</th><th>Doanh thu ngày</th><th>Target ngày</th><th>% ngày</th><th>Bill</th><th>Món</th><th>Khách mới</th><th>Khách cũ</th><th>Lượt khách tổng</th><th>UPT</th><th>ATV</th><th>ASP</th><th>CR</th><th>% lũy kế tháng</th><th>Ghi chú</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 
 function tableWeeklyDays(rows) {
   if (!rows?.length) return '<div class="empty">Chưa có dữ liệu ngày trong tuần này</div>';
-  return `<div class="table-wrap"><table><thead><tr><th>Ngày</th><th>Doanh thu</th><th>Target ngày</th><th>% đạt</th><th>Bill</th><th>Món</th><th>Lượt khách</th><th>UPT</th><th>ATV</th><th>ASP</th><th>CR</th><th>Ghi chú</th></tr></thead><tbody>${rows.map(r => `<tr><td><b>${dOnly(r.sale_date)}</b></td><td>${money(r.revenue || 0)}đ</td><td>${money(r.target_revenue || 0)}đ</td><td>${percentBadge(r.achievement_percent || 0)}</td><td>${money(r.bill_count || 0)}</td><td>${money(r.item_count || 0)}</td><td>${money(r.customer_count || 0)}</td><td>${fmt2(r.upt || 0)}</td><td>${money(r.atv || 0)}đ</td><td>${money(r.asp || 0)}đ</td><td>${fmt2(r.cr || 0)}%</td><td>${esc(r.note || '')}</td></tr>`).join('')}</tbody></table></div>`;
+  return `<div class="table-wrap"><table><thead><tr><th>Ngày</th><th>Doanh thu</th><th>Target ngày</th><th>% đạt</th><th>Bill</th><th>Món</th><th>Khách mới</th><th>Khách cũ</th><th>Lượt khách tổng</th><th>UPT</th><th>ATV</th><th>ASP</th><th>CR</th><th>Ghi chú</th></tr></thead><tbody>${rows.map(r => `<tr><td><b>${dOnly(r.sale_date)}</b></td><td>${money(r.revenue || 0)}đ</td><td>${money(r.target_revenue || 0)}đ</td><td>${percentBadge(r.achievement_percent || 0)}</td><td>${money(r.bill_count || 0)}</td><td>${money(r.item_count || 0)}</td><td>${money(r.customer_new_count || 0)}</td><td>${money(r.customer_old_count || 0)}</td><td>${money(r.customer_count || 0)}</td><td>${fmt2(r.upt || 0)}</td><td>${money(r.atv || 0)}đ</td><td>${money(r.asp || 0)}đ</td><td>${fmt2(r.cr || 0)}%</td><td>${esc(r.note || '')}</td></tr>`).join('')}</tbody></table></div>`;
 }
 
 function tableWeeklyEmployees(rows) {
@@ -768,7 +841,7 @@ function tableWeeklyEmployees(rows) {
 function tableWeeklyProducts(rows) {
   rows = Array.isArray(rows) ? rows : [];
   if (!rows.length) return '<div class="empty">Chưa nhập top sản phẩm bán chạy</div>';
-  return `<div class="table-wrap weekly-read-table-wrap"><table class="weekly-read-table"><thead><tr><th>Top</th><th>Sản phẩm</th><th>SKU</th><th>Số lượng</th><th>Số bill</th><th>Ghi chú</th></tr></thead><tbody>${rows.slice(0,5).map((r, i) => `<tr><td><span class="badge dark">Top ${i + 1}</span></td><td><b>${esc(r.name || '')}</b></td><td>${esc(r.sku || '')}</td><td>${money(r.quantity || 0)}</td><td>${money(r.bill_count || 0)}</td><td>${esc(r.note || '')}</td></tr>`).join('')}</tbody></table></div>`;
+  return `<div class="table-wrap weekly-read-table-wrap"><table class="weekly-read-table"><thead><tr><th>Top</th><th>Sản phẩm</th><th>Số món</th><th>Ghi chú</th></tr></thead><tbody>${rows.slice(0,5).map((r, i) => `<tr><td><span class="badge dark">Top ${i + 1}</span></td><td><b>${esc(r.name || '')}</b></td><td>${money(r.quantity || 0)}</td><td>${esc(r.note || '')}</td></tr>`).join('')}</tbody></table></div>`;
 }
 
 function tableWeeklyPromotions(rows) {
@@ -780,7 +853,7 @@ function tableWeeklyPromotions(rows) {
 function weeklyProductInputRows(rows = []) {
   const base = Array.isArray(rows) && rows.length ? rows.slice(0,5) : [{}, {}, {}, {}, {}];
   while (base.length < 5) base.push({});
-  return base.slice(0,5).map((r, i) => `<tr class="weekly-product-row"><td><span class="badge dark">Top ${i + 1}</span></td><td><input class="input weekly-product-name" value="${esc(r.name || '')}" placeholder="Tên sản phẩm"></td><td><input class="input weekly-product-sku" value="${esc(r.sku || '')}" placeholder="SKU"></td><td><input class="input weekly-product-qty" type="text" inputmode="numeric" data-number-format value="${money(r.quantity || 0)}"></td><td><input class="input weekly-product-bill" type="text" inputmode="numeric" data-number-format value="${money(r.bill_count || 0)}"></td><td><input class="input weekly-product-note" value="${esc(r.note || '')}" placeholder="Ghi chú"></td></tr>`).join('');
+  return base.slice(0,5).map((r, i) => `<tr class="weekly-product-row"><td><span class="badge dark">Top ${i + 1}</span></td><td><input class="input weekly-product-name" value="${esc(r.name || '')}" placeholder="Tên sản phẩm"></td><td><input class="input weekly-product-qty" type="text" inputmode="numeric" data-number-format value="${money(r.quantity || 0)}"></td><td><input class="input weekly-product-note" value="${esc(r.note || '')}" placeholder="Ghi chú"></td></tr>`).join('');
 }
 
 function weeklyPromotionInputRows(rows = []) {
@@ -790,7 +863,7 @@ function weeklyPromotionInputRows(rows = []) {
 
 
 async function downloadWeeklyReport() {
-  const storeId = state.user.role === 'admin' ? (state.weeklyStoreId || state.boot.stores[0]?.id || '') : state.user.store_id;
+  const storeId = isAllStoreUser() ? (state.weeklyStoreId || state.boot.stores[0]?.id || '') : state.user.store_id;
   const weekStart = state.weeklyWeekStart || mondayOf(new Date().toISOString().slice(0, 10));
   try {
     const res = await fetch(`/api/weekly-report/export.csv?week_start=${encodeURIComponent(weekStart)}${storeId ? `&store_id=${encodeURIComponent(storeId)}` : ''}`, { headers: { Authorization: `Bearer ${state.token}` } });
@@ -853,6 +926,9 @@ function dailyReportOverviewBox(data = {}) {
   if (!hasContent) return '<div id="dailyReportSummaryBox"></div>';
   const target = Number(total.target_revenue || data.daily_target?.target_revenue || 0);
   const percent = target ? Math.round((Number(total.revenue || 0) / target) * 10000) / 100 : 0;
+  const customerNew = Number(total.customer_new_count || data.customer_new_count || 0);
+  const customerOld = Number(total.customer_old_count || data.customer_old_count || 0);
+  const customerTotal = customerTotalValue(customerNew, customerOld, total.customer_count || data.customer_count || 0);
   const salesHtml = sales.length ? sales.map(r => `<div class="daily-overview-row"><div><b>${esc(r.full_name || '')}</b><small>${esc(r.note || '')}</small></div><div class="daily-overview-numbers"><strong>${money(r.revenue || 0)}đ</strong><span>Bill ${money(r.bill_count || 0)} • Món ${money(r.item_count || 0)}</span></div></div>`).join('') : '<div class="daily-overview-empty">Chưa có doanh thu nhân viên</div>';
   const missingHtml = missing.length ? missing.map((item, i) => `<div class="daily-overview-chip"><b>${i + 1}. ${esc(item.sku || '')}${item.sku && item.product_name ? ' - ' : ''}${esc(item.product_name || '')}</b><span>${item.size ? `Size ${esc(item.size)} • ` : ''}SL ${money(item.quantity || 0)}${item.note ? ` • ${esc(item.note)}` : ''}</span></div>`).join('') : '<div class="daily-overview-empty">Không có sản phẩm thiếu size</div>';
   const feedbackHtml = feedback.length ? feedback.map((item, i) => `<div class="daily-overview-chip"><b>${i + 1}. ${esc(item.sku || '')}${item.sku && item.product_name ? ' - ' : ''}${esc(item.product_name || '')}</b><span>${item.product_errors ? `Lỗi: ${esc(item.product_errors)}` : ''}${item.product_errors && item.customer_feedback ? ' • ' : ''}${item.customer_feedback ? `KH: ${esc(item.customer_feedback)}` : ''}${item.note ? ` • ${esc(item.note)}` : ''}</span></div>`).join('') : '<div class="daily-overview-empty">Không có sản phẩm lỗi / feedback khách</div>';
@@ -862,7 +938,9 @@ function dailyReportOverviewBox(data = {}) {
       <div><span>Tổng doanh thu cửa hàng</span><b>${money(total.revenue || 0)}đ</b></div>
       <div><span>Target ngày</span><b>${target ? money(target) + 'đ' : 'Chưa set'}</b></div>
       <div><span>Bill / Món</span><b>${money(total.bill_count || 0)} / ${money(total.item_count || 0)}</b></div>
-      <div><span>Lượt khách</span><b>${money(total.customer_count || data.customer_count || 0)}</b></div>
+      <div><span>Khách mới</span><b>${money(customerNew)}</b></div>
+      <div><span>Khách cũ</span><b>${money(customerOld)}</b></div>
+      <div><span>Lượt khách tổng</span><b>${money(customerTotal)}</b></div>
       <div><span>UPT</span><b>${fmt2(total.upt || 0)}</b></div>
       <div><span>ATV</span><b>${money(total.atv || 0)}đ</b></div>
       <div><span>ASP</span><b>${money(total.asp || 0)}đ</b></div>
@@ -879,12 +957,12 @@ function dailyReportOverviewBox(data = {}) {
 
 async function renderDailyReport() {
   const reportDate = state.dailyReportDate || isoDateLocal(new Date());
-  const defaultStoreId = state.user.role === 'admin' ? (state.dailyReportStoreId || state.boot.stores[0]?.id || '') : state.user.store_id;
+  const defaultStoreId = isAllStoreUser() ? (state.dailyReportStoreId || state.boot.stores[0]?.id || '') : state.user.store_id;
   state.dailyReportStoreId = defaultStoreId;
   state.dailyReportDate = reportDate;
   const data = await api(`/api/daily-report?report_date=${encodeURIComponent(reportDate)}${defaultStoreId ? `&store_id=${encodeURIComponent(defaultStoreId)}` : ''}`);
   const storeOptions = state.boot.stores.map(s => `<option value="${s.id}" ${Number(s.id) === Number(data.store_id) ? 'selected' : ''}>${esc(s.name)}</option>`).join('');
-  const storeFilter = state.user.role === 'admin' ? `<div class="field"><label>Cửa hàng</label><select class="input" id="dailyReportStoreFilter" name="store_id">${storeOptions}</select></div>` : `<input type="hidden" name="store_id" value="${esc(data.store_id)}">`;
+  const storeFilter = isAllStoreUser() ? `<div class="field"><label>Cửa hàng</label><select class="input" id="dailyReportStoreFilter" name="store_id">${storeOptions}</select></div>` : `<input type="hidden" name="store_id" value="${esc(data.store_id)}">`;
   const canEdit = canAny('can_manage_daily_report','can_manage_sales');
   const salesRows = (data.sales_entries || []).map(r => `<tr class="daily-sales-row" data-user="${r.user_id}">
     <td class="daily-sticky-name"><b>${esc(r.full_name || '')}</b><div class="hint">${esc(r.store_name || data.store_name || '')}</div></td>
@@ -894,7 +972,7 @@ async function renderDailyReport() {
     <td><input class="input daily-sale-note" value="${esc(r.note || '')}" placeholder="Ghi chú NV" ${canEdit ? '' : 'disabled'}></td>
   </tr>`).join('') || '<tr><td colspan="5"><div class="empty">Chưa có nhân viên bán hàng</div></td></tr>';
   const form = `<form id="dailyReportForm">
-    <div class="card daily-report-head"><div class="toolbar"><div class="field"><label>Ngày báo cáo</label><input class="input" id="dailyReportDateFilter" name="report_date" type="date" value="${esc(data.report_date || reportDate)}" required></div>${storeFilter}<div class="field"><label>Lượt khách tổng cửa hàng</label><input class="input" type="text" inputmode="numeric" data-number-format name="customer_count" value="${money(data.customer_count || 0)}"></div></div><p class="hint">Lưu báo cáo ngày sẽ tự cập nhật vào Doanh thu tháng, tự chuyển thiếu size sang Order hàng và chuyển lỗi/feedback khách sang Đánh giá sản phẩm.</p></div>
+    <div class="card daily-report-head"><div class="toolbar"><div class="field"><label>Ngày báo cáo</label><input class="input" id="dailyReportDateFilter" name="report_date" type="date" value="${esc(data.report_date || reportDate)}" required></div>${storeFilter}<div class="field"><label>Khách mới</label><input class="input" type="text" inputmode="numeric" data-number-format name="customer_new_count" value="${money(data.customer_new_count || 0)}"></div><div class="field"><label>Khách cũ</label><input class="input" type="text" inputmode="numeric" data-number-format name="customer_old_count" value="${money(data.customer_old_count || 0)}"></div><div class="field"><label>Lượt khách tổng</label><input class="input readonly" type="text" inputmode="numeric" data-number-format name="customer_count" value="${money(customerTotalValue(data.customer_new_count || 0, data.customer_old_count || 0, data.customer_count || 0))}" readonly></div></div><p class="hint">Lưu báo cáo ngày sẽ tự cập nhật vào Doanh thu tháng, tự chuyển thiếu size sang Order hàng và chuyển lỗi/feedback khách sang Đánh giá sản phẩm.</p></div>
     <div class="card daily-situation-card" style="margin-top:16px"><div class="section-title"><h3>Tình hình cửa hàng</h3><span class="badge ok">Theo ca</span></div><div class="grid two daily-situation-grid"><div class="field"><label>Ca sáng</label><textarea class="input daily-situation-input" name="store_situation_morning" placeholder="VD: TF sáng, khách hỏi size, tình trạng sàn..." ${canEdit ? '' : 'disabled'}>${esc(data.store_situation_morning || '')}</textarea></div><div class="field"><label>Ca tối</label><textarea class="input daily-situation-input" name="store_situation_evening" placeholder="VD: TF tối, thời tiết, khách phản hồi..." ${canEdit ? '' : 'disabled'}>${esc(data.store_situation_evening || '')}</textarea></div></div></div>
     <div class="card" style="margin-top:16px"><div class="section-title"><h3>1. Doanh thu & chỉ số trong ngày</h3><span class="badge">Tự về báo cáo tháng</span></div><div class="table-wrap revenue-sticky-name daily-report-table-wrap"><table><thead><tr><th>Nhân viên</th><th>Doanh thu</th><th>Số bill</th><th>Số món</th><th>Ghi chú</th></tr></thead><tbody>${salesRows}</tbody></table></div></div>
     <div class="card" style="margin-top:16px"><div class="section-title"><h3>2. Sản phẩm thiếu size / cần order</h3><span class="badge warn">Tự chuyển Order hàng</span></div><div class="table-wrap daily-report-table-wrap"><table><thead><tr><th>SKU</th><th>Tên sản phẩm</th><th>Size thiếu</th><th>SL cần order</th><th>Ghi chú</th></tr></thead><tbody id="dailyMissingBody">${dailyMissingRows(data.missing_size_items || [], 2)}</tbody></table></div><button type="button" class="btn secondary small" id="dailyAddMissingBtn" style="margin-top:10px">Thêm dòng thiếu size</button></div>
@@ -902,6 +980,7 @@ async function renderDailyReport() {
     ${canEdit ? '<div style="margin-top:16px"><button class="btn daily-save-btn">Lưu báo cáo ngày</button></div>' : '<div class="empty" style="margin-top:16px">Tài khoản này chỉ được xem báo cáo ngày.</div>'}
   </form>`;
   shell(`${form}${dailyReportOverviewBox(data)}`, 'Báo cáo ngày', `Nhập báo cáo ngày ${dOnly(data.report_date || reportDate)} - ${esc(data.store_name || '')}`);
+  attachCustomerTotalSync($('#dailyReportForm'));
   $('#dailyReportDateFilter')?.addEventListener('change', e => { state.dailyReportDate = e.target.value; renderDailyReport(); });
   $('#dailyReportStoreFilter')?.addEventListener('change', e => { state.dailyReportStoreId = e.target.value; renderDailyReport(); });
   $('#dailyAddMissingBtn')?.addEventListener('click', () => { $('#dailyMissingBody')?.insertAdjacentHTML('beforeend', dailyMissingRows([{}], 0)); setupNumberFormat($('#dailyMissingBody')); });
@@ -936,7 +1015,7 @@ async function renderDailyReport() {
     })).filter(x => x.sku || x.product_name || x.product_errors || x.customer_feedback);
     const morningSituation = fd.get('store_situation_morning') || '';
     const eveningSituation = fd.get('store_situation_evening') || '';
-    const payload = { store_id: fd.get('store_id') || data.store_id, report_date: fd.get('report_date'), customer_count: cleanNumberInput(fd.get('customer_count')), store_situation_morning: morningSituation, store_situation_evening: eveningSituation, store_note: [morningSituation ? `Ca sáng: ${morningSituation}` : '', eveningSituation ? `Ca tối: ${eveningSituation}` : ''].filter(Boolean).join('\n'), sales_entries, missing_size_items, product_feedback_items };
+    const payload = { store_id: fd.get('store_id') || data.store_id, report_date: fd.get('report_date'), customer_new_count: cleanNumberInput(fd.get('customer_new_count')), customer_old_count: cleanNumberInput(fd.get('customer_old_count')), customer_count: cleanNumberInput(fd.get('customer_count')), store_situation_morning: morningSituation, store_situation_evening: eveningSituation, store_note: [morningSituation ? `Ca sáng: ${morningSituation}` : '', eveningSituation ? `Ca tối: ${eveningSituation}` : ''].filter(Boolean).join('\n'), sales_entries, missing_size_items, product_feedback_items };
     try {
       const res = await api('/api/daily-report', { method:'POST', body: JSON.stringify(payload) });
       toast(`Đã lưu báo cáo ngày • Order ${res.order_count || 0} • Feedback ${res.feedback_count || 0}`);
@@ -947,16 +1026,16 @@ async function renderDailyReport() {
 }
 
 async function renderWeeklyReport() {
-  const defaultStoreId = state.user.role === 'admin' ? (state.weeklyStoreId || state.boot.stores[0]?.id || '') : state.user.store_id;
+  const defaultStoreId = isAllStoreUser() ? (state.weeklyStoreId || state.boot.stores[0]?.id || '') : state.user.store_id;
   state.weeklyStoreId = defaultStoreId;
   const weekStart = state.weeklyWeekStart || mondayOf(new Date().toISOString().slice(0, 10));
   state.weeklyWeekStart = weekStart;
   const data = await api(`/api/weekly-report?week_start=${encodeURIComponent(weekStart)}${defaultStoreId ? `&store_id=${encodeURIComponent(defaultStoreId)}` : ''}`);
   state.weeklyWeekStart = data.week_start || weekStart;
   const storeOptions = state.boot.stores.map(s => `<option value="${s.id}" ${Number(s.id) === Number(data.store_id) ? 'selected' : ''}>${esc(s.name)}</option>`).join('');
-  const storeFilter = state.user.role === 'admin' ? `<div class="field"><label>Cửa hàng</label><select class="input" id="weeklyStoreFilter">${storeOptions}</select></div>` : '';
+  const storeFilter = isAllStoreUser() ? `<div class="field"><label>Cửa hàng</label><select class="input" id="weeklyStoreFilter">${storeOptions}</select></div>` : '';
   const t = data.totals || {};
-  const kpis = `<section class="grid four dash-kpis weekly-kpis"><div class="card kpi weekly-kpi weekly-revenue"><div class="label">Doanh thu tuần</div><div class="num">${money(t.revenue || 0)}đ</div><div class="hint">Target tuần: ${money(t.target_revenue || 0)}đ • ${percentBadge(t.achievement_percent || 0)}</div></div><div class="card kpi weekly-kpi weekly-bill"><div class="label">Bill / Món</div><div class="num">${money(t.bill_count || 0)} / ${money(t.item_count || 0)}</div><div class="hint">Tổng toàn cửa hàng</div></div><div class="card kpi weekly-kpi weekly-upt"><div class="label">UPT</div><div class="num">${fmt2(t.upt || 0)}</div><div class="hint">Số món / bill</div></div><div class="card kpi weekly-kpi weekly-atv"><div class="label">ATV</div><div class="num">${money(t.atv || 0)}đ</div><div class="hint">Doanh thu / bill</div></div><div class="card kpi weekly-kpi weekly-asp"><div class="label">ASP</div><div class="num">${money(t.asp || 0)}đ</div><div class="hint">Doanh thu / số món</div></div><div class="card kpi weekly-kpi weekly-cr"><div class="label">CR</div><div class="num">${fmt2(t.cr || 0)}%</div><div class="hint">Bill / lượt khách</div></div><div class="card kpi weekly-kpi weekly-customer"><div class="label">Lượt khách</div><div class="num">${money(t.customer_count || 0)}</div><div class="hint">Theo tổng cửa hàng</div></div></section>`;
+  const kpis = `<section class="grid four dash-kpis weekly-kpis"><div class="card kpi weekly-kpi weekly-revenue"><div class="label">Doanh thu tuần</div><div class="num">${money(t.revenue || 0)}đ</div><div class="hint">Target tuần: ${money(t.target_revenue || 0)}đ • ${percentBadge(t.achievement_percent || 0)}</div></div><div class="card kpi weekly-kpi weekly-bill"><div class="label">Bill / Món</div><div class="num">${money(t.bill_count || 0)} / ${money(t.item_count || 0)}</div><div class="hint">Tổng toàn cửa hàng</div></div><div class="card kpi weekly-kpi weekly-upt"><div class="label">UPT</div><div class="num">${fmt2(t.upt || 0)}</div><div class="hint">Số món / bill</div></div><div class="card kpi weekly-kpi weekly-atv"><div class="label">ATV</div><div class="num">${money(t.atv || 0)}đ</div><div class="hint">Doanh thu / bill</div></div><div class="card kpi weekly-kpi weekly-asp"><div class="label">ASP</div><div class="num">${money(t.asp || 0)}đ</div><div class="hint">Doanh thu / số món</div></div><div class="card kpi weekly-kpi weekly-cr"><div class="label">CR</div><div class="num">${fmt2(t.cr || 0)}%</div><div class="hint">Bill / lượt khách</div></div><div class="card kpi weekly-kpi weekly-customer"><div class="label">Khách mới / cũ</div><div class="num">${money(t.customer_new_count || 0)} / ${money(t.customer_old_count || 0)}</div><div class="hint">Theo TF cửa hàng</div></div><div class="card kpi weekly-kpi weekly-customer"><div class="label">Lượt khách tổng</div><div class="num">${money(t.customer_count || 0)}</div><div class="hint">Khách mới + khách cũ</div></div></section>`;
   const feedback = data.feedback || {};
   const hasWeeklyExtra = !!((feedback.top_products || data.top_products || []).length || (feedback.promotions || data.promotions || []).length);
   const hasFeedback = !!(feedback.id || feedback.feedback || feedback.issues || feedback.action_plan || feedback.note || hasWeeklyExtra);
@@ -965,7 +1044,7 @@ async function renderWeeklyReport() {
   const weeklyPromotions = feedback.promotions || data.promotions || [];
   const feedbackView = `<div class="card weekly-feedback-card" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">Feedback tuần</h3>${canEditFeedback ? `<button class="btn secondary" id="weeklyEditFeedbackBtn">Sửa feedback</button>` : ''}</div>${hasFeedback ? `<div class="weekly-feedback-view"><div class="weekly-feedback-block"><b>Nhận xét tuần</b><div class="weekly-feedback-content">${esc(feedback.feedback || 'Chưa nhập')}</div></div><div class="weekly-feedback-block"><b>Vấn đề phát sinh</b><div class="weekly-feedback-content">${esc(feedback.issues || 'Chưa nhập')}</div></div><div class="weekly-feedback-block"><b>Việc cần làm tuần tới</b><div class="weekly-feedback-content">${esc(feedback.action_plan || 'Chưa nhập')}</div></div><div class="weekly-feedback-block"><b>Ghi chú</b><div class="weekly-feedback-content">${esc(feedback.note || 'Chưa nhập')}</div></div></div>` : '<div class="empty">Chưa lưu feedback tuần này</div>'}</div>
     <section class="grid two weekly-extra-grid" style="margin-top:16px"><div class="card"><h3>Top 5 sản phẩm bán chạy</h3>${tableWeeklyProducts(weeklyProducts)}</div><div class="card"><h3>Tổng hợp bill CTKM</h3>${tableWeeklyPromotions(weeklyPromotions)}</div></section>`;
-  const feedbackForm = canEditFeedback ? `<div class="card" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">${hasFeedback ? 'Sửa báo cáo tuần' : 'Nhập báo cáo tuần'}</h3>${hasFeedback ? '<button type="button" class="btn secondary" id="weeklyCancelFeedbackBtn">Hủy sửa</button>' : ''}</div><form id="weeklyFeedbackForm" class="grid two"><input type="hidden" name="store_id" value="${esc(data.store_id)}"><input type="hidden" name="week_start" value="${esc(data.week_start)}"><div class="field" style="grid-column:1/-1"><label>Nhận xét/feedback tuần này</label><textarea name="feedback" data-auto-resize placeholder="VD: TF tăng cuối tuần, khách hỏi nhiều size L/XL...">${esc(feedback.feedback || '')}</textarea></div><div class="field"><label>Vấn đề phát sinh</label><textarea name="issues" data-auto-resize placeholder="VD: Thiếu size, khách chê chất liệu, nhân sự thiếu ca...">${esc(feedback.issues || '')}</textarea></div><div class="field"><label>Việc cần làm tuần tới</label><textarea name="action_plan" data-auto-resize placeholder="VD: Đẩy combo, bổ sung hàng, đào tạo lại UPT...">${esc(feedback.action_plan || '')}</textarea></div><div class="field" style="grid-column:1/-1"><label>Ghi chú thêm</label><textarea name="note" data-auto-resize>${esc(feedback.note || '')}</textarea></div><div class="field" style="grid-column:1/-1"><label>Top 5 sản phẩm bán chạy</label><div class="table-wrap"><table class="weekly-extra-input-table"><thead><tr><th>Top</th><th>Sản phẩm</th><th>SKU</th><th>Số lượng</th><th>Số bill</th><th>Ghi chú</th></tr></thead><tbody>${weeklyProductInputRows(weeklyProducts)}</tbody></table></div></div><div class="field" style="grid-column:1/-1"><label>Bill chạy CTKM</label><div class="row" style="margin-bottom:8px"><button type="button" class="btn secondary small" id="weeklyAddPromoBtn">Thêm CTKM</button><span class="hint">VD: Mua 3 giảm 5%, Mua 5 giảm 10%</span></div><div class="table-wrap"><table class="weekly-extra-input-table"><thead><tr><th>Tên CTKM</th><th>Số bill tham gia</th><th>Ghi chú</th></tr></thead><tbody id="weeklyPromoRows">${weeklyPromotionInputRows(weeklyPromotions)}</tbody></table></div></div><div style="grid-column:1/-1"><button class="btn">Lưu báo cáo tuần</button></div></form></div>` : '';
+  const feedbackForm = canEditFeedback ? `<div class="card" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">${hasFeedback ? 'Sửa báo cáo tuần' : 'Nhập báo cáo tuần'}</h3>${hasFeedback ? '<button type="button" class="btn secondary" id="weeklyCancelFeedbackBtn">Hủy sửa</button>' : ''}</div><form id="weeklyFeedbackForm" class="grid two"><input type="hidden" name="store_id" value="${esc(data.store_id)}"><input type="hidden" name="week_start" value="${esc(data.week_start)}"><div class="field" style="grid-column:1/-1"><label>Nhận xét/feedback tuần này</label><textarea name="feedback" data-auto-resize placeholder="VD: TF tăng cuối tuần, khách hỏi nhiều size L/XL...">${esc(feedback.feedback || '')}</textarea></div><div class="field"><label>Vấn đề phát sinh</label><textarea name="issues" data-auto-resize placeholder="VD: Thiếu size, khách chê chất liệu, nhân sự thiếu ca...">${esc(feedback.issues || '')}</textarea></div><div class="field"><label>Việc cần làm tuần tới</label><textarea name="action_plan" data-auto-resize placeholder="VD: Đẩy combo, bổ sung hàng, đào tạo lại UPT...">${esc(feedback.action_plan || '')}</textarea></div><div class="field" style="grid-column:1/-1"><label>Ghi chú thêm</label><textarea name="note" data-auto-resize>${esc(feedback.note || '')}</textarea></div><div class="field" style="grid-column:1/-1"><label>Top 5 sản phẩm bán chạy</label><div class="table-wrap"><table class="weekly-extra-input-table"><thead><tr><th>Top</th><th>Sản phẩm</th><th>Số món</th><th>Ghi chú</th></tr></thead><tbody>${weeklyProductInputRows(weeklyProducts)}</tbody></table></div></div><div class="field" style="grid-column:1/-1"><label>Bill chạy CTKM</label><div class="row" style="margin-bottom:8px"><button type="button" class="btn secondary small" id="weeklyAddPromoBtn">Thêm CTKM</button><span class="hint">VD: Mua 3 giảm 5%, Mua 5 giảm 10%</span></div><div class="table-wrap"><table class="weekly-extra-input-table"><thead><tr><th>Tên CTKM</th><th>Số bill tham gia</th><th>Ghi chú</th></tr></thead><tbody id="weeklyPromoRows">${weeklyPromotionInputRows(weeklyPromotions)}</tbody></table></div></div><div style="grid-column:1/-1"><button class="btn">Lưu báo cáo tuần</button></div></form></div>` : '';
   const feedbackSection = canEditFeedback && (state.weeklyEditMode || !hasFeedback) ? feedbackForm : feedbackView;
   shell(`<div class="card"><div class="toolbar"><div class="field"><label>Chọn ngày trong tuần</label><input class="input" id="weeklyDateFilter" type="date" value="${esc(data.week_start)}"></div>${storeFilter}<div class="field"><label>Tuần đang xem</label><div class="input readonly">${dOnly(data.week_start)} - ${dOnly(data.week_end)}</div></div><div style="align-self:end">${can('can_export') ? '<button class="btn secondary" id="weeklyExportBtn">Tải CSV báo cáo tuần</button>' : ''}</div></div><p class="hint">Chọn bất kỳ ngày trong tuần, hệ thống tự gom từ T2 đến CN. Lưu báo cáo xong sẽ hiện dạng bảng, bấm Sửa feedback để chỉnh lại.</p></div>${kpis}<section class="grid two" style="margin-top:16px"><div class="card"><h3>Doanh thu theo ngày</h3>${tableWeeklyDays(data.days || [])}</div><div class="card"><h3>Doanh thu cá nhân</h3>${tableWeeklyEmployees(data.employees || [])}</div></section>${feedbackSection}`, 'Báo cáo tuần', `Tổng hợp tuần ${dOnly(data.week_start)} - ${dOnly(data.week_end)}`);
   setupAutoResizeTextareas($('#weeklyFeedbackForm'));
@@ -990,11 +1069,11 @@ async function renderWeeklyReport() {
     const payload = Object.fromEntries(new FormData(e.target));
     payload.top_products = $$('.weekly-product-row', e.target).map(row => ({
       name: $('.weekly-product-name', row)?.value || '',
-      sku: $('.weekly-product-sku', row)?.value || '',
+      sku: '',
       quantity: cleanNumberInput($('.weekly-product-qty', row)?.value),
-      bill_count: cleanNumberInput($('.weekly-product-bill', row)?.value),
+      bill_count: 0,
       note: $('.weekly-product-note', row)?.value || ''
-    })).filter(x => x.name || x.sku || cleanNumberInput(x.quantity) || cleanNumberInput(x.bill_count)).slice(0,5);
+    })).filter(x => x.name || cleanNumberInput(x.quantity)).slice(0,5);
     payload.promotions = $$('.weekly-promo-row', e.target).map(row => ({
       name: $('.weekly-promo-name', row)?.value || '',
       bill_count: cleanNumberInput($('.weekly-promo-bill', row)?.value),
@@ -1013,7 +1092,7 @@ async function renderTasks() {
   }
   const shifts = shiftData.shifts || [];
   const userStoreIds = Array.isArray(state.user.store_ids) && state.user.store_ids.length ? state.user.store_ids.map(Number) : (state.user.store_id ? [Number(state.user.store_id)] : []);
-  const allowedStores = state.user.role === 'admin' ? state.boot.stores : state.boot.stores.filter(s => userStoreIds.includes(Number(s.id)));
+  const allowedStores = isAllStoreUser() ? state.boot.stores : state.boot.stores.filter(s => userStoreIds.includes(Number(s.id)));
   const storeId = allowedStores[0]?.id || state.user.store_id || state.boot.stores[0]?.id || '';
   const storeOptions = allowedStores.map(s => `<option value="${s.id}" ${Number(s.id) === Number(storeId) ? 'selected' : ''}>${esc(s.name)}</option>`).join('');
   const shiftOptions = shifts.map(sh => `<option value="${sh.id}">${esc(sh.code || sh.name)} • ${esc(sh.start_time || '')}-${esc(sh.end_time || '')}</option>`).join('');
@@ -1160,7 +1239,7 @@ async function renderViolations() {
   const form = can('can_manage_violations') ? `
     <div class="card"><h3>Ghi nhận vi phạm</h3>
       <form id="violationForm" class="grid two" enctype="multipart/form-data">
-        <div class="field"><label>Nhân viên</label><select name="user_id" required>${usersInStore(state.user.role === 'admin' ? '' : state.user.store_id).map(u => `<option value="${u.id}">${esc(u.full_name)} - ${esc(u.store_name || '')}</option>`).join('')}</select></div>
+        <div class="field"><label>Nhân viên</label><select name="user_id" required>${usersInStore(isAllStoreUser() ? '' : state.user.store_id).map(u => `<option value="${u.id}">${esc(u.full_name)} - ${esc(u.store_name || '')}</option>`).join('')}</select></div>
         <div class="field"><label>Loại vi phạm</label><input class="input" name="violation_type" placeholder="VD: Quy trình thu ngân / Grooming / Hàng hóa" required></div>
         <div class="field"><label>Điểm trừ</label><input class="input" type="number" name="points_deducted" value="5" min="0" max="100"></div>
         <div class="field"><label>Ảnh/chứng từ dưới 12MB</label><input class="input" type="file" name="evidence" accept="image/*,.pdf,.xlsx,.docx" multiple></div>
@@ -1223,7 +1302,7 @@ async function renderAssessmentDetail(id) {
 function checklistForm(t) {
   const sections = t.sections || [];
   const storeOptions = state.boot.stores.map(s => `<option value="${s.id}" ${Number(s.id) === Number(state.user.store_id) ? 'selected' : ''}>${esc(s.name)}</option>`).join('');
-  const target = t.target_type === 'employee' ? `<div class="field"><label>Đại sứ kinh doanh</label><select name="employee_id" id="checkEmployee" required>${usersInStore(state.user.role === 'admin' ? '' : state.user.store_id).map(u => `<option value="${u.id}">${esc(u.full_name)} - ${esc(u.store_name || '')}</option>`).join('')}</select></div>` : '';
+  const target = t.target_type === 'employee' ? `<div class="field"><label>Đại sứ kinh doanh</label><select name="employee_id" id="checkEmployee" required>${usersInStore(isAllStoreUser() ? '' : state.user.store_id).map(u => `<option value="${u.id}">${esc(u.full_name)} - ${esc(u.store_name || '')}</option>`).join('')}</select></div>` : '';
   const sectionHtml = sections.map(sec => {
     const items = t.items.filter(i => i.section_id === sec.id);
     if (!items.length) return '';
@@ -1231,7 +1310,7 @@ function checklistForm(t) {
   }).join('');
   return `<form id="checklistForm" data-template="${t.id}">
     <div class="grid three">
-      <div class="field"><label>Cửa hàng</label><select name="store_id" id="checkStore" ${state.user.role !== 'admin' ? 'disabled' : ''}>${storeOptions}</select></div>
+      <div class="field"><label>Cửa hàng</label><select name="store_id" id="checkStore" ${!isAllStoreUser() ? 'disabled' : ''}>${storeOptions}</select></div>
       ${target}
       <div class="field"><label>Ngày chấm</label><input class="input" type="datetime-local" name="assessed_at" value="${new Date().toISOString().slice(0,16)}"></div>
     </div>
@@ -1251,7 +1330,7 @@ async function submitChecklist(e) {
   t.items.forEach(i => scores[i.id] = { score: Number(fd.get(`score_${i.id}`) || 0), note: fd.get(`note_${i.id}`) || '' });
   const payload = {
     template_id: t.id,
-    store_id: state.user.role === 'admin' ? fd.get('store_id') : state.user.store_id,
+    store_id: isAllStoreUser() ? fd.get('store_id') : state.user.store_id,
     employee_id: fd.get('employee_id') || null,
     assessed_at: fd.get('assessed_at'),
     general_note: fd.get('general_note'),
@@ -1263,26 +1342,26 @@ async function submitChecklist(e) {
 async function renderSales() {
   const currentMonth = state.salesMonth || new Date().toISOString().slice(0,7);
   state.salesMonth = currentMonth;
-  const defaultStoreId = state.user.role === 'admin' ? (state.salesStoreId || state.boot.stores[0]?.id || '') : state.user.store_id;
+  const defaultStoreId = isAllStoreUser() ? (state.salesStoreId || state.boot.stores[0]?.id || '') : state.user.store_id;
   state.salesStoreId = defaultStoreId;
   const [data, summary] = await Promise.all([
     api(`/api/sales/leaderboard?period=${state.leaderboardPeriod}&date=${currentMonth}-15${defaultStoreId ? `&store_id=${defaultStoreId}` : ''}`),
     api(`/api/sales/store-summary?month=${currentMonth}${defaultStoreId ? `&store_id=${defaultStoreId}` : ''}`).catch(() => null)
   ]);
-  const storeIdForForms = state.user.role === 'admin' ? defaultStoreId : state.user.store_id;
+  const storeIdForForms = isAllStoreUser() ? defaultStoreId : state.user.store_id;
   const salesStaff = salesStaffInStore(storeIdForForms);
   const employeesOptions = salesStaff.map(u => `<option value="${u.id}">${esc(u.full_name)} - ${esc(u.store_name || '')}</option>`).join('');
   const targetEmployeeChecks = salesStaff.map(u => `<label class="target-employee-check"><input type="checkbox" name="user_ids" value="${u.id}"><span><b>${esc(u.full_name)}</b><small>${esc(u.store_name || '')}</small></span></label>`).join('') || '<div class="empty">Chưa có nhân viên bán hàng trong cửa hàng này</div>';
   const storeOptions = state.boot.stores.map(s => `<option value="${s.id}" ${Number(s.id) === Number(defaultStoreId) ? 'selected' : ''}>${esc(s.name)}</option>`).join('');
-  const storeSelect = state.user.role === 'admin' ? `<div class="field"><label>Cửa hàng</label><select class="input" id="salesStoreFilter" name="store_id">${storeOptions}</select></div>` : `<input type="hidden" name="store_id" value="${esc(state.user.store_id)}">`;
-  const storeSelectTarget = state.user.role === 'admin' ? `<div class="field"><label>Cửa hàng</label><select class="input" id="dailyTargetStoreFilter" name="store_id">${storeOptions}</select></div>` : `<input type="hidden" name="store_id" value="${esc(state.user.store_id)}">`;
+  const storeSelect = isAllStoreUser() ? `<div class="field"><label>Cửa hàng</label><select class="input" id="salesStoreFilter" name="store_id">${storeOptions}</select></div>` : `<input type="hidden" name="store_id" value="${esc(state.user.store_id)}">`;
+  const storeSelectTarget = isAllStoreUser() ? `<div class="field"><label>Cửa hàng</label><select class="input" id="dailyTargetStoreFilter" name="store_id">${storeOptions}</select></div>` : `<input type="hidden" name="store_id" value="${esc(state.user.store_id)}">`;
   const targetForm = can('can_set_sales_targets') ? `<div class="card"><h3>Set target đầu tháng nhiều nhân viên</h3><p class="hint">Có thể chọn một hoặc nhiều nhân viên cùng lúc để set chung target tháng. Nếu nhân viên đã có target tháng này, hệ thống sẽ cập nhật lại thay vì tạo trùng.</p><form id="targetForm" class="grid four"><div class="field target-employee-field" style="grid-column:1/-1"><label>Chọn nhân viên bán hàng</label><div class="row target-multi-actions"><button type="button" class="btn secondary small" id="targetSelectAllBtn">Chọn tất cả</button><button type="button" class="btn ghost small" id="targetClearAllBtn">Bỏ chọn</button><span class="hint">Chọn nhiều nhân viên để lưu target nhanh trong 1 lần.</span></div><div class="target-employee-grid">${targetEmployeeChecks}</div></div><div class="field"><label>Tháng target</label><input class="input" type="month" name="target_month" value="${currentMonth}" required></div><div class="field"><label>Target doanh thu tháng</label><input class="input" type="text" inputmode="numeric" data-number-format name="target_revenue" required placeholder="VD: 80.000.000"></div><div class="field"><label>Target UPT</label><input class="input" type="number" step="0.01" name="target_upt" min="0" placeholder="VD: 2.50"></div><div class="field"><label>Target ATV</label><input class="input" type="text" inputmode="numeric" data-number-format name="target_atv" placeholder="VD: 1.500.000"></div><div class="field"><label>Target CR %</label><input class="input" type="number" step="0.01" name="target_cr" min="0" placeholder="VD: 35"></div><div class="field" style="grid-column:span 2"><label>Ghi chú target</label><input class="input" name="note" placeholder="VD: Target tháng 7 / target điều chỉnh"></div><div class="field" style="align-self:end"><button class="btn">Lưu target đã chọn</button></div></form></div>` : '';
   const todayIso = new Date().toISOString().slice(0,10);
   const dailyTargetForm = can('can_set_sales_targets') ? `<div class="card" style="margin-top:16px"><h3>Set target doanh thu theo ngày - tổng cửa hàng</h3><p class="hint">Chọn từng ngày muốn set target, có thể chọn nhiều ngày không liền nhau. UPT / ATV / CR tự lấy theo target tháng, không cần set riêng từng ngày.</p><form id="dailyTargetForm" class="grid four daily-target-pick-form">${storeSelectTarget}<div class="field" style="grid-column:span 2"><label>Chọn ngày cần set</label><div class="row daily-date-add-row"><input class="input" type="date" id="dailyTargetDatePicker" value="${todayIso}"><button type="button" class="btn secondary" id="dailyTargetAddDateBtn">Thêm ngày</button></div></div><div class="field"><label>Target doanh thu/ngày</label><input class="input" type="text" inputmode="numeric" data-number-format name="target_revenue" required placeholder="VD: 10.000.000"></div><div class="field" style="grid-column:1/-1"><label>Ngày đã chọn</label><div class="row daily-target-actions"><button type="button" class="btn secondary small" id="dailyTargetAddTodayBtn">Thêm hôm nay</button><button type="button" class="btn ghost small" id="dailyTargetClearDatesBtn">Xóa chọn</button><span class="hint">Bấm Thêm ngày nhiều lần để chọn các ngày rời rạc.</span></div><div id="dailyTargetDateList" class="daily-date-list"></div></div><div class="field" style="grid-column:span 3"><label>Ghi chú target ngày</label><input class="input" name="note" placeholder="VD: Target cuối tuần / ngày sale"></div><div class="field" style="align-self:end"><button class="btn">Lưu target ngày đã chọn</button></div></form></div>` : '';
   const rowsInputs = salesStaff.map(u => `<tr data-user="${u.id}"><td><b>${esc(u.full_name)}</b><div class="hint">${esc(u.store_name || '')}</div></td><td><input class="input" name="revenue_${u.id}" type="text" inputmode="numeric" data-number-format value="0"></td><td><input class="input" name="bill_${u.id}" type="text" inputmode="numeric" data-number-format value="0"></td><td><input class="input" name="item_${u.id}" type="text" inputmode="numeric" data-number-format value="0"></td><td><input class="input" name="note_${u.id}" placeholder="Ghi chú NV"></td></tr>`).join('') || '<tr><td colspan="5"><div class="empty">Chưa có nhân viên bán hàng trong cửa hàng này</div></td></tr>';
-  const salesForm = canAny('can_manage_total_sales','can_manage_sales') ? `<div class="card" style="margin-top:16px"><h3>Nhập doanh thu từng ngày</h3><p class="hint">Mỗi ngày cửa hàng nhập doanh thu từng nhân viên: doanh thu, số bill, số món. Lượt khách nhập 1 lần theo tổng cửa hàng. Nếu nhập lại cùng ngày, hệ thống sẽ cập nhật thay vì cộng trùng.</p><form id="dailySalesForm"><div class="grid four">${storeSelect}<div class="field"><label>Ngày bán</label><input class="input" type="date" name="sale_date" value="${new Date().toISOString().slice(0,10)}" required></div><div class="field"><label>Lượt khách tổng cửa hàng</label><input class="input" type="text" inputmode="numeric" data-number-format name="customer_count" value="0"></div><div class="field"><label>Ghi chú cửa hàng</label><input class="input" name="note" placeholder="VD: Cuối ngày / ca tối"></div></div><div class="table-wrap revenue-sticky-name" style="margin-top:12px"><table><thead><tr><th>Nhân viên</th><th>Doanh thu</th><th>Số bill</th><th>Số món</th><th>Ghi chú</th></tr></thead><tbody>${rowsInputs}</tbody></table></div><div style="margin-top:12px"><button class="btn">Lưu doanh thu ngày</button></div></form></div>` : '';
+  const salesForm = canAny('can_manage_total_sales','can_manage_sales') ? `<div class="card" style="margin-top:16px"><h3>Nhập doanh thu từng ngày</h3><p class="hint">Mỗi ngày cửa hàng nhập doanh thu từng nhân viên: doanh thu, số bill, số món. TF nhập theo khách mới/khách cũ, hệ thống tự cộng lượt khách tổng. Nếu nhập lại cùng ngày, hệ thống sẽ cập nhật thay vì cộng trùng.</p><form id="dailySalesForm"><div class="grid four">${storeSelect}<div class="field"><label>Ngày bán</label><input class="input" type="date" name="sale_date" value="${new Date().toISOString().slice(0,10)}" required></div><div class="field"><label>Khách mới</label><input class="input" type="text" inputmode="numeric" data-number-format name="customer_new_count" value="0"></div><div class="field"><label>Khách cũ</label><input class="input" type="text" inputmode="numeric" data-number-format name="customer_old_count" value="0"></div><div class="field"><label>Lượt khách tổng</label><input class="input readonly" type="text" inputmode="numeric" data-number-format name="customer_count" value="0" readonly></div><div class="field"><label>Ghi chú cửa hàng</label><input class="input" name="note" placeholder="VD: Cuối ngày / ca tối"></div></div><div class="table-wrap revenue-sticky-name" style="margin-top:12px"><table><thead><tr><th>Nhân viên</th><th>Doanh thu</th><th>Số bill</th><th>Số món</th><th>Ghi chú</th></tr></thead><tbody>${rowsInputs}</tbody></table></div><div style="margin-top:12px"><button class="btn">Lưu doanh thu ngày</button></div></form></div>` : '';
   const tabs = `<div class="pillbar"><button data-period="month" class="${state.leaderboardPeriod === 'month' ? 'active' : ''}">Tháng</button><button data-period="quarter" class="${state.leaderboardPeriod === 'quarter' ? 'active' : ''}">Quý</button><button data-period="year" class="${state.leaderboardPeriod === 'year' ? 'active' : ''}">Năm</button></div>`;
-  const monthFilter = `<div class="toolbar" style="margin-bottom:12px"><div class="field"><label>Tháng xem tổng hợp</label><input class="input" id="salesMonthFilter" type="month" value="${currentMonth}"></div>${state.user.role === 'admin' ? `<div class="field"><label>Cửa hàng xem tổng</label><select class="input" id="salesStoreSummaryFilter">${storeOptions}</select></div>` : ''}</div>`;
+  const monthFilter = `<div class="toolbar" style="margin-bottom:12px"><div class="field"><label>Tháng xem tổng hợp</label><input class="input" id="salesMonthFilter" type="month" value="${currentMonth}"></div>${isAllStoreUser() ? `<div class="field"><label>Cửa hàng xem tổng</label><select class="input" id="salesStoreSummaryFilter">${storeOptions}</select></div>` : ''}</div>`;
   const summaryBlock = summary ? `<div class="card" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">Tổng hợp doanh thu tháng ${esc(summary.month)} - ${esc(summary.store_name)}</h3></div><p class="hint">Bảng này cộng từng ngày đã nhập để theo dõi doanh thu ngày; UPT, ATV, ASP, CR mặc định so với target tháng. Timeline dự kiến tính theo tốc độ doanh thu hiện tại và số ngày còn lại trong kỳ.</p>${tableStoreSalesSummary(summary)}</div>` : '<div class="card" style="margin-top:16px"><h3>Tổng hợp doanh thu cửa hàng</h3><div class="empty">Tài khoản này chưa được cấp quyền xem tổng doanh thu cửa hàng</div></div>';
   shell(`${targetForm}${dailyTargetForm}${salesForm}<div class="card" style="margin-top:16px">${monthFilter}<div class="toolbar"><h3 style="margin-right:auto">Bảng doanh thu thực đạt ${state.leaderboardPeriod === 'month' ? 'tháng' : state.leaderboardPeriod === 'quarter' ? 'quý' : 'năm'}</h3>${tabs}${can('can_export') ? '<button class="btn secondary" data-export="sales">Tải CSV doanh thu</button>' : ''}</div><p class="hint">Mục Doanh thu được phép xem doanh thu thực đạt. Riêng màn Tổng quan chỉ hiển thị % đạt target, không hiển thị số tiền bán.</p>${tableLeaderboard(data.leaderboard, true)}</div>${summaryBlock}`, 'Doanh thu', 'Nhập doanh thu ngày, target cá nhân, target ngày và tổng hợp target cửa hàng');
   $$('.pillbar button').forEach(b => b.onclick = () => { state.leaderboardPeriod = b.dataset.period; renderSales(); });
@@ -1337,6 +1416,7 @@ async function renderSales() {
       renderSales();
     } catch (err) { toast(err.message, 'danger'); }
   });
+  attachCustomerTotalSync($('#dailySalesForm'));
   $('#dailySalesForm')?.addEventListener('submit', async e => {
     e.preventDefault();
     const fd = new FormData(e.target);
@@ -1344,7 +1424,7 @@ async function renderSales() {
       const uid = tr.dataset.user;
       return { user_id: uid, revenue: cleanNumberInput(fd.get(`revenue_${uid}`)), bill_count: cleanNumberInput(fd.get(`bill_${uid}`)), item_count: cleanNumberInput(fd.get(`item_${uid}`)), note: fd.get(`note_${uid}`) || '' };
     });
-    const payload = { store_id: fd.get('store_id') || state.user.store_id, sale_date: fd.get('sale_date'), customer_count: cleanNumberInput(fd.get('customer_count')), note: fd.get('note') || '', entries };
+    const payload = { store_id: fd.get('store_id') || state.user.store_id, sale_date: fd.get('sale_date'), customer_new_count: cleanNumberInput(fd.get('customer_new_count')), customer_old_count: cleanNumberInput(fd.get('customer_old_count')), customer_count: cleanNumberInput(fd.get('customer_count')), note: fd.get('note') || '', entries };
     try { await api('/api/sales/daily', { method: 'POST', body: JSON.stringify(payload) }); toast('Đã lưu doanh thu ngày'); renderSales(); } catch (err) { toast(err.message, 'danger'); }
   });
 }
@@ -1528,7 +1608,7 @@ async function deleteOrderIds(ids) {
 
 
 async function renderOnlineOrders() {
-  const allScope = state.user.role === 'admin' || (!state.user.store_id && (can('can_manage_online_orders') || can('can_view_online_orders')));
+  const allScope = isAllStoreUser() || (!state.user.store_id && (can('can_manage_online_orders') || can('can_view_online_orders')));
   const defaultStoreId = allScope ? (state.onlineOrderStoreId || state.boot.stores[0]?.id || '') : (state.user.store_id || '');
   state.onlineOrderStoreId = defaultStoreId;
   const month = state.onlineOrderMonth || new Date().toISOString().slice(0, 7);
@@ -1574,7 +1654,7 @@ async function renderOnlineOrders() {
 }
 
 async function renderOrders() {
-  const allScope = state.user.role === 'admin' || (!state.user.store_id && (can('can_manage_orders') || can('can_view_orders')));
+  const allScope = isAllStoreUser() || (!state.user.store_id && (can('can_manage_orders') || can('can_view_orders')));
   const defaultStoreId = allScope ? (state.orderStoreId || state.boot.stores[0]?.id || '') : (state.user.store_id || '');
   state.orderStoreId = defaultStoreId;
   const data = await api(`/api/orders${defaultStoreId ? `?store_id=${defaultStoreId}` : ''}`);
@@ -1629,7 +1709,7 @@ async function renderOrders() {
 
 
 async function renderProductFeedback() {
-  const allScope = state.user.role === 'admin' || (!state.user.store_id && (can('can_manage_product_feedback') || can('can_view_product_feedback')));
+  const allScope = isAllStoreUser() || (!state.user.store_id && (can('can_manage_product_feedback') || can('can_view_product_feedback')));
   const defaultStoreId = allScope ? (state.feedbackStoreId || state.boot.stores[0]?.id || '') : (state.user.store_id || '');
   state.feedbackStoreId = defaultStoreId;
   const month = state.feedbackMonth || new Date().toISOString().slice(0, 7);
@@ -1714,7 +1794,7 @@ async function renderProductFeedback() {
 }
 
 async function renderProductTraining() {
-  const allScope = state.user.role === 'admin' || (!state.user.store_id && (can('can_manage_product_training') || can('can_view_product_training')));
+  const allScope = isAllStoreUser() || (!state.user.store_id && (can('can_manage_product_training') || can('can_view_product_training')));
   const defaultStoreId = allScope ? (state.trainingStoreId || '') : (state.user.store_id || '');
   state.trainingStoreId = defaultStoreId;
   const data = await api(`/api/product-trainings${defaultStoreId ? `?store_id=${defaultStoreId}` : ''}`);
@@ -1827,7 +1907,7 @@ async function renderCdpOjti() {
   const posKey = state.cdpOjtiPosition;
   const pos = positions.find(p => p.key === posKey) || positions[0];
   const bucket = pos[type] || { sections: [], open_fields: [] };
-  const selectedStoreId = state.cdpOjtiStoreId || (state.user?.role === 'admin' ? (state.boot.stores[0]?.id || '') : (state.user?.store_id || ''));
+  const selectedStoreId = state.cdpOjtiStoreId || (isAllStoreUser() ? (state.boot.stores[0]?.id || '') : (state.user?.store_id || ''));
   const recordQuery = new URLSearchParams({ type, position_key: posKey });
   if (selectedStoreId) recordQuery.set('store_id', selectedStoreId);
   const recordData = await api(`/api/cdp-ojti-records?${recordQuery.toString()}`);
@@ -1938,7 +2018,7 @@ async function renderCdpOjti() {
       <div class="toolbar"><h3 style="margin-right:auto">${edit ? 'Sửa bản chấm CDP' : 'Tạo mới / chấm CDP'}</h3>${edit ? '<button class="btn secondary" id="cancelCdpEditBtn">Hủy sửa</button>' : ''}</div>
       <form id="cdpOjtiForm" class="grid three">
         <input type="hidden" name="id" value="${edit?.id || ''}"><input type="hidden" name="type" value="cdp"><input type="hidden" name="position_key" value="${esc(posKey)}"><input type="hidden" name="status_label" value="done">
-        <div class="field"><label>Cửa hàng</label><select name="store_id" id="cdpStoreSelect" ${state.user?.role !== 'admin' ? 'disabled' : ''}>${storeOptions}</select></div>
+        <div class="field"><label>Cửa hàng</label><select name="store_id" id="cdpStoreSelect" ${!isAllStoreUser() ? 'disabled' : ''}>${storeOptions}</select></div>
         <div class="field"><label>Vị trí</label><input class="input" value="${esc(pos.label)}" disabled></div>
         <div class="field"><label>Ngày chấm</label><input class="input" type="date" name="plan_date" value="${esc(edit?.plan_date || isoDateLocal(new Date()))}"></div>
         <div class="field"><label>Nhân sự được chấm</label><select name="trainee_id" required>${traineeOptions}</select><div class="hint">CDP là bản chấm năng lực, không tạo việc đào tạo.</div></div>
@@ -1969,7 +2049,7 @@ async function renderCdpOjti() {
       <div class="toolbar"><h3 style="margin-right:auto">${edit ? 'Sửa' : 'Tạo mới / Lưu'} OJTI theo file đào tạo</h3>${edit ? '<button class="btn secondary" id="cancelCdpEditBtn">Hủy sửa</button>' : ''}</div>
       <form id="cdpOjtiForm" class="grid three">
         <input type="hidden" name="id" value="${edit?.id || ''}"><input type="hidden" name="type" value="ojti"><input type="hidden" name="position_key" value="${esc(posKey)}">
-        <div class="field"><label>Cửa hàng</label><select name="store_id" id="cdpStoreSelect" ${state.user?.role !== 'admin' ? 'disabled' : ''}>${storeOptions}</select></div>
+        <div class="field"><label>Cửa hàng</label><select name="store_id" id="cdpStoreSelect" ${!isAllStoreUser() ? 'disabled' : ''}>${storeOptions}</select></div>
         <div class="field"><label>Vị trí</label><input class="input" value="${esc(pos.label)}" disabled></div>
         <div class="field"><label>Trạng thái</label><select name="status_label">${statusOptions}</select></div>
         <div class="field"><label>Nhân sự đào tạo</label><select name="trainee_id">${traineeOptions}</select><div class="hint">Chỉ chọn 1 nhân sự cho mỗi bản OJTI.</div></div>
@@ -2054,7 +2134,7 @@ async function renderSchedule() {
   const month = state.scheduleMonth || currentMonthLocal();
   const weeks = scheduleMonthWeeks(month);
   const firstWeek = weeks[0]?.week_start || mondayOf(`${month}-01`);
-  const storeId = state.user.role === 'admin' ? (state.scheduleStoreId || state.boot.stores[0]?.id || '') : state.user.store_id;
+  const storeId = isAllStoreUser() ? (state.scheduleStoreId || state.boot.stores[0]?.id || '') : state.user.store_id;
   const makeQuery = (weekStart) => {
     const q = new URLSearchParams({ week_start: weekStart });
     if (storeId) q.set('store_id', storeId);
@@ -2069,7 +2149,7 @@ async function renderSchedule() {
   const scheduleMap = new Map(allSchedules.map(x => [`${x.user_id}_${x.work_date}`, x]));
   const canManage = Number(base.can_manage) === 1 || can('can_manage_schedule');
   const isEditing = canManage && state.scheduleEditMode;
-  const storeSelect = state.user.role === 'admin'
+  const storeSelect = isAllStoreUser()
     ? `<div class="field"><label>Cửa hàng</label><select class="input" id="scheduleStoreFilter">${state.boot.stores.map(st => `<option value="${st.id}" ${Number(st.id) === Number(base.store_id) ? 'selected' : ''}>${esc(st.name)}</option>`).join('')}</select></div>`
     : `<div class="field"><label>Cửa hàng</label><input class="input" value="${esc(base.store_name || state.user.store_name || '')}" disabled></div>`;
   const actions = canManage
@@ -2164,7 +2244,7 @@ async function renderDocuments() {
       <form id="documentForm" class="grid three" enctype="multipart/form-data">
         <div class="field"><label>Tên tài liệu</label><input class="input" name="title" required placeholder="VD: Quy trình hủy đơn tại cửa hàng"></div>
         <div class="field"><label>Nhóm tài liệu</label><select class="input" name="category">${categoryOptions}</select></div>
-        <div class="field"><label>Áp dụng cho</label>${state.user.role === 'admin' ? `<select class="input" name="store_id">${storeOptions}</select>` : `<input type="hidden" name="store_id" value="${esc(state.user.store_id || '')}"><input class="input" value="${esc(state.user.store_name || '')}" disabled>`}</div>
+        <div class="field"><label>Áp dụng cho</label>${isAllStoreUser() ? `<select class="input" name="store_id">${storeOptions}</select>` : `<input type="hidden" name="store_id" value="${esc(state.user.store_id || '')}"><input class="input" value="${esc(state.user.store_name || '')}" disabled>`}</div>
         <div class="field"><label>Phiên bản / ngày hiệu lực</label><input class="input" name="version" placeholder="VD: V1 - 30/07/2026"></div>
         <div class="field"><label>File tài liệu dưới 12MB</label><input class="input" name="file" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.jpg,.jpeg,.png,.webp"><span class="hint">File nặng nên đưa lên Google Drive rồi dán link để không tốn kho lưu trữ.</span></div>
         <div class="field"><label>Hoặc link Google Drive</label><input class="input" name="external_url" placeholder="https://drive.google.com/..."></div>
@@ -2220,7 +2300,7 @@ async function renderDocuments() {
 
 async function renderBonuses() {
   const data = await api('/api/bonuses');
-  const bonusPeople = salesStaffInStore(state.user.role === 'admin' ? '' : state.user.store_id);
+  const bonusPeople = salesStaffInStore(isAllStoreUser() ? '' : state.user.store_id);
   const form = can('can_manage_bonuses') ? `<div class="card"><h3>Nhập tiền công/thưởng nhân viên</h3><p class="hint">Mỗi lần nhập thêm sẽ cộng vào tổng tiền công/thưởng của nhân viên. Bảng bên dưới hiển thị tổng theo nhân viên, không tách từng ngày.</p><form id="bonusForm" class="grid three"><div class="field"><label>Nhân viên</label><select name="user_id" required>${bonusPeople.map(u => `<option value="${u.id}">${esc(u.full_name)} - ${esc(u.store_name || '')}</option>`).join('')}</select></div><div class="field"><label>Ngày ghi nhận</label><input class="input" type="date" name="bonus_date" value="${new Date().toISOString().slice(0,10)}" required></div><div class="field"><label>Loại tiền công/thưởng</label><select name="bonus_type"><option value="Hotbill">Hotbill</option><option value="Thưởng tuần">Thưởng tuần</option><option value="Thưởng KPI">Thưởng KPI</option><option value="Thưởng khác">Thưởng khác</option></select></div><div class="field"><label>Số tiền cộng thêm</label><input class="input" type="text" inputmode="numeric" data-number-format name="amount" required placeholder="100.000"></div><div class="field" style="grid-column:span 2"><label>Ghi chú</label><input class="input" name="note" placeholder="VD: Hotbill / thưởng tuần W30"></div><div style="grid-column:1/-1"><button class="btn">Cộng tiền</button></div></form></div>` : '';
   const rows = data.summary || [];
   const list = rows.length ? `<div class="table-wrap"><table><thead><tr><th>Nhân viên</th><th>Cửa hàng</th><th>Tổng tiền công/thưởng</th><th>Hotbill</th><th>Thưởng tuần</th><th>Thưởng KPI</th><th>Khác</th><th>Số lần nhập</th><th>Cập nhật gần nhất</th><th>Ghi chú gần nhất</th></tr></thead><tbody>${rows.map(b => `<tr><td><b>${esc(b.employee_name)}</b></td><td>${esc(b.store_name || '')}</td><td><b>${money(b.total_amount)}đ</b></td><td>${money(b.hotbill_amount)}đ</td><td>${money(b.week_amount)}đ</td><td>${money(b.kpi_amount)}đ</td><td>${money(b.other_amount)}đ</td><td>${money(b.entries_count || 0)}</td><td>${dOnly(b.latest_date)}</td><td>${esc(b.latest_note || '')}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Chưa có dữ liệu tiền công/thưởng</div>';
@@ -2239,13 +2319,15 @@ async function renderReports() {
 async function renderAdmin() {
   const data = await api('/api/users');
   const permBoxes = Object.entries(PERM_LABELS).map(([key, label]) => `<label><input type="checkbox" name="${key}"> ${label}</label>`).join(' ');
-  const form = `<div class="card"><h3>Cấp tài khoản / phân quyền</h3><form id="userForm" class="grid three"><div class="field"><label>Họ tên</label><input class="input" name="full_name" required></div><div class="field"><label>Tài khoản</label><input class="input" name="username" required></div><div class="field"><label>Mật khẩu</label><input class="input" name="password" value="123456" required></div><div class="field"><label>Vai trò</label><select name="role"><option value="employee">Nhân viên</option><option value="manager">Quản lý</option><option value="admin">Admin</option></select></div><div class="field"><label>Cửa hàng áp dụng (chọn nhiều)</label><select name="store_ids" multiple size="5">${renderStoreMultiOptions([])}</select><div class="hint">Giữ Ctrl hoặc chọn nhiều trên máy tính. Trên điện thoại có thể chọn lần lượt.</div></div><div class="field"><label>Quyền mở rộng</label><div class="hint perm-check-grid">${permBoxes}</div></div><div style="grid-column:1/-1"><button class="btn">Tạo tài khoản</button></div></form></div>`;
+  const form = `<div class="card"><h3>Cấp tài khoản / phân quyền</h3><form id="userForm" class="grid three"><div class="field"><label>Họ tên</label><input class="input" name="full_name" required></div><div class="field"><label>Tài khoản</label><input class="input" name="username" required></div><div class="field"><label>Mật khẩu</label><input class="input" name="password" value="123456" required></div><div class="field"><label>Vai trò</label><select name="role"><option value="employee">Nhân viên</option><option value="manager">Quản lý</option><option value="office">Khối văn phòng</option><option value="admin">Admin</option></select></div><div class="field"><label>Cửa hàng áp dụng (chọn nhiều)</label><select name="store_ids" multiple size="5">${renderStoreMultiOptions([])}</select><div class="hint">Giữ Ctrl hoặc chọn nhiều trên máy tính. Trên điện thoại có thể chọn lần lượt.</div></div><div class="field"><label>Quyền mở rộng</label><div class="hint perm-check-grid">${permBoxes}</div></div><div style="grid-column:1/-1"><button class="btn">Tạo tài khoản</button></div></form></div>`;
   const editUser = data.users.find(u => Number(u.id) === Number(state.adminEditUserId));
   const editBoxes = editUser ? Object.entries(PERM_LABELS).map(([key, label]) => `<label><input type="checkbox" name="${key}" ${Number(editUser.permissions?.[key]) === 1 ? 'checked' : ''}> ${label}</label>`).join(' ') : '';
-  const editCard = editUser ? `<div class="card" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">Sửa quyền / thông tin tài khoản</h3><button class="btn secondary" id="cancelEditUserBtn">Đóng</button></div><form id="editUserForm" class="grid three"><input type="hidden" name="id" value="${editUser.id}"><div class="field"><label>Họ tên</label><input class="input" name="full_name" value="${esc(editUser.full_name)}" required></div><div class="field"><label>Vai trò</label><select name="role"><option value="employee" ${editUser.role === 'employee' ? 'selected' : ''}>Nhân viên</option><option value="manager" ${editUser.role === 'manager' ? 'selected' : ''}>Quản lý</option><option value="admin" ${editUser.role === 'admin' ? 'selected' : ''}>Admin</option></select></div><div class="field"><label>Cửa hàng áp dụng (chọn nhiều)</label><select name="store_ids" multiple size="5">${renderStoreMultiOptions(editUser.store_ids || (editUser.store_id ? [editUser.store_id] : []))}</select><div class="hint">Có thể cấp cùng lúc nhiều cửa hàng, ví dụ Quận 1 và Quận 7.</div></div><div class="field"><label>Reset mật khẩu (không bắt buộc)</label><input class="input" name="password" placeholder="Để trống nếu không đổi"></div><div class="field" style="grid-column:span 2"><label>Quyền chi tiết</label><div class="hint perm-check-grid">${editBoxes}</div></div><div style="grid-column:1/-1" class="row"><button class="btn">Lưu quyền</button><button class="btn secondary" type="button" id="cancelEditUserBtn2">Hủy</button></div></form></div>` : '';
+  const editCard = editUser ? `<div class="card" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">Sửa quyền / thông tin tài khoản</h3><button class="btn secondary" id="cancelEditUserBtn">Đóng</button></div><form id="editUserForm" class="grid three"><input type="hidden" name="id" value="${editUser.id}"><div class="field"><label>Họ tên</label><input class="input" name="full_name" value="${esc(editUser.full_name)}" required></div><div class="field"><label>Vai trò</label><select name="role"><option value="employee" ${editUser.role === 'employee' ? 'selected' : ''}>Nhân viên</option><option value="manager" ${editUser.role === 'manager' ? 'selected' : ''}>Quản lý</option><option value="office" ${editUser.role === 'office' ? 'selected' : ''}>Khối văn phòng</option><option value="admin" ${editUser.role === 'admin' ? 'selected' : ''}>Admin</option></select></div><div class="field"><label>Cửa hàng áp dụng (chọn nhiều)</label><select name="store_ids" multiple size="5">${renderStoreMultiOptions(editUser.store_ids || (editUser.store_id ? [editUser.store_id] : []))}</select><div class="hint">Có thể cấp cùng lúc nhiều cửa hàng, ví dụ Quận 1 và Quận 7.</div></div><div class="field"><label>Reset mật khẩu (không bắt buộc)</label><input class="input" name="password" placeholder="Để trống nếu không đổi"></div><div class="field" style="grid-column:span 2"><label>Quyền chi tiết</label><div class="hint perm-check-grid">${editBoxes}</div></div><div style="grid-column:1/-1" class="row"><button class="btn">Lưu quyền</button><button class="btn secondary" type="button" id="cancelEditUserBtn2">Hủy</button></div></form></div>` : '';
   const table = `<div class="table-wrap"><table><thead><tr><th>Họ tên</th><th>Tài khoản</th><th>Vai trò</th><th>Cửa hàng áp dụng</th><th>Trạng thái</th><th>Quyền</th><th>Thao tác</th></tr></thead><tbody>${data.users.map(u => { const hasView = Number(u.permissions.can_view_sales_target) === 1 && Number(u.permissions.can_view_store_sales_summary) === 1 && Number(u.permissions.can_view_bonuses) === 1; const hasTarget = Number(u.permissions.can_set_sales_targets) === 1; const action = Number(u.id) === Number(state.user.id) ? '<span class="hint">Tài khoản hiện tại</span>' : `<div class="row wrap"><button class="btn small secondary editUserBtn" data-id="${u.id}">Sửa quyền</button><button class="btn small secondary quickPermBtn" data-id="${u.id}" data-mode="${hasView ? 'revoke' : 'grant'}">${hasView ? 'Thu hồi xem %/thưởng' : 'Cấp xem %/thưởng'}</button><button class="btn small secondary quickTargetBtn" data-id="${u.id}" data-mode="${hasTarget ? 'revoke' : 'grant'}">${hasTarget ? 'Thu hồi set target' : 'Cấp set target'}</button><button class="btn small danger deleteUserBtn" data-id="${u.id}" data-name="${esc(u.full_name)}">Xóa</button></div>`; return `<tr><td><b>${esc(u.full_name)}</b></td><td>${esc(u.username)}</td><td>${roleLabel(u.role)}</td><td>${esc((u.store_names && u.store_names.length ? u.store_names.join(' • ') : (u.store_name || '')))}</td><td><span class="badge ok">Đang dùng</span></td><td>${Object.entries(PERM_LABELS).filter(([k]) => Number(u.permissions[k]) === 1).map(([,l]) => `<span class="badge">${esc(l)}</span>`).join(' ')}</td><td>${action}</td></tr>`; }).join('')}</tbody></table></div>`;
   const exports = `<div class="card" style="margin-top:16px"><h3>Tải dữ liệu</h3><div class="export-grid"><button class="btn secondary" data-export="tasks">Công việc</button><button class="btn secondary" data-export="violations">Vi phạm</button><button class="btn secondary" data-export="assessments">Checklist</button><button class="btn secondary" data-export="sales">Doanh thu cập nhật</button><button class="btn secondary" data-export="sales_targets">Target tháng</button><button class="btn secondary" data-export="sales_daily_targets">Target ngày</button><button class="btn secondary" data-export="bonuses">Tiền thưởng</button><button class="btn secondary" data-export="documents">Tài liệu</button><button class="btn secondary" data-export="orders">Order hàng</button><button class="btn secondary" data-export="online_orders">Đơn online</button><button class="btn secondary" data-export="product_feedback_summary">Tổng hợp đánh giá SP</button><button class="btn secondary" data-export="product_feedback">Chi tiết đánh giá SP</button><button class="btn secondary" data-export="product_collections">List BST/SKU</button><button class="btn secondary" data-export="product_trainings">Đào tạo SP</button><button class="btn secondary" data-export="product_training_attempts">Kết quả kiểm tra SP</button><button class="btn secondary" data-export="cdp_ojti">CDP/OJTI</button><button class="btn secondary" data-export="shifts">Ca làm</button><button class="btn secondary" data-export="work_schedules">Lịch làm việc</button><button class="btn secondary" data-export="performance">Tổng hợp điểm</button></div></div>`;
   shell(`${form}${editCard}<div class="card" style="margin-top:16px"><h3>Danh sách tài khoản</h3>${table}</div>${exports}`, 'Admin', 'Cấp quyền, phân quyền xem và tải dữ liệu');
+  const createUserForm = $('#userForm');
+  createUserForm?.querySelector('[name="role"]')?.addEventListener('change', () => applyRolePermissionPreset(createUserForm));
   $('#userForm')?.addEventListener('submit', async e => { e.preventDefault(); const fd = new FormData(e.target); const permissions = {}; Object.keys(PERM_LABELS).forEach(k => permissions[k] = fd.get(k) ? 1 : 0); const payload = { full_name: fd.get('full_name'), username: fd.get('username'), password: fd.get('password'), role: fd.get('role'), store_ids: selectedValues(e.target.querySelector('[name="store_ids"]')), permissions }; try { await api('/api/users', { method: 'POST', body: JSON.stringify(payload) }); toast('Đã tạo tài khoản'); await loadBase(); renderAdmin(); } catch (err) { toast(err.message, 'danger'); } });
   $$('.editUserBtn').forEach(btn => btn.addEventListener('click', () => { state.adminEditUserId = Number(btn.dataset.id); renderAdmin(); window.scrollTo({ top: 0, behavior: 'smooth' }); }));
   $('#cancelEditUserBtn')?.addEventListener('click', () => { state.adminEditUserId = null; renderAdmin(); });

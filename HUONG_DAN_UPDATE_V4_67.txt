@@ -1,0 +1,26 @@
+BẢN V4.67 - THÊM KHÁCH MỚI / KHÁCH CŨ TRONG TF
+
+Đã cập nhật:
+1. Phần nhập doanh thu ngày:
+   - Thêm ô Khách mới
+   - Thêm ô Khách cũ
+   - Lượt khách tổng tự cộng = Khách mới + Khách cũ
+
+2. Phần Báo cáo ngày:
+   - Thêm Khách mới / Khách cũ / Lượt khách tổng
+   - Tổng quan báo cáo ngày hiển thị đủ 3 chỉ số này
+   - CR tính theo Lượt khách tổng
+
+3. Phần Báo cáo tuần:
+   - Tổng hợp tuần có Khách mới / Khách cũ / Lượt khách tổng
+   - Bảng doanh thu theo ngày có đủ 3 cột này
+   - File CSV báo cáo tuần cũng có đủ dữ liệu
+
+4. Phần Doanh thu tổng hợp tháng:
+   - KPI tổng hợp có Khách mới / Khách cũ / Lượt khách tổng
+   - Bảng từng ngày trong tháng có đủ 3 cột này
+   - CR tính theo Lượt khách tổng
+
+Lưu ý:
+- Dữ liệu cũ vẫn dùng được. Nếu ngày cũ chỉ có Lượt khách tổng mà chưa tách khách mới/cũ, hệ thống vẫn giữ tổng cũ.
+- Từ bản này, cửa hàng nên nhập Khách mới và Khách cũ, không cần tự cộng tổng.

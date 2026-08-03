@@ -60,6 +60,7 @@ const ROLE_DEFAULTS = {
     can_manage_sales: 0, can_manage_total_sales: 0, can_manage_daily_report: 0, can_set_sales_targets: 0, can_manage_weekly_report: 0, can_view_weekly_report: 0, can_view_reports: 0, can_manage_users: 0, can_export: 0, can_view_sales_target: 0, can_view_store_sales_summary: 0, can_manage_bonuses: 0, can_view_bonuses: 0, can_manage_documents: 0, can_view_documents: 1, can_manage_shifts: 0, can_manage_schedule: 0, can_view_schedule: 1, can_manage_orders: 0, can_view_orders: 1, can_manage_online_orders: 0, can_view_online_orders: 0, can_manage_product_feedback: 1, can_view_product_feedback: 1, can_manage_product_collections: 0, can_manage_product_training: 0, can_view_product_training: 1, can_manage_cdp_ojti: 0, can_view_cdp_ojti: 1, can_manage_cdp: 0, can_view_cdp: 1, can_manage_ojti: 0, can_view_ojti: 1
   }
 };
+ROLE_DEFAULTS.office = { ...ROLE_DEFAULTS.manager };
 
 function nowIso() { return new Date().toISOString(); }
 function dateOnly(d) {
@@ -188,6 +189,7 @@ function nextId(name) {
 function getStore(id) { return db.stores.find(s => Number(s.id) === Number(id)); }
 function getUser(id) { return db.users.find(u => Number(u.id) === Number(id)); }
 function getActiveUser(id) { const u = getUser(id); return u && u.status === 'active' ? u : null; }
+function isAllStoreRole(user) { return user?.role === 'admin' || user?.role === 'office'; }
 function getPermissions(userId, role) {
   const defaults = ROLE_DEFAULTS[role] || ROLE_DEFAULTS.employee;
   const row = db.permissions.find(p => Number(p.user_id) === Number(userId)) || {};
@@ -217,7 +219,7 @@ function getPrimaryStoreId(row) {
   return row.store_id ? Number(row.store_id) : (getUserStoreIds(row)[0] || null);
 }
 function userHasStore(user, storeId) {
-  if (user?.role === 'admin') return true;
+  if (isAllStoreRole(user)) return true;
   if (!storeId) return true;
   const ids = getUserStoreIds(user);
   if (!ids.length) return false;
@@ -1185,9 +1187,16 @@ function storeSalesProgressForPeriod(storeId, start, end) {
   const item_count = rows.reduce((sum, r) => sum + Number(r.item_count || 0), 0);
   const targets = aggregateKpiTargetsForStore(storeId, months);
   const target = targets.target;
-  const customer_count = (db.sales_store_days || [])
+  const customerMetrics = (db.sales_store_days || [])
     .filter(x => Number(x.store_id) === Number(storeId) && dateVal(x.sale_date) >= start && dateVal(x.sale_date) < end)
-    .reduce((sum, x) => sum + Number(x.customer_count || 0), 0);
+    .reduce((acc, x) => {
+      const counts = customerCountsFromRow(x);
+      acc.customer_new_count += counts.customer_new_count;
+      acc.customer_old_count += counts.customer_old_count;
+      acc.customer_count += counts.customer_count;
+      return acc;
+    }, { customer_new_count: 0, customer_old_count: 0, customer_count: 0 });
+  const customer_count = customerMetrics.customer_count;
   const last_update = rows.reduce((latest, r) => {
     const val = r.updated_at || r.created_at || r.sale_date || null;
     return val && (!latest || val > latest) ? val : latest;
@@ -1201,6 +1210,8 @@ function storeSalesProgressForPeriod(storeId, start, end) {
     bill_count,
     item_count,
     customer_count,
+    customer_new_count: customerMetrics.customer_new_count,
+    customer_old_count: customerMetrics.customer_old_count,
     upt: bill_count ? Math.round((item_count / bill_count) * 100) / 100 : 0,
     atv: bill_count ? Math.round(revenue / bill_count) : 0,
     asp: item_count ? Math.round(revenue / item_count) : 0,
@@ -1216,17 +1227,32 @@ function canViewStoreSales(user, storeId) {
   return Number(user.permissions.can_view_store_sales_summary) === 1 || Number(user.permissions.can_manage_sales) === 1 || Number(user.permissions.can_view_sales_target) === 1;
 }
 
-function upsertStoreSalesDay(storeId, saleDate, customerCount, note, actorId) {
+
+function customerCountsFromRow(row) {
+  const newCount = toNumber(row?.customer_new_count ?? row?.new_customer_count ?? row?.customer_new ?? row?.new_customers, 0);
+  const oldCount = toNumber(row?.customer_old_count ?? row?.old_customer_count ?? row?.customer_old ?? row?.old_customers, 0);
+  const totalRaw = toNumber(row?.customer_count ?? row?.customers ?? 0, 0);
+  const total = (newCount || oldCount) ? newCount + oldCount : totalRaw;
+  return { customer_new_count: newCount, customer_old_count: oldCount, customer_count: total };
+}
+function customerCountsFromInput(customerCount, customerNewCount, customerOldCount) {
+  return customerCountsFromRow({ customer_count: customerCount, customer_new_count: customerNewCount, customer_old_count: customerOldCount });
+}
+
+function upsertStoreSalesDay(storeId, saleDate, customerCount, note, actorId, customerNewCount = 0, customerOldCount = 0) {
   db.sales_store_days = db.sales_store_days || [];
   const d = dateOnly(saleDate || new Date());
+  const counts = customerCountsFromInput(customerCount, customerNewCount, customerOldCount);
   let row = db.sales_store_days.find(x => Number(x.store_id) === Number(storeId) && String(x.sale_date) === d);
   if (row) {
-    row.customer_count = toNumber(customerCount, 0);
+    row.customer_new_count = counts.customer_new_count;
+    row.customer_old_count = counts.customer_old_count;
+    row.customer_count = counts.customer_count;
     row.note = note || '';
     row.updated_by = actorId;
     row.updated_at = nowIso();
   } else {
-    row = { id: nextId('sales_store_days'), store_id: Number(storeId), sale_date: d, customer_count: toNumber(customerCount, 0), note: note || '', created_by: actorId, created_at: nowIso(), updated_by: actorId, updated_at: nowIso() };
+    row = { id: nextId('sales_store_days'), store_id: Number(storeId), sale_date: d, customer_new_count: counts.customer_new_count, customer_old_count: counts.customer_old_count, customer_count: counts.customer_count, note: note || '', created_by: actorId, created_at: nowIso(), updated_by: actorId, updated_at: nowIso() };
     db.sales_store_days.push(row);
   }
   return row;
@@ -1541,12 +1567,14 @@ app.get('/api/users', requireAuth, requirePerm('can_manage_users'), (req, res) =
 
 app.post('/api/users', requireAuth, requirePerm('can_manage_users'), (req, res) => {
   const { full_name, username, password, role, store_id, store_ids, permissions } = req.body || {};
-  if (!full_name || !username || !password || !['admin', 'manager', 'employee'].includes(role)) return res.status(400).json({ error: 'Thiếu thông tin tài khoản' });
+  if (!full_name || !username || !password || !['admin', 'office', 'manager', 'employee'].includes(role)) return res.status(400).json({ error: 'Thiếu thông tin tài khoản' });
   if (db.users.some(u => String(u.username).toLowerCase() === String(username).trim().toLowerCase())) return res.status(400).json({ error: 'Tên đăng nhập đã tồn tại' });
   const id = nextId('users');
   const normalizedStoreIds = normalizeStoreIds(Array.isArray(store_ids) ? store_ids : (store_id ? [store_id] : []));
   db.users.push({ id, full_name: String(full_name).trim(), username: String(username).trim(), password_hash: bcrypt.hashSync(String(password), 10), role, store_id: normalizedStoreIds[0] || null, store_ids: normalizedStoreIds, status: 'active', created_at: nowIso() });
-  setPermissions(id, role, permissions || {});
+  const inputPerms = permissions && typeof permissions === 'object' ? permissions : {};
+  const hasAnyPerm = Object.values(inputPerms).some(v => Number(v) === 1);
+  setPermissions(id, role, role === 'office' && !hasAnyPerm ? ROLE_DEFAULTS.office : inputPerms);
   saveDb();
   res.json({ ok: true, id });
 });
@@ -1557,7 +1585,7 @@ app.patch('/api/users/:id', requireAuth, requirePerm('can_manage_users'), (req, 
   if (!existing) return res.status(404).json({ error: 'Không tìm thấy tài khoản' });
   const { full_name, role, store_id, store_ids, status, password, permissions } = req.body || {};
   if (full_name) existing.full_name = full_name;
-  if (role && ['admin', 'manager', 'employee'].includes(role)) existing.role = role;
+  if (role && ['admin', 'office', 'manager', 'employee'].includes(role)) existing.role = role;
   const nextStoreIds = store_ids === undefined ? getUserStoreIds(existing) : normalizeStoreIds(Array.isArray(store_ids) ? store_ids : (store_id ? [store_id] : []));
   existing.store_ids = nextStoreIds;
   existing.store_id = nextStoreIds[0] || null;
@@ -1614,7 +1642,7 @@ app.post('/api/cdp-ojti-record', requireAuth, (req, res) => {
   if (!canManageCdpOjti(req.user, type)) return res.status(403).json({ error: `Không có quyền nhập ${type === 'ojti' ? 'OJTI' : 'CDP'}` });
   const validPositions = cdpCatalogPositions().map(p => p.key);
   const positionKey = validPositions.includes(String(body.position_key)) ? String(body.position_key) : (validPositions[0] || 'dskd');
-  const storeId = req.user.role === 'admin' ? Number(body.store_id || getPrimaryStoreId(req.user) || db.stores[0]?.id) : Number(getPrimaryStoreId(req.user));
+  const storeId = isAllStoreRole(req.user) ? Number(body.store_id || getPrimaryStoreId(req.user) || db.stores[0]?.id) : Number(getPrimaryStoreId(req.user));
   if (!storeId || !canAccessStore(req, storeId)) return res.status(403).json({ error: 'Không có quyền nhập cửa hàng này' });
   const id = body.id ? Number(body.id) : null;
   let row = id ? (db.cdp_ojti || []).find(r => Number(r.id) === id && r.status !== 'deleted') : null;
@@ -1672,7 +1700,7 @@ app.post('/api/cdp-ojti', requireAuth, (req, res) => {
   const body = req.body || {};
   const type = String(body.type || 'cdp') === 'ojti' ? 'ojti' : 'cdp';
   if (!canManageCdpOjti(req.user, type)) return res.status(403).json({ error: `Không có quyền nhập ${type === 'ojti' ? 'OJTI' : 'CDP'}` });
-  const storeId = req.user.role === 'admin' ? Number(body.store_id || getPrimaryStoreId(req.user) || db.stores[0]?.id) : Number(getPrimaryStoreId(req.user));
+  const storeId = isAllStoreRole(req.user) ? Number(body.store_id || getPrimaryStoreId(req.user) || db.stores[0]?.id) : Number(getPrimaryStoreId(req.user));
   if (!storeId || !canAccessStore(req, storeId)) return res.status(403).json({ error: 'Không có quyền nhập cửa hàng này' });
   const id = nextId('cdp_ojti');
   const row = {
@@ -1712,7 +1740,7 @@ app.patch('/api/cdp-ojti/:id', requireAuth, (req, res) => {
   if (!canManageCdpOjti(req.user, String(row.type || 'cdp'))) return res.status(403).json({ error: `Không có quyền sửa ${String(row.type) === 'ojti' ? 'OJTI' : 'CDP'}` });
   if (!canAccessStore(req, row.store_id)) return res.status(403).json({ error: 'Không có quyền sửa cửa hàng này' });
   const body = req.body || {};
-  const nextStoreId = req.user.role === 'admin' ? Number(body.store_id || row.store_id) : Number(row.store_id);
+  const nextStoreId = isAllStoreRole(req.user) ? Number(body.store_id || row.store_id) : Number(row.store_id);
   if (!nextStoreId || !canAccessStore(req, nextStoreId)) return res.status(403).json({ error: 'Không có quyền chuyển cửa hàng này' });
   row.store_id = nextStoreId;
   row.type = String(body.type || row.type) === 'ojti' ? 'ojti' : 'cdp';
@@ -1750,7 +1778,7 @@ app.post('/api/tasks', requireAuth, requirePerm('can_assign_tasks'), (req, res) 
   if (!title) return res.status(400).json({ error: 'Thiếu tiêu đề công việc' });
   if (!useMultiDate && !due_at) return res.status(400).json({ error: 'Vui lòng nhập hạn hoàn thành hoặc chọn khoảng ngày giao việc' });
   if (!manualAssignees.length && !selectedShiftIds.length) return res.status(400).json({ error: 'Vui lòng chọn nhân viên hoặc chọn ca giao việc' });
-  const storeId = req.user.role === 'admin' ? Number(store_id || getPrimaryStoreId(req.user)) : Number(getPrimaryStoreId(req.user));
+  const storeId = isAllStoreRole(req.user) ? Number(store_id || getPrimaryStoreId(req.user)) : Number(getPrimaryStoreId(req.user));
   if (!storeId || !canAccessStore(req, storeId)) return res.status(403).json({ error: 'Không có quyền giao việc cửa hàng này' });
   const dates = useMultiDate ? dateRangeEvery(start_date, end_date, repeat_every_days || 1) : [dateOnly(due_at)];
   if (!dates.length) return res.status(400).json({ error: 'Khoảng ngày giao việc không hợp lệ' });
@@ -1886,12 +1914,12 @@ app.get('/api/checklist/assessments/:id', requireAuth, (req, res) => {
 });
 
 app.post('/api/sales', requireAuth, requireAnyPerm('can_manage_total_sales','can_manage_sales'), (req, res) => {
-  const { user_id, sale_date, revenue, bill_count, item_count, customer_count, note } = req.body || {};
+  const { user_id, sale_date, revenue, bill_count, item_count, customer_count, customer_new_count, customer_old_count, note } = req.body || {};
   const employee = getActiveUser(Number(user_id));
   if (!employee || employee.role !== 'employee') return res.status(400).json({ error: 'Chỉ nhập doanh thu cho nhân viên bán hàng' });
   if (req.user.role !== 'admin' && !userHasStore(req.user, employee.store_id)) return res.status(403).json({ error: 'Không có quyền nhập doanh thu nhân viên này' });
   const row = upsertSalesRow(employee, sale_date, { revenue, bill_count, item_count, note }, req.user.id);
-  if (customer_count !== undefined && customer_count !== null && customer_count !== '') upsertStoreSalesDay(employee.store_id, sale_date, customer_count, '', req.user.id);
+  if (customer_count !== undefined && customer_count !== null && customer_count !== '') upsertStoreSalesDay(employee.store_id, sale_date, customer_count, '', req.user.id, customer_new_count, customer_old_count);
   saveDb();
   res.json({ ok: true, id: row.id });
 });
@@ -1955,13 +1983,13 @@ function buildWeeklyReport(user, rawWeekStart, rawStoreId) {
   const week_start = weekStartOf(rawWeekStart || new Date());
   const week_end = addDaysUtc(week_start, 6);
   const endExclusive = addDaysUtc(week_start, 7);
-  const storeId = user.role === 'admin' ? Number(rawStoreId || getPrimaryStoreId(user) || db.stores[0]?.id) : Number(getPrimaryStoreId(user));
+  const storeId = isAllStoreRole(user) ? Number(rawStoreId || getPrimaryStoreId(user) || db.stores[0]?.id) : Number(getPrimaryStoreId(user));
   const store = getStore(storeId);
   if (!store) throw new Error('Cửa hàng không hợp lệ');
   if (user.role !== 'admin' && Number(user.permissions.can_view_weekly_report) !== 1 && Number(user.permissions.can_manage_weekly_report) !== 1) throw new Error('Không có quyền xem báo cáo tuần');
   const days = datesBetween(week_start, endExclusive);
   const salesRows = (db.sales || []).filter(sa => Number(sa.store_id) === Number(storeId) && dateVal(sa.sale_date) >= week_start && dateVal(sa.sale_date) < endExclusive);
-  const dailyMap = new Map(days.map(d => [d, { sale_date: d, revenue: 0, bill_count: 0, item_count: 0, customer_count: 0, target_revenue: 0, upt: 0, atv: 0, asp: 0, cr: 0, achievement_percent: 0, note: '' }]));
+  const dailyMap = new Map(days.map(d => [d, { sale_date: d, revenue: 0, bill_count: 0, item_count: 0, customer_count: 0, customer_new_count: 0, customer_old_count: 0, target_revenue: 0, upt: 0, atv: 0, asp: 0, cr: 0, achievement_percent: 0, note: '' }]));
   salesRows.forEach(r => {
     const d = dateVal(r.sale_date);
     const row = dailyMap.get(d);
@@ -1974,7 +2002,10 @@ function buildWeeklyReport(user, rawWeekStart, rawStoreId) {
     const d = dateVal(x.sale_date);
     const row = dailyMap.get(d);
     if (!row) return;
-    row.customer_count = Number(x.customer_count || 0);
+    const counts = customerCountsFromRow(x);
+    row.customer_new_count = counts.customer_new_count;
+    row.customer_old_count = counts.customer_old_count;
+    row.customer_count = counts.customer_count;
     row.note = x.note || '';
   });
   (db.sales_daily_targets || []).filter(x => Number(x.store_id) === Number(storeId) && dateVal(x.target_date) >= week_start && dateVal(x.target_date) < endExclusive).forEach(x => {
@@ -2008,9 +2039,11 @@ function buildWeeklyReport(user, rawWeekStart, rawStoreId) {
     acc.bill_count += Number(r.bill_count || 0);
     acc.item_count += Number(r.item_count || 0);
     acc.customer_count += Number(r.customer_count || 0);
+    acc.customer_new_count += Number(r.customer_new_count || 0);
+    acc.customer_old_count += Number(r.customer_old_count || 0);
     acc.target_revenue += Number(r.target_revenue || 0);
     return acc;
-  }, { revenue: 0, bill_count: 0, item_count: 0, customer_count: 0, target_revenue: 0 });
+  }, { revenue: 0, bill_count: 0, item_count: 0, customer_count: 0, customer_new_count: 0, customer_old_count: 0, target_revenue: 0 });
   const proratedStoreTarget = Math.round(staff.reduce((sum, u) => sum + proratedTargetForUser(u.id, week_start, endExclusive), 0));
   if (!totals.target_revenue) totals.target_revenue = proratedStoreTarget;
   totals.upt = totals.bill_count ? Math.round((totals.item_count / totals.bill_count) * 100) / 100 : 0;
@@ -2026,8 +2059,8 @@ function buildWeeklyReport(user, rawWeekStart, rawStoreId) {
 }
 
 app.post('/api/sales/daily', requireAuth, requireAnyPerm('can_manage_total_sales','can_manage_sales'), (req, res) => {
-  const { store_id, sale_date, customer_count, note, entries } = req.body || {};
-  const storeId = req.user.role === 'admin' ? Number(store_id || getPrimaryStoreId(req.user)) : Number(getPrimaryStoreId(req.user));
+  const { store_id, sale_date, customer_count, customer_new_count, customer_old_count, note, entries } = req.body || {};
+  const storeId = isAllStoreRole(req.user) ? Number(store_id || getPrimaryStoreId(req.user)) : Number(getPrimaryStoreId(req.user));
   const store = getStore(storeId);
   if (!store) return res.status(400).json({ error: 'Cửa hàng không hợp lệ' });
   if (req.user.role !== 'admin' && !userHasStore(req.user, storeId)) return res.status(403).json({ error: 'Không có quyền nhập doanh thu cửa hàng này' });
@@ -2038,7 +2071,7 @@ app.post('/api/sales/daily', requireAuth, requireAnyPerm('can_manage_total_sales
     if (!employee || employee.role !== 'employee' || Number(employee.store_id) !== Number(storeId)) return;
     saved.push(upsertSalesRow(employee, sale_date, entry, req.user.id));
   });
-  upsertStoreSalesDay(storeId, sale_date, customer_count, note, req.user.id);
+  upsertStoreSalesDay(storeId, sale_date, customer_count, note, req.user.id, customer_new_count, customer_old_count);
   saveDb();
   res.json({ ok: true, count: saved.length });
 });
@@ -2081,7 +2114,7 @@ app.post('/api/sales/targets', requireAuth, requirePerm('can_set_sales_targets')
 app.post('/api/sales/daily-targets', requireAuth, requirePerm('can_set_sales_targets'), (req, res) => {
   const { store_id, target_date, start_date, end_date, target_revenue, note } = req.body || {};
   let { dates } = req.body || {};
-  const storeId = req.user.role === 'admin' ? Number(store_id || getPrimaryStoreId(req.user)) : Number(getPrimaryStoreId(req.user));
+  const storeId = isAllStoreRole(req.user) ? Number(store_id || getPrimaryStoreId(req.user)) : Number(getPrimaryStoreId(req.user));
   const store = getStore(storeId);
   if (!store) return res.status(400).json({ error: 'Cửa hàng không hợp lệ' });
   if (req.user.role !== 'admin' && !userHasStore(req.user, storeId)) return res.status(403).json({ error: 'Không có quyền set target cửa hàng này' });
@@ -2161,7 +2194,7 @@ app.get('/api/sales/leaderboard', requireAuth, (req, res) => {
 
 app.get('/api/sales/store-summary', requireAuth, (req, res) => {
   const month = /^\d{4}-\d{2}$/.test(String(req.query.month || '')) ? String(req.query.month) : dateOnly(new Date()).slice(0, 7);
-  const storeId = req.user.role === 'admin' ? Number(req.query.store_id || getPrimaryStoreId(req.user) || db.stores[0]?.id) : Number(getPrimaryStoreId(req.user));
+  const storeId = isAllStoreRole(req.user) ? Number(req.query.store_id || getPrimaryStoreId(req.user) || db.stores[0]?.id) : Number(getPrimaryStoreId(req.user));
   const store = getStore(storeId);
   if (!store) return res.status(400).json({ error: 'Cửa hàng không hợp lệ' });
   if (!canViewStoreSales(req.user, storeId)) return res.status(403).json({ error: 'Không có quyền xem tổng doanh thu cửa hàng' });
@@ -2175,7 +2208,7 @@ app.get('/api/sales/store-summary', requireAuth, (req, res) => {
   const dayMap = new Map();
   salesRows.forEach(r => {
     const d = dateVal(r.sale_date);
-    const row = dayMap.get(d) || { sale_date: d, revenue: 0, bill_count: 0, item_count: 0, customer_count: 0, upt: 0, atv: 0, asp: 0, cumulative_revenue: 0, achievement_percent: 0 };
+    const row = dayMap.get(d) || { sale_date: d, revenue: 0, bill_count: 0, item_count: 0, customer_count: 0, customer_new_count: 0, customer_old_count: 0, upt: 0, atv: 0, asp: 0, cumulative_revenue: 0, achievement_percent: 0 };
     row.revenue += Number(r.revenue || 0);
     row.bill_count += Number(r.bill_count || 0);
     row.item_count += Number(r.item_count || 0);
@@ -2185,8 +2218,11 @@ app.get('/api/sales/store-summary', requireAuth, (req, res) => {
     .filter(x => Number(x.store_id) === Number(storeId) && dateVal(x.sale_date) >= start && dateVal(x.sale_date) < end)
     .forEach(x => {
       const d = dateVal(x.sale_date);
-      const row = dayMap.get(d) || { sale_date: d, revenue: 0, bill_count: 0, item_count: 0, customer_count: 0, upt: 0, atv: 0, asp: 0, cr: 0, cumulative_revenue: 0, achievement_percent: 0 };
-      row.customer_count = Number(x.customer_count || 0);
+      const row = dayMap.get(d) || { sale_date: d, revenue: 0, bill_count: 0, item_count: 0, customer_count: 0, customer_new_count: 0, customer_old_count: 0, upt: 0, atv: 0, asp: 0, cr: 0, cumulative_revenue: 0, achievement_percent: 0 };
+      const counts = customerCountsFromRow(x);
+      row.customer_new_count = counts.customer_new_count;
+      row.customer_old_count = counts.customer_old_count;
+      row.customer_count = counts.customer_count;
       row.note = x.note || '';
       dayMap.set(d, row);
     });
@@ -2194,7 +2230,7 @@ app.get('/api/sales/store-summary', requireAuth, (req, res) => {
     .filter(x => Number(x.store_id) === Number(storeId) && dateVal(x.target_date) >= start && dateVal(x.target_date) < end)
     .forEach(x => {
       const d = dateVal(x.target_date);
-      const row = dayMap.get(d) || { sale_date: d, revenue: 0, bill_count: 0, item_count: 0, customer_count: 0, upt: 0, atv: 0, asp: 0, cr: 0, cumulative_revenue: 0, achievement_percent: 0 };
+      const row = dayMap.get(d) || { sale_date: d, revenue: 0, bill_count: 0, item_count: 0, customer_count: 0, customer_new_count: 0, customer_old_count: 0, upt: 0, atv: 0, asp: 0, cr: 0, cumulative_revenue: 0, achievement_percent: 0 };
       row.daily_target = Number(x.target_revenue || 0);
       // UPT / ATV / CR dùng mặc định target tháng, không dùng target ngày.
       row.daily_target_upt = targetMetrics.target_upt;
@@ -2226,9 +2262,11 @@ app.get('/api/sales/store-summary', requireAuth, (req, res) => {
     acc.bill_count += Number(r.bill_count || 0);
     acc.item_count += Number(r.item_count || 0);
     acc.customer_count += Number(r.customer_count || 0);
+    acc.customer_new_count += Number(r.customer_new_count || 0);
+    acc.customer_old_count += Number(r.customer_old_count || 0);
     acc.daily_target += Number(r.daily_target || 0);
     return acc;
-  }, { revenue: 0, bill_count: 0, item_count: 0, customer_count: 0, daily_target: 0 });
+  }, { revenue: 0, bill_count: 0, item_count: 0, customer_count: 0, customer_new_count: 0, customer_old_count: 0, daily_target: 0 });
   totals.upt = totals.bill_count ? Math.round((totals.item_count / totals.bill_count) * 100) / 100 : 0;
   totals.atv = totals.bill_count ? Math.round(totals.revenue / totals.bill_count) : 0;
   totals.asp = totals.item_count ? Math.round(totals.revenue / totals.item_count) : 0;
@@ -2282,7 +2320,7 @@ function normalizeDailyFeedbackItems(value) {
 }
 function buildDailyReport(user, rawDate, rawStoreId) {
   const reportDate = dateOnly(rawDate || new Date());
-  const storeId = user.role === 'admin' ? Number(rawStoreId || getPrimaryStoreId(user) || db.stores[0]?.id) : Number(getPrimaryStoreId(user));
+  const storeId = isAllStoreRole(user) ? Number(rawStoreId || getPrimaryStoreId(user) || db.stores[0]?.id) : Number(getPrimaryStoreId(user));
   const store = getStore(storeId);
   if (!store) throw new Error('Cửa hàng không hợp lệ');
   if (user.role !== 'admin' && !userHasStore(user, storeId)) throw new Error('Không có quyền xem báo cáo ngày cửa hàng này');
@@ -2294,7 +2332,8 @@ function buildDailyReport(user, rawDate, rawStoreId) {
     const r = salesRows.find(x => Number(x.user_id) === Number(u.id));
     return { user_id: u.id, full_name: u.full_name, store_name: store.name, revenue: r ? Number(r.revenue || 0) : 0, bill_count: r ? Number(r.bill_count || 0) : 0, item_count: r ? Number(r.item_count || 0) : 0, note: r ? (r.note || '') : '' };
   });
-  const customerCount = storeDay ? Number(storeDay.customer_count || 0) : 0;
+  const customerMetrics = storeDay ? customerCountsFromRow(storeDay) : { customer_new_count: 0, customer_old_count: 0, customer_count: 0 };
+  const customerCount = customerMetrics.customer_count;
   const targetDay = storeDailyTarget(storeId, reportDate);
   const storeTotal = sales_entries.reduce((acc, r) => {
     acc.revenue += Number(r.revenue || 0);
@@ -2303,6 +2342,8 @@ function buildDailyReport(user, rawDate, rawStoreId) {
     return acc;
   }, { revenue: 0, bill_count: 0, item_count: 0 });
   storeTotal.customer_count = customerCount;
+  storeTotal.customer_new_count = customerMetrics.customer_new_count;
+  storeTotal.customer_old_count = customerMetrics.customer_old_count;
   storeTotal.target_revenue = Number(targetDay.target_revenue || 0);
   storeTotal.achievement_percent = storeTotal.target_revenue ? Math.round((storeTotal.revenue / storeTotal.target_revenue) * 10000) / 100 : 0;
   storeTotal.upt = storeTotal.bill_count ? Math.round((storeTotal.item_count / storeTotal.bill_count) * 100) / 100 : 0;
@@ -2318,6 +2359,8 @@ function buildDailyReport(user, rawDate, rawStoreId) {
     store_name: store.name,
     report_date: reportDate,
     customer_count: customerCount,
+    customer_new_count: customerMetrics.customer_new_count,
+    customer_old_count: customerMetrics.customer_old_count,
     store_note: legacyStoreNote,
     store_situation_morning: morningSituation,
     store_situation_evening: eveningSituation,
@@ -2348,8 +2391,11 @@ function dailyReportZaloText(payload) {
     if (!u) return;
     lines.push(`- ${u.full_name}: ${fmt(r.revenue)}đ | Bill ${fmt(r.bill_count)} | Món ${fmt(r.item_count)}${r.note ? ` | ${r.note}` : ''}`);
   });
-  lines.push(`Tổng: ${fmt(total.revenue)}đ | Bill ${fmt(total.bill_count)} | Món ${fmt(total.item_count)} | Lượt khách ${fmt(payload.customer_count || 0)}`);
-  lines.push(`UPT: ${total.bill_count ? Math.round((total.item_count / total.bill_count) * 100) / 100 : 0} | ATV: ${total.bill_count ? fmt(Math.round(total.revenue / total.bill_count)) + 'đ' : '0đ'} | ASP: ${total.item_count ? fmt(Math.round(total.revenue / total.item_count)) + 'đ' : '0đ'} | CR: ${payload.customer_count ? Math.round((total.bill_count / Number(payload.customer_count || 0)) * 10000) / 100 : 0}%`);
+  const customerNew = Number(payload.customer_new_count || 0);
+  const customerOld = Number(payload.customer_old_count || 0);
+  const customerTotal = (customerNew || customerOld) ? customerNew + customerOld : Number(payload.customer_count || 0);
+  lines.push(`Tổng: ${fmt(total.revenue)}đ | Bill ${fmt(total.bill_count)} | Món ${fmt(total.item_count)} | Khách mới ${fmt(customerNew)} | Khách cũ ${fmt(customerOld)} | Lượt khách tổng ${fmt(customerTotal)}`);
+  lines.push(`UPT: ${total.bill_count ? Math.round((total.item_count / total.bill_count) * 100) / 100 : 0} | ATV: ${total.bill_count ? fmt(Math.round(total.revenue / total.bill_count)) + 'đ' : '0đ'} | ASP: ${total.item_count ? fmt(Math.round(total.revenue / total.item_count)) + 'đ' : '0đ'} | CR: ${customerTotal ? Math.round((total.bill_count / customerTotal) * 10000) / 100 : 0}%`);
   if (payload.store_situation_morning || payload.store_situation_evening || payload.store_note) {
     lines.push('Tình hình cửa hàng:');
     if (payload.store_situation_morning) lines.push(`- Ca sáng: ${payload.store_situation_morning}`);
@@ -2379,8 +2425,8 @@ app.get('/api/daily-report', requireAuth, (req, res) => {
 });
 
 app.post('/api/daily-report', requireAuth, requireAnyPerm('can_manage_daily_report','can_manage_sales'), (req, res) => {
-  const { store_id, report_date, customer_count, store_note, store_situation_morning, store_situation_evening, sales_entries, missing_size_items, product_feedback_items } = req.body || {};
-  const storeId = req.user.role === 'admin' ? Number(store_id || getPrimaryStoreId(req.user)) : Number(getPrimaryStoreId(req.user));
+  const { store_id, report_date, customer_count, customer_new_count, customer_old_count, store_note, store_situation_morning, store_situation_evening, sales_entries, missing_size_items, product_feedback_items } = req.body || {};
+  const storeId = isAllStoreRole(req.user) ? Number(store_id || getPrimaryStoreId(req.user)) : Number(getPrimaryStoreId(req.user));
   const store = getStore(storeId);
   if (!store) return res.status(400).json({ error: 'Cửa hàng không hợp lệ' });
   if (req.user.role !== 'admin' && !userHasStore(req.user, storeId)) return res.status(403).json({ error: 'Không có quyền nhập báo cáo ngày cửa hàng này' });
@@ -2396,7 +2442,8 @@ app.post('/api/daily-report', requireAuth, requireAnyPerm('can_manage_daily_repo
   const morningSituation = String(store_situation_morning || '').trim();
   const eveningSituation = String(store_situation_evening || '').trim();
   const combinedStoreNote = String(store_note || [morningSituation ? `Ca sáng: ${morningSituation}` : '', eveningSituation ? `Ca tối: ${eveningSituation}` : ''].filter(Boolean).join('\n')).trim();
-  upsertStoreSalesDay(storeId, d, customer_count, combinedStoreNote, req.user.id);
+  const dailyCustomerCounts = customerCountsFromInput(customer_count, customer_new_count, customer_old_count);
+  upsertStoreSalesDay(storeId, d, dailyCustomerCounts.customer_count, combinedStoreNote, req.user.id, dailyCustomerCounts.customer_new_count, dailyCustomerCounts.customer_old_count);
 
   const missingItems = normalizeMissingSizeItems(missing_size_items);
   const feedbackItems = normalizeDailyFeedbackItems(product_feedback_items);
@@ -2472,8 +2519,10 @@ app.post('/api/daily-report', requireAuth, requireAnyPerm('can_manage_daily_repo
     generatedFeedbackIds.push(id);
   });
 
-  const summaryPayload = { report_date: d, store_name: store.name, customer_count, store_note: combinedStoreNote, store_situation_morning: morningSituation, store_situation_evening: eveningSituation, sales_entries: cleanSales, missing_size_items: missingItems, product_feedback_items: feedbackItems };
-  row.customer_count = toNumber(customer_count, 0);
+  const summaryPayload = { report_date: d, store_name: store.name, customer_count: dailyCustomerCounts.customer_count, customer_new_count: dailyCustomerCounts.customer_new_count, customer_old_count: dailyCustomerCounts.customer_old_count, store_note: combinedStoreNote, store_situation_morning: morningSituation, store_situation_evening: eveningSituation, sales_entries: cleanSales, missing_size_items: missingItems, product_feedback_items: feedbackItems };
+  row.customer_new_count = dailyCustomerCounts.customer_new_count;
+  row.customer_old_count = dailyCustomerCounts.customer_old_count;
+  row.customer_count = dailyCustomerCounts.customer_count;
   row.store_note = combinedStoreNote;
   row.store_situation_morning = morningSituation;
   row.store_situation_evening = eveningSituation;
@@ -2500,7 +2549,7 @@ app.get('/api/weekly-report', requireAuth, (req, res) => {
 
 app.post('/api/weekly-report', requireAuth, (req, res) => {
   const { store_id, week_start, feedback, issues, action_plan, note, top_products, promotions } = req.body || {};
-  const storeId = req.user.role === 'admin' ? Number(store_id || getPrimaryStoreId(req.user)) : Number(getPrimaryStoreId(req.user));
+  const storeId = isAllStoreRole(req.user) ? Number(store_id || getPrimaryStoreId(req.user)) : Number(getPrimaryStoreId(req.user));
   const store = getStore(storeId);
   if (!store) return res.status(400).json({ error: 'Cửa hàng không hợp lệ' });
   if (req.user.role !== 'admin' && (Number(req.user.permissions.can_manage_weekly_report) !== 1 || !userHasStore(req.user, storeId))) return res.status(403).json({ error: 'Không có quyền nhập báo cáo tuần' });
@@ -2530,10 +2579,10 @@ app.get('/api/weekly-report/export.csv', requireAuth, requirePerm('can_export'),
   try {
     const data = buildWeeklyReport(req.user, req.query.week_start, req.query.store_id);
     const rows = [];
-    rows.push({ phan: 'Tong cua hang', cua_hang: data.store_name, tu_ngay: data.week_start, den_ngay: data.week_end, doanh_thu: data.totals.revenue, target_tuan: data.totals.target_revenue, phan_tram_dat: data.totals.achievement_percent, bill: data.totals.bill_count, so_mon: data.totals.item_count, luot_khach: data.totals.customer_count, upt: data.totals.upt, atv: data.totals.atv, asp: data.totals.asp, cr: data.totals.cr, feedback: data.feedback.feedback || '', van_de: data.feedback.issues || '', hanh_dong_tuan_toi: data.feedback.action_plan || '', ghi_chu: data.feedback.note || '' });
-    data.days.forEach(d => rows.push({ phan: 'Theo ngay', cua_hang: data.store_name, ngay: d.sale_date, doanh_thu: d.revenue, target_ngay: d.target_revenue, phan_tram_dat: d.achievement_percent, bill: d.bill_count, so_mon: d.item_count, luot_khach: d.customer_count, upt: d.upt, atv: d.atv, asp: d.asp, cr: d.cr, ghi_chu: d.note || '' }));
+    rows.push({ phan: 'Tong cua hang', cua_hang: data.store_name, tu_ngay: data.week_start, den_ngay: data.week_end, doanh_thu: data.totals.revenue, target_tuan: data.totals.target_revenue, phan_tram_dat: data.totals.achievement_percent, bill: data.totals.bill_count, so_mon: data.totals.item_count, khach_moi: data.totals.customer_new_count, khach_cu: data.totals.customer_old_count, luot_khach_tong: data.totals.customer_count, upt: data.totals.upt, atv: data.totals.atv, asp: data.totals.asp, cr: data.totals.cr, feedback: data.feedback.feedback || '', van_de: data.feedback.issues || '', hanh_dong_tuan_toi: data.feedback.action_plan || '', ghi_chu: data.feedback.note || '' });
+    data.days.forEach(d => rows.push({ phan: 'Theo ngay', cua_hang: data.store_name, ngay: d.sale_date, doanh_thu: d.revenue, target_ngay: d.target_revenue, phan_tram_dat: d.achievement_percent, bill: d.bill_count, so_mon: d.item_count, khach_moi: d.customer_new_count, khach_cu: d.customer_old_count, luot_khach_tong: d.customer_count, upt: d.upt, atv: d.atv, asp: d.asp, cr: d.cr, ghi_chu: d.note || '' }));
     data.employees.forEach(e => rows.push({ phan: 'Ca nhan', cua_hang: data.store_name, nhan_vien: e.full_name, doanh_thu: e.revenue, target_tuan_uoc_tinh: e.target, phan_tram_dat: e.achievement_percent, ty_trong_dt: e.revenue_percent, bill: e.bill_count, so_mon: e.item_count, upt: e.upt, atv: e.atv, asp: e.asp }));
-    (data.top_products || []).forEach((p, idx) => rows.push({ phan: 'Top san pham ban chay', top: idx + 1, cua_hang: data.store_name, san_pham: p.name, sku: p.sku || '', so_luong: p.quantity || 0, so_bill: p.bill_count || 0, ghi_chu: p.note || '' }));
+    (data.top_products || []).forEach((p, idx) => rows.push({ phan: 'Top san pham ban chay', top: idx + 1, cua_hang: data.store_name, san_pham: p.name, so_mon: p.quantity || 0, ghi_chu: p.note || '' }));
     (data.promotions || []).forEach(p => rows.push({ phan: 'CTKM', cua_hang: data.store_name, ten_ctkm: p.name, so_bill_tham_gia: p.bill_count || 0, ghi_chu: p.note || '' }));
     res.header('Content-Type', 'text/csv; charset=utf-8');
     res.attachment(`bao-cao-tuan-${data.store_name}-${data.week_start}.csv`);
@@ -2586,7 +2635,7 @@ app.delete('/api/shifts/:id', requireAuth, requirePerm('can_manage_shifts'), (re
 });
 
 app.get('/api/schedules', requireAuth, (req, res) => {
-  const storeId = req.user.role === 'admin' ? Number(req.query.store_id || getPrimaryStoreId(req.user) || db.stores[0]?.id) : Number(getPrimaryStoreId(req.user));
+  const storeId = isAllStoreRole(req.user) ? Number(req.query.store_id || getPrimaryStoreId(req.user) || db.stores[0]?.id) : Number(getPrimaryStoreId(req.user));
   const store = getStore(storeId);
   if (!store) return res.status(400).json({ error: 'Cửa hàng không hợp lệ' });
   if (!canViewSchedule(req.user, storeId)) return res.status(403).json({ error: 'Không có quyền xem lịch làm việc' });
@@ -2600,7 +2649,7 @@ app.get('/api/schedules', requireAuth, (req, res) => {
 
 app.post('/api/schedules/bulk', requireAuth, requirePerm('can_manage_schedule'), (req, res) => {
   const { store_id, week_start, entries } = req.body || {};
-  const storeId = req.user.role === 'admin' ? Number(store_id || getPrimaryStoreId(req.user)) : Number(getPrimaryStoreId(req.user));
+  const storeId = isAllStoreRole(req.user) ? Number(store_id || getPrimaryStoreId(req.user)) : Number(getPrimaryStoreId(req.user));
   const store = getStore(storeId);
   if (!store) return res.status(400).json({ error: 'Cửa hàng không hợp lệ' });
   if (!canManageSchedule(req.user, storeId)) return res.status(403).json({ error: 'Không có quyền phân lịch cửa hàng này' });
@@ -2640,14 +2689,14 @@ app.post('/api/schedules/bulk', requireAuth, requirePerm('can_manage_schedule'),
 
 
 app.get('/api/orders', requireAuth, (req, res) => {
-  const storeId = req.user.role === 'admin' ? (req.query.store_id ? Number(req.query.store_id) : null) : (getPrimaryStoreId(req.user) ? Number(getPrimaryStoreId(req.user)) : (req.query.store_id ? Number(req.query.store_id) : null));
+  const storeId = isAllStoreRole(req.user) ? (req.query.store_id ? Number(req.query.store_id) : null) : (getPrimaryStoreId(req.user) ? Number(getPrimaryStoreId(req.user)) : (req.query.store_id ? Number(req.query.store_id) : null));
   if (storeId && !canViewOrderScope(req.user, storeId)) return res.status(403).json({ error: 'Không có quyền xem order cửa hàng này' });
   res.json({ orders: orderRowsForUser(req.user, storeId) });
 });
 
 app.post('/api/orders', requireAuth, requirePerm('can_manage_orders'), (req, res) => {
   const { store_id, order_date, batch_name, items } = req.body || {};
-  const storeId = req.user.role === 'admin' ? Number(store_id || getPrimaryStoreId(req.user) || 0) : Number(getPrimaryStoreId(req.user) || store_id || 0);
+  const storeId = isAllStoreRole(req.user) ? Number(store_id || getPrimaryStoreId(req.user) || 0) : Number(getPrimaryStoreId(req.user) || store_id || 0);
   const store = getStore(storeId);
   if (!store) return res.status(400).json({ error: 'Cửa hàng không hợp lệ' });
   if (!canManageOrderScope(req.user, storeId)) return res.status(403).json({ error: 'Không có quyền tạo order cửa hàng này' });
@@ -2721,7 +2770,7 @@ app.delete('/api/orders/:id', requireAuth, requirePerm('can_manage_orders'), (re
 
 app.get('/api/online-orders', requireAuth, (req, res) => {
   const month = /^\d{4}-\d{2}$/.test(String(req.query.month || '')) ? String(req.query.month).slice(0, 7) : dateOnly(new Date()).slice(0, 7);
-  const storeId = req.user.role === 'admin' ? (req.query.store_id ? Number(req.query.store_id) : null) : Number(getPrimaryStoreId(req.user) || 0);
+  const storeId = isAllStoreRole(req.user) ? (req.query.store_id ? Number(req.query.store_id) : null) : Number(getPrimaryStoreId(req.user) || 0);
   if (storeId && !canViewOnlineOrderScope(req.user, storeId)) return res.status(403).json({ error: 'Không có quyền xem đơn online cửa hàng này' });
   const rows = onlineOrderRowsForUser(req.user, storeId, month);
   res.json({ month, orders: rows, summary: onlineOrderSummary(rows) });
@@ -2729,7 +2778,7 @@ app.get('/api/online-orders', requireAuth, (req, res) => {
 
 app.post('/api/online-orders', requireAuth, requirePerm('can_manage_online_orders'), (req, res) => {
   const { store_id, order_date, invoice_no, order_value, packer_id, note } = req.body || {};
-  const storeId = req.user.role === 'admin' ? Number(store_id || getPrimaryStoreId(req.user) || 0) : Number(getPrimaryStoreId(req.user) || store_id || 0);
+  const storeId = isAllStoreRole(req.user) ? Number(store_id || getPrimaryStoreId(req.user) || 0) : Number(getPrimaryStoreId(req.user) || store_id || 0);
   const store = getStore(storeId);
   if (!store) return res.status(400).json({ error: 'Cửa hàng không hợp lệ' });
   if (!canManageOnlineOrderScope(req.user, storeId)) return res.status(403).json({ error: 'Không có quyền nhập đơn online cửa hàng này' });
@@ -2929,7 +2978,7 @@ app.get('/api/product-feedback', requireAuth, (req, res) => {
 
 app.post('/api/product-feedback', requireAuth, requirePerm('can_manage_product_feedback'), (req, res) => {
   const { store_id, feedback_date, collection_id, sku, product_name, style_feedback, material_feedback, product_errors, customer_feedback, restock_wish, note } = req.body || {};
-  const storeId = req.user.role === 'admin' ? Number(store_id || getPrimaryStoreId(req.user)) : Number(getPrimaryStoreId(req.user));
+  const storeId = isAllStoreRole(req.user) ? Number(store_id || getPrimaryStoreId(req.user)) : Number(getPrimaryStoreId(req.user));
   if (!storeId || !getStore(storeId)) return res.status(400).json({ error: 'Cửa hàng không hợp lệ' });
   if (!canManageProductFeedbackScope(req.user, storeId)) return res.status(403).json({ error: 'Không có quyền nhập đánh giá sản phẩm cửa hàng này' });
   if (!sku && !product_name) return res.status(400).json({ error: 'Cần nhập SKU hoặc tên sản phẩm' });
@@ -3118,7 +3167,7 @@ app.get('/api/export/:type.csv', requireAuth, requirePerm('can_export'), (req, r
   } else if (type === 'assessments') {
     rows = assessmentRowsForUser(req.user);
   } else if (type === 'sales') {
-    rows = db.sales.map(sa => ({ id: sa.id, sale_date: sa.sale_date, store_id: sa.store_id, employee_name: getUser(sa.user_id)?.full_name || '', store_name: getStore(sa.store_id)?.name || '', revenue: Number(sa.revenue || 0), bill_count: Number(sa.bill_count || 0), item_count: Number(sa.item_count || 0), upt: Number(sa.bill_count || 0) ? Math.round((Number(sa.item_count || 0) / Number(sa.bill_count || 0)) * 100) / 100 : 0, atv: Number(sa.bill_count || 0) ? Math.round(Number(sa.revenue || 0) / Number(sa.bill_count || 0)) : 0, note: sa.note || '', created_at: sa.created_at || '', updated_at: sa.updated_at || '' }));
+    rows = db.sales.map(sa => { const sd = (db.sales_store_days || []).find(x => Number(x.store_id) === Number(sa.store_id) && String(x.sale_date) === String(sa.sale_date)); const cc = customerCountsFromRow(sd || {}); return { id: sa.id, sale_date: sa.sale_date, store_id: sa.store_id, employee_name: getUser(sa.user_id)?.full_name || '', store_name: getStore(sa.store_id)?.name || '', revenue: Number(sa.revenue || 0), bill_count: Number(sa.bill_count || 0), item_count: Number(sa.item_count || 0), khach_moi: cc.customer_new_count, khach_cu: cc.customer_old_count, luot_khach_tong: cc.customer_count, upt: Number(sa.bill_count || 0) ? Math.round((Number(sa.item_count || 0) / Number(sa.bill_count || 0)) * 100) / 100 : 0, atv: Number(sa.bill_count || 0) ? Math.round(Number(sa.revenue || 0) / Number(sa.bill_count || 0)) : 0, note: sa.note || '', created_at: sa.created_at || '', updated_at: sa.updated_at || '' }; });
     if (req.user.role !== 'admin') rows = rows.filter(r => userHasStore(req.user, r.store_id));
     rows = rows.sort((a, b) => new Date(b.sale_date) - new Date(a.sale_date));
   } else if (type === 'sales_targets') {
