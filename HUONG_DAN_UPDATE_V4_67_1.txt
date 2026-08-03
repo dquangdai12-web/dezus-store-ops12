@@ -1,0 +1,14 @@
+DEZUS Store Ops v4.67.1 - Fix iPad trắng màn hình
+
+Nội dung sửa:
+- Bump version app.js/style.css để iPad Safari không dùng cache cũ.
+- Thêm no-cache cho file html/js/css trên server.
+- Thêm màn hình thông báo nếu trình duyệt lỗi tải app thay vì trắng xoá.
+- Giữ nguyên các tính năng v4.67: Khách mới/Khách cũ/Lượt khách tổng.
+
+Cập nhật:
+1. Giải nén file zip.
+2. Upload đè toàn bộ lên GitHub.
+3. Commit changes.
+4. Render > Manual Deploy > Deploy latest commit.
+5. Trên iPad mở Safari, kéo reload lại trang. Nếu vẫn trắng, vào Settings > Safari > Clear History and Website Data rồi mở lại.

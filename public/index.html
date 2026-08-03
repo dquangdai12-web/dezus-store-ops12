@@ -5,11 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#e7e2d8" />
   <title>Dezus Store Ops</title>
-  <link rel="stylesheet" href="/style.css?v=v4-48-inter-mobile-ui" />
+  <link rel="stylesheet" href="/style.css?v=v4-67-1-ipad-fix" />
+  <script>
+    window.__DEZUS_APP_VERSION__ = "v4-67-1-ipad-fix";
+    window.onerror = function(message, source, lineno, colno) {
+      var app = document.getElementById("app");
+      if (app && !app.innerHTML) {
+        app.innerHTML = "<div style=\"font-family:Arial,sans-serif;padding:24px;line-height:1.5;color:#111\"><h2>Đang tải lại ứng dụng...</h2><p>Nếu màn hình vẫn trắng, vui lòng tải lại trang hoặc xoá cache Safari.</p><p style=\"font-size:12px;color:#777\">" + String(message || "Lỗi tải ứng dụng") + "</p></div>";
+      }
+      return false;
+    };
+  </script>
 </head>
 <body>
   <div id="app"></div>
   <div id="toast" class="toast hidden"></div>
-  <script src="/app.js?v=v4-48-inter-mobile-ui"></script>
+  <script src="/app.js?v=v4-67-1-ipad-fix"></script>
 </body>
 </html>

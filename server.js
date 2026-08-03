@@ -44,7 +44,15 @@ const upload = multer({
 
 app.use(express.json({ limit: '6mb' }));
 app.use('/uploads', express.static(UPLOAD_DIR));
-app.use(express.static(path.join(ROOT, 'public')));
+app.use(express.static(path.join(ROOT, 'public'), {
+  setHeaders: (res, filePath) => {
+    if (/\.(html|js|css)$/i.test(filePath)) {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+    }
+  }
+}));
 
 const ROLE_DEFAULTS = {
   admin: {
@@ -3277,7 +3285,12 @@ app.use((err, req, res, _next) => {
   res.status(status).json({ error: message });
 });
 
-app.get('*', (_req, res) => res.sendFile(path.join(ROOT, 'public', 'index.html')));
+app.get('*', (_req, res) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.sendFile(path.join(ROOT, 'public', 'index.html'));
+});
 
 app.listen(PORT, () => {
   console.log('==========================================');
