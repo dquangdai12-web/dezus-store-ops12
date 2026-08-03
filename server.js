@@ -255,6 +255,8 @@ function publicUser(row) {
     store_name: u.store_name || null,
     store_names: u.store_names || [],
     status: u.status,
+    inactive_at: u.inactive_at || u.deleted_at || null,
+    inactive_by: u.inactive_by || u.deleted_by || null,
     permissions: getPermissions(u.id, u.role)
   };
 }
@@ -1109,14 +1111,16 @@ function aggregateKpiTargetsForUser(userId, months) {
 }
 
 function aggregateKpiTargetsForStore(storeId, months) {
-  const staff = salesStaffForStore(storeId);
-  const employeeTargets = staff.map(u => aggregateKpiTargetsForUser(u.id, months));
+  // Tính theo dòng target đã lưu, không phụ thuộc tài khoản còn active hay đã nghỉ.
+  // Nhờ vậy khi nhân viên nghỉ/ngưng hoạt động, target lịch sử của cửa hàng vẫn không bị mất.
+  const monthSet = new Set((months || []).map(String));
+  const targetRows = (db.sales_targets || []).filter(t => Number(t.store_id) === Number(storeId) && monthSet.has(String(t.target_month)));
   const avg = key => {
-    const vals = employeeTargets.map(r => Number(r[key] || 0)).filter(v => v > 0);
+    const vals = targetRows.map(r => Number(r[key] || 0)).filter(v => v > 0);
     return vals.length ? Math.round((vals.reduce((s, v) => s + v, 0) / vals.length) * 100) / 100 : 0;
   };
   return {
-    target: employeeTargets.reduce((sum, r) => sum + Number(r.target || 0), 0),
+    target: targetRows.reduce((sum, r) => sum + Number(r.target_revenue ?? r.target ?? 0), 0),
     target_upt: avg('target_upt'),
     target_atv: avg('target_atv'),
     target_cr: avg('target_cr'),
@@ -1177,14 +1181,40 @@ function salesProgressForUserPeriod(userId, start, end) {
   };
 }
 
-function salesStaffForStore(storeId) {
-  return db.users.filter(u => u.status === 'active' && Number(u.store_id) === Number(storeId) && u.role === 'employee');
+function salesStaffForStore(storeId, opts = {}) {
+  const options = typeof opts === 'string' ? { status: opts } : (opts || {});
+  const statusMode = ['active', 'inactive', 'all'].includes(String(options.status || 'active')) ? String(options.status || 'active') : 'active';
+  const sid = Number(storeId);
+  const start = options.start ? dateVal(options.start) : null;
+  const end = options.end ? dateVal(options.end) : null;
+  const monthSet = start && end ? new Set(monthKeysBetween(start, end).map(String)) : new Set();
+  const idsWithData = new Set();
+  if (start && end) {
+    (db.sales || []).forEach(r => {
+      if (Number(r.store_id) === sid && dateVal(r.sale_date) >= start && dateVal(r.sale_date) < end) idsWithData.add(Number(r.user_id));
+    });
+    (db.sales_targets || []).forEach(r => {
+      if (Number(r.store_id) === sid && monthSet.has(String(r.target_month))) idsWithData.add(Number(r.user_id));
+    });
+    (db.assessments || []).forEach(r => {
+      if (Number(r.store_id) === sid && r.template_id === 'GUESTS' && dateVal(r.assessed_at) >= start && dateVal(r.assessed_at) < end) idsWithData.add(Number(r.employee_id));
+    });
+  }
+  let rows = (db.users || []).filter(u => u.status !== 'deleted' && Number(getPrimaryStoreId(u)) === sid && u.role === 'employee');
+  if (statusMode === 'active') rows = rows.filter(u => u.status === 'active');
+  if (statusMode === 'inactive') rows = rows.filter(u => u.status !== 'active');
+  if (start && end) {
+    rows = rows.filter(u => u.status === 'active' || idsWithData.has(Number(u.id)) || statusMode === 'inactive');
+    if (statusMode === 'inactive') rows = rows.filter(u => idsWithData.has(Number(u.id)));
+  }
+  return rows.sort((a, b) => String(a.status || '').localeCompare(String(b.status || '')) || a.full_name.localeCompare(b.full_name, 'vi'));
 }
 
 function storeMonthlyTarget(storeId, month) {
-  // Target cửa hàng/quản lý = tổng target cá nhân của toàn bộ nhân viên cửa hàng.
-  // Không cộng target riêng của quản lý để tránh tính trùng.
-  return salesStaffForStore(storeId).reduce((sum, u) => sum + monthlyTargetForUser(u.id, month), 0);
+  // Target cửa hàng/quản lý = tổng target cá nhân đã lưu trong tháng, kể cả nhân viên đã nghỉ/ngưng hoạt động.
+  return (db.sales_targets || [])
+    .filter(t => Number(t.store_id) === Number(storeId) && String(t.target_month) === String(month))
+    .reduce((sum, t) => sum + Number(t.target_revenue ?? t.target ?? 0), 0);
 }
 
 function storeSalesProgressForPeriod(storeId, start, end) {
@@ -1437,15 +1467,18 @@ function assessmentRowsForUser(user, templateId) {
 
 function leaderboardRows(user, period, refDate, storeId = null, options = {}) {
   const { start, end } = periodRange(period, refDate);
+  const statusMode = ['active', 'inactive', 'all'].includes(String(options.userStatus || 'active')) ? String(options.userStatus || 'active') : 'active';
   // Bảng doanh thu chỉ hiển thị nhân viên bán hàng, không đưa quản lý vào bảng này.
-  let people = db.users.filter(u => u.status === 'active' && u.role === 'employee');
+  let people = (db.users || []).filter(u => u.status !== 'deleted' && u.role === 'employee');
+  if (statusMode === 'active') people = people.filter(u => u.status === 'active');
+  if (statusMode === 'inactive') people = people.filter(u => u.status !== 'active');
   const requestedStoreId = storeId ? Number(storeId) : null;
   if (requestedStoreId) {
     people = people.filter(u => Number(getPrimaryStoreId(u)) === Number(requestedStoreId));
   } else if (options.includeAllStores) {
     // Màn Tổng quan: cho phép xem bảng xếp hạng theo % đạt target toàn hệ thống.
     // Không truyền store_id để tránh bị khóa theo cửa hàng ở khu vực này.
-  } else if (user.role !== 'admin') {
+  } else if (!isAllStoreRole(user)) {
     const canViewStoreScope = user.role === 'manager' || Number(user.permissions.can_manage_sales) === 1 || Number(user.permissions.can_view_sales_target) === 1 || Number(user.permissions.can_view_store_sales_summary) === 1;
     people = canViewStoreScope ? people.filter(u => userHasStore(user, getPrimaryStoreId(u))) : people.filter(u => Number(u.id) === Number(user.id));
   }
@@ -1454,8 +1487,9 @@ function leaderboardRows(user, period, refDate, storeId = null, options = {}) {
     const guestsRows = db.assessments.filter(a => a.template_id === 'GUESTS' && Number(a.employee_id) === Number(u.id) && dateVal(a.assessed_at) >= start && dateVal(a.assessed_at) < end);
     const guests_percent = guestsRows.length ? guestsRows.reduce((sum, a) => sum + Number(a.percent || 0), 0) / guestsRows.length : 0;
     const achievement_percent = progress.target ? Math.round((progress.revenue / progress.target) * 10000) / 100 : 0;
-    return { user_id: u.id, full_name: u.full_name, role: u.role, is_store_total: false, store_name: getStore(u.store_id)?.name || '', revenue: progress.revenue, target: progress.target, target_upt: progress.target_upt, target_atv: progress.target_atv, target_cr: progress.target_cr, achievement_percent, bill_count: progress.bill_count, item_count: progress.item_count, upt: progress.upt, atv: progress.atv, asp: progress.asp, cr: progress.cr, pace_percent: progress.pace_percent, projected_revenue: progress.projected_revenue, days_elapsed: progress.days_elapsed, days_remaining: progress.days_remaining, daily_needed: progress.daily_needed, guests_percent, last_update: progress.last_update };
-  }).sort((a, b) => b.achievement_percent - a.achievement_percent || b.revenue - a.revenue || b.guests_percent - a.guests_percent);
+    return { user_id: u.id, full_name: u.full_name, role: u.role, user_status: u.status || 'active', is_store_total: false, store_name: getStore(getPrimaryStoreId(u))?.name || '', revenue: progress.revenue, target: progress.target, target_upt: progress.target_upt, target_atv: progress.target_atv, target_cr: progress.target_cr, achievement_percent, bill_count: progress.bill_count, item_count: progress.item_count, upt: progress.upt, atv: progress.atv, asp: progress.asp, cr: progress.cr, pace_percent: progress.pace_percent, projected_revenue: progress.projected_revenue, days_elapsed: progress.days_elapsed, days_remaining: progress.days_remaining, daily_needed: progress.daily_needed, guests_percent, last_update: progress.last_update };
+  }).filter(r => statusMode === 'active' || r.user_status === 'active' || Number(r.revenue || 0) || Number(r.target || 0) || Number(r.bill_count || 0) || Number(r.item_count || 0) || Number(r.guests_percent || 0))
+    .sort((a, b) => b.achievement_percent - a.achievement_percent || b.revenue - a.revenue || b.guests_percent - a.guests_percent);
   const employeeTotal = rows.reduce((sum, row) => sum + Number(row.revenue || 0), 0);
   return { period, start, end, leaderboard: rows.map((r, idx) => ({ ...r, rank: idx + 1, revenue_percent: employeeTotal ? Math.round((r.revenue / employeeTotal) * 10000) / 100 : 0 })) };
 }
@@ -1565,12 +1599,15 @@ app.get('/api/bootstrap', requireAuth, (req, res) => {
 });
 
 app.get('/api/users', requireAuth, requirePerm('can_manage_users'), (req, res) => {
-  const users = db.users
-    .filter(u => u.status === 'active')
+  const statusMode = ['active', 'inactive', 'all'].includes(String(req.query.status || 'active')) ? String(req.query.status || 'active') : 'active';
+  let rows = (db.users || []).filter(u => u.status !== 'deleted');
+  if (statusMode === 'active') rows = rows.filter(u => u.status === 'active');
+  if (statusMode === 'inactive') rows = rows.filter(u => u.status !== 'active');
+  const users = rows
     .slice()
-    .sort((a, b) => Number(getPrimaryStoreId(a) || 0) - Number(getPrimaryStoreId(b) || 0) || a.role.localeCompare(b.role) || a.full_name.localeCompare(b.full_name, 'vi'))
+    .sort((a, b) => (a.status === 'active' ? 0 : 1) - (b.status === 'active' ? 0 : 1) || Number(getPrimaryStoreId(a) || 0) - Number(getPrimaryStoreId(b) || 0) || a.role.localeCompare(b.role) || a.full_name.localeCompare(b.full_name, 'vi'))
     .map(publicUser);
-  res.json({ users });
+  res.json({ users, status: statusMode });
 });
 
 app.post('/api/users', requireAuth, requirePerm('can_manage_users'), (req, res) => {
@@ -1597,7 +1634,18 @@ app.patch('/api/users/:id', requireAuth, requirePerm('can_manage_users'), (req, 
   const nextStoreIds = store_ids === undefined ? getUserStoreIds(existing) : normalizeStoreIds(Array.isArray(store_ids) ? store_ids : (store_id ? [store_id] : []));
   existing.store_ids = nextStoreIds;
   existing.store_id = nextStoreIds[0] || null;
-  if (status) existing.status = status;
+  if (status && ['active', 'inactive'].includes(String(status))) {
+    existing.status = String(status);
+    if (existing.status === 'inactive') {
+      existing.inactive_at = existing.inactive_at || nowIso();
+      existing.inactive_by = existing.inactive_by || req.user.id;
+    } else {
+      delete existing.inactive_at;
+      delete existing.inactive_by;
+      delete existing.deleted_at;
+      delete existing.deleted_by;
+    }
+  }
   if (password) existing.password_hash = bcrypt.hashSync(String(password), 10);
   setPermissions(id, existing.role, permissions || getPermissions(id, existing.role));
   saveDb();
@@ -1614,9 +1662,10 @@ app.delete('/api/users/:id', requireAuth, requirePerm('can_manage_users'), (req,
     if (activeAdmins.length <= 1) return res.status(400).json({ error: 'Không thể xóa admin cuối cùng của hệ thống' });
   }
   existing.status = 'inactive';
-  existing.deleted_at = nowIso();
+  existing.inactive_at = nowIso();
+  existing.inactive_by = req.user.id;
+  existing.deleted_at = existing.inactive_at;
   existing.deleted_by = req.user.id;
-  existing.username = `${existing.username}__deleted_${existing.id}_${Date.now()}`;
   saveDb();
   res.json({ ok: true });
 });
@@ -1975,8 +2024,8 @@ function normalizeWeeklyProducts(value) {
   return parseWeeklyList(value).map(item => ({
     name: String(item.name || item.product_name || '').trim(),
     sku: String(item.sku || '').trim(),
-    quantity: toNumber(item.quantity || item.qty, 0),
-    bill_count: toNumber(item.bill_count, 0),
+    quantity: toNumber(item.quantity ?? item.qty ?? item.item_count ?? item.so_mon, 0),
+    bill_count: toNumber(item.bill_count ?? item.bills, 0),
     note: String(item.note || '').trim()
   })).filter(item => item.name || item.sku || item.quantity).slice(0, 5);
 }
@@ -1987,7 +2036,7 @@ function normalizeWeeklyPromotions(value) {
     note: String(item.note || '').trim()
   })).filter(item => item.name || item.bill_count).slice(0, 20);
 }
-function buildWeeklyReport(user, rawWeekStart, rawStoreId) {
+function buildWeeklyReport(user, rawWeekStart, rawStoreId, rawUserStatus = 'active') {
   const week_start = weekStartOf(rawWeekStart || new Date());
   const week_end = addDaysUtc(week_start, 6);
   const endExclusive = addDaysUtc(week_start, 7);
@@ -1996,6 +2045,7 @@ function buildWeeklyReport(user, rawWeekStart, rawStoreId) {
   if (!store) throw new Error('Cửa hàng không hợp lệ');
   if (user.role !== 'admin' && Number(user.permissions.can_view_weekly_report) !== 1 && Number(user.permissions.can_manage_weekly_report) !== 1) throw new Error('Không có quyền xem báo cáo tuần');
   const days = datesBetween(week_start, endExclusive);
+  const employeeStatusMode = ['active', 'inactive', 'all'].includes(String(rawUserStatus || 'active')) ? String(rawUserStatus || 'active') : 'active';
   const salesRows = (db.sales || []).filter(sa => Number(sa.store_id) === Number(storeId) && dateVal(sa.sale_date) >= week_start && dateVal(sa.sale_date) < endExclusive);
   const dailyMap = new Map(days.map(d => [d, { sale_date: d, revenue: 0, bill_count: 0, item_count: 0, customer_count: 0, customer_new_count: 0, customer_old_count: 0, target_revenue: 0, upt: 0, atv: 0, asp: 0, cr: 0, achievement_percent: 0, note: '' }]));
   salesRows.forEach(r => {
@@ -2033,14 +2083,14 @@ function buildWeeklyReport(user, rawWeekStart, rawStoreId) {
     r.achievement_percent = r.target_revenue ? Math.round((r.revenue / r.target_revenue) * 10000) / 100 : 0;
     return r;
   });
-  const staff = salesStaffForStore(storeId);
+  const staff = salesStaffForStore(storeId, { status: employeeStatusMode, start: week_start, end: endExclusive });
   const employeeRows = staff.map(u => {
     const rows = salesRows.filter(r => Number(r.user_id) === Number(u.id));
     const revenue = rows.reduce((s, r) => s + Number(r.revenue || 0), 0);
     const bill_count = rows.reduce((s, r) => s + Number(r.bill_count || 0), 0);
     const item_count = rows.reduce((s, r) => s + Number(r.item_count || 0), 0);
     const target = Math.round(proratedTargetForUser(u.id, week_start, endExclusive));
-    return { user_id: u.id, full_name: u.full_name, store_id: u.store_id, store_name: store.name, revenue, target, achievement_percent: target ? Math.round((revenue / target) * 10000) / 100 : 0, revenue_percent: 0, bill_count, item_count, upt: bill_count ? Math.round((item_count / bill_count) * 100) / 100 : 0, atv: bill_count ? Math.round(revenue / bill_count) : 0, asp: item_count ? Math.round(revenue / item_count) : 0 };
+    return { user_id: u.id, full_name: u.full_name, user_status: u.status || 'active', store_id: getPrimaryStoreId(u), store_name: store.name, revenue, target, achievement_percent: target ? Math.round((revenue / target) * 10000) / 100 : 0, revenue_percent: 0, bill_count, item_count, upt: bill_count ? Math.round((item_count / bill_count) * 100) / 100 : 0, atv: bill_count ? Math.round(revenue / bill_count) : 0, asp: item_count ? Math.round(revenue / item_count) : 0 };
   }).sort((a, b) => b.revenue - a.revenue);
   const totals = daysRows.reduce((acc, r) => {
     acc.revenue += Number(r.revenue || 0);
@@ -2052,7 +2102,8 @@ function buildWeeklyReport(user, rawWeekStart, rawStoreId) {
     acc.target_revenue += Number(r.target_revenue || 0);
     return acc;
   }, { revenue: 0, bill_count: 0, item_count: 0, customer_count: 0, customer_new_count: 0, customer_old_count: 0, target_revenue: 0 });
-  const proratedStoreTarget = Math.round(staff.reduce((sum, u) => sum + proratedTargetForUser(u.id, week_start, endExclusive), 0));
+  const staffForTarget = salesStaffForStore(storeId, { status: 'all', start: week_start, end: endExclusive });
+  const proratedStoreTarget = Math.round(staffForTarget.reduce((sum, u) => sum + proratedTargetForUser(u.id, week_start, endExclusive), 0));
   if (!totals.target_revenue) totals.target_revenue = proratedStoreTarget;
   totals.upt = totals.bill_count ? Math.round((totals.item_count / totals.bill_count) * 100) / 100 : 0;
   totals.atv = totals.bill_count ? Math.round(totals.revenue / totals.bill_count) : 0;
@@ -2192,7 +2243,8 @@ app.get('/api/sales/leaderboard', requireAuth, (req, res) => {
     if (!store) return res.status(400).json({ error: 'Cửa hàng không hợp lệ' });
     if (req.user.role !== 'admin' && !userHasStore(req.user, storeId)) return res.status(403).json({ error: 'Không có quyền xem doanh thu cửa hàng này' });
   }
-  const result = leaderboardRows(req.user, period, date, storeId, { includeAllStores: overviewPercentScope });
+  const userStatus = ['active', 'inactive', 'all'].includes(String(req.query.user_status || 'active')) ? String(req.query.user_status || 'active') : 'active';
+  const result = leaderboardRows(req.user, period, date, storeId, { includeAllStores: overviewPercentScope, userStatus });
   if (overviewPercentScope && req.user.role !== 'admin') {
     // Ở Tổng quan, cửa hàng được xem thứ hạng toàn hệ thống theo %, nhưng không trả số tiền doanh thu/target.
     result.leaderboard = result.leaderboard.map(r => ({ ...r, revenue: 0, target: 0 }));
@@ -2335,7 +2387,7 @@ function buildDailyReport(user, rawDate, rawStoreId) {
   const report = dailyReportRow(storeId, reportDate) || null;
   const salesRows = (db.sales || []).filter(sa => Number(sa.store_id) === Number(storeId) && dateVal(sa.sale_date) === reportDate);
   const storeDay = (db.sales_store_days || []).find(x => Number(x.store_id) === Number(storeId) && dateVal(x.sale_date) === reportDate) || null;
-  const staff = salesStaffForStore(storeId);
+  const staff = salesStaffForStore(storeId, { status: 'all', start: reportDate, end: addDaysUtc(reportDate, 1) });
   const sales_entries = staff.map(u => {
     const r = salesRows.find(x => Number(x.user_id) === Number(u.id));
     return { user_id: u.id, full_name: u.full_name, store_name: store.name, revenue: r ? Number(r.revenue || 0) : 0, bill_count: r ? Number(r.bill_count || 0) : 0, item_count: r ? Number(r.item_count || 0) : 0, note: r ? (r.note || '') : '' };
@@ -2549,7 +2601,7 @@ app.post('/api/daily-report', requireAuth, requireAnyPerm('can_manage_daily_repo
 
 app.get('/api/weekly-report', requireAuth, (req, res) => {
   try {
-    res.json(buildWeeklyReport(req.user, req.query.week_start, req.query.store_id));
+    res.json(buildWeeklyReport(req.user, req.query.week_start, req.query.store_id, req.query.user_status));
   } catch (err) {
     res.status(403).json({ error: err.message || 'Không lấy được báo cáo tuần' });
   }
@@ -2585,11 +2637,11 @@ app.post('/api/weekly-report', requireAuth, (req, res) => {
 
 app.get('/api/weekly-report/export.csv', requireAuth, requirePerm('can_export'), (req, res) => {
   try {
-    const data = buildWeeklyReport(req.user, req.query.week_start, req.query.store_id);
+    const data = buildWeeklyReport(req.user, req.query.week_start, req.query.store_id, req.query.user_status);
     const rows = [];
     rows.push({ phan: 'Tong cua hang', cua_hang: data.store_name, tu_ngay: data.week_start, den_ngay: data.week_end, doanh_thu: data.totals.revenue, target_tuan: data.totals.target_revenue, phan_tram_dat: data.totals.achievement_percent, bill: data.totals.bill_count, so_mon: data.totals.item_count, khach_moi: data.totals.customer_new_count, khach_cu: data.totals.customer_old_count, luot_khach_tong: data.totals.customer_count, upt: data.totals.upt, atv: data.totals.atv, asp: data.totals.asp, cr: data.totals.cr, feedback: data.feedback.feedback || '', van_de: data.feedback.issues || '', hanh_dong_tuan_toi: data.feedback.action_plan || '', ghi_chu: data.feedback.note || '' });
     data.days.forEach(d => rows.push({ phan: 'Theo ngay', cua_hang: data.store_name, ngay: d.sale_date, doanh_thu: d.revenue, target_ngay: d.target_revenue, phan_tram_dat: d.achievement_percent, bill: d.bill_count, so_mon: d.item_count, khach_moi: d.customer_new_count, khach_cu: d.customer_old_count, luot_khach_tong: d.customer_count, upt: d.upt, atv: d.atv, asp: d.asp, cr: d.cr, ghi_chu: d.note || '' }));
-    data.employees.forEach(e => rows.push({ phan: 'Ca nhan', cua_hang: data.store_name, nhan_vien: e.full_name, doanh_thu: e.revenue, target_tuan_uoc_tinh: e.target, phan_tram_dat: e.achievement_percent, ty_trong_dt: e.revenue_percent, bill: e.bill_count, so_mon: e.item_count, upt: e.upt, atv: e.atv, asp: e.asp }));
+    data.employees.forEach(e => rows.push({ phan: 'Ca nhan', cua_hang: data.store_name, nhan_vien: e.full_name, trang_thai_nhan_su: e.user_status === 'active' ? 'Dang lam' : 'Da nghi/ngung hoat dong', doanh_thu: e.revenue, target_tuan_uoc_tinh: e.target, phan_tram_dat: e.achievement_percent, ty_trong_dt: e.revenue_percent, bill: e.bill_count, so_mon: e.item_count, upt: e.upt, atv: e.atv, asp: e.asp }));
     (data.top_products || []).forEach((p, idx) => rows.push({ phan: 'Top san pham ban chay', top: idx + 1, cua_hang: data.store_name, san_pham: p.name, so_mon: p.quantity || 0, ghi_chu: p.note || '' }));
     (data.promotions || []).forEach(p => rows.push({ phan: 'CTKM', cua_hang: data.store_name, ten_ctkm: p.name, so_bill_tham_gia: p.bill_count || 0, ghi_chu: p.note || '' }));
     res.header('Content-Type', 'text/csv; charset=utf-8');

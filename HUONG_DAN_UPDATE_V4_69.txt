@@ -1,0 +1,17 @@
+V4.69 - Ngưng hoạt động / giữ dữ liệu lịch sử nhân viên
+
+Nội dung chính:
+1. Đổi thao tác Xóa tài khoản thành Ngưng hoạt động / Nghỉ việc.
+2. Tài khoản ngưng hoạt động không đăng nhập được nữa nhưng dữ liệu cũ vẫn giữ.
+3. Admin xem được cả tài khoản đang làm và đã nghỉ, có thể mở lại tài khoản khi cần.
+4. Báo cáo doanh thu / báo cáo tuần có bộ lọc:
+   - Nhân sự đang làm
+   - Nhân sự đã nghỉ
+   - Tất cả nhân sự
+5. Doanh thu tổng cửa hàng, target cửa hàng và dữ liệu lịch sử không bị mất khi nhân viên nghỉ.
+
+Cách cập nhật:
+- Giải nén file zip.
+- Upload đè toàn bộ lên GitHub.
+- Commit changes.
+- Render > Manual Deploy > Deploy latest commit.

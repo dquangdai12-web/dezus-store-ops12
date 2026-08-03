@@ -1,0 +1,13 @@
+DEZUS STORE OPS - V4.70
+
+Cap nhat:
+- Khi bam/chon vao cac o nhap so dang hien 0, he thong tu xoa so 0 de cua hang nhap nhanh hon.
+- Ap dung cho cac o doanh thu, bill, so mon, khach moi, khach cu, order, CTKM va cac o so co dinh dang dau cham.
+- Khong anh huong cac o tong tu dong/readonly.
+- Cap nhat version app.js/style.css de iPad/Safari tai lai file moi.
+
+Cach cap nhat:
+1. Giai nen file zip.
+2. Upload de len GitHub.
+3. Commit changes.
+4. Render -> Manual Deploy -> Deploy latest commit.

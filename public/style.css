@@ -3551,3 +3551,130 @@ body{letter-spacing:-.008em}
   .weekly-extra-input-table th:nth-child(2),
   .weekly-extra-input-table td:nth-child(2){min-width:170px}
 }
+
+/* ==== V4.68 WEEKLY REPORT UX + BRONZE CUP ==== */
+.rank-card.rank-3{position:relative}
+.rank-card.rank-3 .rank-no{padding-right:42px}
+.rank-card .rank-cup-bronze{
+  background:linear-gradient(135deg,#f8d7b5,#b87333)!important;
+  box-shadow:0 10px 20px rgba(184,115,51,.22), inset 0 1px 0 rgba(255,255,255,.65)!important;
+  filter:saturate(.95);
+}
+.weekly-extra-grid-vertical{
+  display:grid!important;
+  grid-template-columns:1fr!important;
+  gap:14px!important;
+}
+.weekly-feedback-view{
+  grid-template-columns:1fr!important;
+  gap:10px!important;
+}
+.weekly-feedback-block{
+  width:100%!important;
+  min-width:0!important;
+}
+.weekly-feedback-form-vertical{
+  display:grid!important;
+  grid-template-columns:1fr!important;
+  gap:14px!important;
+}
+.weekly-feedback-form-vertical .field{
+  grid-column:1/-1!important;
+}
+.weekly-feedback-form-vertical textarea{
+  min-height:92px!important;
+}
+.weekly-product-list{
+  display:grid;
+  gap:10px;
+}
+.weekly-product-card{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 92px;
+  align-items:center;
+  gap:12px;
+  border:1px solid #e5edf5;
+  border-radius:15px;
+  background:linear-gradient(180deg,#fff,#f8fbff);
+  padding:11px 12px;
+  box-shadow:0 8px 18px rgba(15,23,42,.045);
+}
+.weekly-product-main{
+  min-width:0;
+  display:grid;
+  gap:5px;
+}
+.weekly-product-main b{
+  font-size:14px;
+  line-height:1.35;
+  color:#0f172a;
+  overflow-wrap:anywhere;
+}
+.weekly-product-main small{
+  color:#64748b;
+  font-size:12px;
+  line-height:1.35;
+  white-space:pre-wrap;
+}
+.weekly-product-qty-view{
+  border-left:1px solid #e5edf5;
+  text-align:right;
+  padding-left:10px;
+}
+.weekly-product-qty-view span{
+  display:block;
+  color:#64748b;
+  font-size:11px;
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:.03em;
+}
+.weekly-product-qty-view strong{
+  display:block;
+  color:#0f172a;
+  font-size:22px;
+  line-height:1.15;
+  margin-top:3px;
+}
+.weekly-product-form-list{
+  display:grid;
+  gap:10px;
+}
+.weekly-product-form-row{
+  display:grid;
+  grid-template-columns:1.3fr 120px 1fr;
+  gap:10px;
+  align-items:end;
+  border:1px solid #e5edf5;
+  border-radius:15px;
+  background:#fff;
+  padding:11px;
+}
+.weekly-product-form-row .weekly-product-top{
+  grid-column:1/-1;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.weekly-product-form-row .weekly-product-top b{
+  font-size:13px;
+  color:#334155;
+}
+.weekly-product-qty-field input{
+  text-align:center;
+  font-weight:850;
+}
+@media (max-width:860px){
+  .rank-card.rank-3 .rank-no{padding-right:36px}
+  .weekly-product-card{grid-template-columns:1fr 76px;padding:10px;gap:9px}
+  .weekly-product-qty-view strong{font-size:18px}
+  .weekly-product-form-row{grid-template-columns:1fr;gap:8px;padding:10px}
+  .weekly-product-form-row .field label{font-size:11px}
+}
+
+/* ==== V4.69 USER INACTIVE / HISTORY SAFE ==== */
+.user-inactive-row { opacity: .82; }
+.user-inactive-row td { background: rgba(148, 163, 184, .07); }
+.employee-name-cell .badge,
+.employee-name-line .badge,
+.weekly-read-table .badge { margin-left: 6px; vertical-align: middle; }

@@ -1,0 +1,25 @@
+BẢN V4.68 - SỬA BÁO CÁO TUẦN + CUP ĐỒNG
+
+Nội dung đã chỉnh:
+1. Báo cáo tuần - Top 5 sản phẩm bán chạy
+- Chuyển phần hiển thị sau khi lưu sang dạng thẻ dọc.
+- Hiển thị rõ Tên sản phẩm + Số món + Ghi chú.
+- Sửa đọc dữ liệu số món để tránh lưu xong chỉ thấy tên sản phẩm.
+
+2. Báo cáo tuần - Feedback
+- Bố cục feedback chuyển thành từng mục theo hàng dọc.
+- Form nhập/sửa feedback cũng chuyển về dạng 1 cột để dễ nhìn trên iPad/điện thoại.
+- Top sản phẩm nhập dạng thẻ dọc, không còn bảng nhiều cột khó nhìn.
+
+3. Tổng quan
+- Top 3 trong Top % đạt target doanh thu tháng này có icon cup đồng.
+- Top 1 cup vàng, Top 2 cup bạc, Top 3 cup đồng.
+
+4. Cache iPad
+- Đổi version app.js/style.css để iPad/Safari tự tải lại file mới.
+
+Cách cập nhật:
+- Giải nén zip.
+- Upload đè toàn bộ lên GitHub.
+- Commit changes.
+- Render > Manual Deploy > Deploy latest commit.

@@ -11,6 +11,7 @@ const state = {
   leaderboardPeriod: 'month',
   salesMonth: new Date().toISOString().slice(0, 7),
   salesStoreId: '',
+  salesUserStatus: localStorage.getItem('dezus_ops_sales_user_status') || 'active',
   scheduleDate: isoDateLocal(new Date()),
   scheduleMonth: currentMonthLocal(),
   scheduleStoreId: '',
@@ -26,6 +27,7 @@ const state = {
   cdpOjtiEditId: null,
   weeklyWeekStart: mondayOf(isoDateLocal(new Date())),
   weeklyStoreId: '',
+  weeklyUserStatus: localStorage.getItem('dezus_ops_weekly_user_status') || 'active',
   weeklyEditMode: false,
   dailyReportDate: isoDateLocal(new Date()),
   dailyReportStoreId: '',
@@ -152,11 +154,23 @@ function setupNumberFormat(root = document) {
     input.inputMode = 'numeric';
     input.autocomplete = 'off';
     input.value = formatIntegerDots(input.value);
+    input.addEventListener('focus', () => {
+      if (input.readOnly || input.disabled) return;
+      if (cleanNumberInput(input.value) === 0) input.value = '';
+    });
     input.addEventListener('input', () => {
       input.value = formatIntegerDots(input.value);
     });
     input.addEventListener('blur', () => {
       input.value = formatIntegerDots(input.value);
+    });
+  });
+  $$('input[type="number"]', root).forEach(input => {
+    if (input.dataset.clearZeroReady === '1') return;
+    input.dataset.clearZeroReady = '1';
+    input.addEventListener('focus', () => {
+      if (input.readOnly || input.disabled) return;
+      if (String(input.value).trim() === '0') input.value = '';
     });
   });
 }
@@ -410,6 +424,16 @@ function roleLabel(role) {
   if (role === 'office') return 'Khối văn phòng';
   if (role === 'manager') return 'Quản lý';
   return 'Nhân viên';
+}
+
+function userStatusLabel(status) {
+  return status === 'active' ? 'Đang làm' : 'Đã nghỉ / ngưng hoạt động';
+}
+function userStatusBadge(status) {
+  return `<span class="badge ${status === 'active' ? 'ok' : 'danger'}">${userStatusLabel(status)}</span>`;
+}
+function userDisplayName(u) {
+  return `${esc(u.full_name || '')}${u.user_status && u.user_status !== 'active' ? ' <span class="badge danger">Đã nghỉ</span>' : ''}`;
 }
 
 function isAllStoreUser(user = state.user) {
@@ -803,7 +827,7 @@ async function renderDashboard() {
       <div class="card kpi top-month-kpi"><div class="top-month-head"><div><div class="label">Top tháng</div><div class="num top-month-name">${top[0] ? esc(top[0].full_name) : '-'}</div><div class="hint top-month-store">${top[0] ? esc(top[0].store_name || '') : 'Chưa có dữ liệu'}</div></div><div class="top-month-cup" aria-hidden="true">🏆</div></div></div>
     </section>
     <section class="grid two overview-bottom-grid" style="margin-top:17px">
-      <div class="card overview-leaderboard-card"><div class="section-title"><h3>Top % đạt target tháng này</h3><span class="badge">Cạnh tranh</span></div>${tableLeaderboard(top)}</div>
+      <div class="card overview-leaderboard-card"><div class="section-title"><h3>Top % đạt target doanh thu tháng này</h3><span class="badge">Cạnh tranh</span></div>${tableLeaderboard(top)}</div>
       <div class="card overview-violations-card"><div class="section-title"><h3>Vi phạm gần đây</h3><span class="badge danger">Kiểm soát</span></div>${violationsData.violations.slice(0, 6).map(v => `<div class="activity-item"><div><b>${esc(v.employee_name)}</b><span>${esc(v.store_name || '')} • ${dt(v.created_at)}</span><p>${esc(v.description || '')}</p></div><span class="badge danger">-${v.points_deducted}</span></div>`).join('') || '<div class="empty">Chưa có vi phạm</div>'}</div>
     </section>
   `, 'Tổng quan', '');
@@ -816,8 +840,9 @@ function tableLeaderboard(rows, showAmounts = false) {
   // V4.57-1: Tổng quan không hiển thị % tỷ trọng DT, nhưng trang Doanh thu vẫn giữ.
   const revenueShareHead = showAmounts ? '<th>% tỷ trọng DT</th>' : '';
   const revenueShareBody = r => showAmounts ? `<td>${Number(r.revenue_percent || 0)}%</td>` : '';
-  const podium = rows.slice(0, 3).map(r => `<div class="rank-card rank-${r.rank}">${r.rank === 1 ? `<div class="rank-cup rank-cup-gold" aria-hidden="true">🏆</div>` : (r.rank === 2 ? `<div class="rank-cup rank-cup-silver" aria-hidden="true">🏆</div>` : "")}<div class="rank-no">Top ${r.rank}</div><b class="employee-name-line">${esc(r.full_name)}</b><span>${esc(r.store_name || '')}</span><strong>${Number(r.achievement_percent || 0)}%</strong></div>`).join('');
-  return `<div class="leaderboard-premium">${podium}</div><div class="table-wrap leaderboard-wrap"><table class="leaderboard-table"><thead><tr><th>Top</th><th>Nhân viên</th><th>Cửa hàng</th><th>% đạt target</th>${moneyColsHead}${revenueShareHead}<th>Bill</th><th>Món</th><th>UPT</th><th>ATV</th><th>ASP</th><th>GUESTS</th></tr></thead><tbody>${rows.map(r => `<tr><td><span class="badge dark">Top ${r.rank}</span></td><td class="employee-name-cell"><b>${esc(r.full_name)}</b></td><td class="store-name-cell">${esc(r.store_name || '')}</td><td>${percentBadge(r.achievement_percent || 0)}</td>${moneyColsBody(r)}${revenueShareBody(r)}<td>${money(r.bill_count || 0)}</td><td>${money(r.item_count || 0)}</td><td class="metric-badge-cell">${targetBadge(r.upt || 0, r.target_upt || 0, '', 2)}</td><td class="metric-badge-cell">${targetBadge(r.atv || 0, r.target_atv || 0, 'đ')}</td><td>${money(r.asp || 0)}đ</td><td>${Math.round(r.guests_percent || 0)}%</td></tr>`).join('')}</tbody></table></div>`;
+  const rankCupHtml = r => r.rank === 1 ? `<div class="rank-cup rank-cup-gold" aria-hidden="true">🏆</div>` : (r.rank === 2 ? `<div class="rank-cup rank-cup-silver" aria-hidden="true">🏆</div>` : (r.rank === 3 ? `<div class="rank-cup rank-cup-bronze" aria-hidden="true">🏆</div>` : ''));
+  const podium = rows.slice(0, 3).map(r => `<div class="rank-card rank-${r.rank}">${rankCupHtml(r)}<div class="rank-no">Top ${r.rank}</div><b class="employee-name-line">${userDisplayName(r)}</b><span>${esc(r.store_name || '')}</span><strong>${Number(r.achievement_percent || 0)}%</strong></div>`).join('');
+  return `<div class="leaderboard-premium">${podium}</div><div class="table-wrap leaderboard-wrap"><table class="leaderboard-table"><thead><tr><th>Top</th><th>Nhân viên</th><th>Cửa hàng</th><th>% đạt target</th>${moneyColsHead}${revenueShareHead}<th>Bill</th><th>Món</th><th>UPT</th><th>ATV</th><th>ASP</th><th>GUESTS</th></tr></thead><tbody>${rows.map(r => `<tr><td><span class="badge dark">Top ${r.rank}</span></td><td class="employee-name-cell"><b>${userDisplayName(r)}</b></td><td class="store-name-cell">${esc(r.store_name || '')}</td><td>${percentBadge(r.achievement_percent || 0)}</td>${moneyColsBody(r)}${revenueShareBody(r)}<td>${money(r.bill_count || 0)}</td><td>${money(r.item_count || 0)}</td><td class="metric-badge-cell">${targetBadge(r.upt || 0, r.target_upt || 0, '', 2)}</td><td class="metric-badge-cell">${targetBadge(r.atv || 0, r.target_atv || 0, 'đ')}</td><td>${money(r.asp || 0)}đ</td><td>${Math.round(r.guests_percent || 0)}%</td></tr>`).join('')}</tbody></table></div>`;
 }
 
 function tableStoreSalesSummary(summary) {
@@ -835,13 +860,15 @@ function tableWeeklyDays(rows) {
 
 function tableWeeklyEmployees(rows) {
   if (!rows?.length) return '<div class="empty">Chưa có dữ liệu cá nhân trong tuần này</div>';
-  return `<div class="table-wrap"><table><thead><tr><th>Nhân viên</th><th>Doanh thu</th><th>Target tuần ước tính</th><th>% đạt</th><th>% tỷ trọng DT</th><th>Bill</th><th>Món</th><th>UPT</th><th>ATV</th><th>ASP</th></tr></thead><tbody>${rows.map(r => `<tr><td><b>${esc(r.full_name)}</b></td><td>${money(r.revenue || 0)}đ</td><td>${money(r.target || 0)}đ</td><td>${percentBadge(r.achievement_percent || 0)}</td><td>${Number(r.revenue_percent || 0)}%</td><td>${money(r.bill_count || 0)}</td><td>${money(r.item_count || 0)}</td><td>${fmt2(r.upt || 0)}</td><td>${money(r.atv || 0)}đ</td><td>${money(r.asp || 0)}đ</td></tr>`).join('')}</tbody></table></div>`;
+  return `<div class="table-wrap"><table><thead><tr><th>Nhân viên</th><th>Doanh thu</th><th>Target tuần ước tính</th><th>% đạt</th><th>% tỷ trọng DT</th><th>Bill</th><th>Món</th><th>UPT</th><th>ATV</th><th>ASP</th></tr></thead><tbody>${rows.map(r => `<tr><td><b>${userDisplayName(r)}</b></td><td>${money(r.revenue || 0)}đ</td><td>${money(r.target || 0)}đ</td><td>${percentBadge(r.achievement_percent || 0)}</td><td>${Number(r.revenue_percent || 0)}%</td><td>${money(r.bill_count || 0)}</td><td>${money(r.item_count || 0)}</td><td>${fmt2(r.upt || 0)}</td><td>${money(r.atv || 0)}đ</td><td>${money(r.asp || 0)}đ</td></tr>`).join('')}</tbody></table></div>`;
 }
 
 function tableWeeklyProducts(rows) {
-  rows = Array.isArray(rows) ? rows : [];
   if (!rows.length) return '<div class="empty">Chưa nhập top sản phẩm bán chạy</div>';
-  return `<div class="table-wrap weekly-read-table-wrap"><table class="weekly-read-table"><thead><tr><th>Top</th><th>Sản phẩm</th><th>Số món</th><th>Ghi chú</th></tr></thead><tbody>${rows.slice(0,5).map((r, i) => `<tr><td><span class="badge dark">Top ${i + 1}</span></td><td><b>${esc(r.name || '')}</b></td><td>${money(r.quantity || 0)}</td><td>${esc(r.note || '')}</td></tr>`).join('')}</tbody></table></div>`;
+  return `<div class="weekly-product-list">${rows.slice(0,5).map((r, i) => {
+    const qty = Number(r.quantity ?? r.qty ?? r.item_count ?? 0) || 0;
+    return `<div class="weekly-product-card"><div class="weekly-product-main"><span class="badge dark">Top ${i + 1}</span><b>${esc(r.name || r.product_name || '')}</b>${r.note ? `<small>${esc(r.note)}</small>` : ''}</div><div class="weekly-product-qty-view"><span>Số món</span><strong>${money(qty)}</strong></div></div>`;
+  }).join('')}</div>`;
 }
 
 function tableWeeklyPromotions(rows) {
@@ -851,9 +878,9 @@ function tableWeeklyPromotions(rows) {
 }
 
 function weeklyProductInputRows(rows = []) {
-  const base = Array.isArray(rows) && rows.length ? rows.slice(0,5) : [{}, {}, {}, {}, {}];
+  const base = [...rows];
   while (base.length < 5) base.push({});
-  return base.slice(0,5).map((r, i) => `<tr class="weekly-product-row"><td><span class="badge dark">Top ${i + 1}</span></td><td><input class="input weekly-product-name" value="${esc(r.name || '')}" placeholder="Tên sản phẩm"></td><td><input class="input weekly-product-qty" type="text" inputmode="numeric" data-number-format value="${money(r.quantity || 0)}"></td><td><input class="input weekly-product-note" value="${esc(r.note || '')}" placeholder="Ghi chú"></td></tr>`).join('');
+  return base.slice(0,5).map((r, i) => `<div class="weekly-product-row weekly-product-form-row"><div class="weekly-product-top"><span class="badge dark">Top ${i + 1}</span><b>Sản phẩm bán chạy</b></div><div class="field"><label>Tên sản phẩm</label><input class="input weekly-product-name" value="${esc(r.name || r.product_name || '')}" placeholder="Tên sản phẩm"></div><div class="field weekly-product-qty-field"><label>Số món</label><input class="input weekly-product-qty" type="text" inputmode="numeric" data-number-format value="${money(r.quantity ?? r.qty ?? r.item_count ?? 0)}"></div><div class="field"><label>Ghi chú</label><input class="input weekly-product-note" value="${esc(r.note || '')}" placeholder="Ghi chú"></div></div>`).join('');
 }
 
 function weeklyPromotionInputRows(rows = []) {
@@ -866,7 +893,8 @@ async function downloadWeeklyReport() {
   const storeId = isAllStoreUser() ? (state.weeklyStoreId || state.boot.stores[0]?.id || '') : state.user.store_id;
   const weekStart = state.weeklyWeekStart || mondayOf(new Date().toISOString().slice(0, 10));
   try {
-    const res = await fetch(`/api/weekly-report/export.csv?week_start=${encodeURIComponent(weekStart)}${storeId ? `&store_id=${encodeURIComponent(storeId)}` : ''}`, { headers: { Authorization: `Bearer ${state.token}` } });
+    const userStatus = state.weeklyUserStatus || 'active';
+    const res = await fetch(`/api/weekly-report/export.csv?week_start=${encodeURIComponent(weekStart)}${storeId ? `&store_id=${encodeURIComponent(storeId)}` : ''}&user_status=${encodeURIComponent(userStatus)}`, { headers: { Authorization: `Bearer ${state.token}` } });
     if (!res.ok) throw new Error('Không tải được báo cáo tuần');
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);
@@ -1030,10 +1058,12 @@ async function renderWeeklyReport() {
   state.weeklyStoreId = defaultStoreId;
   const weekStart = state.weeklyWeekStart || mondayOf(new Date().toISOString().slice(0, 10));
   state.weeklyWeekStart = weekStart;
-  const data = await api(`/api/weekly-report?week_start=${encodeURIComponent(weekStart)}${defaultStoreId ? `&store_id=${encodeURIComponent(defaultStoreId)}` : ''}`);
+  const weeklyUserStatus = state.weeklyUserStatus || 'active';
+  const data = await api(`/api/weekly-report?week_start=${encodeURIComponent(weekStart)}${defaultStoreId ? `&store_id=${encodeURIComponent(defaultStoreId)}` : ''}&user_status=${encodeURIComponent(weeklyUserStatus)}`);
   state.weeklyWeekStart = data.week_start || weekStart;
   const storeOptions = state.boot.stores.map(s => `<option value="${s.id}" ${Number(s.id) === Number(data.store_id) ? 'selected' : ''}>${esc(s.name)}</option>`).join('');
   const storeFilter = isAllStoreUser() ? `<div class="field"><label>Cửa hàng</label><select class="input" id="weeklyStoreFilter">${storeOptions}</select></div>` : '';
+  const weeklyStatusFilter = `<div class="field"><label>Nhân sự hiển thị</label><select class="input" id="weeklyUserStatusFilter"><option value="active" ${weeklyUserStatus === 'active' ? 'selected' : ''}>Nhân sự đang làm</option><option value="inactive" ${weeklyUserStatus === 'inactive' ? 'selected' : ''}>Nhân sự đã nghỉ</option><option value="all" ${weeklyUserStatus === 'all' ? 'selected' : ''}>Tất cả nhân sự</option></select></div>`;
   const t = data.totals || {};
   const kpis = `<section class="grid four dash-kpis weekly-kpis"><div class="card kpi weekly-kpi weekly-revenue"><div class="label">Doanh thu tuần</div><div class="num">${money(t.revenue || 0)}đ</div><div class="hint">Target tuần: ${money(t.target_revenue || 0)}đ • ${percentBadge(t.achievement_percent || 0)}</div></div><div class="card kpi weekly-kpi weekly-bill"><div class="label">Bill / Món</div><div class="num">${money(t.bill_count || 0)} / ${money(t.item_count || 0)}</div><div class="hint">Tổng toàn cửa hàng</div></div><div class="card kpi weekly-kpi weekly-upt"><div class="label">UPT</div><div class="num">${fmt2(t.upt || 0)}</div><div class="hint">Số món / bill</div></div><div class="card kpi weekly-kpi weekly-atv"><div class="label">ATV</div><div class="num">${money(t.atv || 0)}đ</div><div class="hint">Doanh thu / bill</div></div><div class="card kpi weekly-kpi weekly-asp"><div class="label">ASP</div><div class="num">${money(t.asp || 0)}đ</div><div class="hint">Doanh thu / số món</div></div><div class="card kpi weekly-kpi weekly-cr"><div class="label">CR</div><div class="num">${fmt2(t.cr || 0)}%</div><div class="hint">Bill / lượt khách</div></div><div class="card kpi weekly-kpi weekly-customer"><div class="label">Khách mới / cũ</div><div class="num">${money(t.customer_new_count || 0)} / ${money(t.customer_old_count || 0)}</div><div class="hint">Theo TF cửa hàng</div></div><div class="card kpi weekly-kpi weekly-customer"><div class="label">Lượt khách tổng</div><div class="num">${money(t.customer_count || 0)}</div><div class="hint">Khách mới + khách cũ</div></div></section>`;
   const feedback = data.feedback || {};
@@ -1043,13 +1073,14 @@ async function renderWeeklyReport() {
   const weeklyProducts = feedback.top_products || data.top_products || [];
   const weeklyPromotions = feedback.promotions || data.promotions || [];
   const feedbackView = `<div class="card weekly-feedback-card" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">Feedback tuần</h3>${canEditFeedback ? `<button class="btn secondary" id="weeklyEditFeedbackBtn">Sửa feedback</button>` : ''}</div>${hasFeedback ? `<div class="weekly-feedback-view"><div class="weekly-feedback-block"><b>Nhận xét tuần</b><div class="weekly-feedback-content">${esc(feedback.feedback || 'Chưa nhập')}</div></div><div class="weekly-feedback-block"><b>Vấn đề phát sinh</b><div class="weekly-feedback-content">${esc(feedback.issues || 'Chưa nhập')}</div></div><div class="weekly-feedback-block"><b>Việc cần làm tuần tới</b><div class="weekly-feedback-content">${esc(feedback.action_plan || 'Chưa nhập')}</div></div><div class="weekly-feedback-block"><b>Ghi chú</b><div class="weekly-feedback-content">${esc(feedback.note || 'Chưa nhập')}</div></div></div>` : '<div class="empty">Chưa lưu feedback tuần này</div>'}</div>
-    <section class="grid two weekly-extra-grid" style="margin-top:16px"><div class="card"><h3>Top 5 sản phẩm bán chạy</h3>${tableWeeklyProducts(weeklyProducts)}</div><div class="card"><h3>Tổng hợp bill CTKM</h3>${tableWeeklyPromotions(weeklyPromotions)}</div></section>`;
-  const feedbackForm = canEditFeedback ? `<div class="card" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">${hasFeedback ? 'Sửa báo cáo tuần' : 'Nhập báo cáo tuần'}</h3>${hasFeedback ? '<button type="button" class="btn secondary" id="weeklyCancelFeedbackBtn">Hủy sửa</button>' : ''}</div><form id="weeklyFeedbackForm" class="grid two"><input type="hidden" name="store_id" value="${esc(data.store_id)}"><input type="hidden" name="week_start" value="${esc(data.week_start)}"><div class="field" style="grid-column:1/-1"><label>Nhận xét/feedback tuần này</label><textarea name="feedback" data-auto-resize placeholder="VD: TF tăng cuối tuần, khách hỏi nhiều size L/XL...">${esc(feedback.feedback || '')}</textarea></div><div class="field"><label>Vấn đề phát sinh</label><textarea name="issues" data-auto-resize placeholder="VD: Thiếu size, khách chê chất liệu, nhân sự thiếu ca...">${esc(feedback.issues || '')}</textarea></div><div class="field"><label>Việc cần làm tuần tới</label><textarea name="action_plan" data-auto-resize placeholder="VD: Đẩy combo, bổ sung hàng, đào tạo lại UPT...">${esc(feedback.action_plan || '')}</textarea></div><div class="field" style="grid-column:1/-1"><label>Ghi chú thêm</label><textarea name="note" data-auto-resize>${esc(feedback.note || '')}</textarea></div><div class="field" style="grid-column:1/-1"><label>Top 5 sản phẩm bán chạy</label><div class="table-wrap"><table class="weekly-extra-input-table"><thead><tr><th>Top</th><th>Sản phẩm</th><th>Số món</th><th>Ghi chú</th></tr></thead><tbody>${weeklyProductInputRows(weeklyProducts)}</tbody></table></div></div><div class="field" style="grid-column:1/-1"><label>Bill chạy CTKM</label><div class="row" style="margin-bottom:8px"><button type="button" class="btn secondary small" id="weeklyAddPromoBtn">Thêm CTKM</button><span class="hint">VD: Mua 3 giảm 5%, Mua 5 giảm 10%</span></div><div class="table-wrap"><table class="weekly-extra-input-table"><thead><tr><th>Tên CTKM</th><th>Số bill tham gia</th><th>Ghi chú</th></tr></thead><tbody id="weeklyPromoRows">${weeklyPromotionInputRows(weeklyPromotions)}</tbody></table></div></div><div style="grid-column:1/-1"><button class="btn">Lưu báo cáo tuần</button></div></form></div>` : '';
+    <section class="weekly-extra-grid weekly-extra-grid-vertical" style="margin-top:16px"><div class="card"><h3>Top 5 sản phẩm bán chạy</h3>${tableWeeklyProducts(weeklyProducts)}</div><div class="card"><h3>Tổng hợp bill CTKM</h3>${tableWeeklyPromotions(weeklyPromotions)}</div></section>`;
+  const feedbackForm = canEditFeedback ? `<div class="card" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">${hasFeedback ? 'Sửa báo cáo tuần' : 'Nhập báo cáo tuần'}</h3>${hasFeedback ? '<button type="button" class="btn secondary" id="weeklyCancelFeedbackBtn">Hủy sửa</button>' : ''}</div><form id="weeklyFeedbackForm" class="weekly-feedback-form-vertical"><input type="hidden" name="store_id" value="${esc(data.store_id)}"><input type="hidden" name="week_start" value="${esc(data.week_start)}"><div class="field" style="grid-column:1/-1"><label>Nhận xét/feedback tuần này</label><textarea name="feedback" data-auto-resize placeholder="VD: TF tăng cuối tuần, khách hỏi nhiều size L/XL...">${esc(feedback.feedback || '')}</textarea></div><div class="field"><label>Vấn đề phát sinh</label><textarea name="issues" data-auto-resize placeholder="VD: Thiếu size, khách chê chất liệu, nhân sự thiếu ca...">${esc(feedback.issues || '')}</textarea></div><div class="field"><label>Việc cần làm tuần tới</label><textarea name="action_plan" data-auto-resize placeholder="VD: Đẩy combo, bổ sung hàng, đào tạo lại UPT...">${esc(feedback.action_plan || '')}</textarea></div><div class="field" style="grid-column:1/-1"><label>Ghi chú thêm</label><textarea name="note" data-auto-resize>${esc(feedback.note || '')}</textarea></div><div class="field weekly-product-input-section"><label>Top 5 sản phẩm bán chạy</label><div class="weekly-product-form-list">${weeklyProductInputRows(weeklyProducts)}</div></div><div class="field" style="grid-column:1/-1"><label>Bill chạy CTKM</label><div class="row" style="margin-bottom:8px"><button type="button" class="btn secondary small" id="weeklyAddPromoBtn">Thêm CTKM</button><span class="hint">VD: Mua 3 giảm 5%, Mua 5 giảm 10%</span></div><div class="table-wrap"><table class="weekly-extra-input-table"><thead><tr><th>Tên CTKM</th><th>Số bill tham gia</th><th>Ghi chú</th></tr></thead><tbody id="weeklyPromoRows">${weeklyPromotionInputRows(weeklyPromotions)}</tbody></table></div></div><div style="grid-column:1/-1"><button class="btn">Lưu báo cáo tuần</button></div></form></div>` : '';
   const feedbackSection = canEditFeedback && (state.weeklyEditMode || !hasFeedback) ? feedbackForm : feedbackView;
-  shell(`<div class="card"><div class="toolbar"><div class="field"><label>Chọn ngày trong tuần</label><input class="input" id="weeklyDateFilter" type="date" value="${esc(data.week_start)}"></div>${storeFilter}<div class="field"><label>Tuần đang xem</label><div class="input readonly">${dOnly(data.week_start)} - ${dOnly(data.week_end)}</div></div><div style="align-self:end">${can('can_export') ? '<button class="btn secondary" id="weeklyExportBtn">Tải CSV báo cáo tuần</button>' : ''}</div></div><p class="hint">Chọn bất kỳ ngày trong tuần, hệ thống tự gom từ T2 đến CN. Lưu báo cáo xong sẽ hiện dạng bảng, bấm Sửa feedback để chỉnh lại.</p></div>${kpis}<section class="grid two" style="margin-top:16px"><div class="card"><h3>Doanh thu theo ngày</h3>${tableWeeklyDays(data.days || [])}</div><div class="card"><h3>Doanh thu cá nhân</h3>${tableWeeklyEmployees(data.employees || [])}</div></section>${feedbackSection}`, 'Báo cáo tuần', `Tổng hợp tuần ${dOnly(data.week_start)} - ${dOnly(data.week_end)}`);
+  shell(`<div class="card"><div class="toolbar"><div class="field"><label>Chọn ngày trong tuần</label><input class="input" id="weeklyDateFilter" type="date" value="${esc(data.week_start)}"></div>${storeFilter}${weeklyStatusFilter}<div class="field"><label>Tuần đang xem</label><div class="input readonly">${dOnly(data.week_start)} - ${dOnly(data.week_end)}</div></div><div style="align-self:end">${can('can_export') ? '<button class="btn secondary" id="weeklyExportBtn">Tải CSV báo cáo tuần</button>' : ''}</div></div><p class="hint">Chọn bất kỳ ngày trong tuần, hệ thống tự gom từ T2 đến CN. Lưu báo cáo xong sẽ hiện dạng bảng, bấm Sửa feedback để chỉnh lại.</p></div>${kpis}<section class="grid two" style="margin-top:16px"><div class="card"><h3>Doanh thu theo ngày</h3>${tableWeeklyDays(data.days || [])}</div><div class="card"><h3>Doanh thu cá nhân</h3>${tableWeeklyEmployees(data.employees || [])}</div></section>${feedbackSection}`, 'Báo cáo tuần', `Tổng hợp tuần ${dOnly(data.week_start)} - ${dOnly(data.week_end)}`);
   setupAutoResizeTextareas($('#weeklyFeedbackForm'));
   $('#weeklyDateFilter')?.addEventListener('change', e => { state.weeklyWeekStart = mondayOf(e.target.value); renderWeeklyReport(); });
   $('#weeklyStoreFilter')?.addEventListener('change', e => { state.weeklyStoreId = e.target.value; state.weeklyEditMode = false; renderWeeklyReport(); });
+  $('#weeklyUserStatusFilter')?.addEventListener('change', e => { state.weeklyUserStatus = e.target.value; localStorage.setItem('dezus_ops_weekly_user_status', state.weeklyUserStatus); renderWeeklyReport(); });
   $('#weeklyEditFeedbackBtn')?.addEventListener('click', () => { state.weeklyEditMode = true; renderWeeklyReport(); });
   $('#weeklyCancelFeedbackBtn')?.addEventListener('click', () => { state.weeklyEditMode = false; renderWeeklyReport(); });
   $('#weeklyExportBtn')?.addEventListener('click', downloadWeeklyReport);
@@ -1344,8 +1375,9 @@ async function renderSales() {
   state.salesMonth = currentMonth;
   const defaultStoreId = isAllStoreUser() ? (state.salesStoreId || state.boot.stores[0]?.id || '') : state.user.store_id;
   state.salesStoreId = defaultStoreId;
+  const salesUserStatus = state.salesUserStatus || 'active';
   const [data, summary] = await Promise.all([
-    api(`/api/sales/leaderboard?period=${state.leaderboardPeriod}&date=${currentMonth}-15${defaultStoreId ? `&store_id=${defaultStoreId}` : ''}`),
+    api(`/api/sales/leaderboard?period=${state.leaderboardPeriod}&date=${currentMonth}-15${defaultStoreId ? `&store_id=${defaultStoreId}` : ''}&user_status=${encodeURIComponent(salesUserStatus)}`),
     api(`/api/sales/store-summary?month=${currentMonth}${defaultStoreId ? `&store_id=${defaultStoreId}` : ''}`).catch(() => null)
   ]);
   const storeIdForForms = isAllStoreUser() ? defaultStoreId : state.user.store_id;
@@ -1361,13 +1393,15 @@ async function renderSales() {
   const rowsInputs = salesStaff.map(u => `<tr data-user="${u.id}"><td><b>${esc(u.full_name)}</b><div class="hint">${esc(u.store_name || '')}</div></td><td><input class="input" name="revenue_${u.id}" type="text" inputmode="numeric" data-number-format value="0"></td><td><input class="input" name="bill_${u.id}" type="text" inputmode="numeric" data-number-format value="0"></td><td><input class="input" name="item_${u.id}" type="text" inputmode="numeric" data-number-format value="0"></td><td><input class="input" name="note_${u.id}" placeholder="Ghi chú NV"></td></tr>`).join('') || '<tr><td colspan="5"><div class="empty">Chưa có nhân viên bán hàng trong cửa hàng này</div></td></tr>';
   const salesForm = canAny('can_manage_total_sales','can_manage_sales') ? `<div class="card" style="margin-top:16px"><h3>Nhập doanh thu từng ngày</h3><p class="hint">Mỗi ngày cửa hàng nhập doanh thu từng nhân viên: doanh thu, số bill, số món. TF nhập theo khách mới/khách cũ, hệ thống tự cộng lượt khách tổng. Nếu nhập lại cùng ngày, hệ thống sẽ cập nhật thay vì cộng trùng.</p><form id="dailySalesForm"><div class="grid four">${storeSelect}<div class="field"><label>Ngày bán</label><input class="input" type="date" name="sale_date" value="${new Date().toISOString().slice(0,10)}" required></div><div class="field"><label>Khách mới</label><input class="input" type="text" inputmode="numeric" data-number-format name="customer_new_count" value="0"></div><div class="field"><label>Khách cũ</label><input class="input" type="text" inputmode="numeric" data-number-format name="customer_old_count" value="0"></div><div class="field"><label>Lượt khách tổng</label><input class="input readonly" type="text" inputmode="numeric" data-number-format name="customer_count" value="0" readonly></div><div class="field"><label>Ghi chú cửa hàng</label><input class="input" name="note" placeholder="VD: Cuối ngày / ca tối"></div></div><div class="table-wrap revenue-sticky-name" style="margin-top:12px"><table><thead><tr><th>Nhân viên</th><th>Doanh thu</th><th>Số bill</th><th>Số món</th><th>Ghi chú</th></tr></thead><tbody>${rowsInputs}</tbody></table></div><div style="margin-top:12px"><button class="btn">Lưu doanh thu ngày</button></div></form></div>` : '';
   const tabs = `<div class="pillbar"><button data-period="month" class="${state.leaderboardPeriod === 'month' ? 'active' : ''}">Tháng</button><button data-period="quarter" class="${state.leaderboardPeriod === 'quarter' ? 'active' : ''}">Quý</button><button data-period="year" class="${state.leaderboardPeriod === 'year' ? 'active' : ''}">Năm</button></div>`;
-  const monthFilter = `<div class="toolbar" style="margin-bottom:12px"><div class="field"><label>Tháng xem tổng hợp</label><input class="input" id="salesMonthFilter" type="month" value="${currentMonth}"></div>${isAllStoreUser() ? `<div class="field"><label>Cửa hàng xem tổng</label><select class="input" id="salesStoreSummaryFilter">${storeOptions}</select></div>` : ''}</div>`;
+  const salesUserStatusFilter = `<div class="field"><label>Nhân sự hiển thị</label><select class="input" id="salesUserStatusFilter"><option value="active" ${salesUserStatus === 'active' ? 'selected' : ''}>Nhân sự đang làm</option><option value="inactive" ${salesUserStatus === 'inactive' ? 'selected' : ''}>Nhân sự đã nghỉ</option><option value="all" ${salesUserStatus === 'all' ? 'selected' : ''}>Tất cả nhân sự</option></select></div>`;
+  const monthFilter = `<div class="toolbar" style="margin-bottom:12px"><div class="field"><label>Tháng xem tổng hợp</label><input class="input" id="salesMonthFilter" type="month" value="${currentMonth}"></div>${isAllStoreUser() ? `<div class="field"><label>Cửa hàng xem tổng</label><select class="input" id="salesStoreSummaryFilter">${storeOptions}</select></div>` : ''}${salesUserStatusFilter}</div>`;
   const summaryBlock = summary ? `<div class="card" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">Tổng hợp doanh thu tháng ${esc(summary.month)} - ${esc(summary.store_name)}</h3></div><p class="hint">Bảng này cộng từng ngày đã nhập để theo dõi doanh thu ngày; UPT, ATV, ASP, CR mặc định so với target tháng. Timeline dự kiến tính theo tốc độ doanh thu hiện tại và số ngày còn lại trong kỳ.</p>${tableStoreSalesSummary(summary)}</div>` : '<div class="card" style="margin-top:16px"><h3>Tổng hợp doanh thu cửa hàng</h3><div class="empty">Tài khoản này chưa được cấp quyền xem tổng doanh thu cửa hàng</div></div>';
   shell(`${targetForm}${dailyTargetForm}${salesForm}<div class="card" style="margin-top:16px">${monthFilter}<div class="toolbar"><h3 style="margin-right:auto">Bảng doanh thu thực đạt ${state.leaderboardPeriod === 'month' ? 'tháng' : state.leaderboardPeriod === 'quarter' ? 'quý' : 'năm'}</h3>${tabs}${can('can_export') ? '<button class="btn secondary" data-export="sales">Tải CSV doanh thu</button>' : ''}</div><p class="hint">Mục Doanh thu được phép xem doanh thu thực đạt. Riêng màn Tổng quan chỉ hiển thị % đạt target, không hiển thị số tiền bán.</p>${tableLeaderboard(data.leaderboard, true)}</div>${summaryBlock}`, 'Doanh thu', 'Nhập doanh thu ngày, target cá nhân, target ngày và tổng hợp target cửa hàng');
   $$('.pillbar button').forEach(b => b.onclick = () => { state.leaderboardPeriod = b.dataset.period; renderSales(); });
   $('#salesMonthFilter')?.addEventListener('change', e => { state.salesMonth = e.target.value; renderSales(); });
   $('#salesStoreSummaryFilter')?.addEventListener('change', e => { state.salesStoreId = e.target.value; renderSales(); });
   $('#salesStoreFilter')?.addEventListener('change', e => { state.salesStoreId = e.target.value; renderSales(); });
+  $('#salesUserStatusFilter')?.addEventListener('change', e => { state.salesUserStatus = e.target.value; localStorage.setItem('dezus_ops_sales_user_status', state.salesUserStatus); renderSales(); });
   $('#dailyTargetStoreFilter')?.addEventListener('change', e => { state.salesStoreId = e.target.value; renderSales(); });
   const dailyTargetDates = new Set([todayIso]);
   const renderDailyTargetDates = () => {
@@ -2317,13 +2351,13 @@ async function renderReports() {
 }
 
 async function renderAdmin() {
-  const data = await api('/api/users');
+  const data = await api('/api/users?status=all');
   const permBoxes = Object.entries(PERM_LABELS).map(([key, label]) => `<label><input type="checkbox" name="${key}"> ${label}</label>`).join(' ');
   const form = `<div class="card"><h3>Cấp tài khoản / phân quyền</h3><form id="userForm" class="grid three"><div class="field"><label>Họ tên</label><input class="input" name="full_name" required></div><div class="field"><label>Tài khoản</label><input class="input" name="username" required></div><div class="field"><label>Mật khẩu</label><input class="input" name="password" value="123456" required></div><div class="field"><label>Vai trò</label><select name="role"><option value="employee">Nhân viên</option><option value="manager">Quản lý</option><option value="office">Khối văn phòng</option><option value="admin">Admin</option></select></div><div class="field"><label>Cửa hàng áp dụng (chọn nhiều)</label><select name="store_ids" multiple size="5">${renderStoreMultiOptions([])}</select><div class="hint">Giữ Ctrl hoặc chọn nhiều trên máy tính. Trên điện thoại có thể chọn lần lượt.</div></div><div class="field"><label>Quyền mở rộng</label><div class="hint perm-check-grid">${permBoxes}</div></div><div style="grid-column:1/-1"><button class="btn">Tạo tài khoản</button></div></form></div>`;
   const editUser = data.users.find(u => Number(u.id) === Number(state.adminEditUserId));
   const editBoxes = editUser ? Object.entries(PERM_LABELS).map(([key, label]) => `<label><input type="checkbox" name="${key}" ${Number(editUser.permissions?.[key]) === 1 ? 'checked' : ''}> ${label}</label>`).join(' ') : '';
-  const editCard = editUser ? `<div class="card" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">Sửa quyền / thông tin tài khoản</h3><button class="btn secondary" id="cancelEditUserBtn">Đóng</button></div><form id="editUserForm" class="grid three"><input type="hidden" name="id" value="${editUser.id}"><div class="field"><label>Họ tên</label><input class="input" name="full_name" value="${esc(editUser.full_name)}" required></div><div class="field"><label>Vai trò</label><select name="role"><option value="employee" ${editUser.role === 'employee' ? 'selected' : ''}>Nhân viên</option><option value="manager" ${editUser.role === 'manager' ? 'selected' : ''}>Quản lý</option><option value="office" ${editUser.role === 'office' ? 'selected' : ''}>Khối văn phòng</option><option value="admin" ${editUser.role === 'admin' ? 'selected' : ''}>Admin</option></select></div><div class="field"><label>Cửa hàng áp dụng (chọn nhiều)</label><select name="store_ids" multiple size="5">${renderStoreMultiOptions(editUser.store_ids || (editUser.store_id ? [editUser.store_id] : []))}</select><div class="hint">Có thể cấp cùng lúc nhiều cửa hàng, ví dụ Quận 1 và Quận 7.</div></div><div class="field"><label>Reset mật khẩu (không bắt buộc)</label><input class="input" name="password" placeholder="Để trống nếu không đổi"></div><div class="field" style="grid-column:span 2"><label>Quyền chi tiết</label><div class="hint perm-check-grid">${editBoxes}</div></div><div style="grid-column:1/-1" class="row"><button class="btn">Lưu quyền</button><button class="btn secondary" type="button" id="cancelEditUserBtn2">Hủy</button></div></form></div>` : '';
-  const table = `<div class="table-wrap"><table><thead><tr><th>Họ tên</th><th>Tài khoản</th><th>Vai trò</th><th>Cửa hàng áp dụng</th><th>Trạng thái</th><th>Quyền</th><th>Thao tác</th></tr></thead><tbody>${data.users.map(u => { const hasView = Number(u.permissions.can_view_sales_target) === 1 && Number(u.permissions.can_view_store_sales_summary) === 1 && Number(u.permissions.can_view_bonuses) === 1; const hasTarget = Number(u.permissions.can_set_sales_targets) === 1; const action = Number(u.id) === Number(state.user.id) ? '<span class="hint">Tài khoản hiện tại</span>' : `<div class="row wrap"><button class="btn small secondary editUserBtn" data-id="${u.id}">Sửa quyền</button><button class="btn small secondary quickPermBtn" data-id="${u.id}" data-mode="${hasView ? 'revoke' : 'grant'}">${hasView ? 'Thu hồi xem %/thưởng' : 'Cấp xem %/thưởng'}</button><button class="btn small secondary quickTargetBtn" data-id="${u.id}" data-mode="${hasTarget ? 'revoke' : 'grant'}">${hasTarget ? 'Thu hồi set target' : 'Cấp set target'}</button><button class="btn small danger deleteUserBtn" data-id="${u.id}" data-name="${esc(u.full_name)}">Xóa</button></div>`; return `<tr><td><b>${esc(u.full_name)}</b></td><td>${esc(u.username)}</td><td>${roleLabel(u.role)}</td><td>${esc((u.store_names && u.store_names.length ? u.store_names.join(' • ') : (u.store_name || '')))}</td><td><span class="badge ok">Đang dùng</span></td><td>${Object.entries(PERM_LABELS).filter(([k]) => Number(u.permissions[k]) === 1).map(([,l]) => `<span class="badge">${esc(l)}</span>`).join(' ')}</td><td>${action}</td></tr>`; }).join('')}</tbody></table></div>`;
+  const editCard = editUser ? `<div class="card" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">Sửa quyền / thông tin tài khoản</h3><button class="btn secondary" id="cancelEditUserBtn">Đóng</button></div><form id="editUserForm" class="grid three"><input type="hidden" name="id" value="${editUser.id}"><div class="field"><label>Họ tên</label><input class="input" name="full_name" value="${esc(editUser.full_name)}" required></div><div class="field"><label>Vai trò</label><select name="role"><option value="employee" ${editUser.role === 'employee' ? 'selected' : ''}>Nhân viên</option><option value="manager" ${editUser.role === 'manager' ? 'selected' : ''}>Quản lý</option><option value="office" ${editUser.role === 'office' ? 'selected' : ''}>Khối văn phòng</option><option value="admin" ${editUser.role === 'admin' ? 'selected' : ''}>Admin</option></select></div><div class="field"><label>Cửa hàng áp dụng (chọn nhiều)</label><select name="store_ids" multiple size="5">${renderStoreMultiOptions(editUser.store_ids || (editUser.store_id ? [editUser.store_id] : []))}</select><div class="hint">Có thể cấp cùng lúc nhiều cửa hàng, ví dụ Quận 1 và Quận 7.</div></div><div class="field"><label>Trạng thái tài khoản</label><select class="input" name="status"><option value="active" ${editUser.status === 'active' ? 'selected' : ''}>Đang làm / đang dùng</option><option value="inactive" ${editUser.status !== 'active' ? 'selected' : ''}>Đã nghỉ / ngưng hoạt động</option></select></div><div class="field"><label>Reset mật khẩu (không bắt buộc)</label><input class="input" name="password" placeholder="Để trống nếu không đổi"></div><div class="field" style="grid-column:span 2"><label>Quyền chi tiết</label><div class="hint perm-check-grid">${editBoxes}</div></div><div style="grid-column:1/-1" class="row"><button class="btn">Lưu quyền</button><button class="btn secondary" type="button" id="cancelEditUserBtn2">Hủy</button></div></form></div>` : '';
+  const table = `<div class="table-wrap"><table><thead><tr><th>Họ tên</th><th>Tài khoản</th><th>Vai trò</th><th>Cửa hàng áp dụng</th><th>Trạng thái</th><th>Quyền</th><th>Thao tác</th></tr></thead><tbody>${data.users.map(u => { const hasView = Number(u.permissions.can_view_sales_target) === 1 && Number(u.permissions.can_view_store_sales_summary) === 1 && Number(u.permissions.can_view_bonuses) === 1; const hasTarget = Number(u.permissions.can_set_sales_targets) === 1; const inactive = u.status !== 'active'; const action = Number(u.id) === Number(state.user.id) ? '<span class="hint">Tài khoản hiện tại</span>' : `<div class="row wrap"><button class="btn small secondary editUserBtn" data-id="${u.id}">Sửa quyền</button><button class="btn small secondary quickPermBtn" data-id="${u.id}" data-mode="${hasView ? 'revoke' : 'grant'}">${hasView ? 'Thu hồi xem %/thưởng' : 'Cấp xem %/thưởng'}</button><button class="btn small secondary quickTargetBtn" data-id="${u.id}" data-mode="${hasTarget ? 'revoke' : 'grant'}">${hasTarget ? 'Thu hồi set target' : 'Cấp set target'}</button>${inactive ? `<button class="btn small ok restoreUserBtn" data-id="${u.id}" data-name="${esc(u.full_name)}">Mở lại</button>` : `<button class="btn small danger deleteUserBtn" data-id="${u.id}" data-name="${esc(u.full_name)}">Ngưng hoạt động / Nghỉ việc</button>`}</div>`; return `<tr class="${inactive ? 'user-inactive-row' : ''}"><td><b>${esc(u.full_name)}</b>${inactive ? '<div class="hint">Dữ liệu cũ vẫn được giữ trong báo cáo</div>' : ''}</td><td>${esc(u.username)}</td><td>${roleLabel(u.role)}</td><td>${esc((u.store_names && u.store_names.length ? u.store_names.join(' • ') : (u.store_name || '')))}</td><td>${userStatusBadge(u.status)}</td><td>${Object.entries(PERM_LABELS).filter(([k]) => Number(u.permissions[k]) === 1).map(([,l]) => `<span class="badge">${esc(l)}</span>`).join(' ')}</td><td>${action}</td></tr>`; }).join('')}</tbody></table></div>`;
   const exports = `<div class="card" style="margin-top:16px"><h3>Tải dữ liệu</h3><div class="export-grid"><button class="btn secondary" data-export="tasks">Công việc</button><button class="btn secondary" data-export="violations">Vi phạm</button><button class="btn secondary" data-export="assessments">Checklist</button><button class="btn secondary" data-export="sales">Doanh thu cập nhật</button><button class="btn secondary" data-export="sales_targets">Target tháng</button><button class="btn secondary" data-export="sales_daily_targets">Target ngày</button><button class="btn secondary" data-export="bonuses">Tiền thưởng</button><button class="btn secondary" data-export="documents">Tài liệu</button><button class="btn secondary" data-export="orders">Order hàng</button><button class="btn secondary" data-export="online_orders">Đơn online</button><button class="btn secondary" data-export="product_feedback_summary">Tổng hợp đánh giá SP</button><button class="btn secondary" data-export="product_feedback">Chi tiết đánh giá SP</button><button class="btn secondary" data-export="product_collections">List BST/SKU</button><button class="btn secondary" data-export="product_trainings">Đào tạo SP</button><button class="btn secondary" data-export="product_training_attempts">Kết quả kiểm tra SP</button><button class="btn secondary" data-export="cdp_ojti">CDP/OJTI</button><button class="btn secondary" data-export="shifts">Ca làm</button><button class="btn secondary" data-export="work_schedules">Lịch làm việc</button><button class="btn secondary" data-export="performance">Tổng hợp điểm</button></div></div>`;
   shell(`${form}${editCard}<div class="card" style="margin-top:16px"><h3>Danh sách tài khoản</h3>${table}</div>${exports}`, 'Admin', 'Cấp quyền, phân quyền xem và tải dữ liệu');
   const createUserForm = $('#userForm');
@@ -2337,7 +2371,7 @@ async function renderAdmin() {
     const fd = new FormData(e.target);
     const permissions = {};
     Object.keys(PERM_LABELS).forEach(k => permissions[k] = fd.get(k) ? 1 : 0);
-    const payload = { full_name: fd.get('full_name'), role: fd.get('role'), store_ids: selectedValues(e.target.querySelector('[name="store_ids"]')), permissions };
+    const payload = { full_name: fd.get('full_name'), role: fd.get('role'), status: fd.get('status'), store_ids: selectedValues(e.target.querySelector('[name="store_ids"]')), permissions };
     if (String(fd.get('password') || '').trim()) payload.password = String(fd.get('password')).trim();
     try {
       await api(`/api/users/${fd.get('id')}`, { method: 'PATCH', body: JSON.stringify(payload) });
@@ -2373,10 +2407,22 @@ async function renderAdmin() {
   }));
   $$('.deleteUserBtn').forEach(btn => btn.addEventListener('click', async () => {
     const name = btn.dataset.name || 'tài khoản này';
-    if (!confirm(`Xóa ${name}? Tài khoản này sẽ không đăng nhập được nữa, nhưng dữ liệu cũ vẫn được giữ để xem báo cáo.`)) return;
+    if (!confirm(`Ngưng hoạt động / đánh dấu nghỉ việc cho ${name}? Tài khoản này sẽ không đăng nhập được nữa, nhưng dữ liệu cũ vẫn được giữ trong báo cáo.`)) return;
     try {
       await api(`/api/users/${btn.dataset.id}`, { method: 'DELETE' });
-      toast('Đã xóa tài khoản');
+      toast('Đã chuyển tài khoản sang trạng thái đã nghỉ / ngưng hoạt động');
+      await loadBase();
+      renderAdmin();
+    } catch (err) { toast(err.message, 'danger'); }
+  }));
+  $$('.restoreUserBtn').forEach(btn => btn.addEventListener('click', async () => {
+    const u = data.users.find(x => Number(x.id) === Number(btn.dataset.id));
+    if (!u) return;
+    const name = btn.dataset.name || 'tài khoản này';
+    if (!confirm(`Mở lại tài khoản cho ${name}?`)) return;
+    try {
+      await api(`/api/users/${u.id}`, { method: 'PATCH', body: JSON.stringify({ full_name: u.full_name, role: u.role, status: 'active', store_ids: u.store_ids || (u.store_id ? [u.store_id] : []), permissions: u.permissions }) });
+      toast('Đã mở lại tài khoản');
       await loadBase();
       renderAdmin();
     } catch (err) { toast(err.message, 'danger'); }
