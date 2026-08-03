@@ -1,0 +1,15 @@
+BẢN V4.71 - BÁO CÁO TUẦN: FEEDBACK MẶC ĐỊNH DẠNG XEM
+
+Đã chỉnh:
+- Mục Feedback tuần mặc định hiển thị ở trạng thái đã lưu/xem.
+- Quản lý muốn nhập hoặc chỉnh sửa thì bấm nút Sửa feedback.
+- Sau khi lưu, hệ thống quay lại màn hình xem feedback, không giữ form nhập mở sẵn.
+- Đổi nhãn Ghi chú thành Feedback sản phẩm trong phần feedback tuần.
+- Top sản phẩm bán chạy: ghi chú sản phẩm đổi nhãn thành Feedback sản phẩm.
+- CSV báo cáo tuần đổi trường ghi chú feedback tuần thành feedback_san_pham.
+
+Cách cập nhật:
+1. Giải nén file zip.
+2. Upload đè toàn bộ lên GitHub.
+3. Commit changes.
+4. Render → Manual Deploy → Deploy latest commit.
