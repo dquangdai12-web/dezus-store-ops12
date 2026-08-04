@@ -1,0 +1,10 @@
+DEZUS STORE OPS V4.86
+
+1. Thay toàn bộ source hiện tại bằng bộ V4.86 và deploy/restart như các phiên bản trước.
+2. Phần Vi phạm:
+   - Chỉ Admin có nút Xóa vi phạm.
+   - Người có quyền Ghi vi phạm có thể thêm danh mục lỗi mới, chọn nhóm, tên lỗi và mức mặc định.
+   - Điểm trừ vẫn tự khóa theo mức xử lý.
+3. Phần Học sản phẩm:
+   - Danh sách học bắt buộc gồm cả Nhân viên và Quản lý đang hoạt động.
+   - Dữ liệu bài học đã tạo trước đây không cần nhập lại; quản lý tự xuất hiện trong tiến độ theo cửa hàng.

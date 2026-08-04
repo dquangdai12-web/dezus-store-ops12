@@ -82,9 +82,10 @@ const VIOLATION_CATALOG = [
   { code:'AT02', group:'An toàn & tài sản', name:'Hành vi gây rủi ro nghiêm trọng cho người, hàng hoặc cửa hàng', level:'M3' },
 ];
 
-function violationCatalogOptions() {
-  const groups = [...new Set(VIOLATION_CATALOG.map(x => x.group))];
-  return '<option value="">Chọn lỗi theo SOP chế tài</option>' + groups.map(group => `<optgroup label="${esc(group)}">${VIOLATION_CATALOG.filter(x => x.group === group).map(x => `<option value="${x.code}">${esc(x.code)} - ${esc(x.name)}</option>`).join('')}</optgroup>`).join('');
+function violationCatalogOptions(catalog = VIOLATION_CATALOG) {
+  const rows = Array.isArray(catalog) ? catalog : VIOLATION_CATALOG;
+  const groups = [...new Set(rows.map(x => x.group))];
+  return '<option value="">Chọn lỗi theo SOP chế tài</option>' + groups.map(group => `<optgroup label="${esc(group)}">${rows.filter(x => x.group === group).map(x => `<option value="${x.code}">${esc(x.code)} - ${esc(x.name)}</option>`).join('')}</optgroup>`).join('');
 }
 
 
@@ -1373,12 +1374,13 @@ async function submitCompleteTask(e) {
 
 async function renderViolations() {
   const data = await api('/api/violations');
+  const catalog = Array.isArray(data.catalog) && data.catalog.length ? data.catalog : VIOLATION_CATALOG;
   const levelOptions = Object.entries(VIOLATION_LEVELS).map(([key, item]) => `<option value="${key}">${esc(item.label)} (-${item.points} điểm)</option>`).join('');
   const form = can('can_manage_violations') ? `
     <div class="card"><h3>Ghi nhận vi phạm theo SOP chế tài</h3>
       <form id="violationForm" class="grid two" enctype="multipart/form-data">
         <div class="field"><label>Nhân viên</label><select name="user_id" required>${usersInStore(isAllStoreUser() ? '' : state.user.store_id).map(u => `<option value="${u.id}">${esc(u.full_name)} - ${esc(u.store_name || '')}</option>`).join('')}</select></div>
-        <div class="field"><label>Danh mục vi phạm</label><select name="violation_code" id="violationCode" required>${violationCatalogOptions()}</select></div>
+        <div class="field"><label>Danh mục vi phạm</label><select name="violation_code" id="violationCode" required>${violationCatalogOptions(catalog)}</select></div>
         <div class="field"><label>Mức vi phạm</label><select name="violation_level" id="violationLevel" required>${levelOptions}</select><span class="hint">Hệ thống tự gợi ý theo SOP; có thể nâng mức khi tái phạm.</span></div>
         <div class="field"><label>Điểm trừ tương ứng</label><input class="input" id="violationPoints" name="points_deducted" value="1" readonly><span class="hint">Điểm được khóa theo mức vi phạm.</span></div>
         <div class="field"><label>Ảnh/chứng từ dưới 12MB</label><input class="input" type="file" name="evidence" accept="image/*,.pdf,.xlsx,.docx" multiple></div>
@@ -1386,13 +1388,22 @@ async function renderViolations() {
         <div class="field" style="grid-column:1/-1"><label>Nội dung vi phạm</label><textarea name="description" required placeholder="Mô tả thời gian, tình huống, bằng chứng, lần tái phạm và yêu cầu khắc phục"></textarea></div>
         <div style="grid-column:1/-1"><button class="btn danger">Lưu vi phạm</button></div>
       </form>
-    </div>` : '';
-  const list = data.violations.length ? `<div class="table-wrap"><table><thead><tr><th>Ngày</th><th>Nhân viên</th><th>Cửa hàng</th><th>Danh mục SOP</th><th>Mức xử lý</th><th>Điểm trừ</th><th>Nội dung</th><th>Chứng từ</th></tr></thead><tbody>${data.violations.map(v => `<tr><td>${dt(v.created_at)}</td><td><b>${esc(v.employee_name)}</b></td><td>${esc(v.store_name || '')}</td><td><b>${esc(v.violation_code || '')}</b>${v.violation_group ? `<br><span class="hint">${esc(v.violation_group)}</span>` : ''}<br>${esc(v.violation_type)}</td><td><span class="badge danger">${esc(v.level_label || v.violation_level || 'Chưa phân mức')}</span></td><td><span class="badge danger">-${v.points_deducted}</span></td><td>${esc(v.description || '')}</td><td>${v.evidence_path ? renderFiles(v.evidence_path) : ''}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Chưa có vi phạm</div>';
+    </div>
+    <div class="card" style="margin-top:16px"><details><summary><b>+ Thêm danh mục vi phạm mới</b></summary>
+      <form id="violationCatalogForm" class="grid three" style="margin-top:14px">
+        <div class="field"><label>Nhóm vi phạm</label><input class="input" name="group" required placeholder="VD: Dịch vụ & tác phong"></div>
+        <div class="field"><label>Tên lỗi vi phạm</label><input class="input" name="name" required placeholder="Nhập nội dung lỗi"></div>
+        <div class="field"><label>Mức mặc định</label><select name="level" required>${levelOptions}</select></div>
+        <div style="grid-column:1/-1"><button class="btn secondary">Thêm vào danh mục</button></div>
+      </form>
+    </details></div>` : '';
+  const actionHead = state.user?.role === 'admin' ? '<th>Thao tác</th>' : '';
+  const list = data.violations.length ? `<div class="table-wrap"><table><thead><tr><th>Ngày</th><th>Nhân viên</th><th>Cửa hàng</th><th>Danh mục SOP</th><th>Mức xử lý</th><th>Điểm trừ</th><th>Nội dung</th><th>Chứng từ</th>${actionHead}</tr></thead><tbody>${data.violations.map(v => `<tr><td>${dt(v.created_at)}</td><td><b>${esc(v.employee_name)}</b></td><td>${esc(v.store_name || '')}</td><td><b>${esc(v.violation_code || '')}</b>${v.violation_group ? `<br><span class="hint">${esc(v.violation_group)}</span>` : ''}<br>${esc(v.violation_type)}</td><td><span class="badge danger">${esc(v.level_label || v.violation_level || 'Chưa phân mức')}</span></td><td><span class="badge danger">-${v.points_deducted}</span></td><td>${esc(v.description || '')}</td><td>${v.evidence_path ? renderFiles(v.evidence_path) : ''}</td>${state.user?.role === 'admin' ? `<td><button class="btn small danger violationDeleteBtn" data-id="${v.id}" type="button">Xóa</button></td>` : ''}</tr>`).join('')}</tbody></table></div>` : '<div class="empty">Chưa có vi phạm</div>';
   shell(`${form}<div class="card" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">Danh sách vi phạm</h3>${can('can_export') ? '<button class="btn secondary" data-export="violations">Tải CSV</button>' : ''}</div>${list}</div>`, 'Vi phạm', 'Danh mục và mức xử lý theo SOP chế tài; nhân viên chỉ xem vi phạm của mình');
   const formEl = $('#violationForm');
   const syncViolation = (preferCatalog = false) => {
     if (!formEl) return;
-    const item = VIOLATION_CATALOG.find(x => x.code === $('#violationCode')?.value);
+    const item = catalog.find(x => x.code === $('#violationCode')?.value);
     if (preferCatalog && item && $('#violationLevel')) $('#violationLevel').value = item.level;
     const level = VIOLATION_LEVELS[$('#violationLevel')?.value] || VIOLATION_LEVELS.REMINDER;
     if ($('#violationPoints')) $('#violationPoints').value = level.points;
@@ -1401,6 +1412,8 @@ async function renderViolations() {
   $('#violationLevel')?.addEventListener('change', () => syncViolation(false));
   syncViolation(false);
   formEl?.addEventListener('submit', async e => { e.preventDefault(); if (hasFileOverLimit(e.target)) return; try { await api('/api/violations', { method: 'POST', body: new FormData(e.target) }); toast('Đã lưu vi phạm theo SOP'); renderViolations(); } catch (err) { toast(err.message, 'danger'); } });
+  $('#violationCatalogForm')?.addEventListener('submit', async e => { e.preventDefault(); try { await api('/api/violation-catalog', { method: 'POST', body: Object.fromEntries(new FormData(e.target).entries()) }); toast('Đã thêm danh mục vi phạm'); renderViolations(); } catch (err) { toast(err.message, 'danger'); } });
+  $$('.violationDeleteBtn').forEach(btn => btn.addEventListener('click', async () => { if (!confirm('Xóa vi phạm này? Điểm trừ liên quan cũng sẽ được loại khỏi tổng hợp.')) return; try { await api(`/api/violations/${btn.dataset.id}`, { method: 'DELETE' }); toast('Đã xóa vi phạm'); renderViolations(); } catch (err) { toast(err.message, 'danger'); } }));
 }
 
 async function renderChecklists() {

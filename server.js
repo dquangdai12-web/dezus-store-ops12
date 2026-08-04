@@ -109,7 +109,11 @@ const VIOLATION_CATALOG = [
   ['AT01','An toàn & tài sản','Không tuân thủ quy định an toàn, PCCC hoặc bảo quản tài sản','M2'],
   ['AT02','An toàn & tài sản','Hành vi gây rủi ro nghiêm trọng cho người, hàng hoặc cửa hàng','M3'],
 ].map(([code, group, name, level]) => ({ code, group, name, level }));
-function violationCatalogItem(code) { return VIOLATION_CATALOG.find(x => x.code === String(code || '').trim()); }
+function allViolationCatalog() {
+  db.violation_catalog_custom = db.violation_catalog_custom || [];
+  return [...VIOLATION_CATALOG, ...db.violation_catalog_custom.filter(x => x && x.status !== 'deleted')];
+}
+function violationCatalogItem(code) { return allViolationCatalog().find(x => x.code === String(code || '').trim()); }
 
 
 function nowIso() { return new Date().toISOString(); }
@@ -166,9 +170,9 @@ function defaultDb() {
   const permissions = users.map(u => ({ user_id: u.id, ...ROLE_DEFAULTS[u.role] }));
   return {
     version: 2,
-    nextIds: { stores: 6, users: 7, tasks: 1, task_assignees: 1, violations: 1, assessments: 1, assessment_items: 1, sales: 1, sales_targets: 1, sales_daily_targets: 1, sales_store_days: 1, bonuses: 1, documents: 1, shifts: 6, work_schedules: 1, orders: 1, online_orders: 1, product_feedback: 1, product_collections: 1, product_collection_items: 1, product_trainings: 1, product_training_attempts: 1, product_training_reads: 1, weekly_reports: 1, daily_reports: 1, cdp_ojti: 1 },
+    nextIds: { stores: 6, users: 7, tasks: 1, task_assignees: 1, violations: 1, violation_catalog_custom: 1, assessments: 1, assessment_items: 1, sales: 1, sales_targets: 1, sales_daily_targets: 1, sales_store_days: 1, bonuses: 1, documents: 1, shifts: 6, work_schedules: 1, orders: 1, online_orders: 1, product_feedback: 1, product_collections: 1, product_collection_items: 1, product_trainings: 1, product_training_attempts: 1, product_training_reads: 1, weekly_reports: 1, daily_reports: 1, cdp_ojti: 1 },
     stores, users, permissions, shifts,
-    tasks: [], task_assignees: [], violations: [], assessments: [], assessment_items: [], sales: [], sales_targets: [], sales_daily_targets: [], sales_store_days: [], bonuses: [], documents: [], orders: [], online_orders: [], product_feedback: [], product_collections: [], product_collection_items: [], product_trainings: [], product_training_attempts: [], product_training_reads: [], weekly_reports: [], daily_reports: [], cdp_ojti: [], work_schedules: []
+    tasks: [], task_assignees: [], violations: [], violation_catalog_custom: [], assessments: [], assessment_items: [], sales: [], sales_targets: [], sales_daily_targets: [], sales_store_days: [], bonuses: [], documents: [], orders: [], online_orders: [], product_feedback: [], product_collections: [], product_collection_items: [], product_trainings: [], product_training_attempts: [], product_training_reads: [], weekly_reports: [], daily_reports: [], cdp_ojti: [], work_schedules: []
   };
 }
 
@@ -193,6 +197,7 @@ function loadDb() {
       tasks: parsed.tasks || [],
       task_assignees: parsed.task_assignees || [],
       violations: parsed.violations || [],
+      violation_catalog_custom: parsed.violation_catalog_custom || [],
       assessments: parsed.assessments || [],
       assessment_items: parsed.assessment_items || [],
       sales: parsed.sales || [],
@@ -1250,7 +1255,7 @@ function trainingProgress(trainingId, userId, passPercent = 90) {
 
 function trainingAssignees(row) {
   if (!row || Number(row.is_required || 0) !== 1) return [];
-  return db.users.filter(u => u.status === 'active' && u.role === 'employee' && (!row.store_id || Number(u.store_id) === Number(row.store_id)));
+  return db.users.filter(u => u.status === 'active' && ['employee','manager'].includes(u.role) && (!row.store_id || Number(u.store_id) === Number(row.store_id)));
 }
 
 function overdueTrainingCountForUser(userId) {
@@ -2305,7 +2310,31 @@ app.post('/api/tasks/:assignmentId/complete', requireAuth, upload.array('evidenc
   res.json({ ok: true, status: late ? 'completed_late' : 'completed_on_time', points_delta: ta.points_delta });
 });
 
-app.get('/api/violations', requireAuth, (req, res) => res.json({ violations: violationRowsForUser(req.user) }));
+app.get('/api/violations', requireAuth, (req, res) => res.json({ violations: violationRowsForUser(req.user), catalog: allViolationCatalog() }));
+
+app.post('/api/violation-catalog', requireAuth, requirePerm('can_manage_violations'), (req, res) => {
+  const group = String(req.body?.group || '').trim();
+  const name = String(req.body?.name || '').trim();
+  const levelKey = VIOLATION_LEVELS[req.body?.level] ? req.body.level : 'M1';
+  if (!group || !name) return res.status(400).json({ error: 'Cần nhập nhóm và tên danh mục vi phạm' });
+  db.violation_catalog_custom = db.violation_catalog_custom || [];
+  const duplicate = allViolationCatalog().find(x => String(x.group).toLowerCase() === group.toLowerCase() && String(x.name).toLowerCase() === name.toLowerCase());
+  if (duplicate) return res.status(400).json({ error: 'Danh mục vi phạm này đã tồn tại' });
+  const id = nextId('violation_catalog_custom');
+  const code = `TC${String(id).padStart(3, '0')}`;
+  db.violation_catalog_custom.push({ id, code, group, name, level: levelKey, status: 'active', created_by: req.user.id, created_at: nowIso() });
+  saveDb();
+  res.json({ ok: true, id, code });
+});
+
+app.delete('/api/violations/:id', requireAuth, (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Chỉ Admin được xóa vi phạm' });
+  const row = (db.violations || []).find(v => Number(v.id) === Number(req.params.id));
+  if (!row) return res.status(404).json({ error: 'Không tìm thấy vi phạm' });
+  db.violations = db.violations.filter(v => Number(v.id) !== Number(req.params.id));
+  saveDb();
+  res.json({ ok: true });
+});
 
 app.post('/api/violations', requireAuth, requirePerm('can_manage_violations'), upload.array('evidence', 10), (req, res) => {
   const { user_id, violation_code, violation_level, description } = req.body || {};
