@@ -1,0 +1,14 @@
+DEZUS STORE OPS - UPDATE V4.73
+
+Nội dung cập nhật:
+- Đào tạo SP: các dòng cùng SKU/Mã cha tự gom thành 1 sản phẩm.
+- Nhiều màu của cùng 1 sản phẩm được gộp vào Màu hiện có.
+- Mỗi sản phẩm chỉ giữ 1 bài test, tránh tạo trùng theo từng màu.
+- Thêm link ảnh sản phẩm để nhân sự dễ hình dung.
+- Nhân viên phải xác nhận đã học xong mới mở bài test.
+
+Cách update:
+1. Giải nén file zip.
+2. Upload đè toàn bộ lên GitHub.
+3. Commit changes.
+4. Render -> Manual Deploy -> Deploy latest commit.

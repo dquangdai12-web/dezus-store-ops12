@@ -1,0 +1,11 @@
+V4.74 - Training sản phẩm có ảnh + luồng nhân viên học rõ hơn
+
+1. Đã đổi mục Đào tạo SP thành Học & Test SP.
+2. Admin/QL khi tạo bài training có thể upload ảnh trực tiếp hoặc dán link ảnh.
+3. Ảnh sản phẩm sẽ hiển thị ngay trong bài học của nhân viên.
+4. Nhân viên vào Sản phẩm > Học & Test SP để học.
+5. Nhân viên đọc nội dung trước, sau đó bấm Tôi đã học xong - mở bài test.
+6. Mỗi SKU/Mã cha vẫn chỉ giữ 1 bài học và 1 bài test, các màu gom vào Màu hiện có.
+7. Nếu nhân viên không thấy mục này, kiểm tra quyền tài khoản có Xem đào tạo sản phẩm.
+
+Cập nhật: upload đè toàn bộ file/folder lên GitHub, Commit changes, Render Manual Deploy latest commit.

@@ -1,0 +1,16 @@
+DEZUS STORE OPS - UPDATE V4.79
+
+Nội dung cập nhật:
+1. Tự động lấy ảnh đại diện từ Link sản phẩm khi trang có og:image/twitter:image.
+2. Khi copy bảng từ Google Sheet, nếu cột Ảnh sản phẩm trống nhưng có Link sản phẩm, web tự thử lấy ảnh.
+3. Nhận cột Hạn hoàn thành / Thời hạn hoàn thành / Deadline từ dữ liệu copy.
+4. Mẫu copy training bổ sung cột Hạn hoàn thành.
+
+Cách cập nhật:
+- Thay toàn bộ thư mục web cũ bằng bản V4.79, nhưng giữ lại data/store_ops.json và thư mục uploads nếu đang có dữ liệu thật.
+- Chạy RUN_WEB.cmd hoặc npm start.
+- Sau khi cập nhật online, deploy lại dịch vụ nếu hệ thống không tự deploy.
+
+Lưu ý ảnh:
+- Trang sản phẩm phải cho phép server đọc trang và có thẻ og:image/twitter:image.
+- Nếu website chặn, hãy dùng cột Ảnh sản phẩm hoặc upload ảnh trực tiếp.

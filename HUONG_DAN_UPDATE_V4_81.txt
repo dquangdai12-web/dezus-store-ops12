@@ -1,0 +1,7 @@
+DEZUS STORE OPS V4.81
+
+- Thêm cột riêng: Link ảnh sản phẩm.
+- Khi copy tổng từ Google Sheet, web ưu tiên lấy ảnh từ đúng cột Link ảnh sản phẩm.
+- Link sản phẩm chỉ dùng để mở trang sản phẩm, không dùng làm ảnh.
+- Cột Link ảnh sản phẩm có thể dùng link ảnh trực tiếp hoặc link Google Drive được chia sẻ quyền xem.
+- Thứ tự sheet chuẩn A:Q, cột Q là Link ảnh sản phẩm.

@@ -1,0 +1,6 @@
+DEZUS STORE OPS V4.82
+- Thêm nút Sửa trong từng bài học sản phẩm.
+- Khi bấm Sửa, toàn bộ dữ liệu được đổ lại lên form.
+- Nút Lưu bài đào tạo đổi thành Lưu thay đổi.
+- Có nút Hủy sửa.
+- Giữ nguyên dữ liệu cũ khi cập nhật phiên bản.

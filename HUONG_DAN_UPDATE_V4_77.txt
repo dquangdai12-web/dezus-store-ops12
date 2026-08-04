@@ -1,0 +1,21 @@
+V4.77 - HỌC SẢN PHẨM + TEST TỔNG + TỐI ƯU ĐIỆN THOẠI
+
+CÁC ĐIỂM ĐÃ CHỈNH:
+1. Nhân viên không làm test ngay trong từng bài học sản phẩm nữa.
+2. Nhân viên học từng sản phẩm, bấm "Đã học xong bài này".
+3. Khi học xong toàn bộ bài đang áp dụng, hệ thống mới mở nút "Làm bài test tổng".
+4. Bài test tổng gom câu hỏi từ tất cả bài học sản phẩm đang áp dụng.
+5. Giao diện học đã thiết kế lại dạng thẻ bài học gọn hơn, có ảnh, badge trạng thái, nội dung chia mục rõ ràng.
+6. Tối ưu khi học trên điện thoại: ảnh gọn, thẻ mở/đóng, nút thao tác full-width dễ bấm.
+
+CÁCH NHÂN VIÊN HỌC:
+- Vào Sản phẩm > Học & Test sản phẩm.
+- Mở từng sản phẩm để đọc nội dung.
+- Bấm "Đã học xong bài này" ở từng bài.
+- Sau khi đủ bài, bấm "Làm bài test tổng".
+- Nộp bài test tổng.
+
+LƯU Ý:
+- Ảnh sản phẩm hiện trực tiếp nếu có link ảnh hợp lệ hoặc ảnh upload trực tiếp.
+- Link Google Drive cần bật quyền "Bất kỳ ai có đường liên kết đều có thể xem".
+- Nếu ảnh Drive bị chặn hiển thị trực tiếp, web vẫn có nút mở ảnh dự phòng.

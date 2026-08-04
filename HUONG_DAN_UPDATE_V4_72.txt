@@ -1,0 +1,26 @@
+DEZUS STORE OPS - V4.72
+
+TÍNH NĂNG MỚI: ĐIỀN NHANH TRAINING BST
+
+1. Vào Sản phẩm -> Đào tạo SP.
+2. Ở khung "Điền nhanh từ file training BST":
+   - Copy bảng từ Excel/Google Sheets.
+   - Dán vào ô lớn.
+   - Bấm "Đổ dòng đầu vào form" để kiểm tra 1 sản phẩm.
+   - Hoặc bấm "Lưu nhanh tất cả dòng" để tạo nhiều bài đào tạo một lần.
+3. Có nút "Tải mẫu copy" để lấy mẫu cột chuẩn.
+
+CỘT HỆ THỐNG TỰ NHẬN:
+- SKU / Mã SP
+- Tên SP / Tên sản phẩm
+- Ngày hàng về
+- Trạng thái
+- Chất liệu
+- Kiểu dáng / Form
+- Điểm bán hàng / USP
+- Cách tư vấn / Bảo quản
+- Lỗi / Điểm cần lưu ý
+- Ghi chú đào tạo
+- Bài kiểm tra / Quiz
+
+Bản này giữ nguyên các tính năng trước đó.

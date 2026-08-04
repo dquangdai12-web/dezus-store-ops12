@@ -1,0 +1,24 @@
+V4.78 - HỌC SP TỰ SANG ĐÁNH GIÁ + ĐỔI CA CẬP NHẬT CÔNG VIỆC
+
+Nội dung đã cập nhật:
+1. Sản phẩm đã tạo trong Học & Test SP sẽ tự sinh danh mục đánh giá sản phẩm.
+   - Không cần set lại thủ công trong Đánh giá SP.
+   - Danh mục tự động có tên: Tự động từ Học SP YYYY-MM.
+   - Cửa hàng vào Đánh giá SP là chọn được sản phẩm đã học để feedback.
+
+2. Công việc giao theo ca sẽ tự đồng bộ khi đổi lịch ca tương lai.
+   - Khi quản lý đổi ca trong Lịch làm việc, các công việc theo ca trong tương lai tự chuyển người nhận theo ca mới.
+   - Những ngày quá khứ giữ nguyên lịch sử và không tự đổi.
+   - Nếu công việc đã hoàn thành thì không bị xóa khỏi lịch sử.
+
+3. Màn Công việc ưu tiên hiển thị việc hôm nay.
+   - Có khu riêng: Hạn hôm nay / việc trong ngày.
+   - Các công việc khác sắp xếp theo ngày gần nhất.
+   - Công việc theo ca có nhãn: Theo ca tự cập nhật.
+
+Cách update Render/GitHub:
+- Giải nén file zip.
+- Upload toàn bộ file/folder lên GitHub, ghi đè bản cũ.
+- Commit changes.
+- Render sẽ tự deploy lại.
+- Không xóa persistent disk / storage.

@@ -1,0 +1,11 @@
+DEZUS STORE OPS V4.80
+- Sửa chức năng COPY TỔNG: tự nhận đủ dữ liệu theo tiêu đề cột.
+- Link sản phẩm tự đổ đúng vào ô Link sản phẩm.
+- Hạn hoàn thành tự đổ đúng vào ô Thời hạn hoàn thành.
+- Có cơ chế dự phòng theo đúng thứ tự cột A:P của sheet UPLOAD_WEB_TRAINING_BST.
+- Tránh nhầm cột Ảnh sản phẩm với Link sản phẩm.
+
+Cách dùng:
+1. Tại sheet UPLOAD_WEB_TRAINING_BST, chọn từ cột A đến P gồm cả dòng tiêu đề.
+2. Copy và dán nguyên bảng vào ô Điền nhanh từ file training BST.
+3. Bấm Lưu nhanh sau khi gom màu.

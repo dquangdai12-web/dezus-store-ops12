@@ -1,0 +1,12 @@
+V4.76 - Training theo tên sản phẩm + link sản phẩm + giao việc theo thứ cố định
+
+1. Đào tạo sản phẩm
+- Hệ thống gom bài đào tạo theo TÊN SẢN PHẨM, không dùng SKU làm khóa chính.
+- Sản phẩm nhiều màu/nhiều mã nhưng cùng tên chỉ tạo 1 bài học + 1 bài test.
+- Bảng copy nhanh có thêm cột Link sản phẩm.
+- Link ảnh Drive/link ảnh online vẫn hiển thị trực tiếp trong bài học nếu quyền xem mở.
+
+2. Giao việc cố định
+- Bổ sung kiểu giao: Hàng ngày, 2 ngày/tuần, 3 ngày/tuần, tự chọn thứ trong tuần, hoặc lặp mỗi N ngày.
+- Khoảng Từ ngày - Đến ngày chỉ là thời gian áp dụng.
+- Các ngày thực tế được tạo theo thứ đã chọn, ví dụ T2/T4/T6 trong khoảng ngày.

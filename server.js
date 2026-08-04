@@ -124,9 +124,9 @@ function defaultDb() {
   const permissions = users.map(u => ({ user_id: u.id, ...ROLE_DEFAULTS[u.role] }));
   return {
     version: 2,
-    nextIds: { stores: 6, users: 7, tasks: 1, task_assignees: 1, violations: 1, assessments: 1, assessment_items: 1, sales: 1, sales_targets: 1, sales_daily_targets: 1, sales_store_days: 1, bonuses: 1, documents: 1, shifts: 6, work_schedules: 1, orders: 1, online_orders: 1, product_feedback: 1, product_collections: 1, product_collection_items: 1, product_trainings: 1, product_training_attempts: 1, weekly_reports: 1, daily_reports: 1, cdp_ojti: 1 },
+    nextIds: { stores: 6, users: 7, tasks: 1, task_assignees: 1, violations: 1, assessments: 1, assessment_items: 1, sales: 1, sales_targets: 1, sales_daily_targets: 1, sales_store_days: 1, bonuses: 1, documents: 1, shifts: 6, work_schedules: 1, orders: 1, online_orders: 1, product_feedback: 1, product_collections: 1, product_collection_items: 1, product_trainings: 1, product_training_attempts: 1, product_training_reads: 1, weekly_reports: 1, daily_reports: 1, cdp_ojti: 1 },
     stores, users, permissions, shifts,
-    tasks: [], task_assignees: [], violations: [], assessments: [], assessment_items: [], sales: [], sales_targets: [], sales_daily_targets: [], sales_store_days: [], bonuses: [], documents: [], orders: [], online_orders: [], product_feedback: [], product_collections: [], product_collection_items: [], product_trainings: [], product_training_attempts: [], weekly_reports: [], daily_reports: [], cdp_ojti: [], work_schedules: []
+    tasks: [], task_assignees: [], violations: [], assessments: [], assessment_items: [], sales: [], sales_targets: [], sales_daily_targets: [], sales_store_days: [], bonuses: [], documents: [], orders: [], online_orders: [], product_feedback: [], product_collections: [], product_collection_items: [], product_trainings: [], product_training_attempts: [], product_training_reads: [], weekly_reports: [], daily_reports: [], cdp_ojti: [], work_schedules: []
   };
 }
 
@@ -166,6 +166,7 @@ function loadDb() {
       product_collection_items: parsed.product_collection_items || [],
       product_trainings: parsed.product_trainings || [],
       product_training_attempts: parsed.product_training_attempts || [],
+      product_training_reads: parsed.product_training_reads || [],
       weekly_reports: parsed.weekly_reports || [],
       daily_reports: parsed.daily_reports || [],
       cdp_ojti: parsed.cdp_ojti || [],
@@ -560,6 +561,68 @@ function normalizeExternalUrl(value) {
     return '';
   }
 }
+function isSafePublicProductUrl(value) {
+  const normalized = normalizeExternalUrl(value);
+  if (!normalized) return '';
+  try {
+    const u = new URL(normalized);
+    const host = String(u.hostname || '').toLowerCase();
+    if (!host || host === 'localhost' || host.endsWith('.local')) return '';
+    if (/^(127\.|10\.|0\.|169\.254\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(host)) return '';
+    if (host === '::1' || host.startsWith('fc') || host.startsWith('fd') || host.startsWith('fe80:')) return '';
+    return u.toString();
+  } catch (_err) { return ''; }
+}
+function htmlDecodeBasic(value) {
+  return String(value || '')
+    .replace(/&amp;/gi, '&').replace(/&quot;/gi, '"').replace(/&#39;|&apos;/gi, "'")
+    .replace(/&lt;/gi, '<').replace(/&gt;/gi, '>');
+}
+function absoluteProductImageUrl(value, pageUrl) {
+  const raw = htmlDecodeBasic(value).trim();
+  if (!raw || /^data:/i.test(raw)) return '';
+  try { return new URL(raw, pageUrl).toString(); } catch (_err) { return ''; }
+}
+function productImageFromHtml(html, pageUrl) {
+  const text = String(html || '').slice(0, 1200000);
+  const patterns = [
+    /<meta[^>]+(?:property|name)=["']og:image(?::secure_url)?["'][^>]+content=["']([^"']+)["']/i,
+    /<meta[^>]+content=["']([^"']+)["'][^>]+(?:property|name)=["']og:image(?::secure_url)?["']/i,
+    /<meta[^>]+(?:property|name)=["']twitter:image(?::src)?["'][^>]+content=["']([^"']+)["']/i,
+    /<meta[^>]+content=["']([^"']+)["'][^>]+(?:property|name)=["']twitter:image(?::src)?["']/i,
+    /"image"\s*:\s*"(https?:\\?\/\\?\/[^"\\]+(?:\\.[^"\\]*)?)"/i,
+    /<img[^>]+(?:id|class)=["'][^"']*(?:product|main|featured)[^"']*["'][^>]+src=["']([^"']+)["']/i
+  ];
+  for (const pattern of patterns) {
+    const match = text.match(pattern);
+    if (!match) continue;
+    const candidate = String(match[1] || '').replace(/\\\//g, '/').replace(/\\u0026/gi, '&');
+    const absolute = absoluteProductImageUrl(candidate, pageUrl);
+    if (absolute) return absolute;
+  }
+  return '';
+}
+async function resolveProductImageUrl(productUrl) {
+  const safeUrl = isSafePublicProductUrl(productUrl);
+  if (!safeUrl) return '';
+  if (/\.(?:jpe?g|png|webp|gif|avif)(?:[?#].*)?$/i.test(safeUrl)) return safeUrl;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 8000);
+  try {
+    const resp = await fetch(safeUrl, {
+      redirect: 'follow', signal: controller.signal,
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; DezusStoreOps/4.79)', 'Accept': 'text/html,application/xhtml+xml,image/avif,image/webp,*/*;q=0.8' }
+    });
+    if (!resp.ok) return '';
+    const contentType = String(resp.headers.get('content-type') || '').toLowerCase();
+    if (contentType.startsWith('image/')) return resp.url || safeUrl;
+    if (!contentType.includes('text/html') && !contentType.includes('application/xhtml')) return '';
+    const html = await resp.text();
+    return productImageFromHtml(html, resp.url || safeUrl);
+  } catch (_err) { return ''; }
+  finally { clearTimeout(timer); }
+}
+
 function externalLinksFromText(value) {
   return String(value || '')
     .split(/[\n,]+/)
@@ -800,7 +863,7 @@ function productCollectionRowsForUser(user, storeId = null, month = null) {
     const store = c.store_id ? getStore(c.store_id) : null;
     const creator = getUser(c.created_by);
     const updater = getUser(c.updated_by);
-    const items = collectionItems(c.id).map(i => ({ id: i.id, sku: i.sku || '', product_name: i.product_name || '', note: i.note || '', sort_order: Number(i.sort_order || 0) }));
+    const items = collectionItems(c.id).map(i => ({ id: i.id, sku: i.sku || '', product_name: i.product_name || '', note: i.note || '', sort_order: Number(i.sort_order || 0), source_training_id: i.source_training_id || null }));
     return { ...c, store_name: store ? store.name : 'Toàn hệ thống', created_by_name: creator ? creator.full_name : '', updated_by_name: updater ? updater.full_name : '', items };
   }).sort((a, b) => String(b.collection_month || '').localeCompare(String(a.collection_month || '')) || String(a.name || '').localeCompare(String(b.name || ''), 'vi'));
 }
@@ -817,6 +880,93 @@ function parseCollectionItems(raw) {
     })
     .filter(i => i.sku || i.product_name);
 }
+
+function monthFromTraining(row) {
+  const candidates = [row.arrival_date, row.due_at, row.updated_at, row.created_at, new Date()];
+  for (const c of candidates) {
+    const m = monthKey(c || new Date());
+    if (/^\d{4}-\d{2}$/.test(String(m || ''))) return m;
+  }
+  return monthKey(new Date());
+}
+function autoTrainingCollectionName(month) {
+  return `Tự động từ Học SP ${month}`;
+}
+function syncTrainingProductCollections(actorId = null) {
+  db.product_trainings = db.product_trainings || [];
+  db.product_collections = db.product_collections || [];
+  db.product_collection_items = db.product_collection_items || [];
+  const groups = new Map();
+  (db.product_trainings || [])
+    .filter(r => r.status !== 'deleted' && (r.product_name || r.sku))
+    .forEach(r => {
+      const month = monthFromTraining(r);
+      const key = `${Number(r.store_id || 0)}||${month}`;
+      if (!groups.has(key)) groups.set(key, { store_id: r.store_id ? Number(r.store_id) : null, month, items: [] });
+      groups.get(key).items.push(r);
+    });
+  let changed = false;
+  groups.forEach(group => {
+    const storeId = group.store_id || null;
+    const name = autoTrainingCollectionName(group.month);
+    let col = db.product_collections.find(c => c.status !== 'deleted' && c.auto_source === 'product_training' && Number(c.store_id || 0) === Number(storeId || 0) && String(c.collection_month || '') === String(group.month));
+    if (!col) {
+      col = {
+        id: nextId('product_collections'),
+        store_id: storeId,
+        collection_month: group.month,
+        name,
+        description: 'Danh mục tự động tạo từ Học & Test sản phẩm. Cửa hàng dùng danh mục này để đánh giá sản phẩm đã được học.',
+        auto_source: 'product_training',
+        status: 'active',
+        created_by: actorId || null,
+        created_at: nowIso(),
+        updated_at: nowIso()
+      };
+      db.product_collections.push(col);
+      changed = true;
+    } else {
+      if (col.name !== name) { col.name = name; changed = true; }
+      if (col.status === 'deleted') { col.status = 'active'; changed = true; }
+      col.description = col.description || 'Danh mục tự động tạo từ Học & Test sản phẩm.';
+    }
+    const existingItems = db.product_collection_items.filter(i => Number(i.collection_id) === Number(col.id));
+    const seen = new Set();
+    group.items.forEach((tr, idx) => {
+      const identity = normalizeTrainingIdentity(tr.product_name || tr.sku);
+      if (!identity || seen.has(identity)) return;
+      seen.add(identity);
+      let item = existingItems.find(i => normalizeTrainingIdentity(i.product_name || i.sku) === identity);
+      if (!item) {
+        item = {
+          id: nextId('product_collection_items'),
+          collection_id: col.id,
+          sku: String(tr.sku || '').trim(),
+          product_name: String(tr.product_name || '').trim(),
+          note: [tr.color_options ? `Màu: ${tr.color_options}` : '', tr.product_url ? `Link SP: ${tr.product_url}` : ''].filter(Boolean).join(' | '),
+          sort_order: idx + 1,
+          source_training_id: tr.id,
+          status: 'active',
+          created_at: nowIso()
+        };
+        db.product_collection_items.push(item);
+        changed = true;
+      } else {
+        if (item.status === 'deleted') { item.status = 'active'; changed = true; }
+        if (!item.sku && tr.sku) { item.sku = String(tr.sku || '').trim(); changed = true; }
+        if (!item.product_name && tr.product_name) { item.product_name = String(tr.product_name || '').trim(); changed = true; }
+        const nextNote = [tr.color_options ? `Màu: ${tr.color_options}` : '', tr.product_url ? `Link SP: ${tr.product_url}` : ''].filter(Boolean).join(' | ');
+        if (nextNote && item.note !== nextNote && Number(item.source_training_id || tr.id) === Number(tr.id)) { item.note = nextNote; changed = true; }
+        if (!item.source_training_id) { item.source_training_id = tr.id; changed = true; }
+      }
+    });
+    col.updated_at = nowIso();
+    col.updated_by = actorId || col.updated_by || null;
+  });
+  if (changed) saveDb();
+  return changed;
+}
+
 function productFeedbackSummaryForUser(user, storeId = null, collectionId = null, month = null) {
   const rows = productFeedbackRowsForUser(user, storeId, collectionId, month);
   const map = new Map();
@@ -909,10 +1059,94 @@ function canManageProductTrainingScope(user, storeId) {
   if (!user.store_id) return true;
   return !storeId || userHasStore(user, storeId);
 }
+function normalizeTrainingIdentity(value) {
+  return String(value || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/[^a-z0-9]+/g, '')
+    .trim();
+}
+function productTrainingIdentity(sku, productName) {
+  // V4.76: nhận diện bài training theo TÊN SẢN PHẨM trước, không theo SKU.
+  // Một sản phẩm nhiều màu/mã sẽ gom 1 bài học + 1 bài test nếu cùng tên.
+  return normalizeTrainingIdentity(productName || sku);
+}
+function findExistingProductTraining(storeId, sku, productName, ignoreId = null) {
+  const key = productTrainingIdentity(sku, productName);
+  if (!key) return null;
+  return (db.product_trainings || []).find(r => r.status !== 'deleted'
+    && (!ignoreId || Number(r.id) !== Number(ignoreId))
+    && Number(r.store_id || 0) === Number(storeId || 0)
+    && productTrainingIdentity(r.sku, r.product_name) === key);
+}
+function trainingImageUrl(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+  const match = raw.match(/IMAGE\(\s*["']([^"']+)["']/i);
+  const url = String(match ? match[1] : raw).trim();
+  if (/^\/uploads\//i.test(url)) return url;
+  return normalizeExternalUrl(url);
+}
+function trainingApplyPayload(row, payload, userId, isNew = false) {
+  const { store_id, sku, product_name, color_options, image_url, product_url, arrival_date, material, style_info, selling_points, care_instruction, common_errors, training_note, status_label, is_required, due_at, pass_percent, quiz_text } = payload || {};
+  if (store_id !== undefined) row.store_id = store_id ? Number(store_id) : null;
+  if (sku !== undefined) row.sku = String(sku || '').trim();
+  if (product_name !== undefined) row.product_name = String(product_name || '').trim();
+  if (color_options !== undefined) row.color_options = String(color_options || '').trim();
+  if (image_url !== undefined) row.image_url = trainingImageUrl(image_url);
+  if (product_url !== undefined) row.product_url = normalizeExternalUrl(product_url);
+  if (arrival_date !== undefined) row.arrival_date = arrival_date || '';
+  if (material !== undefined) row.material = String(material || '').trim();
+  if (style_info !== undefined) row.style_info = String(style_info || '').trim();
+  if (selling_points !== undefined) row.selling_points = String(selling_points || '').trim();
+  if (care_instruction !== undefined) row.care_instruction = String(care_instruction || '').trim();
+  if (common_errors !== undefined) row.common_errors = String(common_errors || '').trim();
+  if (training_note !== undefined) row.training_note = String(training_note || '').trim();
+  if (status_label !== undefined || isNew) row.status_label = status_label || 'Sắp về';
+  if (is_required !== undefined || isNew) row.is_required = Number(is_required || 0) ? 1 : 0;
+  if (due_at !== undefined) row.due_at = due_at || '';
+  if (pass_percent !== undefined || isNew) row.pass_percent = Number(pass_percent || 90);
+  if (quiz_text !== undefined) {
+    const parsedQuiz = parseQuizText(quiz_text);
+    row.quiz_questions = parsedQuiz.length ? parsedQuiz : buildDefaultTrainingQuiz(row);
+  } else if (isNew && !row.quiz_questions) {
+    row.quiz_questions = buildDefaultTrainingQuiz(row);
+  }
+  row.updated_by = userId;
+  row.updated_at = nowIso();
+  if (isNew) {
+    row.created_by = userId;
+    row.created_at = nowIso();
+    row.status = 'active';
+  }
+}
+function trainingQuizOptionText(value, fallback = '') {
+  const text = String(value || '').replace(/\s+/g, ' ').trim();
+  return text ? (text.length > 140 ? text.slice(0, 137) + '...' : text) : fallback;
+}
+function buildDefaultTrainingQuiz(row) {
+  const make = (question, answer, decoys) => {
+    const correct = trainingQuizOptionText(answer);
+    if (!correct) return null;
+    const options = [correct, ...(decoys || [])].map(x => trainingQuizOptionText(x)).filter(Boolean);
+    const unique = [];
+    options.forEach(x => { if (!unique.some(y => y.toLowerCase() === x.toLowerCase())) unique.push(x); });
+    if (unique.length < 2) return null;
+    return { question, options: unique.slice(0, 4), correct_index: 0 };
+  };
+  return [
+    make('Chất liệu/điểm chất liệu chính của sản phẩm là gì?', row.material || row.selling_points, ['Chưa xác định chất liệu', 'Chất liệu không cần tư vấn', 'Không có điểm nổi bật về chất liệu']),
+    make('Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?', row.training_note || row.selling_points, ['Khách không cần tư vấn', 'Chỉ phù hợp mặc ở nhà', 'Không cần xác định nhu cầu khách']),
+    make('Khi tư vấn hoặc thử đồ cần lưu ý gì?', row.common_errors || row.care_instruction, ['Không cần kiểm tra size/form', 'Không cần hướng dẫn bảo quản', 'Không cần lưu ý khi thử đồ'])
+  ].filter(Boolean);
+}
 function trainingQuestions(row, includeAnswers = false) {
   let questions = [];
   try { questions = Array.isArray(row.quiz_questions) ? row.quiz_questions : JSON.parse(row.quiz_questions || '[]'); } catch (_err) { questions = []; }
   questions = questions.filter(q => q && String(q.question || '').trim());
+  if (!questions.length && row) questions = buildDefaultTrainingQuiz(row);
   return questions.map((q, idx) => {
     const base = { index: idx, question: String(q.question || '').trim(), options: (Array.isArray(q.options) ? q.options : []).map(x => String(x || '').trim()).filter(Boolean) };
     if (includeAnswers) base.correct_index = Number(q.correct_index || 0);
@@ -948,12 +1182,28 @@ function trainingAttemptsFor(trainingId, userId = null) {
   return db.product_training_attempts.filter(a => Number(a.training_id) === Number(trainingId) && (!userId || Number(a.user_id) === Number(userId)) && a.status !== 'deleted');
 }
 
+function trainingLearnRecord(trainingId, userId) {
+  db.product_training_reads = db.product_training_reads || [];
+  return db.product_training_reads.find(r => Number(r.training_id) === Number(trainingId) && Number(r.user_id) === Number(userId) && r.status !== 'deleted') || null;
+}
+function markTrainingLearned(row, user) {
+  db.product_training_reads = db.product_training_reads || [];
+  let record = trainingLearnRecord(row.id, user.id);
+  if (!record) {
+    record = { id: nextId('product_training_reads'), training_id: row.id, user_id: user.id, store_id: user.store_id || row.store_id || null, status: 'active', created_at: nowIso() };
+    db.product_training_reads.push(record);
+  }
+  record.learned_at = record.learned_at || nowIso();
+  record.updated_at = nowIso();
+  return record;
+}
 function trainingProgress(trainingId, userId, passPercent = 90) {
   const attempts = trainingAttemptsFor(trainingId, userId).sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')));
+  const learnedRecord = trainingLearnRecord(trainingId, userId);
   const bestScore = attempts.length ? Math.max(...attempts.map(a => Number(a.score_percent || 0))) : 0;
   const passed = attempts.some(a => Number(a.passed) === 1 || Number(a.score_percent || 0) >= Number(passPercent || 90));
   const passedAttempt = attempts.find(a => Number(a.passed) === 1 || Number(a.score_percent || 0) >= Number(passPercent || 90));
-  return { attempts_count: attempts.length, best_score: Math.round(bestScore * 100) / 100, passed, completed_at: passedAttempt ? passedAttempt.created_at : null, last_score: attempts[0] ? Number(attempts[0].score_percent || 0) : null };
+  return { attempts_count: attempts.length, best_score: Math.round(bestScore * 100) / 100, passed, completed_at: passedAttempt ? passedAttempt.created_at : null, last_score: attempts[0] ? Number(attempts[0].score_percent || 0) : null, learned: !!learnedRecord, learned_at: learnedRecord ? learnedRecord.learned_at : null };
 }
 
 function trainingAssignees(row) {
@@ -979,7 +1229,7 @@ function productTrainingRowsForUser(user, storeId = null) {
     const creator = getUser(r.created_by);
     const updater = getUser(r.updated_by);
     const questions = trainingQuestions(r, false);
-    const progress = user.role === 'employee' ? trainingProgress(r.id, user.id, r.pass_percent || 90) : null;
+    const progress = (user.role === 'employee' || user.role === 'manager' || (!Number(user.permissions.can_manage_product_training) && Number(user.permissions.can_view_product_training))) ? trainingProgress(r.id, user.id, r.pass_percent || 90) : null;
     const assignees = (user.role === 'admin' || Number(user.permissions.can_manage_product_training) === 1) ? trainingAssignees(r).map(u => ({ user_id: u.id, full_name: u.full_name, store_name: getStore(u.store_id)?.name || '', ...trainingProgress(r.id, u.id, r.pass_percent || 90) })) : [];
     return { ...r, quiz_questions: undefined, quiz_question_count: questions.length, pass_percent: Number(r.pass_percent || 90), is_required: Number(r.is_required || 0), due_at: r.due_at || '', store_name: store ? store.name : 'Toàn hệ thống', created_by_name: creator ? creator.full_name : '', updated_by_name: updater ? updater.full_name : '', progress, assignees };
   }).sort((a, b) => String(a.arrival_date || '9999-12-31').localeCompare(String(b.arrival_date || '9999-12-31')) || Number(b.id) - Number(a.id));
@@ -1351,6 +1601,28 @@ function dateRangeEvery(start, end, every = 1) {
   }
   return out;
 }
+function normalizeWeekdays(list) {
+  const raw = Array.isArray(list) ? list : (list === undefined || list === null ? [] : [list]);
+  return Array.from(new Set(raw.map(v => Number(v)).filter(v => Number.isFinite(v) && v >= 0 && v <= 6))).sort((a, b) => a - b);
+}
+function weekdayLabel(v) {
+  return ({1:'T2',2:'T3',3:'T4',4:'T5',5:'T6',6:'T7',0:'CN'})[Number(v)] || '';
+}
+function dateRangeByWeekdays(start, end, weekdays = []) {
+  const selected = new Set(normalizeWeekdays(weekdays));
+  if (!selected.size) return dateRangeEvery(start, end, 1);
+  const out = [];
+  let cur = dateOnly(start);
+  const last = dateOnly(end || start);
+  let guard = 0;
+  while (cur <= last && guard < 370) {
+    const d = new Date(`${cur}T00:00:00Z`);
+    if (selected.has(d.getUTCDay())) out.push(cur);
+    cur = addDaysIso(cur, 1);
+    guard += 1;
+  }
+  return out;
+}
 function shiftLabelByIds(ids) {
   const set = new Set((ids || []).map(Number));
   return activeShifts().filter(sh => set.has(Number(sh.id))).map(sh => sh.code || sh.name).join(', ');
@@ -1361,6 +1633,56 @@ function scheduledUsersByShift(storeId, workDate, shiftIds = []) {
   return (db.work_schedules || [])
     .filter(x => x.status !== 'deleted' && Number(x.store_id) === Number(storeId) && String(x.work_date) === String(workDate) && set.has(Number(x.shift_id)))
     .map(x => Number(x.user_id));
+}
+
+
+function taskWorkDate(row) {
+  return dateOnly(row.task_date || row.due_at || new Date());
+}
+function syncFutureShiftTasksForSchedule(storeId, changedDates = [], actorId = null) {
+  const today = dateOnly(new Date());
+  const targetDates = new Set((changedDates || []).map(dateOnly).filter(d => d && d >= today));
+  if (!targetDates.size) return { changed_tasks: 0, added_assignments: 0, removed_assignments: 0 };
+  db.tasks = db.tasks || [];
+  db.task_assignees = db.task_assignees || [];
+  let changedTasks = 0;
+  let addedAssignments = 0;
+  let removedAssignments = 0;
+  db.tasks.forEach(t => {
+    if (t.status === 'deleted') return;
+    if (Number(t.store_id) !== Number(storeId)) return;
+    const workDate = taskWorkDate(t);
+    if (!targetDates.has(workDate)) return;
+    const shiftIds = Array.isArray(t.shift_ids) ? t.shift_ids.map(Number).filter(Boolean) : [];
+    if (!shiftIds.length) return;
+    const desired = new Set();
+    scheduledUsersByShift(storeId, workDate, shiftIds).forEach(uid => desired.add(Number(uid)));
+    normalizeIdArray(t.manual_assignee_ids || []).forEach(uid => desired.add(Number(uid)));
+    const desiredUsers = Array.from(desired).filter(uid => {
+      const u = getActiveUser(uid);
+      return u && u.role !== 'admin' && userHasStore(u, storeId);
+    });
+    const desiredSet = new Set(desiredUsers);
+    const before = db.task_assignees.length;
+    db.task_assignees = db.task_assignees.filter(ta => {
+      if (Number(ta.task_id) !== Number(t.id)) return true;
+      if (ta.completed_at) return true;
+      return desiredSet.has(Number(ta.user_id));
+    });
+    removedAssignments += before - db.task_assignees.length;
+    const existing = new Set(db.task_assignees.filter(ta => Number(ta.task_id) === Number(t.id)).map(ta => Number(ta.user_id)));
+    desiredUsers.forEach(uid => {
+      if (!existing.has(Number(uid))) {
+        db.task_assignees.push({ id: nextId('task_assignees'), task_id: t.id, user_id: uid, completed_at: null, evidence_path: null, evidence_note: '', points_delta: 0, created_by_sync: actorId || null, created_at: nowIso() });
+        addedAssignments += 1;
+      }
+    });
+    t.shift_synced_at = nowIso();
+    t.updated_by = actorId || t.updated_by || null;
+    t.updated_at = nowIso();
+    changedTasks += 1;
+  });
+  return { changed_tasks: changedTasks, added_assignments: addedAssignments, removed_assignments: removedAssignments };
 }
 
 function taskRowsForUser(user) {
@@ -1385,7 +1707,25 @@ function taskRowsForUser(user) {
   }).filter(Boolean);
   if (user.role === 'employee') rows = rows.filter(r => Number(r.assignee_id) === Number(user.id));
   else if (user.role === 'manager') rows = rows.filter(r => userHasStore(user, r.store_id));
-  return rows.map(r => ({ ...r, status: taskStatus(r) })).sort((a, b) => new Date(a.due_at) - new Date(b.due_at) || new Date(b.created_at) - new Date(a.created_at));
+  const today = dateOnly(new Date());
+  const rankDate = (row) => {
+    const d = taskWorkDate(row);
+    if (d === today) return 0;
+    if (d > today) return 1;
+    return 2;
+  };
+  return rows.map(r => ({ ...r, status: taskStatus(r), is_today: taskWorkDate(r) === today }))
+    .sort((a, b) => {
+      const ra = rankDate(a), rb = rankDate(b);
+      if (ra !== rb) return ra - rb;
+      const da = taskWorkDate(a), dbb = taskWorkDate(b);
+      if (da !== dbb) return ra === 2 ? dbb.localeCompare(da) : da.localeCompare(dbb);
+      if (a.status !== b.status) {
+        const order = { assigned: 0, overdue: 1, completed_late: 2, completed_on_time: 3 };
+        return (order[a.status] ?? 9) - (order[b.status] ?? 9);
+      }
+      return new Date(a.due_at) - new Date(b.due_at) || new Date(b.created_at) - new Date(a.created_at);
+    });
 }
 
 function violationRowsForUser(user) {
@@ -1828,17 +2168,22 @@ app.delete('/api/cdp-ojti/:id', requireAuth, (req, res) => {
 });
 
 app.post('/api/tasks', requireAuth, requirePerm('can_assign_tasks'), (req, res) => {
-  const { title, description, due_at, priority, store_id, assignee_ids, score_value, start_date, end_date, due_time, repeat_every_days, shift_ids } = req.body || {};
+  const { title, description, due_at, priority, store_id, assignee_ids, score_value, start_date, end_date, due_time, repeat_every_days, repeat_mode, weekdays, shift_ids } = req.body || {};
   const manualAssignees = Array.isArray(assignee_ids) ? assignee_ids.map(Number).filter(Boolean) : [];
   const selectedShiftIds = Array.isArray(shift_ids) ? shift_ids.map(Number).filter(Boolean) : [];
+  const selectedWeekdays = normalizeWeekdays(weekdays);
+  const modeLabel = String(repeat_mode || '').trim();
   const useMultiDate = !!(start_date && end_date);
   if (!title) return res.status(400).json({ error: 'Thiếu tiêu đề công việc' });
   if (!useMultiDate && !due_at) return res.status(400).json({ error: 'Vui lòng nhập hạn hoàn thành hoặc chọn khoảng ngày giao việc' });
   if (!manualAssignees.length && !selectedShiftIds.length) return res.status(400).json({ error: 'Vui lòng chọn nhân viên hoặc chọn ca giao việc' });
   const storeId = isAllStoreRole(req.user) ? Number(store_id || getPrimaryStoreId(req.user)) : Number(getPrimaryStoreId(req.user));
   if (!storeId || !canAccessStore(req, storeId)) return res.status(403).json({ error: 'Không có quyền giao việc cửa hàng này' });
-  const dates = useMultiDate ? dateRangeEvery(start_date, end_date, repeat_every_days || 1) : [dateOnly(due_at)];
-  if (!dates.length) return res.status(400).json({ error: 'Khoảng ngày giao việc không hợp lệ' });
+  if (useMultiDate && modeLabel === 'weekly2' && selectedWeekdays.length !== 2) return res.status(400).json({ error: 'Vui lòng chọn đúng 2 thứ trong tuần' });
+  if (useMultiDate && modeLabel === 'weekly3' && selectedWeekdays.length !== 3) return res.status(400).json({ error: 'Vui lòng chọn đúng 3 thứ trong tuần' });
+  if (useMultiDate && modeLabel === 'custom_weekdays' && selectedWeekdays.length < 1) return res.status(400).json({ error: 'Vui lòng chọn ít nhất 1 thứ trong tuần' });
+  const dates = useMultiDate ? (selectedWeekdays.length ? dateRangeByWeekdays(start_date, end_date, selectedWeekdays) : dateRangeEvery(start_date, end_date, repeat_every_days || 1)) : [dateOnly(due_at)];
+  if (!dates.length) return res.status(400).json({ error: 'Khoảng ngày giao việc không có ngày phù hợp. Hãy kiểm tra lại thứ được chọn.' });
   const shiftText = shiftLabelByIds(selectedShiftIds);
   let createdTasks = 0;
   let createdAssignments = 0;
@@ -1854,7 +2199,10 @@ app.post('/api/tasks', requireAuth, requirePerm('can_assign_tasks'), (req, res) 
     const taskId = nextId('tasks');
     const dueAt = useMultiDate ? `${workDate}T${due_time || '22:00'}` : due_at;
     const extraDesc = [];
-    if (useMultiDate) extraDesc.push(`Giao cố định/nhiều ngày: ${dateOnly(start_date)} đến ${dateOnly(end_date)}, lặp mỗi ${Math.max(1, Number(repeat_every_days || 1))} ngày.`);
+    if (useMultiDate) {
+      const repeatText = selectedWeekdays.length ? `theo thứ trong tuần (${selectedWeekdays.map(weekdayLabel).filter(Boolean).join(', ')})` : `lặp mỗi ${Math.max(1, Number(repeat_every_days || 1))} ngày`;
+      extraDesc.push(`Giao cố định/nhiều ngày: ${dateOnly(start_date)} đến ${dateOnly(end_date)}, ${repeatText}.`);
+    }
     if (shiftText) extraDesc.push(`Áp dụng ca: ${shiftText}.`);
     db.tasks.push({
       id: taskId,
@@ -1866,9 +2214,11 @@ app.post('/api/tasks', requireAuth, requirePerm('can_assign_tasks'), (req, res) 
       shift_ids: selectedShiftIds,
       shift_label: shiftText,
       recurrence_batch: useMultiDate ? batchId : null,
-      recurrence_label: useMultiDate ? `Lặp mỗi ${Math.max(1, Number(repeat_every_days || 1))} ngày` : '',
+      recurrence_label: useMultiDate ? (selectedWeekdays.length ? `Lặp ${modeLabel || 'theo tuần'}: ${selectedWeekdays.map(weekdayLabel).filter(Boolean).join(', ')}` : `Lặp mỗi ${Math.max(1, Number(repeat_every_days || 1))} ngày`) : '',
       store_id: storeId,
       score_value: Number(score_value || 10),
+      assignment_mode: selectedShiftIds.length ? 'shift' : (useMultiDate ? 'multi' : 'single'),
+      manual_assignee_ids: manualAssignees,
       created_by: req.user.id,
       created_at: nowIso()
     });
@@ -2743,8 +3093,9 @@ app.post('/api/schedules/bulk', requireAuth, requirePerm('can_manage_schedule'),
     }
     count += 1;
   });
+  const shiftSync = syncFutureShiftTasksForSchedule(storeId, dates, req.user.id);
   saveDb();
-  res.json({ ok: true, count });
+  res.json({ ok: true, count, shift_sync: shiftSync });
 });
 
 
@@ -2970,6 +3321,7 @@ app.delete('/api/documents/:id', requireAuth, requirePerm('can_manage_documents'
 
 
 app.get('/api/product-collections', requireAuth, (req, res) => {
+  syncTrainingProductCollections(req.user.id);
   const storeId = req.query.store_id ? Number(req.query.store_id) : null;
   const month = req.query.month ? String(req.query.month).slice(0, 7) : null;
   if (storeId && !canViewProductCollectionScope(req.user, storeId)) return res.status(403).json({ error: 'Không có quyền xem BST/List sản phẩm cửa hàng này' });
@@ -3097,10 +3449,36 @@ app.delete('/api/product-feedback/:id', requireAuth, requirePerm('can_manage_pro
   res.json({ ok: true });
 });
 
+app.post('/api/product-trainings/resolve-image', requireAuth, requirePerm('can_manage_product_training'), async (req, res) => {
+  const productUrl = normalizeExternalUrl(req.body && req.body.product_url);
+  if (!productUrl) return res.status(400).json({ error: 'Link sản phẩm không hợp lệ' });
+  const imageUrl = await resolveProductImageUrl(productUrl);
+  res.json({ ok: true, image_url: imageUrl || '', product_url: productUrl });
+});
+
+app.post('/api/product-trainings/image', requireAuth, requirePerm('can_manage_product_training'), upload.single('image'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'Chưa có ảnh sản phẩm để upload' });
+  if (!/^image\//i.test(req.file.mimetype || '')) {
+    try { fs.unlinkSync(req.file.path); } catch (_err) {}
+    return res.status(400).json({ error: 'File ảnh không hợp lệ' });
+  }
+  const imageUrl = saveUploadedFile(req.file);
+  res.json({ ok: true, image_url: imageUrl });
+});
+
 app.get('/api/product-trainings', requireAuth, (req, res) => {
   const storeId = req.query.store_id ? Number(req.query.store_id) : null;
   if (storeId && !canViewProductTrainingScope(req.user, storeId)) return res.status(403).json({ error: 'Không có quyền xem đào tạo sản phẩm cửa hàng này' });
   res.json({ trainings: productTrainingRowsForUser(req.user, storeId) });
+});
+
+app.post('/api/product-trainings/:id/learned', requireAuth, (req, res) => {
+  const row = (db.product_trainings || []).find(r => Number(r.id) === Number(req.params.id) && r.status !== 'deleted');
+  if (!row) return res.status(404).json({ error: 'Không tìm thấy bài đào tạo' });
+  if (!canViewProductTrainingScope(req.user, row.store_id)) return res.status(403).json({ error: 'Không có quyền xem bài đào tạo này' });
+  markTrainingLearned(row, req.user);
+  saveDb();
+  res.json({ ok: true, progress: trainingProgress(row.id, req.user.id, row.pass_percent || 90) });
 });
 
 app.get('/api/product-trainings/:id/quiz', requireAuth, (req, res) => {
@@ -3116,6 +3494,7 @@ app.post('/api/product-trainings/:id/submit', requireAuth, (req, res) => {
   if (!row) return res.status(404).json({ error: 'Không tìm thấy bài đào tạo' });
   if (req.user.role !== 'employee' && req.user.role !== 'manager') return res.status(403).json({ error: 'Chỉ nhân viên/quản lý làm bài kiểm tra' });
   if (!canViewProductTrainingScope(req.user, row.store_id)) return res.status(403).json({ error: 'Không có quyền làm bài đào tạo này' });
+  if (!trainingLearnRecord(row.id, req.user.id)) return res.status(400).json({ error: 'Cần bấm “Tôi đã học xong” trước khi làm bài test' });
   const questions = trainingQuestions(row, true);
   if (!questions.length) return res.status(400).json({ error: 'Bài đào tạo chưa có câu hỏi kiểm tra' });
   const answers = Array.isArray(req.body?.answers) ? req.body.answers.map(x => Number(x)) : [];
@@ -3132,36 +3511,25 @@ app.post('/api/product-trainings/:id/submit', requireAuth, (req, res) => {
 });
 
 app.post('/api/product-trainings', requireAuth, requirePerm('can_manage_product_training'), (req, res) => {
-  const { store_id, sku, product_name, arrival_date, material, style_info, selling_points, care_instruction, common_errors, training_note, status_label, is_required, due_at, pass_percent, quiz_text } = req.body || {};
+  const { store_id, sku, product_name } = req.body || {};
   const storeId = store_id ? Number(store_id) : null;
   if (storeId && !getStore(storeId)) return res.status(400).json({ error: 'Cửa hàng không hợp lệ' });
   if (!canManageProductTrainingScope(req.user, storeId)) return res.status(403).json({ error: 'Không có quyền nhập đào tạo sản phẩm phạm vi này' });
   if (!sku && !product_name) return res.status(400).json({ error: 'Cần nhập SKU hoặc tên sản phẩm' });
-  const id = nextId('product_trainings');
   db.product_trainings = db.product_trainings || [];
-  db.product_trainings.push({
-    id,
-    store_id: storeId,
-    sku: String(sku || '').trim(),
-    product_name: String(product_name || '').trim(),
-    arrival_date: arrival_date || '',
-    material: String(material || '').trim(),
-    style_info: String(style_info || '').trim(),
-    selling_points: String(selling_points || '').trim(),
-    care_instruction: String(care_instruction || '').trim(),
-    common_errors: String(common_errors || '').trim(),
-    training_note: String(training_note || '').trim(),
-    status_label: status_label || 'Sắp về',
-    is_required: Number(is_required || 0) ? 1 : 0,
-    due_at: due_at || '',
-    pass_percent: Number(pass_percent || 90),
-    quiz_questions: parseQuizText(quiz_text),
-    status: 'active',
-    created_by: req.user.id,
-    created_at: nowIso(),
-    updated_at: nowIso()
-  });
+  const existing = findExistingProductTraining(storeId, sku, product_name);
+  if (existing) {
+    trainingApplyPayload(existing, { ...req.body, store_id: storeId }, req.user.id, false);
+    saveDb();
+    syncTrainingProductCollections(req.user.id);
+    return res.json({ ok: true, id: existing.id, updated_existing: true });
+  }
+  const id = nextId('product_trainings');
+  const row = { id, store_id: storeId };
+  trainingApplyPayload(row, { ...req.body, store_id: storeId }, req.user.id, true);
+  db.product_trainings.push(row);
   saveDb();
+  syncTrainingProductCollections(req.user.id);
   res.json({ ok: true, id });
 });
 
@@ -3169,18 +3537,13 @@ app.patch('/api/product-trainings/:id', requireAuth, requirePerm('can_manage_pro
   const row = (db.product_trainings || []).find(r => Number(r.id) === Number(req.params.id));
   if (!row || row.status === 'deleted') return res.status(404).json({ error: 'Không tìm thấy bài đào tạo sản phẩm' });
   if (!canManageProductTrainingScope(req.user, row.store_id)) return res.status(403).json({ error: 'Không có quyền sửa bài đào tạo này' });
-  const fields = ['store_id','sku','product_name','arrival_date','material','style_info','selling_points','care_instruction','common_errors','training_note','status_label','is_required','due_at','pass_percent'];
-  fields.forEach(k => {
-    if (req.body && req.body[k] !== undefined) {
-      if (k === 'store_id') row[k] = req.body[k] ? Number(req.body[k]) : null;
-      else if (k === 'is_required') row[k] = Number(req.body[k] || 0) ? 1 : 0;
-      else if (k === 'pass_percent') row[k] = Number(req.body[k] || 90);
-      else row[k] = String(req.body[k] || '').trim();
-    }
-  });
-  row.updated_by = req.user.id;
-  row.updated_at = nowIso();
+  const nextStoreId = req.body && req.body.store_id !== undefined ? (req.body.store_id ? Number(req.body.store_id) : null) : row.store_id;
+  if (nextStoreId && !canManageProductTrainingScope(req.user, nextStoreId)) return res.status(403).json({ error: 'Không có quyền chuyển phạm vi bài đào tạo này' });
+  const duplicate = findExistingProductTraining(nextStoreId, req.body?.sku !== undefined ? req.body.sku : row.sku, req.body?.product_name !== undefined ? req.body.product_name : row.product_name, row.id);
+  if (duplicate) return res.status(400).json({ error: 'Đã có bài đào tạo cho SKU/Mã cha này, không tạo trùng bài test' });
+  trainingApplyPayload(row, req.body || {}, req.user.id, false);
   saveDb();
+  syncTrainingProductCollections(req.user.id);
   res.json({ ok: true });
 });
 
@@ -3192,6 +3555,7 @@ app.delete('/api/product-trainings/:id', requireAuth, requirePerm('can_manage_pr
   row.deleted_at = nowIso();
   row.deleted_by = req.user.id;
   saveDb();
+  syncTrainingProductCollections(req.user.id);
   res.json({ ok: true });
 });
 
@@ -3256,7 +3620,7 @@ app.get('/api/export/:type.csv', requireAuth, requirePerm('can_export'), (req, r
   } else if (type === 'product_collections') {
     rows = productCollectionRowsForUser(req.user).flatMap(c => (c.items || []).map(i => ({ thang: c.collection_month || '', bst_list: c.name || '', pham_vi: c.store_name || '', sku: i.sku || '', ten_sp: i.product_name || '', ghi_chu_sp: i.note || '', ghi_chu_bst: c.description || '', nguoi_tao: c.created_by_name || '', ngay_tao: c.created_at || '' })));
   } else if (type === 'product_trainings') {
-    rows = productTrainingRowsForUser(req.user).map(r => ({ id: r.id, pham_vi: r.store_name || '', bat_buoc_hoc: Number(r.is_required || 0) ? 'Có' : 'Không', han_hoc: r.due_at || '', ty_le_dat: Number(r.pass_percent || 90), so_cau_hoi: Number(r.quiz_question_count || 0), sku: r.sku || '', ten_sp: r.product_name || '', ngay_hang_ve: r.arrival_date || '', chat_lieu: r.material || '', kieu_dang_form: r.style_info || '', diem_ban_hang: r.selling_points || '', huong_dan_bao_quan_tu_van: r.care_instruction || '', loi_can_luu_y: r.common_errors || '', ghi_chu_dao_tao: r.training_note || '', trang_thai: r.status_label || '', nguoi_nhap: r.created_by_name || '', ngay_cap_nhat: r.updated_at || r.created_at || '' }));
+    rows = productTrainingRowsForUser(req.user).map(r => ({ id: r.id, pham_vi: r.store_name || '', bat_buoc_hoc: Number(r.is_required || 0) ? 'Có' : 'Không', han_hoc: r.due_at || '', ty_le_dat: Number(r.pass_percent || 90), so_cau_hoi: Number(r.quiz_question_count || 0), sku: r.sku || '', ten_sp: r.product_name || '', mau_hien_co: r.color_options || '', anh_san_pham: r.image_url || '', link_san_pham: r.product_url || '', ngay_hang_ve: r.arrival_date || '', chat_lieu: r.material || '', kieu_dang_form: r.style_info || '', diem_ban_hang: r.selling_points || '', huong_dan_bao_quan_tu_van: r.care_instruction || '', loi_can_luu_y: r.common_errors || '', ghi_chu_dao_tao: r.training_note || '', trang_thai: r.status_label || '', nguoi_nhap: r.created_by_name || '', ngay_cap_nhat: r.updated_at || r.created_at || '' }));
   } else if (type === 'product_training_attempts') {
     rows = (db.product_training_attempts || []).filter(a => a.status !== 'deleted').map(a => { const t = (db.product_trainings || []).find(x => Number(x.id) === Number(a.training_id)); const u = getUser(a.user_id); return { id: a.id, bai_dao_tao: t ? `${t.sku || ''} ${t.product_name || ''}`.trim() : '', cua_hang: getStore(a.store_id)?.name || getStore(u?.store_id)?.name || '', nhan_vien: u?.full_name || '', diem: Number(a.score_percent || 0), dung: Number(a.correct_count || 0), tong_cau: Number(a.total_questions || 0), ket_qua: Number(a.passed || 0) ? 'Đạt' : 'Chưa đạt', ngay_lam_bai: a.created_at || '' }; });
   } else if (type === 'cdp_ojti') {

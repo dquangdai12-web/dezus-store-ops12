@@ -1,0 +1,28 @@
+V4.75 - ẢNH GOOGLE DRIVE HIỂN THỊ TRỰC TIẾP + NHÂN VIÊN XÁC NHẬN ĐÃ HỌC
+
+1. Ảnh sản phẩm trong Học & Test SP
+- Có thể dán link ảnh Google Drive vào ô Ảnh sản phẩm.
+- Web tự đổi link Google Drive sang dạng ảnh hiển thị trực tiếp trong bài học.
+- Nếu Google Drive không cho hiển thị trực tiếp, web sẽ thử link dự phòng.
+- Nếu vẫn lỗi, web hiện nút Mở ảnh sản phẩm để xem nhanh.
+
+Lưu ý: Link Google Drive cần bật quyền xem: Anyone with the link / Bất kỳ ai có đường liên kết đều có thể xem.
+
+2. Luồng học của nhân viên
+- Nhân viên vào Sản phẩm -> Học & Test sản phẩm.
+- Xem ảnh sản phẩm và nội dung học.
+- Bấm Tôi đã học xong.
+- Nếu bài có test, nút sẽ chuyển thành Làm bài test.
+- Kết quả đã học được lưu lại, không mất khi tải lại trang.
+
+3. Quản lý theo dõi tiến độ
+- Quản lý xem được từng nhân viên đã học/chưa học.
+- Quản lý xem được nhân viên đạt/chưa đạt bài test.
+
+4. Test tự động dự phòng
+- Nếu dữ liệu BST chưa có câu hỏi trắc nghiệm đúng format, hệ thống vẫn tạo bài test cơ bản từ chất liệu, khách hàng phù hợp và lưu ý tư vấn.
+
+5. Cập nhật
+- Upload đè toàn bộ file lên GitHub.
+- Commit changes.
+- Render -> Manual Deploy -> Deploy latest commit.
