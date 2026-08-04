@@ -3834,3 +3834,15 @@ body{letter-spacing:-.008em}
   .completeForm.row{display:grid;grid-template-columns:1fr;gap:8px}
   .completeForm.row .btn{width:100%;min-height:42px}
 }
+
+
+/* ==== V4.83 ADMIN DELETE TASK + SILVER/BRONZE MEDALS ==== */
+.task-admin-actions{display:flex;justify-content:flex-end;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+.btn.danger.deleteTaskBtn{background:#fff1f2;color:#b42318;border-color:#fecdd3}
+.btn.danger.deleteTaskBtn:hover{background:#ffe4e6;border-color:#fda4af}
+.rank-card .rank-cup-silver,.rank-card .rank-cup-bronze{border-radius:50%;font-family:Arial,sans-serif;font-weight:900;font-size:17px;line-height:1}
+.rank-card .rank-cup-silver{color:#394150;background:radial-gradient(circle at 35% 25%,#ffffff 0 13%,#e5e7eb 32%,#aeb6c2 72%,#7b8491 100%);border:2px solid #c8ced7;box-shadow:0 9px 18px rgba(107,114,128,.25),inset 0 1px 2px rgba(255,255,255,.9)}
+.rank-card .rank-cup-bronze{color:#fff8ef;background:radial-gradient(circle at 35% 25%,#ffd7ad 0 12%,#c98245 38%,#985527 76%,#713817 100%);border:2px solid #b66c35;box-shadow:0 9px 18px rgba(146,82,37,.28),inset 0 1px 2px rgba(255,255,255,.55)}
+.rank-card .rank-cup-silver span,.rank-card .rank-cup-bronze span{display:block;transform:translateY(.5px)}
+.rank-card.rank-2 .rank-no,.rank-card.rank-3 .rank-no{padding-right:42px}
+@media(max-width:860px){.rank-card.rank-2 .rank-no,.rank-card.rank-3 .rank-no{padding-right:36px}}

@@ -2233,6 +2233,17 @@ app.post('/api/tasks', requireAuth, requirePerm('can_assign_tasks'), (req, res) 
   res.json({ ok: true, created_tasks: createdTasks, created_assignments: createdAssignments });
 });
 
+app.delete('/api/tasks/:taskId', requireAuth, (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Chỉ Admin được quyền xóa công việc' });
+  const taskId = Number(req.params.taskId);
+  const task = db.tasks.find(x => Number(x.id) === taskId);
+  if (!task) return res.status(404).json({ error: 'Không tìm thấy công việc' });
+  db.task_assignees = db.task_assignees.filter(x => Number(x.task_id) !== taskId);
+  db.tasks = db.tasks.filter(x => Number(x.id) !== taskId);
+  saveDb();
+  res.json({ ok: true, deleted_task_id: taskId });
+});
+
 app.post('/api/tasks/:assignmentId/complete', requireAuth, upload.array('evidence', 10), (req, res) => {
   const assignmentId = Number(req.params.assignmentId);
   const ta = db.task_assignees.find(x => Number(x.id) === assignmentId);

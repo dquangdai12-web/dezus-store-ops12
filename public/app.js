@@ -842,7 +842,7 @@ function tableLeaderboard(rows, showAmounts = false) {
   // V4.57-1: Tổng quan không hiển thị % tỷ trọng DT, nhưng trang Doanh thu vẫn giữ.
   const revenueShareHead = showAmounts ? '<th>% tỷ trọng DT</th>' : '';
   const revenueShareBody = r => showAmounts ? `<td>${Number(r.revenue_percent || 0)}%</td>` : '';
-  const rankCupHtml = r => r.rank === 1 ? `<div class="rank-cup rank-cup-gold" aria-hidden="true">🏆</div>` : (r.rank === 2 ? `<div class="rank-cup rank-cup-silver" aria-hidden="true">🏆</div>` : (r.rank === 3 ? `<div class="rank-cup rank-cup-bronze" aria-hidden="true">🏆</div>` : ''));
+  const rankCupHtml = r => r.rank === 1 ? `<div class="rank-cup rank-cup-gold" aria-label="Huy chương vàng hạng 1">🏆</div>` : (r.rank === 2 ? `<div class="rank-cup rank-cup-silver" aria-label="Huy chương bạc hạng 2"><span>2</span></div>` : (r.rank === 3 ? `<div class="rank-cup rank-cup-bronze" aria-label="Huy chương đồng hạng 3"><span>3</span></div>` : ''));
   const podium = rows.slice(0, 3).map(r => `<div class="rank-card rank-${r.rank}">${rankCupHtml(r)}<div class="rank-no">Top ${r.rank}</div><b class="employee-name-line">${userDisplayName(r)}</b><span>${esc(r.store_name || '')}</span><strong>${Number(r.achievement_percent || 0)}%</strong></div>`).join('');
   return `<div class="leaderboard-premium">${podium}</div><div class="table-wrap leaderboard-wrap"><table class="leaderboard-table"><thead><tr><th>Top</th><th>Nhân viên</th><th>Cửa hàng</th><th>% đạt target</th>${moneyColsHead}${revenueShareHead}<th>Bill</th><th>Món</th><th>UPT</th><th>ATV</th><th>ASP</th><th>GUESTS</th></tr></thead><tbody>${rows.map(r => `<tr><td><span class="badge dark">Top ${r.rank}</span></td><td class="employee-name-cell"><b>${userDisplayName(r)}</b></td><td class="store-name-cell">${esc(r.store_name || '')}</td><td>${percentBadge(r.achievement_percent || 0)}</td>${moneyColsBody(r)}${revenueShareBody(r)}<td>${money(r.bill_count || 0)}</td><td>${money(r.item_count || 0)}</td><td class="metric-badge-cell">${targetBadge(r.upt || 0, r.target_upt || 0, '', 2)}</td><td class="metric-badge-cell">${targetBadge(r.atv || 0, r.target_atv || 0, 'đ')}</td><td>${money(r.asp || 0)}đ</td><td>${Math.round(r.guests_percent || 0)}%</td></tr>`).join('')}</tbody></table></div>`;
 }
@@ -1224,6 +1224,22 @@ async function renderTasks() {
   updateTaskRepeatUi();
   $('#taskForm')?.addEventListener('submit', submitTask);
   $$('.completeForm').forEach(f => f.addEventListener('submit', submitCompleteTask));
+  $$('.deleteTaskBtn').forEach(btn => btn.addEventListener('click', deleteTask));
+}
+
+async function deleteTask(e) {
+  const btn = e.currentTarget;
+  const title = btn.dataset.taskTitle || 'công việc này';
+  if (!confirm(`Xóa toàn bộ công việc \"${title}\" và tất cả người được giao? Thao tác này không thể hoàn tác.`)) return;
+  btn.disabled = true;
+  try {
+    await api(`/api/tasks/${btn.dataset.taskId}`, { method: 'DELETE' });
+    toast('Đã xóa công việc');
+    renderTasks();
+  } catch (err) {
+    btn.disabled = false;
+    toast(err.message, 'danger');
+  }
 }
 
 function taskCard(t) {
@@ -1242,6 +1258,7 @@ function taskCard(t) {
     ${t.description ? `<p>${esc(t.description)}</p>` : ''}
     ${t.evidence_path ? `<div class="hint">Chứng từ: ${renderFiles(t.evidence_path)} • ${esc(t.evidence_note || '')}</div>` : ''}
     ${canComplete ? `<form class="completeForm row" data-id="${t.assignment_id}" enctype="multipart/form-data"><input class="input" name="note" placeholder="Ghi chú hoàn thành"><input class="input" name="evidence" type="file" accept="image/*,.pdf,.xlsx,.docx" multiple><input class="input" name="evidence_link" placeholder="Link Drive nếu file >12MB"><button class="btn small">Hoàn thành</button></form>` : ''}
+    ${state.user.role === 'admin' ? `<div class="task-admin-actions"><button type="button" class="btn danger small deleteTaskBtn" data-task-id="${t.id}" data-task-title="${esc(t.title)}">Xóa công việc</button></div>` : ''}
   </div>`;
 }
 

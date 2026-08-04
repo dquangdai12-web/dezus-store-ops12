@@ -1,0 +1,5 @@
+DEZUS STORE OPS V4.83
+
+1. Công việc: thêm nút Xóa công việc, chỉ tài khoản Admin nhìn thấy và sử dụng được.
+2. Khi xóa, hệ thống xóa công việc và toàn bộ lượt giao liên quan sau khi xác nhận.
+3. Top doanh thu tháng: Top 2 đổi thành huy chương bạc số 2; Top 3 đổi thành huy chương đồng số 3.
