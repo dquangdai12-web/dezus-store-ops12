@@ -1412,7 +1412,31 @@ async function renderViolations() {
   $('#violationLevel')?.addEventListener('change', () => syncViolation(false));
   syncViolation(false);
   formEl?.addEventListener('submit', async e => { e.preventDefault(); if (hasFileOverLimit(e.target)) return; try { await api('/api/violations', { method: 'POST', body: new FormData(e.target) }); toast('Đã lưu vi phạm theo SOP'); renderViolations(); } catch (err) { toast(err.message, 'danger'); } });
-  $('#violationCatalogForm')?.addEventListener('submit', async e => { e.preventDefault(); try { await api('/api/violation-catalog', { method: 'POST', body: Object.fromEntries(new FormData(e.target).entries()) }); toast('Đã thêm danh mục vi phạm'); renderViolations(); } catch (err) { toast(err.message, 'danger'); } });
+  $('#violationCatalogForm')?.addEventListener('submit', async e => {
+    e.preventDefault();
+    const form = e.target;
+    const payload = Object.fromEntries(new FormData(form).entries());
+    payload.group = String(payload.group || '').trim();
+    payload.name = String(payload.name || '').trim();
+    payload.level = String(payload.level || '').trim();
+    if (!payload.group || !payload.name || !payload.level) {
+      toast('Vui lòng nhập đủ nhóm, tên lỗi và mức mặc định', 'danger');
+      return;
+    }
+    const submitBtn = form.querySelector('button[type="submit"], button:not([type])');
+    const oldText = submitBtn?.textContent;
+    try {
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Đang lưu...'; }
+      await api('/api/violation-catalog', { method: 'POST', body: JSON.stringify(payload) });
+      toast('Đã thêm danh mục vi phạm');
+      form.reset();
+      await renderViolations();
+    } catch (err) {
+      toast(err.message || 'Không thể thêm danh mục vi phạm', 'danger');
+    } finally {
+      if (submitBtn && document.body.contains(submitBtn)) { submitBtn.disabled = false; submitBtn.textContent = oldText || 'Thêm vào danh mục'; }
+    }
+  });
   $$('.violationDeleteBtn').forEach(btn => btn.addEventListener('click', async () => { if (!confirm('Xóa vi phạm này? Điểm trừ liên quan cũng sẽ được loại khỏi tổng hợp.')) return; try { await api(`/api/violations/${btn.dataset.id}`, { method: 'DELETE' }); toast('Đã xóa vi phạm'); renderViolations(); } catch (err) { toast(err.message, 'danger'); } }));
 }
 

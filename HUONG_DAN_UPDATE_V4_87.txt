@@ -1,0 +1,12 @@
+DEZUS STORE OPS V4.87 - SỬA LỖI LƯU DANH MỤC VI PHẠM
+
+1. Thay toàn bộ source hiện tại bằng bộ V4.87.
+2. Giữ nguyên thư mục data và uploads đang sử dụng.
+3. Chạy lại web hoặc redeploy trên Render.
+4. Vào Vi phạm > Thêm danh mục vi phạm mới, nhập đủ Nhóm, Tên lỗi và Mức mặc định rồi bấm Thêm vào danh mục.
+
+Đã sửa:
+- Gửi dữ liệu danh mục dưới dạng JSON hợp lệ.
+- Kiểm tra dữ liệu bắt buộc trước khi gửi.
+- Khóa nút trong lúc lưu để tránh tạo trùng.
+- Reset form và tải lại danh mục sau khi lưu thành công.
