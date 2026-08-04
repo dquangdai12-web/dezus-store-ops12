@@ -19,10 +19,11 @@
     "orders": 1,
     "online_orders": 1,
     "product_feedback": 1,
-    "product_collections": 1,
-    "product_collection_items": 1,
-    "product_trainings": 1,
+    "product_collections": 2,
+    "product_collection_items": 58,
+    "product_trainings": 58,
     "product_training_attempts": 1,
+    "product_training_reads": 1,
     "weekly_reports": 1,
     "daily_reports": 1,
     "cdp_ojti": 1
@@ -64,61 +65,61 @@
       "id": 1,
       "full_name": "Admin PKD",
       "username": "admin",
-      "password_hash": "$2a$10$k0UvEnRlKYHaQxXhx6X41e2wHnwW/XCwNayouAtx7Na0GdYxzKroK",
+      "password_hash": "$2a$10$hpZVQv0RVPTRjpCpUWYga.p2ovRGT.TNeLG8Utd25TdKy6IAD59zq",
       "role": "admin",
       "store_id": null,
       "status": "active",
-      "created_at": "2026-08-03T05:37:38.102Z"
+      "created_at": "2026-08-04T05:40:12.353Z"
     },
     {
       "id": 2,
       "full_name": "QL Bà Triệu",
       "username": "qly.bt",
-      "password_hash": "$2a$10$k0UvEnRlKYHaQxXhx6X41e2wHnwW/XCwNayouAtx7Na0GdYxzKroK",
+      "password_hash": "$2a$10$hpZVQv0RVPTRjpCpUWYga.p2ovRGT.TNeLG8Utd25TdKy6IAD59zq",
       "role": "manager",
       "store_id": 1,
       "status": "active",
-      "created_at": "2026-08-03T05:37:38.103Z"
+      "created_at": "2026-08-04T05:40:12.353Z"
     },
     {
       "id": 3,
       "full_name": "ĐSKD Bà Triệu 01",
       "username": "nv.bt1",
-      "password_hash": "$2a$10$k0UvEnRlKYHaQxXhx6X41e2wHnwW/XCwNayouAtx7Na0GdYxzKroK",
+      "password_hash": "$2a$10$hpZVQv0RVPTRjpCpUWYga.p2ovRGT.TNeLG8Utd25TdKy6IAD59zq",
       "role": "employee",
       "store_id": 1,
       "status": "active",
-      "created_at": "2026-08-03T05:37:38.103Z"
+      "created_at": "2026-08-04T05:40:12.353Z"
     },
     {
       "id": 4,
       "full_name": "ĐSKD Bà Triệu 02",
       "username": "nv.bt2",
-      "password_hash": "$2a$10$k0UvEnRlKYHaQxXhx6X41e2wHnwW/XCwNayouAtx7Na0GdYxzKroK",
+      "password_hash": "$2a$10$hpZVQv0RVPTRjpCpUWYga.p2ovRGT.TNeLG8Utd25TdKy6IAD59zq",
       "role": "employee",
       "store_id": 1,
       "status": "active",
-      "created_at": "2026-08-03T05:37:38.103Z"
+      "created_at": "2026-08-04T05:40:12.353Z"
     },
     {
       "id": 5,
       "full_name": "QL Đà Nẵng",
       "username": "qly.dn",
-      "password_hash": "$2a$10$k0UvEnRlKYHaQxXhx6X41e2wHnwW/XCwNayouAtx7Na0GdYxzKroK",
+      "password_hash": "$2a$10$hpZVQv0RVPTRjpCpUWYga.p2ovRGT.TNeLG8Utd25TdKy6IAD59zq",
       "role": "manager",
       "store_id": 2,
       "status": "active",
-      "created_at": "2026-08-03T05:37:38.103Z"
+      "created_at": "2026-08-04T05:40:12.353Z"
     },
     {
       "id": 6,
       "full_name": "ĐSKD Đà Nẵng 01",
       "username": "nv.dn1",
-      "password_hash": "$2a$10$k0UvEnRlKYHaQxXhx6X41e2wHnwW/XCwNayouAtx7Na0GdYxzKroK",
+      "password_hash": "$2a$10$hpZVQv0RVPTRjpCpUWYga.p2ovRGT.TNeLG8Utd25TdKy6IAD59zq",
       "role": "employee",
       "store_id": 2,
       "status": "active",
-      "created_at": "2026-08-03T05:37:38.103Z"
+      "created_at": "2026-08-04T05:40:12.353Z"
     }
   ],
   "permissions": [
@@ -366,7 +367,7 @@
       "end_time": "16:30",
       "note": "Ca sáng",
       "status": "active",
-      "created_at": "2026-08-03T05:37:38.103Z"
+      "created_at": "2026-08-04T05:40:12.353Z"
     },
     {
       "id": 2,
@@ -376,7 +377,7 @@
       "end_time": "22:00",
       "note": "Ca chiều",
       "status": "active",
-      "created_at": "2026-08-03T05:37:38.103Z"
+      "created_at": "2026-08-04T05:40:12.353Z"
     },
     {
       "id": 3,
@@ -386,7 +387,7 @@
       "end_time": "22:00",
       "note": "Ca gãy / full peak",
       "status": "active",
-      "created_at": "2026-08-03T05:37:38.103Z"
+      "created_at": "2026-08-04T05:40:12.353Z"
     },
     {
       "id": 4,
@@ -396,7 +397,7 @@
       "end_time": "17:00",
       "note": "",
       "status": "active",
-      "created_at": "2026-08-03T05:37:38.103Z"
+      "created_at": "2026-08-04T05:40:12.353Z"
     },
     {
       "id": 5,
@@ -406,7 +407,7 @@
       "end_time": "20:30",
       "note": "",
       "status": "active",
-      "created_at": "2026-08-03T05:37:38.103Z"
+      "created_at": "2026-08-04T05:40:12.353Z"
     }
   ],
   "tasks": [],
@@ -423,10 +424,3903 @@
   "orders": [],
   "online_orders": [],
   "product_feedback": [],
-  "product_collections": [],
-  "product_collection_items": [],
-  "product_trainings": [],
+  "product_collections": [
+    {
+      "id": 1,
+      "store_id": null,
+      "collection_month": "2026-08",
+      "name": "Tự động từ Học SP 2026-08",
+      "description": "Danh mục tự động tạo từ Học & Test sản phẩm. Cửa hàng dùng danh mục này để đánh giá sản phẩm đã được học.",
+      "auto_source": "product_training",
+      "status": "active",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:54.968Z",
+      "updated_at": "2026-08-04T05:40:55.327Z",
+      "updated_by": 1
+    }
+  ],
+  "product_collection_items": [
+    {
+      "id": 1,
+      "collection_id": 1,
+      "sku": "1WAKC026A994",
+      "product_name": "Tarazi Top",
+      "note": "Màu: ĐEN",
+      "sort_order": 1,
+      "source_training_id": 1,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:54.968Z"
+    },
+    {
+      "id": 2,
+      "collection_id": 1,
+      "sku": "1WAKD016A264",
+      "product_name": "Blair Top",
+      "note": "",
+      "sort_order": 2,
+      "source_training_id": 2,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:54.981Z"
+    },
+    {
+      "id": 3,
+      "collection_id": 1,
+      "sku": "1WAKD022A264",
+      "product_name": "Taraxu Top",
+      "note": "Màu: BE, ĐEN",
+      "sort_order": 3,
+      "source_training_id": 3,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:54.991Z"
+    },
+    {
+      "id": 4,
+      "collection_id": 1,
+      "sku": "1WAKD023A264",
+      "product_name": "Vallina Shirt",
+      "note": "Màu: BE, GHI",
+      "sort_order": 4,
+      "source_training_id": 4,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:55.005Z"
+    },
+    {
+      "id": 5,
+      "collection_id": 1,
+      "sku": "1WAKT014A264",
+      "product_name": "Cora Top",
+      "note": "Màu: LOANG",
+      "sort_order": 5,
+      "source_training_id": 5,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:55.018Z"
+    },
+    {
+      "id": 6,
+      "collection_id": 1,
+      "sku": "1WAMC055A264",
+      "product_name": "Celesty Shirt",
+      "note": "Màu: NÂU",
+      "sort_order": 6,
+      "source_training_id": 6,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:55.025Z"
+    },
+    {
+      "id": 7,
+      "collection_id": 1,
+      "sku": "1WAPC047A264",
+      "product_name": "Anais Polo",
+      "note": "",
+      "sort_order": 7,
+      "source_training_id": 7,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:55.033Z"
+    },
+    {
+      "id": 8,
+      "collection_id": 1,
+      "sku": "1WASD001A262",
+      "product_name": "Evelina Tshirt",
+      "note": "Màu: TRẮNG",
+      "sort_order": 8,
+      "source_training_id": 8,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:55.039Z"
+    },
+    {
+      "id": 9,
+      "collection_id": 1,
+      "sku": "1WVBM007A261",
+      "product_name": "Ottilie Dress",
+      "note": "Màu: VÀNG",
+      "sort_order": 9,
+      "source_training_id": 9,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:55.046Z"
+    },
+    {
+      "id": 10,
+      "collection_id": 1,
+      "sku": "1WVPO006S266",
+      "product_name": "Karaxy Dress Beigei",
+      "note": "Màu: BE, ĐEN",
+      "sort_order": 10,
+      "source_training_id": 10,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:55.053Z"
+    },
+    {
+      "id": 11,
+      "collection_id": 1,
+      "sku": "2WAKH021A264",
+      "product_name": "Emlale Top",
+      "note": "Màu: XANH THAN",
+      "sort_order": 11,
+      "source_training_id": 11,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:55.060Z"
+    },
+    {
+      "id": 12,
+      "collection_id": 1,
+      "sku": "2WAKH022A264",
+      "product_name": "Cosima Top",
+      "note": "Màu: NÂU",
+      "sort_order": 12,
+      "source_training_id": 12,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:55.069Z"
+    },
+    {
+      "id": 13,
+      "collection_id": 1,
+      "sku": "2WAKT012A264",
+      "product_name": "Freya Top",
+      "note": "Màu: LOANG",
+      "sort_order": 13,
+      "source_training_id": 13,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:55.073Z"
+    },
+    {
+      "id": 14,
+      "collection_id": 1,
+      "sku": "2WAKT016A264",
+      "product_name": "Coralie Top",
+      "note": "Màu: LOANG",
+      "sort_order": 14,
+      "source_training_id": 14,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:55.079Z"
+    },
+    {
+      "id": 15,
+      "collection_id": 1,
+      "sku": "2WAMD059A262",
+      "product_name": "Elara Shirt",
+      "note": "Màu: LOANG",
+      "sort_order": 15,
+      "source_training_id": 15,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:55.084Z"
+    },
+    {
+      "id": 16,
+      "collection_id": 1,
+      "sku": "2WQDN046A268",
+      "product_name": "Emlale Trousers",
+      "note": "Màu: XANH THAN",
+      "sort_order": 16,
+      "source_training_id": 16,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:55.088Z"
+    },
+    {
+      "id": 17,
+      "collection_id": 1,
+      "sku": "2WVXS001A264",
+      "product_name": "Aurella Dress",
+      "note": "Màu: BE",
+      "sort_order": 17,
+      "source_training_id": 17,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:55.097Z"
+    },
+    {
+      "id": 18,
+      "collection_id": 1,
+      "sku": "CWALC017A263",
+      "product_name": "Feelant Top",
+      "note": "Màu: ĐEN, GHI",
+      "sort_order": 18,
+      "source_training_id": 18,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:55.101Z"
+    },
+    {
+      "id": 19,
+      "collection_id": 1,
+      "sku": "CWALC018A263",
+      "product_name": "Labown Top",
+      "note": "Màu: BE, ĐEN",
+      "sort_order": 19,
+      "source_training_id": 19,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:55.110Z"
+    },
+    {
+      "id": 20,
+      "collection_id": 1,
+      "sku": "CWAMC047S264",
+      "product_name": "Cinsi Shirt",
+      "note": "Màu: ĐEN, TRẮNG",
+      "sort_order": 20,
+      "source_training_id": 20,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:55.116Z"
+    },
+    {
+      "id": 21,
+      "collection_id": 1,
+      "sku": "CWAMC050S263",
+      "product_name": "Winiexi Shirt",
+      "note": "Màu: GHI",
+      "sort_order": 21,
+      "source_training_id": 21,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:55.126Z"
+    },
+    {
+      "id": 22,
+      "collection_id": 1,
+      "sku": "CWAMC052S263",
+      "product_name": "Ruxinta Shirt",
+      "note": "Màu: XANH THAN",
+      "sort_order": 22,
+      "source_training_id": 22,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:55.133Z"
+    },
+    {
+      "id": 23,
+      "collection_id": 1,
+      "sku": "CWAMC053S264",
+      "product_name": "Rehana Shirt",
+      "note": "Màu: ĐEN",
+      "sort_order": 23,
+      "source_training_id": 23,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:55.137Z"
+    },
+    {
+      "id": 24,
+      "collection_id": 1,
+      "sku": "CWAMD061A262",
+      "product_name": "Tiana Shirt",
+      "note": "Màu: KẺ XANH",
+      "sort_order": 24,
+      "source_training_id": 24,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:55.141Z"
+    },
+    {
+      "id": 25,
+      "collection_id": 1,
+      "sku": "CWAOY001A262",
+      "product_name": "Winter Jacket",
+      "note": "Màu: ĐEN, GHI",
+      "sort_order": 25,
+      "source_training_id": 25,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:55.150Z"
+    },
+    {
+      "id": 26,
+      "collection_id": 1,
+      "sku": "CWATO001S265",
+      "product_name": "Dilys Top",
+      "note": "Màu: ĐEN",
+      "sort_order": 26,
+      "source_training_id": 26,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:55.155Z"
+    },
+    {
+      "id": 27,
+      "collection_id": 1,
+      "sku": "CWCDO006S264",
+      "product_name": "Taraxi Skirt",
+      "note": "Màu: ĐEN, BE, TRẮNG",
+      "sort_order": 27,
+      "source_training_id": 27,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:55.160Z"
+    },
+    {
+      "id": 28,
+      "collection_id": 1,
+      "sku": "CWCNA009S266",
+      "product_name": "Dilys Skirt",
+      "note": "Màu: ĐEN",
+      "sort_order": 28,
+      "source_training_id": 28,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:55.164Z"
+    },
+    {
+      "id": 29,
+      "collection_id": 1,
+      "sku": "CWCNA030S266",
+      "product_name": "Elowen Skirt",
+      "note": "Màu: NÂU",
+      "sort_order": 29,
+      "source_training_id": 29,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:55.169Z"
+    },
+    {
+      "id": 30,
+      "collection_id": 1,
+      "sku": "CWQDN009S268",
+      "product_name": "Tish Trousers",
+      "note": "Màu: LOANG",
+      "sort_order": 30,
+      "source_training_id": 30,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:55.173Z"
+    },
+    {
+      "id": 31,
+      "collection_id": 1,
+      "sku": "CWQDN043S268",
+      "product_name": "Meiwa Trousers",
+      "note": "Màu: ĐEN",
+      "sort_order": 31,
+      "source_training_id": 31,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:55.178Z"
+    },
+    {
+      "id": 32,
+      "collection_id": 1,
+      "sku": "CWQDS008S262",
+      "product_name": "Alda Trousers",
+      "note": "Màu: LOANG",
+      "sort_order": 32,
+      "source_training_id": 32,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:55.183Z"
+    },
+    {
+      "id": 33,
+      "collection_id": 1,
+      "sku": "CWQDS025S268",
+      "product_name": "Ruxinta Trousers",
+      "note": "Màu: XANH THAN",
+      "sort_order": 33,
+      "source_training_id": 33,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:55.188Z"
+    },
+    {
+      "id": 34,
+      "collection_id": 1,
+      "sku": "CWQST001A262",
+      "product_name": "Winter Short",
+      "note": "Màu: ĐEN, GHI",
+      "sort_order": 34,
+      "source_training_id": 34,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:55.193Z"
+    },
+    {
+      "id": 35,
+      "collection_id": 1,
+      "sku": "CWVBO001S261",
+      "product_name": "Midi Dress",
+      "note": "",
+      "sort_order": 35,
+      "source_training_id": 35,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:55.198Z"
+    },
+    {
+      "id": 36,
+      "collection_id": 1,
+      "sku": "CWVIO005S265",
+      "product_name": "Alina Dress",
+      "note": "Màu: ĐEN",
+      "sort_order": 36,
+      "source_training_id": 36,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:55.204Z"
+    },
+    {
+      "id": 37,
+      "collection_id": 1,
+      "sku": "CWVPN001A264",
+      "product_name": "Nasia Dress",
+      "note": "Màu: KẺ ĐEN",
+      "sort_order": 37,
+      "source_training_id": 37,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:55.208Z"
+    },
+    {
+      "id": 38,
+      "collection_id": 1,
+      "sku": "DXA140522",
+      "product_name": "Suzy Top",
+      "note": "Màu: TÍM",
+      "sort_order": 38,
+      "source_training_id": 38,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:55.214Z"
+    },
+    {
+      "id": 39,
+      "collection_id": 1,
+      "sku": "DXCV140524",
+      "product_name": "Suzy Skirt",
+      "note": "Màu: TÍM",
+      "sort_order": 39,
+      "source_training_id": 39,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:55.219Z"
+    },
+    {
+      "id": 40,
+      "collection_id": 1,
+      "sku": "TWAKC017S264",
+      "product_name": "Phatina Shirt",
+      "note": "Màu: ĐEN",
+      "sort_order": 40,
+      "source_training_id": 40,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:55.226Z"
+    },
+    {
+      "id": 41,
+      "collection_id": 1,
+      "sku": "TWAKC022S264",
+      "product_name": "Elowen Top",
+      "note": "Màu: GHI, NÂU",
+      "sort_order": 41,
+      "source_training_id": 41,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:55.232Z"
+    },
+    {
+      "id": 42,
+      "collection_id": 1,
+      "sku": "TWAKQ006S264",
+      "product_name": "Cici Top",
+      "note": "Màu: BE",
+      "sort_order": 42,
+      "source_training_id": 42,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:55.238Z"
+    },
+    {
+      "id": 43,
+      "collection_id": 1,
+      "sku": "TWAKQ008S264",
+      "product_name": "Celeste Top",
+      "note": "",
+      "sort_order": 43,
+      "source_training_id": 43,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:55.244Z"
+    },
+    {
+      "id": 44,
+      "collection_id": 1,
+      "sku": "TWAKS009S262",
+      "product_name": "Tish Top",
+      "note": "Màu: LOANG",
+      "sort_order": 44,
+      "source_training_id": 44,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:55.250Z"
+    },
+    {
+      "id": 45,
+      "collection_id": 1,
+      "sku": "TWAKY013S261",
+      "product_name": "Linesite Top",
+      "note": "Màu: BE",
+      "sort_order": 45,
+      "source_training_id": 45,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:55.256Z"
+    },
+    {
+      "id": 46,
+      "collection_id": 1,
+      "sku": "TWDAR003S265",
+      "product_name": "Hennie Top",
+      "note": "Màu: NÂU",
+      "sort_order": 46,
+      "source_training_id": 46,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:55.262Z"
+    },
+    {
+      "id": 47,
+      "collection_id": 1,
+      "sku": "TWQDN036S268",
+      "product_name": "Cici Trouser",
+      "note": "Màu: BE",
+      "sort_order": 47,
+      "source_training_id": 47,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:55.268Z"
+    },
+    {
+      "id": 48,
+      "collection_id": 1,
+      "sku": "TWQSO006S266",
+      "product_name": "Hennie Short",
+      "note": "Màu: NÂU",
+      "sort_order": 48,
+      "source_training_id": 48,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:55.275Z"
+    },
+    {
+      "id": 49,
+      "collection_id": 1,
+      "sku": "TWSTE001S266",
+      "product_name": "Spacie Skirt",
+      "note": "Màu: LOANG",
+      "sort_order": 49,
+      "source_training_id": 49,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:55.280Z"
+    },
+    {
+      "id": 50,
+      "collection_id": 1,
+      "sku": "TWVXN002S254",
+      "product_name": "Axer Dress",
+      "note": "",
+      "sort_order": 50,
+      "source_training_id": 50,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:55.286Z"
+    },
+    {
+      "id": 51,
+      "collection_id": 1,
+      "sku": "U4TW240803",
+      "product_name": "Wanrui Trouser",
+      "note": "Màu: ĐEN",
+      "sort_order": 51,
+      "source_training_id": 51,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:55.291Z"
+    },
+    {
+      "id": 52,
+      "collection_id": 1,
+      "sku": "Y1BW241210",
+      "product_name": "Kosa Top",
+      "note": "Màu: TRẮNG",
+      "sort_order": 52,
+      "source_training_id": 52,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:55.297Z"
+    },
+    {
+      "id": 53,
+      "collection_id": 1,
+      "sku": "Y1BW250105",
+      "product_name": "Halcyon Top",
+      "note": "Màu: HỒNG",
+      "sort_order": 53,
+      "source_training_id": 53,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:55.304Z"
+    },
+    {
+      "id": 54,
+      "collection_id": 1,
+      "sku": "Y1KW250604",
+      "product_name": "Lucella Top",
+      "note": "Màu: LOANG",
+      "sort_order": 54,
+      "source_training_id": 54,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:55.309Z"
+    },
+    {
+      "id": 55,
+      "collection_id": 1,
+      "sku": "Y1TW250201",
+      "product_name": "Patrick Top",
+      "note": "Màu: TRẮNG, ĐEN",
+      "sort_order": 55,
+      "source_training_id": 55,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:55.315Z"
+    },
+    {
+      "id": 56,
+      "collection_id": 1,
+      "sku": "Y2SW250105",
+      "product_name": "Halcyon Skirt",
+      "note": "Màu: HỒNG",
+      "sort_order": 56,
+      "source_training_id": 56,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:55.321Z"
+    },
+    {
+      "id": 57,
+      "collection_id": 1,
+      "sku": "Y3SW250204",
+      "product_name": "Cafe Dress",
+      "note": "Màu: LOANG",
+      "sort_order": 57,
+      "source_training_id": 57,
+      "status": "active",
+      "created_at": "2026-08-04T05:40:55.327Z"
+    }
+  ],
+  "product_trainings": [
+    {
+      "id": 1,
+      "store_id": null,
+      "sku": "1WAKC026A994",
+      "product_name": "Tarazi Top",
+      "color_options": "ĐEN",
+      "image_url": "https://drive.google.com/thumbnail?id=1oKGZin-ue9ziN_8I8XqSwSqIlgZbJgDR&sz=w1600",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Cần bổ sung",
+      "style_info": "Áo kiểu dệt thoi",
+      "selling_points": "Chất liệu: Cần bổ sung chất liệu để nhân sự có điểm tư vấn thống nhất.\nDòng hàng: AFF TREND 1 (siêu hời)\nỨng dụng: PLAY\nMàu hiện có: ĐEN",
+      "care_instruction": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size.\nBảo quản: Cần bổ sung hướng dẫn bảo quản từ bộ phận sản phẩm.",
+      "common_errors": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size.",
+      "training_note": "Persona: S1: BETTER LIFE\nKhách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; thích sản phẩm hợp xu hướng, giá trị tốt; mua đi chơi, du lịch, cà phê.\nNhu cầu: Play: đi chơi, du lịch, cà phê, dạo phố; ưu tiên cảm giác thoải mái và bắt mắt.",
+      "status_label": "SCALE/ TÁI LẠI",
+      "is_required": 1,
+      "due_at": "10/08/2026 22:00",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Cần bổ sung",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: S1: BETTER LIFE Khách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; thích sản phẩm hợp xu hướng, giá trị tốt; mua đi chơi,...",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Luôn check vai/ngực/eo/hông khi thử để tránh sai size.",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:54.966Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:54.966Z",
+      "status": "active"
+    },
+    {
+      "id": 2,
+      "store_id": null,
+      "sku": "1WAKD016A264",
+      "product_name": "Blair Top",
+      "color_options": "",
+      "image_url": "https://drive.google.com/thumbnail?id=1VhR4i78-6lzBpNM47jK6iTQ3fBHcV8xs&sz=w1600",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Pattern 4-way stretch mesh",
+      "style_info": "Áo kiểu dệt kim",
+      "selling_points": "",
+      "care_instruction": "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng. Chất mỏng/lưới: tư vấn nội y/lớp lót cùng màu hoặc phối layer.\nBảo quản: Giặt tay hoặc túi giặt chế độ nhẹ; tránh móc sắc/ma sát mạnh; phơi ngang hoặc nơi thoáng mát.",
+      "common_errors": "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng. Chất mỏng/lưới: tư vấn nội y/lớp lót cùng màu hoặc phối layer.",
+      "training_note": "Persona: \nKhách phù hợp: tự tin với đồ ôm/tôn dáng.\nNhu cầu: Ứng dụng linh hoạt theo cách phối; nhân viên cần gợi ý set hoàn chỉnh.",
+      "status_label": "NEW",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Pattern 4-way stretch mesh",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: Khách phù hợp: tự tin với đồ ôm/tôn dáng. Nhu cầu: Ứng dụng linh hoạt theo cách phối; nhân viên cần gợi ý set hoàn chỉnh.",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng. Chất mỏng/lưới: tư vấn nội y/lớp lót cùng màu hoặc phối layer.",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:54.980Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:54.980Z",
+      "status": "active"
+    },
+    {
+      "id": 3,
+      "store_id": null,
+      "sku": "1WAKD022A264",
+      "product_name": "Taraxu Top",
+      "color_options": "BE, ĐEN",
+      "image_url": "https://drive.google.com/thumbnail?id=1OGwne2gte1AAMuuzNsTNlYVpTSam__h6&sz=w1600",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Crinkled Stretch Mesh (Vải lưới co giãn 4 chiều hoạ tiết., hiệu ứng nhăn)",
+      "style_info": "Áo tshirt",
+      "selling_points": "Chất liệu: Lưới co giãn: nhẹ, thoáng, ôm theo cơ thể và tạo hiệu ứng thời trang “nửa kín nửa hở”. Cần tư vấn nội y/lớp lót phù hợp.\nDòng hàng: AFF TREND 1 (siêu hời)\nỨng dụng: PLAY\nMàu hiện có: BE, ĐEN",
+      "care_instruction": "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng. Chất mỏng/lưới: tư vấn nội y/lớp lót cùng màu hoặc phối layer.\nBảo quản: Giặt tay hoặc túi giặt chế độ nhẹ; tránh móc sắc/ma sát mạnh; phơi ngang hoặc nơi thoáng mát.",
+      "common_errors": "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng. Chất mỏng/lưới: tư vấn nội y/lớp lót cùng màu hoặc phối layer.",
+      "training_note": "Persona: S1: BETTER LIFE\nKhách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; thích sản phẩm hợp xu hướng, giá trị tốt; tự tin với đồ ôm/tôn dáng.\nNhu cầu: Play: đi chơi, du lịch, cà phê, dạo phố; ưu tiên cảm giác thoải mái và bắt mắt.",
+      "status_label": "NEW",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Crinkled Stretch Mesh (Vải lưới co giãn 4 chiều hoạ tiết., hiệu ứng nhăn)",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: S1: BETTER LIFE Khách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; thích sản phẩm hợp xu hướng, giá trị tốt; tự tin với đ...",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng. Chất mỏng/lưới: tư vấn nội y/lớp lót cùng màu hoặc phối layer.",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:54.989Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:54.989Z",
+      "status": "active"
+    },
+    {
+      "id": 4,
+      "store_id": null,
+      "sku": "1WAKD023A264",
+      "product_name": "Vallina Shirt",
+      "color_options": "BE, GHI",
+      "image_url": "https://drive.google.com/thumbnail?id=1LmL8xTapNQkos-erXoBB6kNXTvPsAcfc&sz=w1600",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Cần bổ sung",
+      "style_info": "Áo tshirt",
+      "selling_points": "Chất liệu: Cần bổ sung chất liệu để nhân sự có điểm tư vấn thống nhất.\nDòng hàng: AFF TREND 1 (siêu hời)\nỨng dụng: PLAY\nMàu hiện có: BE, GHI",
+      "care_instruction": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size.\nBảo quản: Cần bổ sung hướng dẫn bảo quản từ bộ phận sản phẩm.",
+      "common_errors": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size.",
+      "training_note": "Persona: S1: BETTER LIFE\nKhách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; thích sản phẩm hợp xu hướng, giá trị tốt; mua đi chơi, du lịch, cà phê.\nNhu cầu: Play: đi chơi, du lịch, cà phê, dạo phố; ưu tiên cảm giác thoải mái và bắt mắt.",
+      "status_label": "NEW",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Cần bổ sung",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: S1: BETTER LIFE Khách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; thích sản phẩm hợp xu hướng, giá trị tốt; mua đi chơi,...",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Luôn check vai/ngực/eo/hông khi thử để tránh sai size.",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:54.997Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:54.997Z",
+      "status": "active"
+    },
+    {
+      "id": 5,
+      "store_id": null,
+      "sku": "1WAKT014A264",
+      "product_name": "Cora Top",
+      "color_options": "LOANG",
+      "image_url": "https://drive.google.com/thumbnail?id=1TTczqAaRY6mtYlGg5ZNLgabh0-YUTm8c&sz=w1600",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Sheer Printed Mesh \n(Vải lưới co giãn 4 chiều hoạ tiết)",
+      "style_info": "Áo kiểu dệt kim",
+      "selling_points": "Chất liệu: Lưới co giãn: nhẹ, thoáng, ôm theo cơ thể và tạo hiệu ứng thời trang “nửa kín nửa hở”. Cần tư vấn nội y/lớp lót phù hợp.\nDòng hàng: AFF TREND 1 (siêu hời)\nỨng dụng: \nMàu hiện có: LOANG",
+      "care_instruction": "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng. Chất mỏng/lưới: tư vấn nội y/lớp lót cùng màu hoặc phối layer.\nBảo quản: Giặt tay hoặc túi giặt chế độ nhẹ; tránh móc sắc/ma sát mạnh; phơi ngang hoặc nơi thoáng mát.",
+      "common_errors": "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng. Chất mỏng/lưới: tư vấn nội y/lớp lót cùng màu hoặc phối layer.",
+      "training_note": "Persona: S1: BETTER LIFE\nKhách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; thích sản phẩm hợp xu hướng, giá trị tốt; tự tin với đồ ôm/tôn dáng.\nNhu cầu: Ứng dụng linh hoạt theo cách phối; nhân viên cần gợi ý set hoàn chỉnh.",
+      "status_label": "NEW",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Sheer Printed Mesh (Vải lưới co giãn 4 chiều hoạ tiết)",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: S1: BETTER LIFE Khách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; thích sản phẩm hợp xu hướng, giá trị tốt; tự tin với đ...",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng. Chất mỏng/lưới: tư vấn nội y/lớp lót cùng màu hoặc phối layer.",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:55.017Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:55.017Z",
+      "status": "active"
+    },
+    {
+      "id": 6,
+      "store_id": null,
+      "sku": "1WAMC055A264",
+      "product_name": "Celesty Shirt",
+      "color_options": "NÂU",
+      "image_url": "https://drive.google.com/thumbnail?id=18nWqcjRxgLVXDbpfQUB8nfITj_6X50zb&sz=w1600",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Cotton with contrast shirting stripes",
+      "style_info": "Áo Polo",
+      "selling_points": "Chất liệu: Cotton: mềm, thoáng, thấm hút tốt và dễ mặc hằng ngày. Cần lưu ý nếu chất mỏng thì tư vấn lớp trong/nội y phù hợp.\nDòng hàng: AFF TREND 1 (siêu hời)\nỨng dụng: WORK & PLAY\nMàu hiện có: NÂU",
+      "care_instruction": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size.\nBảo quản: Giặt nhẹ, tránh chất tẩy mạnh; phơi nơi thoáng, hạn chế sấy nhiệt cao để giữ form.",
+      "common_errors": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size.",
+      "training_note": "Persona: S1: BETTER LIFE\nKhách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; thích sản phẩm hợp xu hướng, giá trị tốt; cần mặc đi làm rồi đi chơi.\nNhu cầu: Work & Play: đi làm, gặp khách, sau đó đi cà phê/ăn tối vẫn phù hợp.",
+      "status_label": "NEW",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Cotton with contrast shirting stripes",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: S1: BETTER LIFE Khách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; thích sản phẩm hợp xu hướng, giá trị tốt; cần mặc đi l...",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Luôn check vai/ngực/eo/hông khi thử để tránh sai size.",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:55.022Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:55.022Z",
+      "status": "active"
+    },
+    {
+      "id": 7,
+      "store_id": null,
+      "sku": "1WAPC047A264",
+      "product_name": "Anais Polo",
+      "color_options": "",
+      "image_url": "",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Cotton Poplin\n( Cotton cao cấp)",
+      "style_info": "",
+      "selling_points": "",
+      "care_instruction": "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng.\nBảo quản: Giặt nhẹ, tránh chất tẩy mạnh; phơi nơi thoáng, hạn chế sấy nhiệt cao để giữ form.",
+      "common_errors": "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng.",
+      "training_note": "Persona: \nKhách phù hợp: tự tin với đồ ôm/tôn dáng.\nNhu cầu: Ứng dụng linh hoạt theo cách phối; nhân viên cần gợi ý set hoàn chỉnh.",
+      "status_label": "NEW",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Cotton Poplin ( Cotton cao cấp)",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: Khách phù hợp: tự tin với đồ ôm/tôn dáng. Nhu cầu: Ứng dụng linh hoạt theo cách phối; nhân viên cần gợi ý set hoàn chỉnh.",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng.",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:55.032Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:55.032Z",
+      "status": "active"
+    },
+    {
+      "id": 8,
+      "store_id": null,
+      "sku": "1WASD001A262",
+      "product_name": "Evelina Tshirt",
+      "color_options": "TRẮNG",
+      "image_url": "https://drive.google.com/thumbnail?id=1nSN0gh5Queds-prX6KFGoY714VVCSBHD&sz=w1600",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Lightweight sheer cotton",
+      "style_info": "Áo tshirt",
+      "selling_points": "Chất liệu: Cotton: mềm, thoáng, thấm hút tốt và dễ mặc hằng ngày. Cần lưu ý nếu chất mỏng thì tư vấn lớp trong/nội y phù hợp.\nDòng hàng: ELEVATED BASIC\nỨng dụng: PLAY\nMàu hiện có: TRẮNG",
+      "care_instruction": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Chất mỏng/lưới: tư vấn nội y/lớp lót cùng màu hoặc phối layer.\nBảo quản: Giặt nhẹ, tránh chất tẩy mạnh; phơi nơi thoáng, hạn chế sấy nhiệt cao để giữ form.",
+      "common_errors": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Chất mỏng/lưới: tư vấn nội y/lớp lót cùng màu hoặc phối layer.",
+      "training_note": "Persona: S1: BETTER LIFE\nKhách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; cần món basic đẹp, mặc nhiều lần; mua đi chơi, du lịch, cà phê.\nNhu cầu: Play: đi chơi, du lịch, cà phê, dạo phố; ưu tiên cảm giác thoải mái và bắt mắt.",
+      "status_label": "NEW",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Lightweight sheer cotton",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: S1: BETTER LIFE Khách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; cần món basic đẹp, mặc nhiều lần; mua đi chơi, du lịch...",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Chất mỏng/lưới: tư vấn nội y/lớp lót cùng màu hoặc phối layer.",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:55.036Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:55.036Z",
+      "status": "active"
+    },
+    {
+      "id": 9,
+      "store_id": null,
+      "sku": "1WVBM007A261",
+      "product_name": "Ottilie Dress",
+      "color_options": "VÀNG",
+      "image_url": "",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Pattern 4-way stretch mesh",
+      "style_info": "Váy body",
+      "selling_points": "Chất liệu: Lưới co giãn: nhẹ, thoáng, ôm theo cơ thể và tạo hiệu ứng thời trang “nửa kín nửa hở”. Cần tư vấn nội y/lớp lót phù hợp.\nDòng hàng: AFF TREND 1 (siêu hời)\nỨng dụng: PLAY\nMàu hiện có: VÀNG",
+      "care_instruction": "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng. Chất mỏng/lưới: tư vấn nội y/lớp lót cùng màu hoặc phối layer. Kiểm tra chiều dài, ngực/eo và tư vấn giày/túi để hoàn chỉnh outfit.\nBảo quản: Giặt tay hoặc túi giặt chế độ nhẹ; tránh móc sắc/ma sát mạnh; phơi ngang hoặc nơi thoáng mát.",
+      "common_errors": "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng. Chất mỏng/lưới: tư vấn nội y/lớp lót cùng màu hoặc phối layer. Kiểm tra chiều dài, ngực/eo và tư vấn giày/túi để hoàn chỉnh outfit.",
+      "training_note": "Persona: S1: BETTER LIFE\nKhách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; thích sản phẩm hợp xu hướng, giá trị tốt; tự tin với đồ ôm/tôn dáng.\nNhu cầu: Play: đi chơi, du lịch, cà phê, dạo phố; ưu tiên cảm giác thoải mái và bắt mắt.",
+      "status_label": "NEW",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Pattern 4-way stretch mesh",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: S1: BETTER LIFE Khách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; thích sản phẩm hợp xu hướng, giá trị tốt; tự tin với đ...",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng. Chất mỏng/lưới: tư vấn nội y/lớp lót cùng màu hoặc phối layer. Kiểm tra ...",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:55.045Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:55.045Z",
+      "status": "active"
+    },
+    {
+      "id": 10,
+      "store_id": null,
+      "sku": "1WVPO006S266",
+      "product_name": "Karaxy Dress Beigei",
+      "color_options": "BE, ĐEN",
+      "image_url": "",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Jersey 100% (nhập khẩu cao cấp)",
+      "style_info": "Váy A",
+      "selling_points": "Chất liệu: Jersey 100% (nhập khẩu cao cấp): Công nghệ nhập khẩu cao cấp: Không bai dão, không xù lông; Kháng nhăn cực tốt.\nDòng hàng: ELEVATED BASIC\nỨng dụng: WORK & PLAY\nMàu hiện có: BE, ĐEN",
+      "care_instruction": "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng. Kiểm tra chiều dài, ngực/eo và tư vấn giày/túi để hoàn chỉnh outfit.\nBảo quản: Giặt nhẹ, không dùng chất tẩy mạnh, phơi nơi thoáng mát và là/ủi theo hướng dẫn tem nhãn.",
+      "common_errors": "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng. Kiểm tra chiều dài, ngực/eo và tư vấn giày/túi để hoàn chỉnh outfit.",
+      "training_note": "Persona: S1: BETTER LIFE\nKhách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; cần món basic đẹp, mặc nhiều lần; tự tin với đồ ôm/tôn dáng.\nNhu cầu: Work & Play: đi làm, gặp khách, sau đó đi cà phê/ăn tối vẫn phù hợp.",
+      "status_label": "SCALE/ TÁI LẠI",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Jersey 100% (nhập khẩu cao cấp)",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: S1: BETTER LIFE Khách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; cần món basic đẹp, mặc nhiều lần; tự tin với đồ ôm/tôn...",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng. Kiểm tra chiều dài, ngực/eo và tư vấn giày/túi để hoàn chỉnh outfit.",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:55.051Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:55.051Z",
+      "status": "active"
+    },
+    {
+      "id": 11,
+      "store_id": null,
+      "sku": "2WAKH021A264",
+      "product_name": "Emlale Top",
+      "color_options": "XANH THAN",
+      "image_url": "",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Chino denim",
+      "style_info": "Áo kiểu dệt thoi",
+      "selling_points": "Chất liệu: Chino denim: đứng form, bền và giữ dáng tốt; có nền cotton nên thoáng hơn denim dày. Phù hợp outfit casual-smart.\nDòng hàng: AFF TREND 1 (siêu hời)\nỨng dụng: PLAY\nMàu hiện có: XANH THAN",
+      "care_instruction": "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng. Chất đứng: cho khách cử động/ngồi thử để cảm nhận độ thoải mái.\nBảo quản: Không dùng chất tẩy: Tránh xa các loại bột giặt có tính tẩy mạnh hoặc nước tẩy vì sẽ làm loang lổ màu • Tránh sấy nhiệt cao: Máy sấy nóng có thể làm co rút các sợi cotton, khiến trang phục bị chật đi",
+      "common_errors": "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng. Chất đứng: cho khách cử động/ngồi thử để cảm nhận độ thoải mái.",
+      "training_note": "Persona: S1: BETTER LIFE\nKhách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; thích sản phẩm hợp xu hướng, giá trị tốt; tự tin với đồ ôm/tôn dáng.\nNhu cầu: Play: đi chơi, du lịch, cà phê, dạo phố; ưu tiên cảm giác thoải mái và bắt mắt.",
+      "status_label": "NEW",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Chino denim",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: S1: BETTER LIFE Khách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; thích sản phẩm hợp xu hướng, giá trị tốt; tự tin với đ...",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng. Chất đứng: cho khách cử động/ngồi thử để cảm nhận độ thoải mái.",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:55.059Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:55.059Z",
+      "status": "active"
+    },
+    {
+      "id": 12,
+      "store_id": null,
+      "sku": "2WAKH022A264",
+      "product_name": "Cosima Top",
+      "color_options": "NÂU",
+      "image_url": "",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Polka dot khaki",
+      "style_info": "Áo kiểu dệt thoi",
+      "selling_points": "Chất liệu: Khaki/denim: dày dặn, bền, đứng dáng và giữ form tốt. Phù hợp khách muốn sản phẩm dễ phối nhưng vẫn có điểm nhấn.\nDòng hàng: AFF TREND 2 (hời)\nỨng dụng: PLAY\nMàu hiện có: NÂU",
+      "care_instruction": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Chất đứng: cho khách cử động/ngồi thử để cảm nhận độ thoải mái.\nBảo quản: Lộn trái khi giặt; giặt riêng màu đậm; tránh chất tẩy và nắng gắt để hạn chế bạc màu.",
+      "common_errors": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Chất đứng: cho khách cử động/ngồi thử để cảm nhận độ thoải mái.",
+      "training_note": "Persona: S2: LOVER\nKhách phù hợp: khách nữ tính, thích outfit có điểm nhấn; thích sản phẩm hợp xu hướng, giá trị tốt; mua đi chơi, du lịch, cà phê.\nNhu cầu: Play: đi chơi, du lịch, cà phê, dạo phố; ưu tiên cảm giác thoải mái và bắt mắt.",
+      "status_label": "NEW",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Polka dot khaki",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: S2: LOVER Khách phù hợp: khách nữ tính, thích outfit có điểm nhấn; thích sản phẩm hợp xu hướng, giá trị tốt; mua đi chơi, du lịc...",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Chất đứng: cho khách cử động/ngồi thử để cảm nhận độ thoải mái.",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:55.066Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:55.066Z",
+      "status": "active"
+    },
+    {
+      "id": 13,
+      "store_id": null,
+      "sku": "2WAKT012A264",
+      "product_name": "Freya Top",
+      "color_options": "LOANG",
+      "image_url": "",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Thin knit hoạ tiết",
+      "style_info": "Áo kiểu dệt kim",
+      "selling_points": "Chất liệu: Dệt kim/rib: co giãn, ôm thoải mái và tôn dáng. Nhấn khả năng hồi form, không gò bó khi mặc.\nDòng hàng: AFF TREND 1 (siêu hời)\nỨng dụng: WORK & PLAY\nMàu hiện có: LOANG",
+      "care_instruction": "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng.\nBảo quản: Ưu tiên giặt tay: Vò nhẹ nhàng với nước mát và nước giặt dịu nhẹ.Sử dụng túi giặt: Cho vào túi lưới giặt máy nếu chọn chế độ giặt nhẹ (Delicate/Wool) • Tránh vật sắc nhọn: Để xa trang sức, khóa kéo hoặc các bề mặt thô ráp để không bị xước và chạy sợi vải",
+      "common_errors": "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng.",
+      "training_note": "Persona: S1: BETTER LIFE\nKhách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; thích sản phẩm hợp xu hướng, giá trị tốt; tự tin với đồ ôm/tôn dáng.\nNhu cầu: Work & Play: đi làm, gặp khách, sau đó đi cà phê/ăn tối vẫn phù hợp.",
+      "status_label": "NEW",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Thin knit hoạ tiết",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: S1: BETTER LIFE Khách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; thích sản phẩm hợp xu hướng, giá trị tốt; tự tin với đ...",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng.",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:55.072Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:55.072Z",
+      "status": "active"
+    },
+    {
+      "id": 14,
+      "store_id": null,
+      "sku": "2WAKT016A264",
+      "product_name": "Coralie Top",
+      "color_options": "LOANG",
+      "image_url": "",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Thin knit hoạ tiết",
+      "style_info": "Áo kiểu dệt kim",
+      "selling_points": "Chất liệu: Dệt kim/rib: co giãn, ôm thoải mái và tôn dáng. Nhấn khả năng hồi form, không gò bó khi mặc.\nDòng hàng: AFF TREND 1 (siêu hời)\nỨng dụng: PLAY\nMàu hiện có: LOANG",
+      "care_instruction": "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng.\nBảo quản: Ưu tiên giặt tay: Vò nhẹ nhàng với nước mát và nước giặt dịu nhẹ.Sử dụng túi giặt: Cho vào túi lưới giặt máy nếu chọn chế độ giặt nhẹ (Delicate/Wool) • Tránh vật sắc nhọn: Để xa trang sức, khóa kéo hoặc các bề mặt thô ráp để không bị xước và chạy sợi vải",
+      "common_errors": "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng.",
+      "training_note": "Persona: S1: BETTER LIFE\nKhách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; thích sản phẩm hợp xu hướng, giá trị tốt; tự tin với đồ ôm/tôn dáng.\nNhu cầu: Play: đi chơi, du lịch, cà phê, dạo phố; ưu tiên cảm giác thoải mái và bắt mắt.",
+      "status_label": "NEW",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Thin knit hoạ tiết",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: S1: BETTER LIFE Khách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; thích sản phẩm hợp xu hướng, giá trị tốt; tự tin với đ...",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng.",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:55.077Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:55.077Z",
+      "status": "active"
+    },
+    {
+      "id": 15,
+      "store_id": null,
+      "sku": "2WAMD059A262",
+      "product_name": "Elara Shirt",
+      "color_options": "LOANG",
+      "image_url": "",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Slub linen",
+      "style_info": "Áo sơ mi",
+      "selling_points": "Chất liệu: Linen/linen blend: bề mặt có vân tự nhiên, thoáng mát, chạm tay mát và tạo cảm giác premium. Hợp nhu cầu đi làm lẫn đi chơi.\nDòng hàng: PREMIUM\nỨng dụng: WORK & PLAY\nMàu hiện có: LOANG",
+      "care_instruction": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size.\nBảo quản: Giặt nhẹ bằng nước giặt dịu; không vắt xoắn mạnh; phơi râm, tránh nắng gắt.",
+      "common_errors": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size.",
+      "training_note": "Persona: S3: SELF SHARPER\nKhách phù hợp: khách cần hình ảnh chỉn chu/premium; sẵn sàng chi cho chất liệu và phom dáng cao cấp; cần mặc đi làm rồi đi chơi.\nNhu cầu: Work & Play: đi làm, gặp khách, sau đó đi cà phê/ăn tối vẫn phù hợp.",
+      "status_label": "NEW",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Slub linen",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: S3: SELF SHARPER Khách phù hợp: khách cần hình ảnh chỉn chu/premium; sẵn sàng chi cho chất liệu và phom dáng cao cấp; cần mặc đi...",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Luôn check vai/ngực/eo/hông khi thử để tránh sai size.",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:55.083Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:55.083Z",
+      "status": "active"
+    },
+    {
+      "id": 16,
+      "store_id": null,
+      "sku": "2WQDN046A268",
+      "product_name": "Emlale Trousers",
+      "color_options": "XANH THAN",
+      "image_url": "",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Chino denim",
+      "style_info": "Quần dài",
+      "selling_points": "Chất liệu: Chino denim: đứng form, bền và giữ dáng tốt; có nền cotton nên thoáng hơn denim dày. Phù hợp outfit casual-smart.\nDòng hàng: AFF TREND 1 (siêu hời)\nỨng dụng: PLAY\nMàu hiện có: XANH THAN",
+      "care_instruction": "Khách thấy rộng: giải thích form thoải mái là chủ đích, cân bằng bằng item ôm hơn. Chất đứng: cho khách cử động/ngồi thử để cảm nhận độ thoải mái. Kiểm tra eo, hông, chiều dài và độ thoải mái khi ngồi.\nBảo quản: Không dùng chất tẩy: Tránh xa các loại bột giặt có tính tẩy mạnh hoặc nước tẩy vì sẽ làm loang lổ màu • Tránh sấy nhiệt cao: Máy sấy nóng có thể làm co rút các sợi cotton, khiến trang phục bị chật đi",
+      "common_errors": "Khách thấy rộng: giải thích form thoải mái là chủ đích, cân bằng bằng item ôm hơn. Chất đứng: cho khách cử động/ngồi thử để cảm nhận độ thoải mái. Kiểm tra eo, hông, chiều dài và độ thoải mái khi ngồi.",
+      "training_note": "Persona: S1: BETTER LIFE\nKhách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; thích sản phẩm hợp xu hướng, giá trị tốt; mua đi chơi, du lịch, cà phê.\nNhu cầu: Play: đi chơi, du lịch, cà phê, dạo phố; ưu tiên cảm giác thoải mái và bắt mắt.",
+      "status_label": "NEW",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Chino denim",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: S1: BETTER LIFE Khách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; thích sản phẩm hợp xu hướng, giá trị tốt; mua đi chơi,...",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Khách thấy rộng: giải thích form thoải mái là chủ đích, cân bằng bằng item ôm hơn. Chất đứng: cho khách cử động/ngồi thử để cảm nhận độ t...",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:55.086Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:55.086Z",
+      "status": "active"
+    },
+    {
+      "id": 17,
+      "store_id": null,
+      "sku": "2WVXS001A264",
+      "product_name": "Aurella Dress",
+      "color_options": "BE",
+      "image_url": "",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Coarse cotton fabric",
+      "style_info": "Váy suông",
+      "selling_points": "Chất liệu: Cotton đứng form: tạo phom rõ, có độ bồng tự nhiên và cảm giác chắc tay. Phù hợp sản phẩm cần dáng đẹp khi mặc.\nDòng hàng: AFF TREND 2 (hời)\nỨng dụng: WORK\nMàu hiện có: BE",
+      "care_instruction": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Kiểm tra chiều dài, ngực/eo và tư vấn giày/túi để hoàn chỉnh outfit.\nBảo quản: Giặt nhẹ, tránh chất tẩy mạnh; phơi nơi thoáng, hạn chế sấy nhiệt cao để giữ form.",
+      "common_errors": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Kiểm tra chiều dài, ngực/eo và tư vấn giày/túi để hoàn chỉnh outfit.",
+      "training_note": "Persona: S2: LOVER\nKhách phù hợp: khách nữ tính, thích outfit có điểm nhấn; thích sản phẩm hợp xu hướng, giá trị tốt; ưu tiên môi trường công sở.\nNhu cầu: Work: đi làm, họp nhẹ, gặp khách; ưu tiên vẻ gọn gàng và chuyên nghiệp.",
+      "status_label": "NEW",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Coarse cotton fabric",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: S2: LOVER Khách phù hợp: khách nữ tính, thích outfit có điểm nhấn; thích sản phẩm hợp xu hướng, giá trị tốt; ưu tiên môi trường ...",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Kiểm tra chiều dài, ngực/eo và tư vấn giày/túi để hoàn chỉnh outfit.",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:55.093Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:55.093Z",
+      "status": "active"
+    },
+    {
+      "id": 18,
+      "store_id": null,
+      "sku": "CWALC017A263",
+      "product_name": "Feelant Top",
+      "color_options": "ĐEN, GHI",
+      "image_url": "",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Cotton Cable-Knit\n(Len Cotton dệt vặn thừng cao cấp)",
+      "style_info": "Áo len",
+      "selling_points": "Chất liệu: Dệt kim/rib: co giãn, ôm thoải mái và tôn dáng. Nhấn khả năng hồi form, không gò bó khi mặc.\nDòng hàng: ELEVATED BASIC\nỨng dụng: WORK & PLAY\nMàu hiện có: ĐEN, GHI",
+      "care_instruction": "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng.\nBảo quản: Giặt tay hoặc túi giặt chế độ nhẹ; tránh móc sắc/ma sát mạnh; phơi ngang hoặc nơi thoáng mát.",
+      "common_errors": "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng.",
+      "training_note": "Persona: S2: LOVER\nKhách phù hợp: khách nữ tính, thích outfit có điểm nhấn; cần món basic đẹp, mặc nhiều lần; tự tin với đồ ôm/tôn dáng.\nNhu cầu: Work & Play: đi làm, gặp khách, sau đó đi cà phê/ăn tối vẫn phù hợp.",
+      "status_label": "NEW",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Cotton Cable-Knit (Len Cotton dệt vặn thừng cao cấp)",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: S2: LOVER Khách phù hợp: khách nữ tính, thích outfit có điểm nhấn; cần món basic đẹp, mặc nhiều lần; tự tin với đồ ôm/tôn dáng. ...",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng.",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:55.100Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:55.100Z",
+      "status": "active"
+    },
+    {
+      "id": 19,
+      "store_id": null,
+      "sku": "CWALC018A263",
+      "product_name": "Labown Top",
+      "color_options": "BE, ĐEN",
+      "image_url": "",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Open knit sweater",
+      "style_info": "Áo len",
+      "selling_points": "Chất liệu: Dệt kim/rib: co giãn, ôm thoải mái và tôn dáng. Nhấn khả năng hồi form, không gò bó khi mặc.\nDòng hàng: ELEVATED BASIC\nỨng dụng: WORK & PLAY\nMàu hiện có: BE, ĐEN",
+      "care_instruction": "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng.\nBảo quản: Giặt tay hoặc túi giặt chế độ nhẹ; tránh móc sắc/ma sát mạnh; phơi ngang hoặc nơi thoáng mát.",
+      "common_errors": "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng.",
+      "training_note": "Persona: S1: BETTER LIFE\nKhách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; cần món basic đẹp, mặc nhiều lần; tự tin với đồ ôm/tôn dáng.\nNhu cầu: Work & Play: đi làm, gặp khách, sau đó đi cà phê/ăn tối vẫn phù hợp.",
+      "status_label": "NEW",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Open knit sweater",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: S1: BETTER LIFE Khách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; cần món basic đẹp, mặc nhiều lần; tự tin với đồ ôm/tôn...",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng.",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:55.108Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:55.108Z",
+      "status": "active"
+    },
+    {
+      "id": 20,
+      "store_id": null,
+      "sku": "CWAMC047S264",
+      "product_name": "Cinsi Shirt",
+      "color_options": "ĐEN, TRẮNG",
+      "image_url": "",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Cotton Poplin\n( Cotton cao cấp)",
+      "style_info": "Áo kiểu dệt kim",
+      "selling_points": "Chất liệu: Cotton poplin: nhẹ, bề mặt mịn, thoáng và đứng phom hơn cotton thường. Dễ dùng cho nhóm basic cao cấp.\nDòng hàng: ELEVATED BASIC\nỨng dụng: WORK & PLAY\nMàu hiện có: ĐEN, TRẮNG",
+      "care_instruction": "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng.\nBảo quản: Giặt nhẹ, tránh chất tẩy mạnh; phơi nơi thoáng, hạn chế sấy nhiệt cao để giữ form.",
+      "common_errors": "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng.",
+      "training_note": "Persona: S1: BETTER LIFE\nKhách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; cần món basic đẹp, mặc nhiều lần; tự tin với đồ ôm/tôn dáng.\nNhu cầu: Work & Play: đi làm, gặp khách, sau đó đi cà phê/ăn tối vẫn phù hợp.",
+      "status_label": "SCALE/ TÁI LẠI",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Cotton Poplin ( Cotton cao cấp)",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: S1: BETTER LIFE Khách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; cần món basic đẹp, mặc nhiều lần; tự tin với đồ ôm/tôn...",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng.",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:55.114Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:55.114Z",
+      "status": "active"
+    },
+    {
+      "id": 21,
+      "store_id": null,
+      "sku": "CWAMC050S263",
+      "product_name": "Winiexi Shirt",
+      "color_options": "GHI",
+      "image_url": "",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Rayon linen",
+      "style_info": "Áo sơ mi",
+      "selling_points": "Chất liệu: Linen/linen blend: bề mặt có vân tự nhiên, thoáng mát, chạm tay mát và tạo cảm giác premium. Hợp nhu cầu đi làm lẫn đi chơi.\nDòng hàng: AFF TREND 2 (hời)\nỨng dụng: WORK & PLAY\nMàu hiện có: GHI",
+      "care_instruction": "Khách thấy rộng: giải thích form thoải mái là chủ đích, cân bằng bằng item ôm hơn.\nBảo quản: Phơi nơi thoáng gió, râm mát. • Tránh nắng gắt trực tiếp vì dễ làm sợi khô cứng và bạc màu • Dùng nước giặt dịu nhẹ, tránh chất tẩy mạnh và thuốc tẩy clo",
+      "common_errors": "Khách thấy rộng: giải thích form thoải mái là chủ đích, cân bằng bằng item ôm hơn.",
+      "training_note": "Persona: S2: LOVER\nKhách phù hợp: khách nữ tính, thích outfit có điểm nhấn; thích sản phẩm hợp xu hướng, giá trị tốt; cần mặc đi làm rồi đi chơi.\nNhu cầu: Work & Play: đi làm, gặp khách, sau đó đi cà phê/ăn tối vẫn phù hợp.",
+      "status_label": "NEW",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Rayon linen",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: S2: LOVER Khách phù hợp: khách nữ tính, thích outfit có điểm nhấn; thích sản phẩm hợp xu hướng, giá trị tốt; cần mặc đi làm rồi ...",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Khách thấy rộng: giải thích form thoải mái là chủ đích, cân bằng bằng item ôm hơn.",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:55.122Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:55.122Z",
+      "status": "active"
+    },
+    {
+      "id": 22,
+      "store_id": null,
+      "sku": "CWAMC052S263",
+      "product_name": "Ruxinta Shirt",
+      "color_options": "XANH THAN",
+      "image_url": "",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Lightweight sheer cotton",
+      "style_info": "Quần dài",
+      "selling_points": "Chất liệu: Cotton: mềm, thoáng, thấm hút tốt và dễ mặc hằng ngày. Cần lưu ý nếu chất mỏng thì tư vấn lớp trong/nội y phù hợp.\nDòng hàng: AFF TREND 2 (hời)\nỨng dụng: WORK & PLAY\nMàu hiện có: XANH THAN",
+      "care_instruction": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Chất mỏng/lưới: tư vấn nội y/lớp lót cùng màu hoặc phối layer.\nBảo quản: Giặt nhẹ, tránh chất tẩy mạnh; phơi nơi thoáng, hạn chế sấy nhiệt cao để giữ form.",
+      "common_errors": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Chất mỏng/lưới: tư vấn nội y/lớp lót cùng màu hoặc phối layer.",
+      "training_note": "Persona: S2: LOVER\nKhách phù hợp: khách nữ tính, thích outfit có điểm nhấn; thích sản phẩm hợp xu hướng, giá trị tốt; cần mặc đi làm rồi đi chơi.\nNhu cầu: Work & Play: đi làm, gặp khách, sau đó đi cà phê/ăn tối vẫn phù hợp.",
+      "status_label": "NEW",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Lightweight sheer cotton",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: S2: LOVER Khách phù hợp: khách nữ tính, thích outfit có điểm nhấn; thích sản phẩm hợp xu hướng, giá trị tốt; cần mặc đi làm rồi ...",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Chất mỏng/lưới: tư vấn nội y/lớp lót cùng màu hoặc phối layer.",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:55.130Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:55.130Z",
+      "status": "active"
+    },
+    {
+      "id": 23,
+      "store_id": null,
+      "sku": "CWAMC053S264",
+      "product_name": "Rehana Shirt",
+      "color_options": "ĐEN",
+      "image_url": "",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Stretch Cotton Rib (Thun Rib Cao Cấp)",
+      "style_info": "Áo kiểu dệt kim",
+      "selling_points": "Chất liệu: Dệt kim/rib: co giãn, ôm thoải mái và tôn dáng. Nhấn khả năng hồi form, không gò bó khi mặc.\nDòng hàng: ELEVATED BASIC\nỨng dụng: WORK & PLAY\nMàu hiện có: ĐEN",
+      "care_instruction": "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng.\nBảo quản: Giặt tay hoặc túi giặt chế độ nhẹ; tránh móc sắc/ma sát mạnh; phơi ngang hoặc nơi thoáng mát.",
+      "common_errors": "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng.",
+      "training_note": "Persona: S1: BETTER LIFE\nKhách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; cần món basic đẹp, mặc nhiều lần; tự tin với đồ ôm/tôn dáng.\nNhu cầu: Work & Play: đi làm, gặp khách, sau đó đi cà phê/ăn tối vẫn phù hợp.",
+      "status_label": "NEW",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Stretch Cotton Rib (Thun Rib Cao Cấp)",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: S1: BETTER LIFE Khách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; cần món basic đẹp, mặc nhiều lần; tự tin với đồ ôm/tôn...",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng.",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:55.136Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:55.136Z",
+      "status": "active"
+    },
+    {
+      "id": 24,
+      "store_id": null,
+      "sku": "CWAMD061A262",
+      "product_name": "Tiana Shirt",
+      "color_options": "KẺ XANH",
+      "image_url": "",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Airy Linen-Blend",
+      "style_info": "Áo sơ mi",
+      "selling_points": "Chất liệu: Linen/linen blend: bề mặt có vân tự nhiên, thoáng mát, chạm tay mát và tạo cảm giác premium. Hợp nhu cầu đi làm lẫn đi chơi.\nDòng hàng: AFF TREND 2 (hời)\nỨng dụng: WORK & PLAY\nMàu hiện có: KẺ XANH",
+      "care_instruction": "Khách thấy rộng: giải thích form thoải mái là chủ đích, cân bằng bằng item ôm hơn.\nBảo quản: Giặt nhẹ bằng nước giặt dịu; không vắt xoắn mạnh; phơi râm, tránh nắng gắt.",
+      "common_errors": "Khách thấy rộng: giải thích form thoải mái là chủ đích, cân bằng bằng item ôm hơn.",
+      "training_note": "Persona: S2: LOVER\nKhách phù hợp: khách nữ tính, thích outfit có điểm nhấn; thích sản phẩm hợp xu hướng, giá trị tốt; cần mặc đi làm rồi đi chơi.\nNhu cầu: Work & Play: đi làm, gặp khách, sau đó đi cà phê/ăn tối vẫn phù hợp.",
+      "status_label": "NEW",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Airy Linen-Blend",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: S2: LOVER Khách phù hợp: khách nữ tính, thích outfit có điểm nhấn; thích sản phẩm hợp xu hướng, giá trị tốt; cần mặc đi làm rồi ...",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Khách thấy rộng: giải thích form thoải mái là chủ đích, cân bằng bằng item ôm hơn.",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:55.140Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:55.140Z",
+      "status": "active"
+    },
+    {
+      "id": 25,
+      "store_id": null,
+      "sku": "CWAOY001A262",
+      "product_name": "Winter Jacket",
+      "color_options": "ĐEN, GHI",
+      "image_url": "",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Lightweight Technical\n(Vải gió kỹ thuật cao cấp)",
+      "style_info": "Áo khoác",
+      "selling_points": "Chất liệu: Lightweight Technical (Vải gió kỹ thuật cao cấp): Siêu nhẹ, mặc \"nhẹ như không\" và dễ dàng gấp siêu gọn bỏ túi.; Cản gió & Trượt nước.\nDòng hàng: ELEVATED BASIC\nỨng dụng: PLAY\nMàu hiện có: ĐEN, GHI",
+      "care_instruction": "Khách thấy rộng: giải thích form thoải mái là chủ đích, cân bằng bằng item ôm hơn.\nBảo quản: Giặt nhẹ, không dùng chất tẩy mạnh, phơi nơi thoáng mát và là/ủi theo hướng dẫn tem nhãn.",
+      "common_errors": "Khách thấy rộng: giải thích form thoải mái là chủ đích, cân bằng bằng item ôm hơn.",
+      "training_note": "Persona: S2: LOVER\nKhách phù hợp: khách nữ tính, thích outfit có điểm nhấn; cần món basic đẹp, mặc nhiều lần; mua đi chơi, du lịch, cà phê.\nNhu cầu: Play: đi chơi, du lịch, cà phê, dạo phố; ưu tiên cảm giác thoải mái và bắt mắt.",
+      "status_label": "NEW",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Lightweight Technical (Vải gió kỹ thuật cao cấp)",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: S2: LOVER Khách phù hợp: khách nữ tính, thích outfit có điểm nhấn; cần món basic đẹp, mặc nhiều lần; mua đi chơi, du lịch, cà ph...",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Khách thấy rộng: giải thích form thoải mái là chủ đích, cân bằng bằng item ôm hơn.",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:55.147Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:55.147Z",
+      "status": "active"
+    },
+    {
+      "id": 26,
+      "store_id": null,
+      "sku": "CWATO001S265",
+      "product_name": "Dilys Top",
+      "color_options": "ĐEN",
+      "image_url": "",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Tech Jersey",
+      "style_info": "Áo kiểu dệt thoi",
+      "selling_points": "Chất liệu: Tech Jersey: bề mặt mịn, bóng nhẹ; co giãn tốt, nhanh khô và ít nhăn. Nhấn vào sự thoải mái khi vận động và tính dễ chăm sóc.\nDòng hàng: AFF TREND 1 (siêu hời)\nỨng dụng: PLAY\nMàu hiện có: ĐEN",
+      "care_instruction": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size.\nBảo quản: Dạ sản phẩm phối màu nên chị vui lòng giặt tay riêng sản phẩm, tuyệt đối KHÔNG NGÂM, vắt khô và phơi ngay sau khi giặt giúp DEZUS nha, lưu ý không dùng bột giặt OMO hay những loại có chất tẩy ạ • Do đặc tính của vải màu, sản phẩm có thể phai nhẹ ra nước trong 1–2 lần giặt đầu, đây là hiện tượng bình thường c nha",
+      "common_errors": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size.",
+      "training_note": "Persona: S1: BETTER LIFE\nKhách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; thích sản phẩm hợp xu hướng, giá trị tốt; mua đi chơi, du lịch, cà phê.\nNhu cầu: Play: đi chơi, du lịch, cà phê, dạo phố; ưu tiên cảm giác thoải mái và bắt mắt.",
+      "status_label": "NEW",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Tech Jersey",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: S1: BETTER LIFE Khách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; thích sản phẩm hợp xu hướng, giá trị tốt; mua đi chơi,...",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Luôn check vai/ngực/eo/hông khi thử để tránh sai size.",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:55.153Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:55.153Z",
+      "status": "active"
+    },
+    {
+      "id": 27,
+      "store_id": null,
+      "sku": "CWCDO006S264",
+      "product_name": "Taraxi Skirt",
+      "color_options": "ĐEN, BE, TRẮNG",
+      "image_url": "",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Kaki cotton",
+      "style_info": "Chân váy dài",
+      "selling_points": "Chất liệu: Khaki/denim: dày dặn, bền, đứng dáng và giữ form tốt. Phù hợp khách muốn sản phẩm dễ phối nhưng vẫn có điểm nhấn.\nDòng hàng: AFF TREND 2 (hời)\nỨng dụng: WORK & PLAY\nMàu hiện có: ĐEN, BE, TRẮNG",
+      "care_instruction": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Chất đứng: cho khách cử động/ngồi thử để cảm nhận độ thoải mái. Kiểm tra eo, hông, chiều dài và độ thoải mái khi ngồi.\nBảo quản: Giặt bằng nước lạnh: Tuyệt đối không dùng nước nóng vì nhiệt độ cao • Phơi trong bóng râm: Ánh nắng gay gắt sẽ làm vải bị cứng và nhanh phai màu • Bạn nên phơi ở nơi thoáng gió",
+      "common_errors": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Chất đứng: cho khách cử động/ngồi thử để cảm nhận độ thoải mái. Kiểm tra eo, hông, chiều dài và độ thoải mái khi ngồi.",
+      "training_note": "Persona: S2: LOVER\nKhách phù hợp: khách nữ tính, thích outfit có điểm nhấn; thích sản phẩm hợp xu hướng, giá trị tốt; cần mặc đi làm rồi đi chơi.\nNhu cầu: Work & Play: đi làm, gặp khách, sau đó đi cà phê/ăn tối vẫn phù hợp.",
+      "status_label": "NEW",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Kaki cotton",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: S2: LOVER Khách phù hợp: khách nữ tính, thích outfit có điểm nhấn; thích sản phẩm hợp xu hướng, giá trị tốt; cần mặc đi làm rồi ...",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Chất đứng: cho khách cử động/ngồi thử để cảm nhận độ thoải mái. Kiểm tra eo, hông,...",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:55.158Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:55.158Z",
+      "status": "active"
+    },
+    {
+      "id": 28,
+      "store_id": null,
+      "sku": "CWCNA009S266",
+      "product_name": "Dilys Skirt",
+      "color_options": "ĐEN",
+      "image_url": "",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Tech Jersey",
+      "style_info": "Chân váy ngắn",
+      "selling_points": "Chất liệu: Tech Jersey: bề mặt mịn, bóng nhẹ; co giãn tốt, nhanh khô và ít nhăn. Nhấn vào sự thoải mái khi vận động và tính dễ chăm sóc.\nDòng hàng: AFF TREND 1 (siêu hời)\nỨng dụng: PLAY\nMàu hiện có: ĐEN",
+      "care_instruction": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Kiểm tra eo, hông, chiều dài và độ thoải mái khi ngồi.\nBảo quản: Dạ sản phẩm phối màu nên chị vui lòng giặt tay riêng sản phẩm, tuyệt đối KHÔNG NGÂM, vắt khô và phơi ngay sau khi giặt giúp DEZUS nha, lưu ý không dùng bột giặt OMO hay những loại có chất tẩy ạ • Do đặc tính của vải màu, sản phẩm có thể phai nhẹ ra nước trong 1–2 lần giặt đầu, đây là hiện tượng bình thường c nha",
+      "common_errors": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Kiểm tra eo, hông, chiều dài và độ thoải mái khi ngồi.",
+      "training_note": "Persona: S1: BETTER LIFE\nKhách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; thích sản phẩm hợp xu hướng, giá trị tốt; mua đi chơi, du lịch, cà phê.\nNhu cầu: Play: đi chơi, du lịch, cà phê, dạo phố; ưu tiên cảm giác thoải mái và bắt mắt.",
+      "status_label": "NEW",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Tech Jersey",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: S1: BETTER LIFE Khách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; thích sản phẩm hợp xu hướng, giá trị tốt; mua đi chơi,...",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Kiểm tra eo, hông, chiều dài và độ thoải mái khi ngồi.",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:55.163Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:55.163Z",
+      "status": "active"
+    },
+    {
+      "id": 29,
+      "store_id": null,
+      "sku": "CWCNA030S266",
+      "product_name": "Elowen Skirt",
+      "color_options": "NÂU",
+      "image_url": "",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Khaki Denim",
+      "style_info": "Chân váy ngắn",
+      "selling_points": "Chất liệu: Khaki/denim: dày dặn, bền, đứng dáng và giữ form tốt. Phù hợp khách muốn sản phẩm dễ phối nhưng vẫn có điểm nhấn.\nDòng hàng: AFF TREND 1 (siêu hời)\nỨng dụng: PLAY\nMàu hiện có: NÂU",
+      "care_instruction": "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng. Chất đứng: cho khách cử động/ngồi thử để cảm nhận độ thoải mái. Kiểm tra eo, hông, chiều dài và độ thoải mái khi ngồi.\nBảo quản: Lộn trái khi giặt; giặt riêng màu đậm; tránh chất tẩy và nắng gắt để hạn chế bạc màu.",
+      "common_errors": "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng. Chất đứng: cho khách cử động/ngồi thử để cảm nhận độ thoải mái. Kiểm tra eo, hông, chiều dài và độ thoải mái khi ngồi.",
+      "training_note": "Persona: S1: BETTER LIFE\nKhách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; thích sản phẩm hợp xu hướng, giá trị tốt; tự tin với đồ ôm/tôn dáng.\nNhu cầu: Play: đi chơi, du lịch, cà phê, dạo phố; ưu tiên cảm giác thoải mái và bắt mắt.",
+      "status_label": "SCALE/ TÁI LẠI",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Khaki Denim",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: S1: BETTER LIFE Khách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; thích sản phẩm hợp xu hướng, giá trị tốt; tự tin với đ...",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng. Chất đứng: cho khách cử động/ngồi thử để cảm nhận độ thoải mái. Kiểm tra...",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:55.167Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:55.167Z",
+      "status": "active"
+    },
+    {
+      "id": 30,
+      "store_id": null,
+      "sku": "CWQDN009S268",
+      "product_name": "Tish Trousers",
+      "color_options": "LOANG",
+      "image_url": "",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "rayon/viscose slub woven( vải tơ sệt thô)",
+      "style_info": "Quần dài",
+      "selling_points": "Chất liệu: Linen/linen blend: bề mặt có vân tự nhiên, thoáng mát, chạm tay mát và tạo cảm giác premium. Hợp nhu cầu đi làm lẫn đi chơi.\nDòng hàng: AFF TREND 2 (hời)\nỨng dụng: WORK & PLAY\nMàu hiện có: LOANG",
+      "care_instruction": "Khách thấy rộng: giải thích form thoải mái là chủ đích, cân bằng bằng item ôm hơn. Kiểm tra eo, hông, chiều dài và độ thoải mái khi ngồi.\nBảo quản: Giặt nhẹ bằng nước giặt dịu; không vắt xoắn mạnh; phơi râm, tránh nắng gắt.",
+      "common_errors": "Khách thấy rộng: giải thích form thoải mái là chủ đích, cân bằng bằng item ôm hơn. Kiểm tra eo, hông, chiều dài và độ thoải mái khi ngồi.",
+      "training_note": "Persona: S3: SELF SHARPER\nKhách phù hợp: khách cần hình ảnh chỉn chu/premium; thích sản phẩm hợp xu hướng, giá trị tốt; cần mặc đi làm rồi đi chơi.\nNhu cầu: Work & Play: đi làm, gặp khách, sau đó đi cà phê/ăn tối vẫn phù hợp.",
+      "status_label": "SCALE/ TÁI LẠI",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "rayon/viscose slub woven( vải tơ sệt thô)",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: S3: SELF SHARPER Khách phù hợp: khách cần hình ảnh chỉn chu/premium; thích sản phẩm hợp xu hướng, giá trị tốt; cần mặc đi làm rồ...",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Khách thấy rộng: giải thích form thoải mái là chủ đích, cân bằng bằng item ôm hơn. Kiểm tra eo, hông, chiều dài và độ thoải mái khi ngồi.",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:55.172Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:55.172Z",
+      "status": "active"
+    },
+    {
+      "id": 31,
+      "store_id": null,
+      "sku": "CWQDN043S268",
+      "product_name": "Meiwa Trousers",
+      "color_options": "ĐEN",
+      "image_url": "",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Crinkled Nylon \n(Gió cao cấp)",
+      "style_info": "Quần dài",
+      "selling_points": "Chất liệu: Crinkled Nylon  (Gió cao cấp): Bề mặt nhăn tự nhiên; Kháng nước nhẹ, khó bám bẩn và dễ làm sạch.\nDòng hàng: ELEVATED BASIC\nỨng dụng: WORK & PLAY\nMàu hiện có: ĐEN",
+      "care_instruction": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Kiểm tra eo, hông, chiều dài và độ thoải mái khi ngồi.\nBảo quản: Giặt nhẹ, không dùng chất tẩy mạnh, phơi nơi thoáng mát và là/ủi theo hướng dẫn tem nhãn.",
+      "common_errors": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Kiểm tra eo, hông, chiều dài và độ thoải mái khi ngồi.",
+      "training_note": "Persona: S1: BETTER LIFE\nKhách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; cần món basic đẹp, mặc nhiều lần; cần mặc đi làm rồi đi chơi.\nNhu cầu: Work & Play: đi làm, gặp khách, sau đó đi cà phê/ăn tối vẫn phù hợp.",
+      "status_label": "SCALE/ TÁI LẠI",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Crinkled Nylon (Gió cao cấp)",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: S1: BETTER LIFE Khách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; cần món basic đẹp, mặc nhiều lần; cần mặc đi làm rồi đ...",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Kiểm tra eo, hông, chiều dài và độ thoải mái khi ngồi.",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:55.176Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:55.176Z",
+      "status": "active"
+    },
+    {
+      "id": 32,
+      "store_id": null,
+      "sku": "CWQDS008S262",
+      "product_name": "Alda Trousers",
+      "color_options": "LOANG",
+      "image_url": "",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Linen blend\n(Đũi)",
+      "style_info": "Quần dài",
+      "selling_points": "Chất liệu: Linen/linen blend: bề mặt có vân tự nhiên, thoáng mát, chạm tay mát và tạo cảm giác premium. Hợp nhu cầu đi làm lẫn đi chơi.\nDòng hàng: PREMIUM\nỨng dụng: WORK & PLAY\nMàu hiện có: LOANG",
+      "care_instruction": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Kiểm tra eo, hông, chiều dài và độ thoải mái khi ngồi.\nBảo quản: Giặt nhẹ bằng nước giặt dịu; không vắt xoắn mạnh; phơi râm, tránh nắng gắt.",
+      "common_errors": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Kiểm tra eo, hông, chiều dài và độ thoải mái khi ngồi.",
+      "training_note": "Persona: S3: SELF SHARPER\nKhách phù hợp: khách cần hình ảnh chỉn chu/premium; sẵn sàng chi cho chất liệu và phom dáng cao cấp; cần mặc đi làm rồi đi chơi.\nNhu cầu: Work & Play: đi làm, gặp khách, sau đó đi cà phê/ăn tối vẫn phù hợp.",
+      "status_label": "SCALE/ TÁI LẠI",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Linen blend (Đũi)",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: S3: SELF SHARPER Khách phù hợp: khách cần hình ảnh chỉn chu/premium; sẵn sàng chi cho chất liệu và phom dáng cao cấp; cần mặc đi...",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Kiểm tra eo, hông, chiều dài và độ thoải mái khi ngồi.",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:55.181Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:55.181Z",
+      "status": "active"
+    },
+    {
+      "id": 33,
+      "store_id": null,
+      "sku": "CWQDS025S268",
+      "product_name": "Ruxinta Trousers",
+      "color_options": "XANH THAN",
+      "image_url": "",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Lightweight denim",
+      "style_info": "Áo kiểu dệt thoi",
+      "selling_points": "Chất liệu: Khaki/denim: dày dặn, bền, đứng dáng và giữ form tốt. Phù hợp khách muốn sản phẩm dễ phối nhưng vẫn có điểm nhấn.\nDòng hàng: AFF TREND 2 (hời)\nỨng dụng: WORK & PLAY\nMàu hiện có: XANH THAN",
+      "care_instruction": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Chất đứng: cho khách cử động/ngồi thử để cảm nhận độ thoải mái. Kiểm tra eo, hông, chiều dài và độ thoải mái khi ngồi.\nBảo quản: Lộn trái khi giặt; giặt riêng màu đậm; tránh chất tẩy và nắng gắt để hạn chế bạc màu.",
+      "common_errors": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Chất đứng: cho khách cử động/ngồi thử để cảm nhận độ thoải mái. Kiểm tra eo, hông, chiều dài và độ thoải mái khi ngồi.",
+      "training_note": "Persona: S2: LOVER\nKhách phù hợp: khách nữ tính, thích outfit có điểm nhấn; thích sản phẩm hợp xu hướng, giá trị tốt; cần mặc đi làm rồi đi chơi.\nNhu cầu: Work & Play: đi làm, gặp khách, sau đó đi cà phê/ăn tối vẫn phù hợp.",
+      "status_label": "NEW",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Lightweight denim",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: S2: LOVER Khách phù hợp: khách nữ tính, thích outfit có điểm nhấn; thích sản phẩm hợp xu hướng, giá trị tốt; cần mặc đi làm rồi ...",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Chất đứng: cho khách cử động/ngồi thử để cảm nhận độ thoải mái. Kiểm tra eo, hông,...",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:55.186Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:55.186Z",
+      "status": "active"
+    },
+    {
+      "id": 34,
+      "store_id": null,
+      "sku": "CWQST001A262",
+      "product_name": "Winter Short",
+      "color_options": "ĐEN, GHI",
+      "image_url": "",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Lightweight Technical\n(Vải gió kỹ thuật cao cấp)",
+      "style_info": "Quần Short",
+      "selling_points": "Chất liệu: Lightweight Technical (Vải gió kỹ thuật cao cấp): Siêu nhẹ, mặc \"nhẹ như không\" và dễ dàng gấp siêu gọn bỏ túi.; Cản gió & Trượt nước.\nDòng hàng: ELEVATED BASIC\nỨng dụng: PLAY\nMàu hiện có: ĐEN, GHI",
+      "care_instruction": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Kiểm tra eo, hông, chiều dài và độ thoải mái khi ngồi.\nBảo quản: Giặt nhẹ, không dùng chất tẩy mạnh, phơi nơi thoáng mát và là/ủi theo hướng dẫn tem nhãn.",
+      "common_errors": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Kiểm tra eo, hông, chiều dài và độ thoải mái khi ngồi.",
+      "training_note": "Persona: S2: LOVER\nKhách phù hợp: khách nữ tính, thích outfit có điểm nhấn; cần món basic đẹp, mặc nhiều lần; mua đi chơi, du lịch, cà phê.\nNhu cầu: Play: đi chơi, du lịch, cà phê, dạo phố; ưu tiên cảm giác thoải mái và bắt mắt.",
+      "status_label": "NEW",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Lightweight Technical (Vải gió kỹ thuật cao cấp)",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: S2: LOVER Khách phù hợp: khách nữ tính, thích outfit có điểm nhấn; cần món basic đẹp, mặc nhiều lần; mua đi chơi, du lịch, cà ph...",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Kiểm tra eo, hông, chiều dài và độ thoải mái khi ngồi.",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:55.191Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:55.191Z",
+      "status": "active"
+    },
+    {
+      "id": 35,
+      "store_id": null,
+      "sku": "CWVBO001S261",
+      "product_name": "Midi Dress",
+      "color_options": "",
+      "image_url": "",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Cần bổ sung",
+      "style_info": "Váy body",
+      "selling_points": "",
+      "care_instruction": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Kiểm tra chiều dài, ngực/eo và tư vấn giày/túi để hoàn chỉnh outfit.\nBảo quản: Cần bổ sung hướng dẫn bảo quản từ bộ phận sản phẩm.",
+      "common_errors": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Kiểm tra chiều dài, ngực/eo và tư vấn giày/túi để hoàn chỉnh outfit.",
+      "training_note": "Persona: \nKhách phù hợp: khách muốn mặc nhanh, lên outfit trọn bộ.\nNhu cầu: Mặc nhanh thành outfit hoàn chỉnh; phù hợp tư vấn cho khách cần giải pháp nhanh.",
+      "status_label": "NEW",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Cần bổ sung",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: Khách phù hợp: khách muốn mặc nhanh, lên outfit trọn bộ. Nhu cầu: Mặc nhanh thành outfit hoàn chỉnh; phù hợp tư vấn cho khách cầ...",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Kiểm tra chiều dài, ngực/eo và tư vấn giày/túi để hoàn chỉnh outfit.",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:55.196Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:55.196Z",
+      "status": "active"
+    },
+    {
+      "id": 36,
+      "store_id": null,
+      "sku": "CWVIO005S265",
+      "product_name": "Alina Dress",
+      "color_options": "ĐEN",
+      "image_url": "",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Crisp cotton",
+      "style_info": "Váy xếp ly",
+      "selling_points": "Chất liệu: Cotton: mềm, thoáng, thấm hút tốt và dễ mặc hằng ngày. Cần lưu ý nếu chất mỏng thì tư vấn lớp trong/nội y phù hợp.\nDòng hàng: AFF TREND 1 (siêu hời)\nỨng dụng: WORK & PLAY\nMàu hiện có: ĐEN",
+      "care_instruction": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Kiểm tra chiều dài, ngực/eo và tư vấn giày/túi để hoàn chỉnh outfit.\nBảo quản: Giặt nhẹ, tránh chất tẩy mạnh; phơi nơi thoáng, hạn chế sấy nhiệt cao để giữ form.",
+      "common_errors": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Kiểm tra chiều dài, ngực/eo và tư vấn giày/túi để hoàn chỉnh outfit.",
+      "training_note": "Persona: S1: BETTER LIFE\nKhách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; thích sản phẩm hợp xu hướng, giá trị tốt; cần mặc đi làm rồi đi chơi.\nNhu cầu: Work & Play: đi làm, gặp khách, sau đó đi cà phê/ăn tối vẫn phù hợp.",
+      "status_label": "NEW",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Crisp cotton",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: S1: BETTER LIFE Khách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; thích sản phẩm hợp xu hướng, giá trị tốt; cần mặc đi l...",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Kiểm tra chiều dài, ngực/eo và tư vấn giày/túi để hoàn chỉnh outfit.",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:55.202Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:55.202Z",
+      "status": "active"
+    },
+    {
+      "id": 37,
+      "store_id": null,
+      "sku": "CWVPN001A264",
+      "product_name": "Nasia Dress",
+      "color_options": "KẺ ĐEN",
+      "image_url": "",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Striped Poplin\n(cotton thô họa tiết kẻ sọc)",
+      "style_info": "Váy Polo",
+      "selling_points": "Chất liệu: Cotton poplin: nhẹ, bề mặt mịn, thoáng và đứng phom hơn cotton thường. Dễ dùng cho nhóm basic cao cấp.\nDòng hàng: ELEVATED BASIC\nỨng dụng: WORK & PLAY\nMàu hiện có: KẺ ĐEN",
+      "care_instruction": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Kiểm tra chiều dài, ngực/eo và tư vấn giày/túi để hoàn chỉnh outfit.\nBảo quản: Giặt nhẹ, tránh chất tẩy mạnh; phơi nơi thoáng, hạn chế sấy nhiệt cao để giữ form.",
+      "common_errors": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Kiểm tra chiều dài, ngực/eo và tư vấn giày/túi để hoàn chỉnh outfit.",
+      "training_note": "Persona: S2: LOVER\nKhách phù hợp: khách nữ tính, thích outfit có điểm nhấn; cần món basic đẹp, mặc nhiều lần; cần mặc đi làm rồi đi chơi.\nNhu cầu: Work & Play: đi làm, gặp khách, sau đó đi cà phê/ăn tối vẫn phù hợp.",
+      "status_label": "NEW",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Striped Poplin (cotton thô họa tiết kẻ sọc)",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: S2: LOVER Khách phù hợp: khách nữ tính, thích outfit có điểm nhấn; cần món basic đẹp, mặc nhiều lần; cần mặc đi làm rồi đi chơi....",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Kiểm tra chiều dài, ngực/eo và tư vấn giày/túi để hoàn chỉnh outfit.",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:55.207Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:55.207Z",
+      "status": "active"
+    },
+    {
+      "id": 38,
+      "store_id": null,
+      "sku": "DXA140522",
+      "product_name": "Suzy Top",
+      "color_options": "TÍM",
+      "image_url": "",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Cần bổ sung",
+      "style_info": "Áo sơ mi",
+      "selling_points": "Chất liệu: Cần bổ sung chất liệu để nhân sự có điểm tư vấn thống nhất.\nDòng hàng: AFF TREND 1 (siêu hời)\nỨng dụng: PLAY\nMàu hiện có: TÍM",
+      "care_instruction": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size.\nBảo quản: Cần bổ sung hướng dẫn bảo quản từ bộ phận sản phẩm.",
+      "common_errors": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size.",
+      "training_note": "Persona: S1: BETTER LIFE\nKhách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; thích sản phẩm hợp xu hướng, giá trị tốt; mua đi chơi, du lịch, cà phê.\nNhu cầu: Play: đi chơi, du lịch, cà phê, dạo phố; ưu tiên cảm giác thoải mái và bắt mắt.",
+      "status_label": "SCALE/ TÁI LẠI",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Cần bổ sung",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: S1: BETTER LIFE Khách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; thích sản phẩm hợp xu hướng, giá trị tốt; mua đi chơi,...",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Luôn check vai/ngực/eo/hông khi thử để tránh sai size.",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:55.212Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:55.212Z",
+      "status": "active"
+    },
+    {
+      "id": 39,
+      "store_id": null,
+      "sku": "DXCV140524",
+      "product_name": "Suzy Skirt",
+      "color_options": "TÍM",
+      "image_url": "",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Cần bổ sung",
+      "style_info": "Chân váy ngắn",
+      "selling_points": "Chất liệu: Cần bổ sung chất liệu để nhân sự có điểm tư vấn thống nhất.\nDòng hàng: AFF TREND 1 (siêu hời)\nỨng dụng: PLAY\nMàu hiện có: TÍM",
+      "care_instruction": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Kiểm tra eo, hông, chiều dài và độ thoải mái khi ngồi.\nBảo quản: Cần bổ sung hướng dẫn bảo quản từ bộ phận sản phẩm.",
+      "common_errors": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Kiểm tra eo, hông, chiều dài và độ thoải mái khi ngồi.",
+      "training_note": "Persona: S1: BETTER LIFE\nKhách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; thích sản phẩm hợp xu hướng, giá trị tốt; mua đi chơi, du lịch, cà phê.\nNhu cầu: Play: đi chơi, du lịch, cà phê, dạo phố; ưu tiên cảm giác thoải mái và bắt mắt.",
+      "status_label": "SCALE/ TÁI LẠI",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Cần bổ sung",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: S1: BETTER LIFE Khách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; thích sản phẩm hợp xu hướng, giá trị tốt; mua đi chơi,...",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Kiểm tra eo, hông, chiều dài và độ thoải mái khi ngồi.",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:55.217Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:55.218Z",
+      "status": "active"
+    },
+    {
+      "id": 40,
+      "store_id": null,
+      "sku": "TWAKC017S264",
+      "product_name": "Phatina Shirt",
+      "color_options": "ĐEN",
+      "image_url": "",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Mildewed khaki fabric",
+      "style_info": "Áo kiểu dệt thoi",
+      "selling_points": "Chất liệu: Khaki/denim: dày dặn, bền, đứng dáng và giữ form tốt. Phù hợp khách muốn sản phẩm dễ phối nhưng vẫn có điểm nhấn.\nDòng hàng: AFF TREND 2 (hời)\nỨng dụng: PLAY\nMàu hiện có: ĐEN",
+      "care_instruction": "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng. Chất đứng: cho khách cử động/ngồi thử để cảm nhận độ thoải mái.\nBảo quản: Lộn trái khi giặt; giặt riêng màu đậm; tránh chất tẩy và nắng gắt để hạn chế bạc màu.",
+      "common_errors": "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng. Chất đứng: cho khách cử động/ngồi thử để cảm nhận độ thoải mái.",
+      "training_note": "Persona: S1: BETTER LIFE\nKhách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; thích sản phẩm hợp xu hướng, giá trị tốt; tự tin với đồ ôm/tôn dáng.\nNhu cầu: Play: đi chơi, du lịch, cà phê, dạo phố; ưu tiên cảm giác thoải mái và bắt mắt.",
+      "status_label": "NEW",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Mildewed khaki fabric",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: S1: BETTER LIFE Khách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; thích sản phẩm hợp xu hướng, giá trị tốt; tự tin với đ...",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng. Chất đứng: cho khách cử động/ngồi thử để cảm nhận độ thoải mái.",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:55.223Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:55.223Z",
+      "status": "active"
+    },
+    {
+      "id": 41,
+      "store_id": null,
+      "sku": "TWAKC022S264",
+      "product_name": "Elowen Top",
+      "color_options": "GHI, NÂU",
+      "image_url": "",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Tie-Dye Stretch Mesh\n( Vải lưới co giãn loang màu)",
+      "style_info": "Áo kiểu dệt kim",
+      "selling_points": "Chất liệu: Lưới co giãn: nhẹ, thoáng, ôm theo cơ thể và tạo hiệu ứng thời trang “nửa kín nửa hở”. Cần tư vấn nội y/lớp lót phù hợp.\nDòng hàng: AFF TREND 1 (siêu hời)\nỨng dụng: PLAY\nMàu hiện có: GHI, NÂU",
+      "care_instruction": "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng. Chất mỏng/lưới: tư vấn nội y/lớp lót cùng màu hoặc phối layer.\nBảo quản: Giặt tay hoặc túi giặt chế độ nhẹ; tránh móc sắc/ma sát mạnh; phơi ngang hoặc nơi thoáng mát.",
+      "common_errors": "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng. Chất mỏng/lưới: tư vấn nội y/lớp lót cùng màu hoặc phối layer.",
+      "training_note": "Persona: S1: BETTER LIFE\nKhách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; thích sản phẩm hợp xu hướng, giá trị tốt; tự tin với đồ ôm/tôn dáng.\nNhu cầu: Play: đi chơi, du lịch, cà phê, dạo phố; ưu tiên cảm giác thoải mái và bắt mắt.",
+      "status_label": "SCALE/ TÁI LẠI",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Tie-Dye Stretch Mesh ( Vải lưới co giãn loang màu)",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: S1: BETTER LIFE Khách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; thích sản phẩm hợp xu hướng, giá trị tốt; tự tin với đ...",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng. Chất mỏng/lưới: tư vấn nội y/lớp lót cùng màu hoặc phối layer.",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:55.229Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:55.229Z",
+      "status": "active"
+    },
+    {
+      "id": 42,
+      "store_id": null,
+      "sku": "TWAKQ006S264",
+      "product_name": "Cici Top",
+      "color_options": "BE",
+      "image_url": "",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Chino denim",
+      "style_info": "Áo kiểu dệt thoi",
+      "selling_points": "Chất liệu: Chino denim: đứng form, bền và giữ dáng tốt; có nền cotton nên thoáng hơn denim dày. Phù hợp outfit casual-smart.\nDòng hàng: AFF TREND 2 (hời)\nỨng dụng: PLAY\nMàu hiện có: BE",
+      "care_instruction": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Chất đứng: cho khách cử động/ngồi thử để cảm nhận độ thoải mái.\nBảo quản: Không dùng chất tẩy: Tránh xa các loại bột giặt có tính tẩy mạnh hoặc nước tẩy vì sẽ làm loang lổ màu • Tránh sấy nhiệt cao: Máy sấy nóng có thể làm co rút các sợi cotton, khiến trang phục bị chật đi",
+      "common_errors": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Chất đứng: cho khách cử động/ngồi thử để cảm nhận độ thoải mái.",
+      "training_note": "Persona: S2: LOVER\nKhách phù hợp: khách nữ tính, thích outfit có điểm nhấn; thích sản phẩm hợp xu hướng, giá trị tốt; mua đi chơi, du lịch, cà phê.\nNhu cầu: Play: đi chơi, du lịch, cà phê, dạo phố; ưu tiên cảm giác thoải mái và bắt mắt.",
+      "status_label": "NEW",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Chino denim",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: S2: LOVER Khách phù hợp: khách nữ tính, thích outfit có điểm nhấn; thích sản phẩm hợp xu hướng, giá trị tốt; mua đi chơi, du lịc...",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Chất đứng: cho khách cử động/ngồi thử để cảm nhận độ thoải mái.",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:55.236Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:55.236Z",
+      "status": "active"
+    },
+    {
+      "id": 43,
+      "store_id": null,
+      "sku": "TWAKQ008S264",
+      "product_name": "Celeste Top",
+      "color_options": "",
+      "image_url": "",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Washed kaki",
+      "style_info": "Áo kiểu dệt thoi",
+      "selling_points": "",
+      "care_instruction": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Chất đứng: cho khách cử động/ngồi thử để cảm nhận độ thoải mái.\nBảo quản: Lộn trái khi giặt; giặt riêng màu đậm; tránh chất tẩy và nắng gắt để hạn chế bạc màu.",
+      "common_errors": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Chất đứng: cho khách cử động/ngồi thử để cảm nhận độ thoải mái.",
+      "training_note": "Persona: S1: BETTER LIFE\nKhách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; thích sản phẩm hợp xu hướng, giá trị tốt; cần mặc đi làm rồi đi chơi.\nNhu cầu: Work & Play: đi làm, gặp khách, sau đó đi cà phê/ăn tối vẫn phù hợp.",
+      "status_label": "NEW",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Washed kaki",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: S1: BETTER LIFE Khách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; thích sản phẩm hợp xu hướng, giá trị tốt; cần mặc đi l...",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Chất đứng: cho khách cử động/ngồi thử để cảm nhận độ thoải mái.",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:55.242Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:55.242Z",
+      "status": "active"
+    },
+    {
+      "id": 44,
+      "store_id": null,
+      "sku": "TWAKS009S262",
+      "product_name": "Tish Top",
+      "color_options": "LOANG",
+      "image_url": "",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "rayon/viscose slub woven( vải tơ sệt thô)",
+      "style_info": "Áo kiểu dệt thoi",
+      "selling_points": "Chất liệu: Linen/linen blend: bề mặt có vân tự nhiên, thoáng mát, chạm tay mát và tạo cảm giác premium. Hợp nhu cầu đi làm lẫn đi chơi.\nDòng hàng: AFF TREND 2 (hời)\nỨng dụng: WORK & PLAY\nMàu hiện có: LOANG",
+      "care_instruction": "Khách thấy rộng: giải thích form thoải mái là chủ đích, cân bằng bằng item ôm hơn.\nBảo quản: Dạ chị ơi, set này là chất vải có hiệu ứng nhăn tự nhiên nên bên em khuyến khích mình giặt tay và vò nhẹ để giữ form và bề mặt vải đẹp nhất ạ",
+      "common_errors": "Khách thấy rộng: giải thích form thoải mái là chủ đích, cân bằng bằng item ôm hơn.",
+      "training_note": "Persona: S3: SELF SHARPER\nKhách phù hợp: khách cần hình ảnh chỉn chu/premium; thích sản phẩm hợp xu hướng, giá trị tốt; cần mặc đi làm rồi đi chơi.\nNhu cầu: Work & Play: đi làm, gặp khách, sau đó đi cà phê/ăn tối vẫn phù hợp.",
+      "status_label": "SCALE/ TÁI LẠI",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "rayon/viscose slub woven( vải tơ sệt thô)",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: S3: SELF SHARPER Khách phù hợp: khách cần hình ảnh chỉn chu/premium; thích sản phẩm hợp xu hướng, giá trị tốt; cần mặc đi làm rồ...",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Khách thấy rộng: giải thích form thoải mái là chủ đích, cân bằng bằng item ôm hơn.",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:55.248Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:55.248Z",
+      "status": "active"
+    },
+    {
+      "id": 45,
+      "store_id": null,
+      "sku": "TWAKY013S261",
+      "product_name": "Linesite Top",
+      "color_options": "BE",
+      "image_url": "",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Lụa",
+      "style_info": "",
+      "selling_points": "Chất liệu: Lụa: mềm, có độ rủ và tạo cảm giác nữ tính/sang. Tư vấn giặt nhẹ, tránh ma sát mạnh để giữ bề mặt vải.\nDòng hàng: \nỨng dụng: \nMàu hiện có: BE",
+      "care_instruction": "Khách thấy rộng: giải thích form thoải mái là chủ đích, cân bằng bằng item ôm hơn.\nBảo quản: Giặt nhẹ bằng nước giặt dịu; không vắt xoắn mạnh; phơi râm, tránh nắng gắt.",
+      "common_errors": "Khách thấy rộng: giải thích form thoải mái là chủ đích, cân bằng bằng item ôm hơn.",
+      "training_note": "Persona: \nKhách phù hợp: khách cần sản phẩm mới dễ ứng dụng.\nNhu cầu: Ứng dụng linh hoạt theo cách phối; nhân viên cần gợi ý set hoàn chỉnh.",
+      "status_label": "SCALE/ TÁI LẠI",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Lụa",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: Khách phù hợp: khách cần sản phẩm mới dễ ứng dụng. Nhu cầu: Ứng dụng linh hoạt theo cách phối; nhân viên cần gợi ý set hoàn chỉnh.",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Khách thấy rộng: giải thích form thoải mái là chủ đích, cân bằng bằng item ôm hơn.",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:55.254Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:55.254Z",
+      "status": "active"
+    },
+    {
+      "id": 46,
+      "store_id": null,
+      "sku": "TWDAR003S265",
+      "product_name": "Hennie Top",
+      "color_options": "NÂU",
+      "image_url": "",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Slub Yarn Seersucker\n( Vải thô xước )",
+      "style_info": "",
+      "selling_points": "Chất liệu: Seersucker/slub: bề mặt nhăn/xước tự nhiên, rất nhẹ và thoáng. Ưu điểm là ít cần là ủi, hợp khí hậu nóng.\nDòng hàng: \nỨng dụng: \nMàu hiện có: NÂU",
+      "care_instruction": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size.\nBảo quản: Giặt nhẹ, không dùng chất tẩy mạnh, phơi nơi thoáng mát và là/ủi theo hướng dẫn tem nhãn.",
+      "common_errors": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size.",
+      "training_note": "Persona: \nKhách phù hợp: khách cần sản phẩm mới dễ ứng dụng.\nNhu cầu: Ứng dụng linh hoạt theo cách phối; nhân viên cần gợi ý set hoàn chỉnh.",
+      "status_label": "SCALE/ TÁI LẠI",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Slub Yarn Seersucker ( Vải thô xước )",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: Khách phù hợp: khách cần sản phẩm mới dễ ứng dụng. Nhu cầu: Ứng dụng linh hoạt theo cách phối; nhân viên cần gợi ý set hoàn chỉnh.",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Luôn check vai/ngực/eo/hông khi thử để tránh sai size.",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:55.260Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:55.260Z",
+      "status": "active"
+    },
+    {
+      "id": 47,
+      "store_id": null,
+      "sku": "TWQDN036S268",
+      "product_name": "Cici Trouser",
+      "color_options": "BE",
+      "image_url": "",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Chino denim",
+      "style_info": "Quần dài",
+      "selling_points": "Chất liệu: Chino denim: đứng form, bền và giữ dáng tốt; có nền cotton nên thoáng hơn denim dày. Phù hợp outfit casual-smart.\nDòng hàng: AFF TREND 2 (hời)\nỨng dụng: PLAY\nMàu hiện có: BE",
+      "care_instruction": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Chất đứng: cho khách cử động/ngồi thử để cảm nhận độ thoải mái. Kiểm tra eo, hông, chiều dài và độ thoải mái khi ngồi.\nBảo quản: Không dùng chất tẩy: Tránh xa các loại bột giặt có tính tẩy mạnh hoặc nước tẩy vì sẽ làm loang lổ màu • Tránh sấy nhiệt cao: Máy sấy nóng có thể làm co rút các sợi cotton, khiến trang phục bị chật đi",
+      "common_errors": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Chất đứng: cho khách cử động/ngồi thử để cảm nhận độ thoải mái. Kiểm tra eo, hông, chiều dài và độ thoải mái khi ngồi.",
+      "training_note": "Persona: S2: LOVER\nKhách phù hợp: khách nữ tính, thích outfit có điểm nhấn; thích sản phẩm hợp xu hướng, giá trị tốt; mua đi chơi, du lịch, cà phê.\nNhu cầu: Play: đi chơi, du lịch, cà phê, dạo phố; ưu tiên cảm giác thoải mái và bắt mắt.",
+      "status_label": "NEW",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Chino denim",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: S2: LOVER Khách phù hợp: khách nữ tính, thích outfit có điểm nhấn; thích sản phẩm hợp xu hướng, giá trị tốt; mua đi chơi, du lịc...",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Chất đứng: cho khách cử động/ngồi thử để cảm nhận độ thoải mái. Kiểm tra eo, hông,...",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:55.266Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:55.266Z",
+      "status": "active"
+    },
+    {
+      "id": 48,
+      "store_id": null,
+      "sku": "TWQSO006S266",
+      "product_name": "Hennie Short",
+      "color_options": "NÂU",
+      "image_url": "",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Slub Yarn Seersucker\n( Vải thô xước )",
+      "style_info": "",
+      "selling_points": "Chất liệu: Seersucker/slub: bề mặt nhăn/xước tự nhiên, rất nhẹ và thoáng. Ưu điểm là ít cần là ủi, hợp khí hậu nóng.\nDòng hàng: \nỨng dụng: \nMàu hiện có: NÂU",
+      "care_instruction": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size.\nBảo quản: Giặt nhẹ, không dùng chất tẩy mạnh, phơi nơi thoáng mát và là/ủi theo hướng dẫn tem nhãn.",
+      "common_errors": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size.",
+      "training_note": "Persona: \nKhách phù hợp: khách cần sản phẩm mới dễ ứng dụng.\nNhu cầu: Ứng dụng linh hoạt theo cách phối; nhân viên cần gợi ý set hoàn chỉnh.",
+      "status_label": "SCALE/ TÁI LẠI",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Slub Yarn Seersucker ( Vải thô xước )",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: Khách phù hợp: khách cần sản phẩm mới dễ ứng dụng. Nhu cầu: Ứng dụng linh hoạt theo cách phối; nhân viên cần gợi ý set hoàn chỉnh.",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Luôn check vai/ngực/eo/hông khi thử để tránh sai size.",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:55.272Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:55.272Z",
+      "status": "active"
+    },
+    {
+      "id": 49,
+      "store_id": null,
+      "sku": "TWSTE001S266",
+      "product_name": "Spacie Skirt",
+      "color_options": "LOANG",
+      "image_url": "",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Denim họa tiết loang",
+      "style_info": "Chân váy ngắn",
+      "selling_points": "Chất liệu: Khaki/denim: dày dặn, bền, đứng dáng và giữ form tốt. Phù hợp khách muốn sản phẩm dễ phối nhưng vẫn có điểm nhấn.\nDòng hàng: AFF TREND 1 (siêu hời)\nỨng dụng: PLAY\nMàu hiện có: LOANG",
+      "care_instruction": "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng. Chất đứng: cho khách cử động/ngồi thử để cảm nhận độ thoải mái. Kiểm tra eo, hông, chiều dài và độ thoải mái khi ngồi.\nBảo quản: Giặt mặt trái: Luôn lộn ngược trang phục trước khi giặt để giảm ma sát, hạn chế phai màu chàm • Phơi trong bóng râm: Ánh nắng gắt sẽ làm vải bị cứng quẹo và nhanh phai màu • Hãy phơi nơi thoáng gió",
+      "common_errors": "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng. Chất đứng: cho khách cử động/ngồi thử để cảm nhận độ thoải mái. Kiểm tra eo, hông, chiều dài và độ thoải mái khi ngồi.",
+      "training_note": "Persona: S1: BETTER LIFE\nKhách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; thích sản phẩm hợp xu hướng, giá trị tốt; tự tin với đồ ôm/tôn dáng.\nNhu cầu: Play: đi chơi, du lịch, cà phê, dạo phố; ưu tiên cảm giác thoải mái và bắt mắt.",
+      "status_label": "SCALE/ TÁI LẠI",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Denim họa tiết loang",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: S1: BETTER LIFE Khách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; thích sản phẩm hợp xu hướng, giá trị tốt; tự tin với đ...",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng. Chất đứng: cho khách cử động/ngồi thử để cảm nhận độ thoải mái. Kiểm tra...",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:55.278Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:55.278Z",
+      "status": "active"
+    },
+    {
+      "id": 50,
+      "store_id": null,
+      "sku": "TWVXN002S254",
+      "product_name": "Axer Dress",
+      "color_options": "",
+      "image_url": "",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Vải lưới hoạ tiết co giãn 4 chiều)",
+      "style_info": "",
+      "selling_points": "",
+      "care_instruction": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Chất mỏng/lưới: tư vấn nội y/lớp lót cùng màu hoặc phối layer.\nBảo quản: Giặt tay hoặc túi giặt chế độ nhẹ; tránh móc sắc/ma sát mạnh; phơi ngang hoặc nơi thoáng mát.",
+      "common_errors": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Chất mỏng/lưới: tư vấn nội y/lớp lót cùng màu hoặc phối layer.",
+      "training_note": "Persona: \nKhách phù hợp: khách cần sản phẩm mới dễ ứng dụng.\nNhu cầu: Ứng dụng linh hoạt theo cách phối; nhân viên cần gợi ý set hoàn chỉnh.",
+      "status_label": "SCALE/ TÁI LẠI",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Vải lưới hoạ tiết co giãn 4 chiều)",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: Khách phù hợp: khách cần sản phẩm mới dễ ứng dụng. Nhu cầu: Ứng dụng linh hoạt theo cách phối; nhân viên cần gợi ý set hoàn chỉnh.",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Chất mỏng/lưới: tư vấn nội y/lớp lót cùng màu hoặc phối layer.",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:55.284Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:55.284Z",
+      "status": "active"
+    },
+    {
+      "id": 51,
+      "store_id": null,
+      "sku": "U4TW240803",
+      "product_name": "Wanrui Trouser",
+      "color_options": "ĐEN",
+      "image_url": "",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Thin PU knit\n( DA )",
+      "style_info": "Quần dài",
+      "selling_points": "Chất liệu: Dệt kim/rib: co giãn, ôm thoải mái và tôn dáng. Nhấn khả năng hồi form, không gò bó khi mặc.\nDòng hàng: AFF TREND 1 (siêu hời)\nỨng dụng: WORK & PLAY\nMàu hiện có: ĐEN",
+      "care_instruction": "Khách thấy rộng: giải thích form thoải mái là chủ đích, cân bằng bằng item ôm hơn. Kiểm tra eo, hông, chiều dài và độ thoải mái khi ngồi.\nBảo quản: Giặt tay hoặc túi giặt chế độ nhẹ; tránh móc sắc/ma sát mạnh; phơi ngang hoặc nơi thoáng mát.",
+      "common_errors": "Khách thấy rộng: giải thích form thoải mái là chủ đích, cân bằng bằng item ôm hơn. Kiểm tra eo, hông, chiều dài và độ thoải mái khi ngồi.",
+      "training_note": "Persona: S1: BETTER LIFE\nKhách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; thích sản phẩm hợp xu hướng, giá trị tốt; cần mặc đi làm rồi đi chơi.\nNhu cầu: Work & Play: đi làm, gặp khách, sau đó đi cà phê/ăn tối vẫn phù hợp.",
+      "status_label": "SCALE/ TÁI LẠI",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Thin PU knit ( DA )",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: S1: BETTER LIFE Khách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; thích sản phẩm hợp xu hướng, giá trị tốt; cần mặc đi l...",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Khách thấy rộng: giải thích form thoải mái là chủ đích, cân bằng bằng item ôm hơn. Kiểm tra eo, hông, chiều dài và độ thoải mái khi ngồi.",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:55.289Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:55.289Z",
+      "status": "active"
+    },
+    {
+      "id": 52,
+      "store_id": null,
+      "sku": "Y1BW241210",
+      "product_name": "Kosa Top",
+      "color_options": "TRẮNG",
+      "image_url": "",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Cotton Poplin\n( Cotton cao cấp)",
+      "style_info": "Áo Polo",
+      "selling_points": "Chất liệu: Cotton poplin: nhẹ, bề mặt mịn, thoáng và đứng phom hơn cotton thường. Dễ dùng cho nhóm basic cao cấp.\nDòng hàng: AFF TREND 2 (hời)\nỨng dụng: WORK & PLAY\nMàu hiện có: TRẮNG",
+      "care_instruction": "Khách thấy rộng: giải thích form thoải mái là chủ đích, cân bằng bằng item ôm hơn.\nBảo quản: Giặt nhẹ, tránh chất tẩy mạnh; phơi nơi thoáng, hạn chế sấy nhiệt cao để giữ form.",
+      "common_errors": "Khách thấy rộng: giải thích form thoải mái là chủ đích, cân bằng bằng item ôm hơn.",
+      "training_note": "Persona: S2: LOVER\nKhách phù hợp: khách nữ tính, thích outfit có điểm nhấn; thích sản phẩm hợp xu hướng, giá trị tốt; cần mặc đi làm rồi đi chơi.\nNhu cầu: Work & Play: đi làm, gặp khách, sau đó đi cà phê/ăn tối vẫn phù hợp.",
+      "status_label": "SCALE/ TÁI LẠI",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Cotton Poplin ( Cotton cao cấp)",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: S2: LOVER Khách phù hợp: khách nữ tính, thích outfit có điểm nhấn; thích sản phẩm hợp xu hướng, giá trị tốt; cần mặc đi làm rồi ...",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Khách thấy rộng: giải thích form thoải mái là chủ đích, cân bằng bằng item ôm hơn.",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:55.295Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:55.295Z",
+      "status": "active"
+    },
+    {
+      "id": 53,
+      "store_id": null,
+      "sku": "Y1BW250105",
+      "product_name": "Halcyon Top",
+      "color_options": "HỒNG",
+      "image_url": "",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Striped Poplin\n(cotton thô họa tiết kẻ sọc)",
+      "style_info": "Áo sơ mi",
+      "selling_points": "Chất liệu: Cotton poplin: nhẹ, bề mặt mịn, thoáng và đứng phom hơn cotton thường. Dễ dùng cho nhóm basic cao cấp.\nDòng hàng: AFF TREND 1 (siêu hời)\nỨng dụng: PLAY\nMàu hiện có: HỒNG",
+      "care_instruction": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size.\nBảo quản: Giặt nhẹ, tránh chất tẩy mạnh; phơi nơi thoáng, hạn chế sấy nhiệt cao để giữ form.",
+      "common_errors": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size.",
+      "training_note": "Persona: S1: BETTER LIFE\nKhách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; thích sản phẩm hợp xu hướng, giá trị tốt; mua đi chơi, du lịch, cà phê.\nNhu cầu: Play: đi chơi, du lịch, cà phê, dạo phố; ưu tiên cảm giác thoải mái và bắt mắt.",
+      "status_label": "SCALE/ TÁI LẠI",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Striped Poplin (cotton thô họa tiết kẻ sọc)",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: S1: BETTER LIFE Khách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; thích sản phẩm hợp xu hướng, giá trị tốt; mua đi chơi,...",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Luôn check vai/ngực/eo/hông khi thử để tránh sai size.",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:55.301Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:55.301Z",
+      "status": "active"
+    },
+    {
+      "id": 54,
+      "store_id": null,
+      "sku": "Y1KW250604",
+      "product_name": "Lucella Top",
+      "color_options": "LOANG",
+      "image_url": "",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Sheer Printed Mesh \n(Vải lưới co giãn 4 chiều hoạ tiết)",
+      "style_info": "Áo kiểu dệt kim",
+      "selling_points": "Chất liệu: Lưới co giãn: nhẹ, thoáng, ôm theo cơ thể và tạo hiệu ứng thời trang “nửa kín nửa hở”. Cần tư vấn nội y/lớp lót phù hợp.\nDòng hàng: AFF TREND 1 (siêu hời)\nỨng dụng: WORK\nMàu hiện có: LOANG",
+      "care_instruction": "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng. Chất mỏng/lưới: tư vấn nội y/lớp lót cùng màu hoặc phối layer.\nBảo quản: Giặt tay hoặc túi giặt chế độ nhẹ; tránh móc sắc/ma sát mạnh; phơi ngang hoặc nơi thoáng mát.",
+      "common_errors": "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng. Chất mỏng/lưới: tư vấn nội y/lớp lót cùng màu hoặc phối layer.",
+      "training_note": "Persona: S1: BETTER LIFE\nKhách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; thích sản phẩm hợp xu hướng, giá trị tốt; tự tin với đồ ôm/tôn dáng.\nNhu cầu: Work: đi làm, họp nhẹ, gặp khách; ưu tiên vẻ gọn gàng và chuyên nghiệp.",
+      "status_label": "SCALE/ TÁI LẠI",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Sheer Printed Mesh (Vải lưới co giãn 4 chiều hoạ tiết)",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: S1: BETTER LIFE Khách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; thích sản phẩm hợp xu hướng, giá trị tốt; tự tin với đ...",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng. Chất mỏng/lưới: tư vấn nội y/lớp lót cùng màu hoặc phối layer.",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:55.307Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:55.307Z",
+      "status": "active"
+    },
+    {
+      "id": 55,
+      "store_id": null,
+      "sku": "Y1TW250201",
+      "product_name": "Patrick Top",
+      "color_options": "TRẮNG, ĐEN",
+      "image_url": "",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Cotton Poplin\n( Cotton cao cấp)",
+      "style_info": "Áo tshirt",
+      "selling_points": "Chất liệu: Cotton poplin: nhẹ, bề mặt mịn, thoáng và đứng phom hơn cotton thường. Dễ dùng cho nhóm basic cao cấp.\nDòng hàng: AFF TREND 1 (siêu hời)\nỨng dụng: PLAY\nMàu hiện có: TRẮNG, ĐEN",
+      "care_instruction": "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng.\nBảo quản: Giặt nhẹ, tránh chất tẩy mạnh; phơi nơi thoáng, hạn chế sấy nhiệt cao để giữ form.",
+      "common_errors": "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng.",
+      "training_note": "Persona: S1: BETTER LIFE\nKhách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; thích sản phẩm hợp xu hướng, giá trị tốt; tự tin với đồ ôm/tôn dáng.\nNhu cầu: Play: đi chơi, du lịch, cà phê, dạo phố; ưu tiên cảm giác thoải mái và bắt mắt.",
+      "status_label": "SCALE/ TÁI LẠI",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Cotton Poplin ( Cotton cao cấp)",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: S1: BETTER LIFE Khách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; thích sản phẩm hợp xu hướng, giá trị tốt; tự tin với đ...",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng.",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:55.313Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:55.313Z",
+      "status": "active"
+    },
+    {
+      "id": 56,
+      "store_id": null,
+      "sku": "Y2SW250105",
+      "product_name": "Halcyon Skirt",
+      "color_options": "HỒNG",
+      "image_url": "",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Striped Poplin\n(cotton thô họa tiết kẻ sọc)",
+      "style_info": "Chân váy ngắn",
+      "selling_points": "Chất liệu: Cotton poplin: nhẹ, bề mặt mịn, thoáng và đứng phom hơn cotton thường. Dễ dùng cho nhóm basic cao cấp.\nDòng hàng: AFF TREND 1 (siêu hời)\nỨng dụng: PLAY\nMàu hiện có: HỒNG",
+      "care_instruction": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Kiểm tra eo, hông, chiều dài và độ thoải mái khi ngồi.\nBảo quản: Giặt nhẹ, tránh chất tẩy mạnh; phơi nơi thoáng, hạn chế sấy nhiệt cao để giữ form.",
+      "common_errors": "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Kiểm tra eo, hông, chiều dài và độ thoải mái khi ngồi.",
+      "training_note": "Persona: S1: BETTER LIFE\nKhách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; thích sản phẩm hợp xu hướng, giá trị tốt; mua đi chơi, du lịch, cà phê.\nNhu cầu: Play: đi chơi, du lịch, cà phê, dạo phố; ưu tiên cảm giác thoải mái và bắt mắt.",
+      "status_label": "SCALE/ TÁI LẠI",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Striped Poplin (cotton thô họa tiết kẻ sọc)",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: S1: BETTER LIFE Khách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; thích sản phẩm hợp xu hướng, giá trị tốt; mua đi chơi,...",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Luôn check vai/ngực/eo/hông khi thử để tránh sai size. Kiểm tra eo, hông, chiều dài và độ thoải mái khi ngồi.",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:55.319Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:55.319Z",
+      "status": "active"
+    },
+    {
+      "id": 57,
+      "store_id": null,
+      "sku": "Y3SW250204",
+      "product_name": "Cafe Dress",
+      "color_options": "LOANG",
+      "image_url": "",
+      "product_url": "",
+      "arrival_date": "",
+      "material": "Washed Twill",
+      "style_info": "Váy A",
+      "selling_points": "Chất liệu: Washed Twill: Mềm mại & Thoải mái; Không lo co rút hay phai màu, giặt thoải mái.\nDòng hàng: AFF TREND 1 (siêu hời)\nỨng dụng: PLAY\nMàu hiện có: LOANG",
+      "care_instruction": "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng. Kiểm tra chiều dài, ngực/eo và tư vấn giày/túi để hoàn chỉnh outfit.\nBảo quản: Giặt nhẹ, không dùng chất tẩy mạnh, phơi nơi thoáng mát và là/ủi theo hướng dẫn tem nhãn.",
+      "common_errors": "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng. Kiểm tra chiều dài, ngực/eo và tư vấn giày/túi để hoàn chỉnh outfit.",
+      "training_note": "Persona: S1: BETTER LIFE\nKhách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; thích sản phẩm hợp xu hướng, giá trị tốt; tự tin với đồ ôm/tôn dáng.\nNhu cầu: Play: đi chơi, du lịch, cà phê, dạo phố; ưu tiên cảm giác thoải mái và bắt mắt.",
+      "status_label": "SCALE/ TÁI LẠI",
+      "is_required": 1,
+      "due_at": "",
+      "pass_percent": 90,
+      "quiz_questions": [
+        {
+          "question": "Chất liệu/điểm chất liệu chính của sản phẩm là gì?",
+          "options": [
+            "Washed Twill",
+            "Chưa xác định chất liệu",
+            "Chất liệu không cần tư vấn",
+            "Không có điểm nổi bật về chất liệu"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khách hàng hoặc nhu cầu phù hợp với sản phẩm là gì?",
+          "options": [
+            "Persona: S1: BETTER LIFE Khách phù hợp: khách trẻ thích sự thoải mái, dễ ứng dụng; thích sản phẩm hợp xu hướng, giá trị tốt; tự tin với đ...",
+            "Khách không cần tư vấn",
+            "Chỉ phù hợp mặc ở nhà",
+            "Không cần xác định nhu cầu khách"
+          ],
+          "correct_index": 0
+        },
+        {
+          "question": "Khi tư vấn hoặc thử đồ cần lưu ý gì?",
+          "options": [
+            "Khách ngại ôm: cho thử lên 1 size và nhấn chất co giãn/tôn dáng. Kiểm tra chiều dài, ngực/eo và tư vấn giày/túi để hoàn chỉnh outfit.",
+            "Không cần kiểm tra size/form",
+            "Không cần hướng dẫn bảo quản",
+            "Không cần lưu ý khi thử đồ"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "updated_by": 1,
+      "updated_at": "2026-08-04T05:40:55.324Z",
+      "created_by": 1,
+      "created_at": "2026-08-04T05:40:55.324Z",
+      "status": "active"
+    }
+  ],
   "product_training_attempts": [],
+  "product_training_reads": [],
   "weekly_reports": [],
   "daily_reports": [],
   "cdp_ojti": [],

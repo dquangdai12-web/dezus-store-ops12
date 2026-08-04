@@ -21,6 +21,8 @@ const state = {
   feedbackCollectionId: '',
   trainingStoreId: '',
   trainingQuiz: null,
+  trainingCombinedQuiz: null,
+  trainingStudyReady: {},
   cdpOjtiType: 'cdp',
   cdpOjtiPosition: 'all',
   cdpOjtiStoreId: '',
@@ -488,7 +490,7 @@ function navItems() {
     ['bonuses', 'Tiền thưởng', '₫', 'revenue'],
     ['orders', 'Order hàng', 'SKU', 'product'],
     ['product_feedback', 'Đánh giá SP', 'FB', 'product'],
-    ['product_training', 'Đào tạo SP', 'EDU', 'product'],
+    ['product_training', 'Học & Test SP', 'EDU', 'product'],
     ['cdp_ojti', 'CDP / OJTI', 'OJTI', 'work'],
     ['tasks', 'Công việc', '✓', 'work'],
     ['checklists', 'Checklist', '★', 'work'],
@@ -1157,7 +1159,9 @@ async function renderTasks() {
             <div class="field"><label>Từ ngày</label><input class="input" name="multi_start_date" type="date"></div>
             <div class="field"><label>Đến ngày</label><input class="input" name="multi_end_date" type="date"></div>
             <div class="field"><label>Hạn hoàn thành mỗi ngày</label><input class="input" name="multi_due_time" type="time" value="22:00"></div>
-            <div class="field"><label>Lặp lại</label><select name="multi_repeat_every_days"><option value="1">Mỗi ngày</option><option value="2">2 ngày/lần</option><option value="3">3 ngày/lần</option><option value="7">Mỗi tuần</option></select></div>
+            <div class="field"><label>Kiểu giao cố định</label><select name="multi_repeat_mode" class="taskRepeatMode"><option value="daily">Hàng ngày trong khoảng ngày</option><option value="weekly2">2 ngày / tuần</option><option value="weekly3">3 ngày / tuần</option><option value="custom_weekdays">Tự chọn thứ trong tuần</option><option value="every_n_days">Lặp mỗi N ngày</option></select><span class="hint">Khoảng ngày là thời gian áp dụng; chọn thứ để hệ thống tự tạo đúng ngày.</span></div>
+            <div class="field taskEveryNDaysField"><label>N ngày/lần</label><select name="multi_repeat_every_days"><option value="1">1 ngày/lần</option><option value="2">2 ngày/lần</option><option value="3">3 ngày/lần</option><option value="7">7 ngày/lần</option></select></div>
+            <div class="field taskWeekdayField" style="grid-column:span 2"><label>Chọn thứ giao việc</label><div class="task-weekday-picker" id="multiWeekdays"><label><input type="checkbox" value="1"><span>T2</span></label><label><input type="checkbox" value="2"><span>T3</span></label><label><input type="checkbox" value="3"><span>T4</span></label><label><input type="checkbox" value="4"><span>T5</span></label><label><input type="checkbox" value="5"><span>T6</span></label><label><input type="checkbox" value="6"><span>T7</span></label><label><input type="checkbox" value="0"><span>CN</span></label></div><span class="hint taskWeekdayHint">VD 2 ngày/tuần: chọn T3 và T6. 3 ngày/tuần: chọn T2, T4, T6.</span></div>
             <div class="field" style="grid-column:span 2"><label>Nhân viên nhận việc</label>${taskUserPicker('multiAssigneeSelect', usersInStore(storeId), 'Tick tròn để chọn người nhận việc lặp lại.')}</div>
           </div>
         </div>
@@ -1167,8 +1171,10 @@ async function renderTasks() {
             <div class="field"><label>Từ ngày</label><input class="input" name="shift_start_date" type="date"></div>
             <div class="field"><label>Đến ngày</label><input class="input" name="shift_end_date" type="date"></div>
             <div class="field"><label>Hạn hoàn thành mỗi ngày</label><input class="input" name="shift_due_time" type="time" value="22:00"></div>
-            <div class="field"><label>Lặp lại</label><select name="shift_repeat_every_days"><option value="1">Mỗi ngày</option><option value="2">2 ngày/lần</option><option value="3">3 ngày/lần</option><option value="7">Mỗi tuần</option></select></div>
-            <div class="field"><label>Chọn ca</label><select name="shift_ids" id="taskShiftSelect" multiple size="5">${shiftOptions}</select><span class="hint">Hệ thống tự lấy nhân viên đã được phân lịch ca đó.</span></div>
+            <div class="field"><label>Kiểu giao cố định</label><select name="shift_repeat_mode" class="taskRepeatMode"><option value="daily">Hàng ngày trong khoảng ngày</option><option value="weekly2">2 ngày / tuần</option><option value="weekly3">3 ngày / tuần</option><option value="custom_weekdays">Tự chọn thứ trong tuần</option><option value="every_n_days">Lặp mỗi N ngày</option></select><span class="hint">Khoảng ngày là thời gian áp dụng; chọn thứ để hệ thống tự tạo đúng ngày.</span></div>
+            <div class="field taskEveryNDaysField"><label>N ngày/lần</label><select name="shift_repeat_every_days"><option value="1">1 ngày/lần</option><option value="2">2 ngày/lần</option><option value="3">3 ngày/lần</option><option value="7">7 ngày/lần</option></select></div>
+            <div class="field taskWeekdayField"><label>Chọn thứ giao việc</label><div class="task-weekday-picker" id="shiftWeekdays"><label><input type="checkbox" value="1"><span>T2</span></label><label><input type="checkbox" value="2"><span>T3</span></label><label><input type="checkbox" value="3"><span>T4</span></label><label><input type="checkbox" value="4"><span>T5</span></label><label><input type="checkbox" value="5"><span>T6</span></label><label><input type="checkbox" value="6"><span>T7</span></label><label><input type="checkbox" value="0"><span>CN</span></label></div><span class="hint taskWeekdayHint">Chỉ tạo việc vào các thứ được chọn và lấy nhân viên đúng ca ngày đó.</span></div>
+            <div class="field"><label>Chọn ca</label><select name="shift_ids" id="taskShiftSelect" multiple size="5">${shiftOptions}</select><span class="hint">Hệ thống tự lấy nhân viên đã được phân lịch ca đó. Nếu đổi ca trong tương lai, công việc theo ca sẽ tự chuyển sang đúng người mới; ngày quá khứ giữ nguyên.</span></div>
             <div class="field"><label>Thêm nhân viên thủ công nếu cần</label>${taskUserPicker('shiftAssigneeSelect', usersInStore(storeId), 'Có thể để trống nếu chỉ giao theo ca.')}</div>
           </div>
         </div>
@@ -1177,8 +1183,13 @@ async function renderTasks() {
         <div class="task-submit-row"><button class="btn">Tạo & giao việc</button></div>
       </form>
     </div>` : '';
-  const grouped = tasks.map(t => taskCard(t)).join('') || '<div class="empty">Chưa có công việc</div>';
-  shell(`${assignForm}<div class="card" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">Danh sách công việc</h3>${can('can_export') ? '<button class="btn secondary" data-export="tasks">Tải CSV</button>' : ''}</div><div class="grid">${grouped}</div></div>`, 'Công việc', 'Giao việc 1 lần, giao nhiều ngày, giao theo ca hoặc nhiều nhân viên cùng lúc');
+  const todayKey = new Date().toISOString().slice(0, 10);
+  const taskDayKey = (t) => String(t.task_date || (t.due_at || '').slice(0, 10) || '');
+  const todayTasks = tasks.filter(t => taskDayKey(t) === todayKey || String(t.due_at || '').slice(0, 10) === todayKey);
+  const otherTasks = tasks.filter(t => !todayTasks.some(x => Number(x.assignment_id) === Number(t.assignment_id)));
+  const todayBlock = todayTasks.length ? `<div class="card task-today-wrap" style="margin-top:16px"><div class="toolbar"><div><p class="eyebrow">Hạn hôm nay / việc trong ngày</p><h3>${todayTasks.length} công việc cần nhìn ngay hôm nay</h3><p class="hint">Ưu tiên hiển thị các việc có ngày việc hoặc hạn hoàn thành trong hôm nay.</p></div></div><div class="grid">${todayTasks.map(t => taskCard(t)).join('')}</div></div>` : '';
+  const grouped = otherTasks.map(t => taskCard(t)).join('') || '<div class="empty">Không còn công việc khác</div>';
+  shell(`${assignForm}${todayBlock}<div class="card" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">Danh sách công việc theo ngày gần nhất</h3>${can('can_export') ? '<button class="btn secondary" data-export="tasks">Tải CSV</button>' : ''}</div><p class="hint">Hệ thống tự đưa công việc hôm nay lên đầu, sau đó tới các ngày gần nhất sắp tới. Việc theo ca sẽ tự cập nhật theo lịch ca tương lai khi đổi ca.</p><div class="grid">${grouped}</div></div>`, 'Công việc', 'Giao việc 1 lần, giao nhiều ngày, giao theo ca hoặc nhiều nhân viên cùng lúc');
   function refreshTaskAssignees(storeValue) {
     const users = usersInStore(storeValue);
     const renderOptions = () => users.map(u => `<label class="task-user-option"><input type="checkbox" value="${u.id}"><span class="task-user-dot" aria-hidden="true"></span><span class="task-user-info"><b>${esc(u.full_name)}</b><small>${esc(u.store_name || '')}</small></span></label>`).join('') || '<div class="empty compact">Chưa có nhân viên trong cửa hàng này</div>';
@@ -1194,15 +1205,38 @@ async function renderTasks() {
   $('#taskStore')?.addEventListener('change', e => refreshTaskAssignees(e.target.value));
   $$('.taskModeBtn').forEach(btn => btn.addEventListener('click', () => setTaskMode(btn.dataset.mode)));
   setTaskMode($('#taskMode')?.value || 'single');
+  function selectedWeekdaysFrom(id) {
+    const box = $('#' + id);
+    return box ? $$('input[type="checkbox"]:checked', box).map(o => Number(o.value)).filter(v => Number.isFinite(v)) : [];
+  }
+  function updateTaskRepeatUi() {
+    $$('.task-mode-panel').forEach(panel => {
+      const modeSelect = $('.taskRepeatMode', panel);
+      if (!modeSelect) return;
+      const value = modeSelect.value;
+      const weekdayField = $('.taskWeekdayField', panel);
+      const everyField = $('.taskEveryNDaysField', panel);
+      if (weekdayField) weekdayField.style.display = ['weekly2','weekly3','custom_weekdays'].includes(value) ? '' : 'none';
+      if (everyField) everyField.style.display = value === 'every_n_days' ? '' : 'none';
+    });
+  }
+  $$('.taskRepeatMode').forEach(sel => sel.addEventListener('change', updateTaskRepeatUi));
+  updateTaskRepeatUi();
   $('#taskForm')?.addEventListener('submit', submitTask);
   $$('.completeForm').forEach(f => f.addEventListener('submit', submitCompleteTask));
 }
 
 function taskCard(t) {
   const canComplete = (Number(t.assignee_id) === Number(state.user.id) || state.user.role !== 'employee') && !t.completed_at;
-  return `<div class="card task-card">
+  const todayKey = new Date().toISOString().slice(0, 10);
+  const dueDay = String(t.due_at || '').slice(0, 10);
+  const workDay = String(t.task_date || dueDay || '');
+  const isToday = dueDay === todayKey || workDay === todayKey || Number(t.is_today || 0) === 1;
+  const todayBadges = isToday ? `<span class="badge warning">${dueDay === todayKey ? 'Hạn hôm nay' : 'Việc hôm nay'}</span>` : '';
+  const shiftSyncBadge = t.shift_ids && t.shift_ids.length ? '<span class="badge dark">Theo ca tự cập nhật</span>' : '';
+  return `<div class="card task-card ${isToday ? 'task-card-today' : ''}">
     <div class="task-head">
-      <div><h4>${esc(t.title)}</h4><div class="meta"><span>${esc(t.store_name || '')}</span>${t.task_date ? `<span>Ngày việc: ${dOnly(t.task_date)}</span>` : ''}${t.shift_label ? `<span>Ca: ${esc(t.shift_label)}</span>` : ''}${t.recurrence_label ? `<span>${esc(t.recurrence_label)}</span>` : ''}<span>Giao cho: ${esc(t.assignee_name)}</span><span>Hạn: ${dt(t.due_at)}</span><span>Điểm trừ: ${t.score_value}</span></div></div>
+      <div><div class="task-badge-row">${todayBadges}${shiftSyncBadge}</div><h4>${esc(t.title)}</h4><div class="meta"><span>${esc(t.store_name || '')}</span>${t.task_date ? `<span>Ngày việc: ${dOnly(t.task_date)}</span>` : ''}${t.shift_label ? `<span>Ca: ${esc(t.shift_label)}</span>` : ''}${t.recurrence_label ? `<span>${esc(t.recurrence_label)}</span>` : ''}<span>Giao cho: ${esc(t.assignee_name)}</span><span>Hạn: ${dt(t.due_at)}</span><span>Điểm trừ: ${t.score_value}</span></div></div>
       ${statusBadge(t.status)}
     </div>
     ${t.description ? `<p>${esc(t.description)}</p>` : ''}
@@ -1235,7 +1269,9 @@ async function submitTask(e) {
     payload.start_date = payload.multi_start_date;
     payload.end_date = payload.multi_end_date;
     payload.due_time = payload.multi_due_time || '22:00';
+    payload.repeat_mode = payload.multi_repeat_mode || 'daily';
     payload.repeat_every_days = payload.multi_repeat_every_days || '1';
+    payload.weekdays = ['weekly2','weekly3','custom_weekdays'].includes(payload.repeat_mode) ? selectedWeekdaysFrom('multiWeekdays') : [];
     delete payload.due_at;
   } else if (mode === 'shift') {
     payload.assignee_ids = selectedFrom('shiftAssigneeSelect');
@@ -1243,11 +1279,18 @@ async function submitTask(e) {
     payload.start_date = payload.shift_start_date;
     payload.end_date = payload.shift_end_date;
     payload.due_time = payload.shift_due_time || '22:00';
+    payload.repeat_mode = payload.shift_repeat_mode || 'daily';
     payload.repeat_every_days = payload.shift_repeat_every_days || '1';
+    payload.weekdays = ['weekly2','weekly3','custom_weekdays'].includes(payload.repeat_mode) ? selectedWeekdaysFrom('shiftWeekdays') : [];
     delete payload.due_at;
   }
 
-  ['task_mode','multi_start_date','multi_end_date','multi_due_time','multi_repeat_every_days','shift_start_date','shift_end_date','shift_due_time','shift_repeat_every_days'].forEach(k => delete payload[k]);
+  ['task_mode','multi_start_date','multi_end_date','multi_due_time','multi_repeat_mode','multi_repeat_every_days','shift_start_date','shift_end_date','shift_due_time','shift_repeat_mode','shift_repeat_every_days'].forEach(k => delete payload[k]);
+
+
+  if (payload.repeat_mode === 'weekly2' && (!payload.weekdays || payload.weekdays.length !== 2)) return toast('Vui lòng chọn đúng 2 thứ trong tuần', 'danger');
+  if (payload.repeat_mode === 'weekly3' && (!payload.weekdays || payload.weekdays.length !== 3)) return toast('Vui lòng chọn đúng 3 thứ trong tuần', 'danger');
+  if (payload.repeat_mode === 'custom_weekdays' && (!payload.weekdays || !payload.weekdays.length)) return toast('Vui lòng chọn ít nhất 1 thứ trong tuần', 'danger');
 
   try {
     const res = await api('/api/tasks', { method: 'POST', body: JSON.stringify(payload) });
@@ -1767,7 +1810,7 @@ async function renderProductFeedback() {
     <div class="field" style="grid-column:1/-1"><label>Ghi chú BST</label><input class="input" name="description" placeholder="VD: hàng đi lần 1, hàng test chất liệu, nhóm sản phẩm cần feedback kỹ..."></div>
     <div style="grid-column:1/-1"><button class="btn">Lưu BST/List sản phẩm</button></div>
   </form></div>` : '';
-  const form = can('can_manage_product_feedback') ? `<div class="card"><h3>Nhập đánh giá sản phẩm hằng ngày</h3><p class="hint">Chọn tháng + BST/List do admin set, sau đó cửa hàng đánh giá sản phẩm trong danh sách đó.</p>${collections.length ? `<form id="productFeedbackForm" class="grid three">
+  const form = can('can_manage_product_feedback') ? `<div class="card"><h3>Nhập đánh giá sản phẩm hằng ngày</h3><p class="hint">Sản phẩm đã tạo trong Học & Test SP sẽ tự đẩy sang danh mục đánh giá, cửa hàng không cần set lại thủ công.</p>${collections.length ? `<form id="productFeedbackForm" class="grid three">
     ${storeField}
     <div class="field"><label>Tháng BST</label><input class="input" type="month" id="feedbackMonthPicker" value="${esc(month)}"></div>
     <div class="field"><label>BST/List sản phẩm</label><select class="input" id="feedbackCollectionFilter" name="collection_id" required>${collectionOptions}</select></div>
@@ -1782,10 +1825,10 @@ async function renderProductFeedback() {
     <div style="grid-column:1/-1"><button class="btn">Lưu đánh giá sản phẩm</button></div>
   </form>` : `<div class="empty">Chưa có BST/List sản phẩm trong tháng này. Admin cần set BST 8.1 / 8.2 trước, sau đó cửa hàng mới đánh giá được.</div>`}</div>` : '';
   const filter = `<div class="toolbar feedback-filter"><div class="field"><label>Tháng</label><input class="input" type="month" id="feedbackMonthFilter" value="${esc(month)}"></div>${allScope ? `<div class="field"><label>Lọc cửa hàng</label><select class="input" id="feedbackStoreFilter2">${storeOptions}</select></div>` : ''}<div class="field"><label>Lọc BST/List</label><select class="input" id="feedbackCollectionFilter2"><option value="">Tất cả BST/List</option>${collectionOptions}</select></div>${can('can_export') ? '<button class="btn secondary" data-export="product_feedback_summary">Tải CSV tổng hợp SP</button><button class="btn secondary" data-export="product_feedback">Tải CSV chi tiết</button><button class="btn secondary" data-export="product_collections">Tải list BST</button>' : ''}</div>`;
-  const collectionCards = collections.length ? `<div class="collection-grid">${collections.map(c => `<div class="collection-card ${Number(c.id) === Number(state.feedbackCollectionId) ? 'active' : ''}"><div class="collection-card-head"><div><span class="badge dark">${esc(c.collection_month || '')}</span><h4>${esc(c.name || '')}</h4><p class="hint">${esc(c.store_name || 'Toàn hệ thống')} • ${Number(c.items?.length || 0)} sản phẩm</p></div>${can('can_manage_product_collections') ? `<button class="btn small danger collectionDeleteBtn" data-id="${c.id}">Xóa</button>` : ''}</div><div class="collection-products">${(c.items || []).slice(0, 8).map(i => `<span>${esc(i.sku || '')}${i.sku ? ' - ' : ''}${esc(i.product_name || '')}</span>`).join('')}${(c.items || []).length > 8 ? `<span>+${(c.items || []).length - 8} SP khác</span>` : ''}</div></div>`).join('')}</div>` : '<div class="empty">Chưa có BST/List sản phẩm theo tháng đang chọn</div>';
+  const collectionCards = collections.length ? `<div class="collection-grid">${collections.map(c => `<div class="collection-card ${Number(c.id) === Number(state.feedbackCollectionId) ? 'active' : ''}"><div class="collection-card-head"><div><span class="badge dark">${esc(c.collection_month || '')}</span>${c.auto_source === 'product_training' ? '<span class="badge ok">Tự động từ bài học</span>' : ''}<h4>${esc(c.name || '')}</h4><p class="hint">${esc(c.store_name || 'Toàn hệ thống')} • ${Number(c.items?.length || 0)} sản phẩm</p></div>${can('can_manage_product_collections') ? `<button class="btn small danger collectionDeleteBtn" data-id="${c.id}">Xóa</button>` : ''}</div><div class="collection-products">${(c.items || []).slice(0, 8).map(i => `<span>${esc(i.sku || '')}${i.sku ? ' - ' : ''}${esc(i.product_name || '')}</span>`).join('')}${(c.items || []).length > 8 ? `<span>+${(c.items || []).length - 8} SP khác</span>` : ''}</div></div>`).join('')}</div>` : '<div class="empty">Chưa có BST/List sản phẩm theo tháng đang chọn</div>';
   const summaryRows = summaryData.length ? `<div class="table-wrap"><table><thead><tr><th>BST/List</th><th>SKU</th><th>Tên SP</th><th>Số lần đánh giá</th><th>Tái SP</th><th>Kiểu dáng</th><th>Chất liệu</th><th>Lỗi SP</th><th>Ý kiến khách</th><th>Cửa hàng</th></tr></thead><tbody>${summaryData.map(r => `<tr><td>${esc(r.collection_name || '')}</td><td><b>${esc(r.sku || '')}</b></td><td>${esc(r.product_name || '')}</td><td><span class="badge dark">${Number(r.count || 0)} lần</span></td><td><span class="badge ${r.recommend_label === 'Đề xuất tái' ? 'ok' : r.recommend_label === 'Không tái' ? 'danger' : 'warn'}">${esc(r.recommend_label || '')}</span><div class="hint">Tái: ${Number(r.restock_yes || 0)} • Không: ${Number(r.restock_no || 0)} • Theo dõi: ${Number(r.restock_watch || 0)}</div></td><td>${esc(r.style_notes || '')}</td><td>${esc(r.material_notes || '')}</td><td>${esc(r.error_notes || '')}</td><td>${esc(r.customer_notes || '')}</td><td>${esc(r.stores || '')}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Chưa có dữ liệu tổng hợp theo sản phẩm</div>';
   const detailRows = rowsData.length ? `<div class="table-wrap"><table><thead><tr><th>Ngày</th><th>BST/List</th><th>Cửa hàng</th><th>SKU</th><th>Tên SP</th><th>Kiểu dáng</th><th>Chất liệu</th><th>Lỗi SP</th><th>Đánh giá khách</th><th>Tái SP</th><th>Ghi chú</th><th>Người nhập</th><th>Thao tác</th></tr></thead><tbody>${rowsData.map(r => `<tr><td>${dOnly(r.feedback_date)}</td><td>${esc(r.collection_name || '')}</td><td>${esc(r.store_name || '')}</td><td><b>${esc(r.sku || '')}</b></td><td>${esc(r.product_name || '')}</td><td>${esc(r.style_feedback || '')}</td><td>${esc(r.material_feedback || '')}</td><td>${esc(r.product_errors || '')}</td><td>${esc(r.customer_feedback || '')}</td><td><span class="badge ${r.restock_wish === 'Đề xuất tái' ? 'ok' : r.restock_wish === 'Không tái' ? 'danger' : 'warn'}">${esc(r.restock_wish || '')}</span></td><td>${esc(r.note || '')}</td><td>${esc(r.created_by_name || '')}</td><td>${can('can_manage_product_feedback') ? `<button class="btn small danger feedbackDeleteBtn" data-id="${r.id}">Xóa</button>` : ''}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Chưa có đánh giá sản phẩm hằng ngày</div>';
-  shell(`${collectionManager}${form}<div class="card" style="margin-top:16px"><div class="section-title"><h3>BST/List sản phẩm đang áp dụng</h3></div>${filter}${collectionCards}</div><div class="card" style="margin-top:16px"><h3>Tổng hợp đánh giá theo tên sản phẩm</h3><p class="hint">Dữ liệu hằng ngày của cửa hàng sẽ được gom lại theo SKU/Tên SP để PKD xem nhanh sản phẩm nào nên tái, không tái hoặc cần theo dõi thêm.</p>${summaryRows}</div><div class="card" style="margin-top:16px"><h3>Chi tiết đánh giá hằng ngày</h3>${detailRows}</div>`, 'Đánh giá sản phẩm', 'Cửa hàng đánh giá theo BST/List do admin set, hệ thống tự tổng hợp theo sản phẩm');
+  shell(`${collectionManager}${form}<div class="card" style="margin-top:16px"><div class="section-title"><h3>Danh mục đánh giá đang áp dụng</h3></div>${filter}${collectionCards}</div><div class="card" style="margin-top:16px"><h3>Tổng hợp đánh giá theo tên sản phẩm</h3><p class="hint">Dữ liệu hằng ngày của cửa hàng sẽ được gom lại theo SKU/Tên SP để PKD xem nhanh sản phẩm nào nên tái, không tái hoặc cần theo dõi thêm.</p>${summaryRows}</div><div class="card" style="margin-top:16px"><h3>Chi tiết đánh giá hằng ngày</h3>${detailRows}</div>`, 'Đánh giá sản phẩm', 'Cửa hàng đánh giá theo BST/List do admin set, hệ thống tự tổng hợp theo sản phẩm');
   $('#feedbackStoreFilter')?.addEventListener('change', e => { state.feedbackStoreId = e.target.value; state.feedbackCollectionId = ''; renderProductFeedback(); });
   $('#feedbackStoreFilter2')?.addEventListener('change', e => { state.feedbackStoreId = e.target.value; state.feedbackCollectionId = ''; renderProductFeedback(); });
   $('#feedbackMonthPicker')?.addEventListener('change', e => { state.feedbackMonth = e.target.value; state.feedbackCollectionId = ''; renderProductFeedback(); });
@@ -1835,10 +1878,16 @@ async function renderProductTraining() {
   const rowsData = data.trainings || [];
   const storeOptions = `<option value="">Toàn hệ thống</option>${state.boot.stores.map(s => `<option value="${s.id}" ${Number(s.id) === Number(defaultStoreId) ? 'selected' : ''}>${esc(s.name)}</option>`).join('')}`;
   const quizHelp = `Mỗi dòng 1 câu theo mẫu: Câu hỏi | Đáp án A | Đáp án B | Đáp án C | Đáp án D | A. Ví dụ: Chất liệu chính là gì? | Cotton | Linen | Denim | Kate | A`;
-  const form = can('can_manage_product_training') ? `<div class="card"><h3>Nhập đào tạo sản phẩm + bài kiểm tra</h3><p class="hint">Admin nhập thông tin sản phẩm, set yêu cầu học cho toàn hệ thống/cửa hàng, đặt hạn học và bài kiểm tra trắc nghiệm. Nhân viên đạt từ 90% trở lên mới tính là đạt.</p><form id="productTrainingForm" class="grid three">
+  const quickPaste = can('can_manage_product_training') ? `<div class="training-quick-fill"><div class="toolbar"><div><h3>Điền nhanh từ file training BST</h3><p class="hint">Copy bảng từ Excel/Google Sheets rồi dán vào đây. Hệ thống tự gom theo TÊN SẢN PHẨM, không lấy SKU làm khóa; nhiều màu/mã cùng tên chỉ giữ 1 bài học + 1 bài test. Cột “Link ảnh sản phẩm” sẽ tự đổ vào đúng ô ảnh và hiển thị trực tiếp trên web.</p></div></div><textarea class="input" id="trainingQuickPaste" rows="5" placeholder="Dán bảng training ở đây. Dòng đầu nên là tiêu đề cột."></textarea><div class="toolbar"><button class="btn secondary" type="button" id="trainingFillFirstBtn">Đổ sản phẩm đầu vào form</button><button class="btn" type="button" id="trainingSaveAllBtn">Lưu nhanh sau khi gom màu</button><button class="btn secondary" type="button" id="trainingTemplateBtn">Tải mẫu copy</button><span class="hint" id="trainingQuickHint"></span></div></div>` : '';
+  const adminTrainingGuide = can('can_manage_product_training') ? `<div class="card training-flow-guide training-flow-guide-soft"><h3>Luồng học mới cho nhân viên</h3><div class="training-flow-steps"><div><b>1. Học theo từng sản phẩm</b><p>Nhân viên xem ảnh, màu hiện có, chất liệu, form và cách tư vấn trong từng thẻ bài học.</p></div><div><b>2. Xác nhận đã học</b><p>Mỗi bài học chỉ cần bấm Đã học xong. Không làm test ngay trong thẻ sản phẩm.</p></div><div><b>3. Làm bài test tổng</b><p>Sau khi học xong toàn bộ bài đang áp dụng, nhân viên làm 1 bài test tổng chung.</p></div></div></div>` : '';
+  const employeeTrainingGuide = !can('can_manage_product_training') ? `<div class="card training-student-hero"><div><p class="eyebrow">Học sản phẩm mới</p><h3>Học hết bài trước, test tổng sau</h3><p class="hint">Mở từng sản phẩm để xem ảnh và nội dung cần nhớ. Sau khi đã bấm Đã học xong cho toàn bộ bài học, nút Làm bài test tổng sẽ mở.</p></div></div>` : '';
+  const form = can('can_manage_product_training') ? `<div class="card"><h3>Nhập đào tạo sản phẩm + bài test tổng</h3><p class="hint">Admin nhập bài học trước. Nhân viên sẽ học từng sản phẩm, sau đó làm 1 bài test tổng chung cho toàn bộ bài học đang áp dụng.</p>${quickPaste}<form id="productTrainingForm" class="grid three">
     <div class="field"><label>Áp dụng cho</label><select class="input" name="store_id">${storeOptions}</select></div>
-    <div class="field"><label>SKU</label><input class="input" name="sku" placeholder="SKU sản phẩm"></div>
+    <div class="field"><label>SKU / Mã cha tham khảo</label><input class="input" name="sku" placeholder="Mã tham khảo nếu có"></div>
     <div class="field"><label>Tên SP</label><input class="input" name="product_name" placeholder="Tên sản phẩm" required></div>
+    <div class="field"><label>Màu hiện có</label><input class="input" name="color_options" placeholder="VD: ĐEN, BE, GHI"></div>
+    <div class="field"><label>Link ảnh sản phẩm</label><input class="input" name="image_url" placeholder="Dán link ảnh trực tiếp hoặc link Google Drive có quyền xem"><input class="input training-image-file" type="file" name="image_file" accept="image/*"><div class="hint">Upload ảnh trực tiếp hoặc dán link Drive có quyền xem để hiện trong bài học.</div><div id="trainingImagePreview" class="training-image-preview"></div></div>
+    <div class="field"><label>Link sản phẩm</label><input class="input" name="product_url" placeholder="Dán link sản phẩm trên web/sàn nếu có"><div class="hint">Nhân viên có thể bấm mở link sản phẩm để xem thêm.</div></div>
     <div class="field"><label>Dự kiến hàng về</label><input class="input" type="date" name="arrival_date"></div>
     <div class="field"><label>Trạng thái</label><select class="input" name="status_label"><option value="Sắp về">Sắp về</option><option value="Đang bán">Đang bán</option><option value="Tạm ngưng">Tạm ngưng</option></select></div>
     <div class="field"><label>Yêu cầu học</label><select class="input" name="is_required"><option value="1">Bắt buộc học</option><option value="0">Không bắt buộc</option></select></div>
@@ -1850,62 +1899,478 @@ async function renderProductTraining() {
     <div class="field"><label>Cách tư vấn / bảo quản</label><textarea class="input" name="care_instruction" placeholder="Cách phối, cách giặt/ủi, lưu ý khi bảo quản"></textarea></div>
     <div class="field"><label>Lỗi / điểm cần lưu ý</label><textarea class="input" name="common_errors" placeholder="VD: dễ nhăn, cần thử size, cần kiểm tra khóa..."></textarea></div>
     <div class="field"><label>Ghi chú đào tạo</label><textarea class="input" name="training_note" placeholder="Thông tin thêm cho cửa hàng"></textarea></div>
-    <div class="field" style="grid-column:1/-1"><label>Bài kiểm tra trắc nghiệm</label><textarea class="input" name="quiz_text" rows="5" placeholder="${esc(quizHelp)}"></textarea><p class="hint">${esc(quizHelp)}</p></div>
-    <div style="grid-column:1/-1"><button class="btn">Lưu bài đào tạo</button></div>
+    <div class="field" style="grid-column:1/-1"><label>Câu hỏi cho bài test tổng</label><textarea class="input" name="quiz_text" rows="5" placeholder="${esc(quizHelp)}"></textarea><p class="hint">${esc(quizHelp)}. Các câu hỏi của từng sản phẩm sẽ được gom vào 1 bài test tổng cho nhân viên.</p></div>
+    <div class="toolbar" style="grid-column:1/-1"><button class="btn" id="trainingFormSaveBtn">Lưu bài đào tạo</button><button class="btn secondary" id="trainingFormCancelBtn" type="button" style="display:none">Hủy sửa</button><span class="hint" id="trainingEditHint"></span></div>
   </form></div>` : '';
   const filter = allScope ? `<div class="field"><label>Lọc phạm vi</label><select class="input" id="trainingStoreFilter">${storeOptions}</select></div>` : '';
-  const quizBlock = (r) => {
-    if (!state.trainingQuiz || Number(state.trainingQuiz.id) !== Number(r.id)) return '';
-    const qz = state.trainingQuiz;
-    if (!qz.questions || !qz.questions.length) return `<div class="quiz-box"><div class="empty">Bài này chưa có câu hỏi kiểm tra</div></div>`;
-    const qs = qz.questions.map((q, idx) => `<div class="quiz-question"><b>Câu ${idx + 1}. ${esc(q.question)}</b>${(q.options || []).map((op, oi) => `<label class="quiz-option"><input type="radio" name="q_${idx}" value="${oi}" required> ${String.fromCharCode(65 + oi)}. ${esc(op)}</label>`).join('')}</div>`).join('');
-    return `<form class="quiz-box" id="trainingQuizForm" data-id="${r.id}"><div class="toolbar"><h3 style="margin-right:auto">Bài kiểm tra</h3><span class="badge dark">Đạt từ ${Number(qz.training?.pass_percent || r.pass_percent || 90)}%</span></div>${qs}<button class="btn">Nộp bài</button></form>`;
+  const combinedQuizBlock = () => {
+    const qz = state.trainingCombinedQuiz;
+    if (!qz) return '';
+    if (qz.loading) return `<div class="training-combined-quiz card"><div class="empty">Đang tải bài test tổng...</div></div>`;
+    if (qz.error) return `<div class="training-combined-quiz card"><div class="empty">${esc(qz.error)}</div><button class="btn secondary" id="trainingCloseCombinedBtn" type="button">Đóng</button></div>`;
+    const questions = qz.questions || [];
+    if (!questions.length) return `<div class="training-combined-quiz card"><div class="empty">Chưa có câu hỏi test cho các bài học đang áp dụng.</div><button class="btn secondary" id="trainingCloseCombinedBtn" type="button">Đóng</button></div>`;
+    let currentProduct = '';
+    const qs = questions.map((q, idx) => {
+      const productHeader = currentProduct !== q.product_name ? (currentProduct = q.product_name, `<div class="training-test-product-title">${esc(q.product_name || 'Sản phẩm')}</div>`) : '';
+      return `${productHeader}<div class="quiz-question training-total-question"><b>Câu ${idx + 1}. ${esc(q.question)}</b>${(q.options || []).map((op, oi) => `<label class="quiz-option"><input type="radio" name="q_${idx}" value="${oi}" required> ${String.fromCharCode(65 + oi)}. ${esc(op)}</label>`).join('')}</div>`;
+    }).join('');
+    return `<form class="training-combined-quiz card" id="trainingCombinedQuizForm"><div class="toolbar training-combined-head"><div><p class="eyebrow">Bài test tổng</p><h3>${questions.length} câu • ${qz.trainingCount || 0} sản phẩm</h3><p class="hint">Bài test này gom câu hỏi từ toàn bộ bài học đã học. Không làm test riêng trong từng thẻ sản phẩm.</p></div><button class="btn secondary" id="trainingCloseCombinedBtn" type="button">Đóng test</button></div>${qs}<button class="btn training-submit-total">Nộp bài test tổng</button></form>`;
   };
   const progressBadge = (r) => {
     const p = r.progress || {};
     if (p.passed) return `<span class="badge ok">Đã đạt ${Number(p.best_score || 0).toFixed(2)}%</span>`;
     if (p.attempts_count) return `<span class="badge danger">Chưa đạt • cao nhất ${Number(p.best_score || 0).toFixed(2)}%</span>`;
-    return `<span class="badge warning">Chưa làm bài</span>`;
+    if (p.learned) return `<span class="badge ok">Đã học xong</span>`;
+    return `<span class="badge warning">Chưa học</span>`;
+  };
+  const trainingRawImageUrl = (value) => {
+    const raw = String(value || '').trim();
+    if (!raw) return '';
+    const match = raw.match(/IMAGE\(\s*["']([^"']+)["']/i);
+    return String(match ? match[1] : raw).trim();
+  };
+  const trainingDriveId = (url) => {
+    const raw = String(url || '').trim();
+    let m = raw.match(/drive\.google\.com\/file\/d\/([^/?#]+)/i);
+    if (m) return m[1];
+    m = raw.match(/[?&]id=([^&#]+)/i);
+    if (/drive\.google\.com|docs\.google\.com/i.test(raw) && m) return m[1];
+    m = raw.match(/drive\.google\.com\/thumbnail\?id=([^&#]+)/i);
+    if (m) return m[1];
+    return '';
+  };
+  const trainingImageCandidatesForView = (value) => {
+    const url = trainingRawImageUrl(value);
+    if (!url) return [];
+    if (/^\/uploads\//i.test(url)) return [url];
+    if (!/^https?:\/\//i.test(url)) return [];
+    const id = trainingDriveId(url);
+    if (id) return [`https://drive.google.com/thumbnail?id=${encodeURIComponent(id)}&sz=w1200`, `https://drive.google.com/uc?export=view&id=${encodeURIComponent(id)}`, `https://lh3.googleusercontent.com/d/${encodeURIComponent(id)}=w1200`, url];
+    return [url];
+  };
+  const trainingOpenImageUrl = (value) => {
+    const url = trainingRawImageUrl(value);
+    const id = trainingDriveId(url);
+    if (id) return `https://drive.google.com/file/d/${encodeURIComponent(id)}/view`;
+    return /^https?:\/\//i.test(url) ? url : '';
   };
   const assigneeTable = (r) => (can('can_manage_product_training') && Number(r.is_required || 0) === 1 && r.assignees && r.assignees.length)
-    ? `<details class="training-progress"><summary>Tiến độ học (${r.assignees.filter(a => a.passed).length}/${r.assignees.length} đạt)</summary><div class="table-wrap"><table><thead><tr><th>Nhân viên</th><th>Cửa hàng</th><th>Điểm cao nhất</th><th>Trạng thái</th><th>Lần làm</th></tr></thead><tbody>${r.assignees.map(a => `<tr><td>${esc(a.full_name)}</td><td>${esc(a.store_name)}</td><td>${Number(a.best_score || 0).toFixed(2)}%</td><td>${a.passed ? '<span class="badge ok">Đạt</span>' : '<span class="badge danger">Chưa đạt</span>'}</td><td>${Number(a.attempts_count || 0)}</td></tr>`).join('')}</tbody></table></div></details>` : '';
-  const rows = rowsData.length ? rowsData.map(r => {
+    ? `<details class="training-progress"><summary>Tiến độ học (${r.assignees.filter(a => a.passed).length}/${r.assignees.length} đạt • ${r.assignees.filter(a => a.learned).length}/${r.assignees.length} đã học)</summary><div class="table-wrap"><table><thead><tr><th>Nhân viên</th><th>Cửa hàng</th><th>Đã học</th><th>Điểm cao nhất</th><th>Trạng thái test</th><th>Lần làm</th></tr></thead><tbody>${r.assignees.map(a => `<tr><td>${esc(a.full_name)}</td><td>${esc(a.store_name)}</td><td>${a.learned ? '<span class="badge ok">Đã học</span>' : '<span class="badge warning">Chưa học</span>'}</td><td>${Number(a.best_score || 0).toFixed(2)}%</td><td>${a.passed ? '<span class="badge ok">Đạt</span>' : '<span class="badge danger">Chưa đạt</span>'}</td><td>${Number(a.attempts_count || 0)}</td></tr>`).join('')}</tbody></table></div></details>` : '';
+  const canStudentAction = (Number(state.user?.permissions?.can_view_product_training || 0) === 1 || Number(state.user?.permissions?.can_manage_product_training || 0) === 1) && ['employee','manager'].includes(state.user.role);
+  const visibleLessons = rowsData;
+  const learnedLessons = visibleLessons.filter(r => r.progress && r.progress.learned);
+  const passedLessons = visibleLessons.filter(r => r.progress && r.progress.passed);
+  const pendingLessons = visibleLessons.filter(r => !(r.progress && r.progress.learned));
+  const testableLessons = visibleLessons.filter(r => Number(r.quiz_question_count || 0) > 0);
+  const canStartTotalTest = canStudentAction && visibleLessons.length > 0 && pendingLessons.length === 0 && testableLessons.length > 0;
+  const trainingStats = canStudentAction ? `<div class="training-student-status card"><div><p class="eyebrow">Tiến độ học</p><h3>${learnedLessons.length}/${visibleLessons.length} bài đã học</h3><p class="hint">Học xong toàn bộ bài đang áp dụng mới mở bài test tổng.</p></div><div class="training-stat-pills"><span class="badge ${pendingLessons.length ? 'warning' : 'ok'}">${pendingLessons.length ? `Còn ${pendingLessons.length} bài chưa học` : 'Đã học đủ'}</span><span class="badge ${passedLessons.length === visibleLessons.length && visibleLessons.length ? 'ok' : 'dark'}">${passedLessons.length}/${visibleLessons.length} bài đã đạt</span></div><button class="btn training-total-test-btn" id="trainingStartCombinedBtn" type="button" ${canStartTotalTest ? '' : 'disabled'}>${canStartTotalTest ? 'Làm bài test tổng' : 'Chưa mở bài test tổng'}</button></div>${combinedQuizBlock()}` : '';
+  const lessonSection = (title, body, icon = '') => {
+    const text = String(body || '').trim();
+    return text ? `<section class="training-lesson-section"><b>${icon ? `${icon} ` : ''}${esc(title)}</b><p>${esc(text)}</p></section>` : '';
+  };
+  const lessonImageHtml = (r, compact = false) => {
+    const imageCandidates = trainingImageCandidatesForView(r.image_url);
+    const openImage = trainingOpenImageUrl(r.image_url);
+    if (imageCandidates.length) return `<div class="${compact ? 'training-lesson-thumb' : 'training-product-image training-lesson-image'}"><img class="training-view-image" src="${esc(imageCandidates[0])}" data-fallbacks="${esc(JSON.stringify(imageCandidates.slice(1)))}" alt="${esc(r.product_name || '')}" loading="lazy"><div class="training-image-fallback">Không tải được ảnh trực tiếp.${openImage ? ` <a class="link" href="${esc(openImage)}" target="_blank" rel="noopener">Mở ảnh sản phẩm</a>` : ''}</div></div>`;
+    return `<div class="${compact ? 'training-lesson-thumb image-empty' : 'training-product-image training-lesson-image image-empty'}"><span>Chưa có ảnh</span></div>`;
+  };
+  const rows = rowsData.length ? rowsData.map((r, idx) => {
     const dueBad = r.due_at && new Date(r.due_at) < new Date() && !(r.progress && r.progress.passed);
-    return `<div class="training-card">
-      <div class="training-head"><div><span class="badge dark">${esc(r.status_label || 'Sắp về')}</span>${Number(r.is_required || 0) ? `<span class="badge ${dueBad ? 'danger' : 'warning'}">Bắt buộc học</span>` : ''}<h3>${esc(r.product_name || '')}</h3><p class="hint">${esc(r.sku || '')} • ${esc(r.store_name || 'Toàn hệ thống')} • Hàng về: ${r.arrival_date ? dOnly(r.arrival_date) : 'Chưa có ngày'}${r.due_at ? ` • Hạn học: ${dt(r.due_at)}` : ''}</p></div>${can('can_manage_product_training') ? `<button class="btn small danger trainingDeleteBtn" data-id="${r.id}">Xóa</button>` : ''}</div>
-      <div class="training-grid"><div><b>Chất liệu</b><p>${esc(r.material || '')}</p></div><div><b>Kiểu dáng / form</b><p>${esc(r.style_info || '')}</p></div><div><b>Điểm bán hàng</b><p>${esc(r.selling_points || '')}</p></div><div><b>Cách tư vấn / bảo quản</b><p>${esc(r.care_instruction || '')}</p></div><div><b>Lỗi cần lưu ý</b><p>${esc(r.common_errors || '')}</p></div><div><b>Ghi chú</b><p>${esc(r.training_note || '')}</p></div></div>
-      <div class="toolbar training-actions"><span class="badge">${Number(r.quiz_question_count || 0)} câu hỏi</span>${state.user.role === 'employee' || state.user.role === 'manager' ? progressBadge(r) : ''}${Number(r.quiz_question_count || 0) ? `<button class="btn small startQuizBtn" data-id="${r.id}">${(r.progress && r.progress.passed) ? 'Làm lại' : 'Làm bài kiểm tra'}</button>` : ''}</div>
-      ${quizBlock(r)}${assigneeTable(r)}
-    </div>`;
+    const quizCount = Number(r.quiz_question_count || 0);
+    const learned = !!(r.progress && r.progress.learned);
+    const passed = !!(r.progress && r.progress.passed);
+    const openAttr = (canStudentAction && !learned && idx < 2) ? ' open' : '';
+    const meta = `${r.color_options ? `Màu: ${esc(r.color_options)} • ` : ''}${esc(r.store_name || 'Toàn hệ thống')} • Hàng về: ${r.arrival_date ? dOnly(r.arrival_date) : 'Chưa có ngày'}${r.due_at ? ` • Hạn học: ${dt(r.due_at)}` : ''}`;
+    const studentAction = canStudentAction ? (learned ? `<span class="badge ok">Đã học xong</span>` : `<button class="btn small trainingReadyBtn" data-id="${r.id}" type="button">Đã học xong bài này</button>`) : '';
+    const editBtn = can('can_manage_product_training') ? `<button class="btn small secondary trainingEditBtn" data-id="${r.id}" type="button">Sửa</button>` : '';
+    const deleteBtn = can('can_manage_product_training') ? `<button class="btn small danger trainingDeleteBtn" data-id="${r.id}" type="button">Xóa</button>` : '';
+    return `<details class="training-lesson-card ${learned ? 'is-learned' : 'is-pending'}"${openAttr}>
+      <summary class="training-lesson-summary">
+        ${lessonImageHtml(r, true)}
+        <div class="training-lesson-main"><div class="training-lesson-badges"><span class="badge dark">${esc(r.status_label || 'Sắp về')}</span>${Number(r.is_required || 0) ? `<span class="badge ${dueBad ? 'danger' : 'warning'}">Bắt buộc học</span>` : ''}${passed ? '<span class="badge ok">Đã đạt test</span>' : (learned ? '<span class="badge ok">Đã học</span>' : '<span class="badge warning">Chưa học</span>')}</div><h3>${esc(r.product_name || '')}</h3><p class="hint">${meta}</p></div>
+        <div class="training-lesson-arrow">⌄</div>
+      </summary>
+      <div class="training-lesson-body">
+        ${lessonImageHtml(r)}
+        <div class="training-lesson-top-actions">${r.product_url ? `<a class="btn small secondary" href="${esc(r.product_url)}" target="_blank" rel="noopener">Mở link sản phẩm</a>` : ''}${editBtn}${deleteBtn}</div>
+        <div class="training-quick-facts"><span>${esc(r.sku || 'Chưa có mã tham khảo')}</span>${r.color_options ? `<span>${esc(r.color_options)}</span>` : ''}<span>${quizCount} câu trong test tổng</span></div>
+        <div class="training-lesson-sections">
+          ${lessonSection('Chất liệu', r.material, '01')}
+          ${lessonSection('Kiểu dáng / form', r.style_info, '02')}
+          ${lessonSection('Điểm bán hàng', r.selling_points, '03')}
+          ${lessonSection('Cách tư vấn / bảo quản', r.care_instruction, '04')}
+          ${lessonSection('Lỗi cần lưu ý', r.common_errors, '05')}
+          ${lessonSection('Ghi chú đào tạo', r.training_note, '06')}
+        </div>
+        <div class="toolbar training-actions"><span class="badge">${quizCount} câu test</span>${canStudentAction ? progressBadge(r) : ''}${studentAction}</div>
+        ${assigneeTable(r)}
+      </div>
+    </details>`;
   }).join('') : '<div class="empty">Chưa có bài đào tạo sản phẩm</div>';
   const exportBtns = can('can_export') ? '<button class="btn secondary" data-export="product_trainings">Tải CSV đào tạo SP</button><button class="btn secondary" data-export="product_training_attempts">Tải CSV kết quả kiểm tra</button>' : '';
-  shell(`${form}<div class="card" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">Thư viện đào tạo sản phẩm</h3>${filter}${exportBtns}</div>${rows}</div>`, 'Đào tạo sản phẩm', 'Admin set bài học, thời hạn và bài kiểm tra; nhân viên đạt 90% mới tính hoàn thành');
-  $('#trainingStoreFilter')?.addEventListener('change', e => { state.trainingStoreId = e.target.value; state.trainingQuiz = null; renderProductTraining(); });
-  $('#productTrainingForm')?.addEventListener('submit', async e => {
-    e.preventDefault();
-    const payload = Object.fromEntries(new FormData(e.target));
+  const listTitle = can('can_manage_product_training') ? 'Thư viện đào tạo sản phẩm' : 'Bài học sản phẩm cần học';
+  shell(`${adminTrainingGuide}${employeeTrainingGuide}${form}${trainingStats}<div class="card training-lesson-list-card" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">${listTitle}</h3>${filter}${exportBtns}</div>${rows}</div>`, 'Học & Test sản phẩm', 'Học từng bài trước, sau đó làm 1 bài test tổng chung cho toàn bộ bài học');
+  $$('.training-view-image').forEach(img => img.addEventListener('error', () => {
+    let fallbacks = [];
+    try { fallbacks = JSON.parse(img.dataset.fallbacks || '[]'); } catch (_err) { fallbacks = []; }
+    const next = fallbacks.shift();
+    if (next) {
+      img.dataset.fallbacks = JSON.stringify(fallbacks);
+      img.src = next;
+      return;
+    }
+    const box = img.closest('.training-product-image');
+    if (box) box.classList.add('image-error');
+    img.remove();
+  }));
+  const normalizeTrainingKey = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g,'d').replace(/[^a-z0-9]+/g,' ').trim();
+  const pickTrainingValue = (row, keys) => {
+    const entries = Object.keys(row || {}).map(k => [k, normalizeTrainingKey(k)]);
+    const wanted = (keys || []).map(normalizeTrainingKey);
+    // Ưu tiên khớp chính xác tiêu đề để tránh nhầm "Ảnh sản phẩm" với "Link sản phẩm".
+    for (const target of wanted) {
+      const exact = entries.find(([, nk]) => nk === target);
+      if (exact && String(row[exact[0]] || '').trim()) return row[exact[0]] || '';
+    }
+    // Sau đó mới cho phép khớp gần với các tiêu đề dài hơn.
+    for (const target of wanted) {
+      const fuzzy = entries.find(([, nk]) => nk.includes(target) || target.includes(nk));
+      if (fuzzy && String(row[fuzzy[0]] || '').trim()) return row[fuzzy[0]] || '';
+    }
+    return '';
+  };
+  const uniqText = (items) => Array.from(new Set((items || []).map(x => String(x || '').trim()).filter(Boolean)));
+  const cleanImageUrl = (value) => {
+    const raw = String(value || '').trim();
+    if (!raw) return '';
+    const formulaMatch = raw.match(/(?:IMAGE|HYPERLINK)\(\s*["']([^"']+)["']/i);
+    const urlMatch = raw.match(/https?:\/\/[^\s"']+/i);
+    const url = formulaMatch ? formulaMatch[1] : (urlMatch ? urlMatch[0] : raw);
+    if (/^\/uploads\//i.test(url)) return url;
+    return /^https?:\/\//i.test(url) ? url : '';
+  };
+  const trainingImageDisplaySrc = (value) => {
+    const url = cleanImageUrl(value);
+    if (!url) return '';
+    const m1 = url.match(/drive\.google\.com\/file\/d\/([^/]+)/i);
+    if (m1) return `https://drive.google.com/uc?export=view&id=${m1[1]}`;
+    const m2 = url.match(/[?&]id=([^&]+)/i);
+    if (/drive\.google\.com/i.test(url) && m2) return `https://drive.google.com/uc?export=view&id=${m2[1]}`;
+    return url;
+  };
+  const parseTrainingPaste = (raw) => {
+    const text = String(raw || '').trim();
+    if (!text) return [];
+    const firstLine = (text.match(/^[^\r\n]*/) || [''])[0];
+    const delimiter = firstLine.includes('\t') ? '\t' : (firstLine.includes(';') ? ';' : ',');
+    const table = [];
+    let row = [];
+    let cell = '';
+    let inQuotes = false;
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i];
+      const next = text[i + 1];
+      if (ch === '"') {
+        if (inQuotes && next === '"') { cell += '"'; i++; }
+        else inQuotes = !inQuotes;
+      } else if (!inQuotes && ch === delimiter) {
+        row.push(cell.trim());
+        cell = '';
+      } else if (!inQuotes && (ch === '\n' || ch === '\r')) {
+        row.push(cell.trim());
+        if (row.some(Boolean)) table.push(row);
+        row = [];
+        cell = '';
+        if (ch === '\r' && next === '\n') i++;
+      } else {
+        cell += ch;
+      }
+    }
+    row.push(cell.trim());
+    if (row.some(Boolean)) table.push(row);
+    if (!table.length) return [];
+    let headers = table[0].map(x => String(x || '').trim());
+    const headerText = headers.map(normalizeTrainingKey).join(' ');
+    const hasHeader = /sku|ma sp|ma cha|san pham|ten sp|chat lieu|form|kieu dang|diem ban|bao quan|quiz|cau hoi|hinh anh|anh san pham|mau/.test(headerText);
+    if (!hasHeader) headers = ['sku','product_name','color_options','image_url','arrival_date','status_label','material','style_info','selling_points','care_instruction','common_errors','training_note','quiz_text'];
+    const start = hasHeader ? 1 : 0;
+    return table.slice(start).map(cols => {
+      const rowObj = {};
+      headers.forEach((h, i) => rowObj[h || `col_${i}`] = cols[i] || '');
+      rowObj.__cols = cols;
+      rowObj.__headers = headers;
+      return rowObj;
+    }).filter(rowObj => Object.values(rowObj).some(Boolean));
+  };
+  const rowToTrainingPayload = (row) => {
+    const formEl = $('#productTrainingForm');
+    const fd = formEl ? Object.fromEntries(new FormData(formEl)) : {};
+    const cols = Array.isArray(row?.__cols) ? row.__cols : [];
+    const positional = (index) => String(cols[index] || '').trim();
+    // Thứ tự chuẩn của sheet UPLOAD_WEB_TRAINING_BST: A:P.
+    const sheetLooksStandard = cols.length >= 14;
+    return {
+      ...fd,
+      sku: pickTrainingValue(row, ['sku','ma sp','ma san pham','ma cha','code']) || (sheetLooksStandard ? positional(0) : '') || fd.sku || '',
+      product_name: pickTrainingValue(row, ['ten sp','ten san pham','san pham','product name','product']) || (sheetLooksStandard ? positional(1) : '') || fd.product_name || '',
+      color_options: pickTrainingValue(row, ['mau hien co','mau','color','colour']) || fd.color_options || '',
+      image_url: cleanImageUrl(pickTrainingValue(row, ['link anh san pham','url anh san pham','link hinh anh san pham','image url','link anh','url anh']) || (sheetLooksStandard && cols.length >= 17 ? positional(16) : '') || pickTrainingValue(row, ['anh san pham','anh sp','hinh anh','image','photo']) || (sheetLooksStandard ? positional(4) : '')) || fd.image_url || '',
+      product_url: cleanImageUrl(pickTrainingValue(row, ['link san pham','url san pham','product url','product link','link sp','duong dan san pham']) || (sheetLooksStandard && cols.length >= 16 ? positional(14) : '')) || fd.product_url || '',
+      arrival_date: pickTrainingValue(row, ['ngay hang ve','du kien hang ve','arrival']) || fd.arrival_date || '',
+      status_label: pickTrainingValue(row, ['trang thai','status']) || fd.status_label || 'Sắp về',
+      material: pickTrainingValue(row, ['chat lieu','thanh phan vai','material','fabric']) || fd.material || '',
+      style_info: pickTrainingValue(row, ['kieu dang','form','phom','dang','style']) || fd.style_info || '',
+      selling_points: pickTrainingValue(row, ['diem ban hang','diem noi bat','usp','selling']) || fd.selling_points || '',
+      care_instruction: pickTrainingValue(row, ['cach tu van','bao quan','care','phoi do','giat']) || fd.care_instruction || '',
+      common_errors: pickTrainingValue(row, ['loi','luu y loi','diem can luu y','common error']) || fd.common_errors || '',
+      training_note: pickTrainingValue(row, ['ghi chu dao tao','ghi chu','note','feedback']) || fd.training_note || '',
+      quiz_text: pickTrainingValue(row, ['bai kiem tra','quiz','cau hoi','test']) || fd.quiz_text || '',
+      is_required: fd.is_required || '1',
+      pass_percent: fd.pass_percent || '90',
+      due_at: pickTrainingValue(row, ['han hoan thanh','thoi han hoan thanh','han hoc','deadline','due at','due date']) || (sheetLooksStandard && cols.length >= 16 ? positional(15) : '') || fd.due_at || '',
+      store_id: fd.store_id || ''
+    };
+  };
+  const groupTrainingPayloads = (rows) => {
+    const grouped = new Map();
+    rows.forEach(row => {
+      const payload = rowToTrainingPayload(row);
+      const key = normalizeTrainingKey(payload.product_name || payload.sku);
+      if (!key) return;
+      if (!grouped.has(key)) grouped.set(key, { ...payload, _colors: [], _images: [], _productLinks: [], _notes: [] });
+      const base = grouped.get(key);
+      base._colors.push(payload.color_options);
+      base._images.push(payload.image_url);
+      base._productLinks.push(payload.product_url);
+      base._notes.push(payload.training_note);
+      ['arrival_date','status_label','material','style_info','selling_points','care_instruction','common_errors','quiz_text','product_url','store_id','due_at','pass_percent','is_required'].forEach(k => {
+        if (!base[k] && payload[k]) base[k] = payload[k];
+      });
+    });
+    return Array.from(grouped.values()).map(payload => {
+      const colors = uniqText(payload._colors.flatMap(v => String(v || '').split(/[,;\n]+/))).join(', ');
+      const image = uniqText(payload._images)[0] || payload.image_url || '';
+      const productLink = uniqText(payload._productLinks)[0] || payload.product_url || '';
+      const notes = uniqText(payload._notes);
+      delete payload._colors; delete payload._images; delete payload._productLinks; delete payload._notes;
+      payload.color_options = colors || payload.color_options || '';
+      payload.image_url = image;
+      payload.product_url = productLink;
+      if (colors && !String(payload.selling_points || '').toLowerCase().includes('màu hiện có')) {
+        payload.selling_points = `${payload.selling_points || ''}${payload.selling_points ? '\n' : ''}Màu hiện có: ${colors}`;
+      }
+      if (!payload.training_note && notes.length) payload.training_note = notes.join('\n---\n');
+      return payload;
+    });
+  };
+  const fillTrainingForm = (payload) => {
+    const formEl = $('#productTrainingForm');
+    if (!formEl) return;
+    Object.keys(payload || {}).forEach(k => {
+      const el = formEl.elements[k];
+      if (el) el.value = payload[k] || '';
+    });
+  };
+  $('#trainingFillFirstBtn')?.addEventListener('click', () => {
+    const rows = parseTrainingPaste($('#trainingQuickPaste')?.value || '');
+    if (!rows.length) return toast('Chưa có dữ liệu để đổ vào form', 'danger');
+    const payloads = groupTrainingPayloads(rows);
+    fillTrainingForm(payloads[0]);
+    updateTrainingImagePreview();
+    resolveTrainingImageFromProductLink($('#productTrainingForm'), true);
+    $('#trainingQuickHint').textContent = `Đã đổ sản phẩm đầu. ${rows.length} dòng đã gom thành ${payloads.length} sản phẩm.`;
+    toast('Đã đổ thông tin vào form');
+  });
+  $('#trainingSaveAllBtn')?.addEventListener('click', async () => {
+    const rows = parseTrainingPaste($('#trainingQuickPaste')?.value || '');
+    if (!rows.length) return toast('Chưa có dữ liệu để lưu nhanh', 'danger');
+    const payloads = groupTrainingPayloads(rows);
+    if (!payloads.length) return toast('Không tìm thấy SKU/Tên SP để lưu', 'danger');
+    if (!confirm(`Lưu nhanh ${payloads.length} sản phẩm sau khi gom màu? Dữ liệu dán có ${rows.length} dòng.`)) return;
+    let ok = 0;
     try {
-      await api('/api/product-trainings', { method: 'POST', body: JSON.stringify(payload) });
-      toast('Đã lưu bài đào tạo sản phẩm');
-      e.target.reset();
+      for (const payload of payloads) {
+        if (!payload.sku && !payload.product_name) continue;
+        await resolveTrainingPayloadImage(payload);
+        await api('/api/product-trainings', { method: 'POST', body: JSON.stringify(payload) });
+        ok++;
+      }
+      toast(`Đã lưu nhanh ${ok} bài đào tạo sản phẩm sau khi gom màu`);
       renderProductTraining();
     } catch (err) { toast(err.message, 'danger'); }
   });
-  $$('.startQuizBtn').forEach(btn => btn.addEventListener('click', async () => {
+  $('#trainingTemplateBtn')?.addEventListener('click', () => {
+    const header = ['Tên SP / Tên sản phẩm','SKU tham khảo / Mã cha','BST','Màu hiện có','Ảnh sản phẩm','Link sản phẩm','Ngày hàng về','Trạng thái','Hạn hoàn thành','Chất liệu','Kiểu dáng / form','Điểm bán hàng / USP','Cách tư vấn / bảo quản','Lỗi / điểm cần lưu ý','Ghi chú đào tạo','Bài kiểm tra / quiz','Link ảnh sản phẩm'].join('\t');
+    const sample = ['Tên sản phẩm mẫu','SKU001','BST 8.1','ĐEN, BE','','https://dezus.vn/...','2026-08-10','Sắp về','2026-08-12 22:00','Chất liệu / thành phần vải','Form / dáng mặc','Điểm nổi bật để tư vấn','Cách phối, cách bảo quản','Lưu ý lỗi/size/form','Ghi chú thêm','Câu hỏi | A | B | C | D | A','https://.../anh-san-pham.jpg'].join('\t');
+    const blob = new Blob([header + '\n' + sample], { type:'text/tab-separated-values;charset=utf-8' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'Mau_copy_training_BST.tsv'; a.click(); URL.revokeObjectURL(a.href);
+  });
+  const resolveTrainingImageFromProductLink = async (formEl, silent = false) => {
+    const productUrl = cleanImageUrl(formEl?.elements?.product_url?.value || '');
+    const currentImage = cleanImageUrl(formEl?.elements?.image_url?.value || '');
+    if (!productUrl || currentImage) return currentImage;
     try {
-      const qz = await api(`/api/product-trainings/${btn.dataset.id}/quiz`);
-      state.trainingQuiz = { id: Number(btn.dataset.id), ...qz };
+      const data = await api('/api/product-trainings/resolve-image', { method:'POST', body: JSON.stringify({ product_url: productUrl }) });
+      if (data.image_url && formEl.elements.image_url) {
+        formEl.elements.image_url.value = data.image_url;
+        updateTrainingImagePreview();
+        if (!silent) toast('Đã tự lấy ảnh từ link sản phẩm');
+      } else if (!silent) {
+        toast('Trang sản phẩm không cho lấy ảnh tự động. Có thể dán link ảnh hoặc upload ảnh.', 'warning');
+      }
+      return data.image_url || '';
+    } catch (err) {
+      if (!silent) toast(err.message || 'Không lấy được ảnh từ link sản phẩm', 'danger');
+      return '';
+    }
+  };
+  const resolveTrainingPayloadImage = async (payload) => {
+    if (cleanImageUrl(payload.image_url || '') || !cleanImageUrl(payload.product_url || '')) return payload;
+    try {
+      const data = await api('/api/product-trainings/resolve-image', { method:'POST', body: JSON.stringify({ product_url: payload.product_url }) });
+      if (data.image_url) payload.image_url = data.image_url;
+    } catch (_err) {}
+    return payload;
+  };
+  const updateTrainingImagePreview = () => {
+    const formEl = $('#productTrainingForm');
+    if (!formEl) return;
+    const preview = $('#trainingImagePreview');
+    if (!preview) return;
+    const fileInput = formEl.elements.image_file;
+    const file = fileInput && fileInput.files && fileInput.files[0];
+    if (file) {
+      const localSrc = URL.createObjectURL(file);
+      preview.innerHTML = `<img src="${localSrc}" alt="Ảnh sản phẩm" onload="URL.revokeObjectURL(this.src)">`;
+      return;
+    }
+    const url = cleanImageUrl(formEl.elements.image_url?.value || '');
+    const src = trainingImageDisplaySrc(url);
+    preview.innerHTML = src ? `<img src="${esc(src)}" alt="Ảnh sản phẩm" onerror="this.parentElement.innerHTML='<span>Không tải được ảnh/link ảnh</span>'">` : '';
+  };
+  const uploadTrainingImageIfNeeded = async (formEl) => {
+    const fileInput = formEl?.elements?.image_file;
+    const file = fileInput && fileInput.files && fileInput.files[0];
+    if (!file) return formEl?.elements?.image_url?.value || '';
+    const fdImg = new FormData();
+    fdImg.append('image', file);
+    const resp = await fetch('/api/product-trainings/image', { method:'POST', headers: state.token ? { Authorization: 'Bearer ' + state.token } : {}, body: fdImg });
+    const data = await resp.json().catch(() => ({}));
+    if (!resp.ok) throw new Error(data.error || 'Không upload được ảnh sản phẩm');
+    if (formEl.elements.image_url) formEl.elements.image_url.value = data.image_url || '';
+    if (fileInput) fileInput.value = '';
+    updateTrainingImagePreview();
+    return data.image_url || '';
+  };
+  $('#productTrainingForm input[name="image_url"]')?.addEventListener('input', updateTrainingImagePreview);
+  $('#productTrainingForm input[name="image_file"]')?.addEventListener('change', updateTrainingImagePreview);
+  $('#productTrainingForm input[name="product_url"]')?.addEventListener('change', e => resolveTrainingImageFromProductLink(e.target.form));
+  $('#productTrainingForm input[name="product_url"]')?.addEventListener('blur', e => resolveTrainingImageFromProductLink(e.target.form, true));
+  $('#trainingStoreFilter')?.addEventListener('change', e => { state.trainingStoreId = e.target.value; state.trainingQuiz = null; renderProductTraining(); });
+  const resetTrainingEditForm = () => {
+    const formEl = $('#productTrainingForm');
+    if (!formEl) return;
+    formEl.reset();
+    delete formEl.dataset.editId;
+    const saveBtn = $('#trainingFormSaveBtn');
+    const cancelBtn = $('#trainingFormCancelBtn');
+    const hint = $('#trainingEditHint');
+    if (saveBtn) saveBtn.textContent = 'Lưu bài đào tạo';
+    if (cancelBtn) cancelBtn.style.display = 'none';
+    if (hint) hint.textContent = '';
+    updateTrainingImagePreview();
+  };
+  $('#trainingFormCancelBtn')?.addEventListener('click', resetTrainingEditForm);
+  $$('.trainingEditBtn').forEach(btn => btn.addEventListener('click', () => {
+    const row = rowsData.find(x => Number(x.id) === Number(btn.dataset.id));
+    const formEl = $('#productTrainingForm');
+    if (!row || !formEl) return;
+    const fields = ['store_id','sku','product_name','color_options','image_url','product_url','arrival_date','status_label','is_required','due_at','pass_percent','material','style_info','selling_points','care_instruction','common_errors','training_note','quiz_text'];
+    fields.forEach(k => {
+      const el = formEl.elements[k];
+      if (!el) return;
+      let value = row[k] ?? '';
+      if (k === 'due_at' && value) value = String(value).slice(0,16);
+      if (k === 'arrival_date' && value) value = String(value).slice(0,10);
+      el.value = value;
+    });
+    formEl.dataset.editId = row.id;
+    $('#trainingFormSaveBtn').textContent = 'Lưu thay đổi';
+    $('#trainingFormCancelBtn').style.display = '';
+    $('#trainingEditHint').textContent = `Đang sửa: ${row.product_name || row.sku || ''}`;
+    updateTrainingImagePreview();
+    formEl.scrollIntoView({ behavior:'smooth', block:'start' });
+  }));
+  $('#productTrainingForm')?.addEventListener('submit', async e => {
+    e.preventDefault();
+    try {
+      await uploadTrainingImageIfNeeded(e.target);
+      await resolveTrainingImageFromProductLink(e.target, true);
+      const payload = Object.fromEntries(new FormData(e.target));
+      delete payload.image_file;
+      const editId = e.target.dataset.editId;
+      await api(editId ? `/api/product-trainings/${editId}` : '/api/product-trainings', { method: editId ? 'PATCH' : 'POST', body: JSON.stringify(payload) });
+      toast(editId ? 'Đã lưu thay đổi bài học' : 'Đã lưu bài đào tạo sản phẩm');
+      resetTrainingEditForm();
+      renderProductTraining();
+    } catch (err) { toast(err.message, 'danger'); }
+  });
+  $$('.trainingReadyBtn').forEach(btn => btn.addEventListener('click', async () => {
+    try {
+      await api(`/api/product-trainings/${btn.dataset.id}/learned`, { method: 'POST' });
+      toast('Đã xác nhận học xong');
+      state.trainingQuiz = null;
       renderProductTraining();
     } catch (err) { toast(err.message, 'danger'); }
   }));
-  $('#trainingQuizForm')?.addEventListener('submit', async e => {
-    e.preventDefault();
-    const answers = [];
-    $$('.quiz-question', e.target).forEach((q, idx) => answers[idx] = Number($(`input[name="q_${idx}"]:checked`, q)?.value));
+  $('#trainingCloseCombinedBtn')?.addEventListener('click', () => {
+    state.trainingCombinedQuiz = null;
+    renderProductTraining();
+  });
+  $('#trainingStartCombinedBtn')?.addEventListener('click', async () => {
     try {
-      const result = await api(`/api/product-trainings/${e.target.dataset.id}/submit`, { method: 'POST', body: JSON.stringify({ answers }) });
-      toast(result.passed ? `Đạt: ${result.score_percent}%` : `Chưa đạt: ${result.score_percent}% - làm lại`, result.passed ? 'ok' : 'danger');
-      state.trainingQuiz = null;
+      const lessons = rowsData.filter(r => Number(r.quiz_question_count || 0) > 0);
+      const pending = lessons.filter(r => !(r.progress && r.progress.learned));
+      if (pending.length) return toast(`Còn ${pending.length} bài chưa bấm Đã học xong`, 'danger');
+      if (!lessons.length) return toast('Chưa có câu hỏi test để làm bài tổng', 'danger');
+      state.trainingCombinedQuiz = { loading: true };
+      renderProductTraining();
+      const allQuestions = [];
+      for (const lesson of lessons) {
+        const qz = await api(`/api/product-trainings/${lesson.id}/quiz`);
+        (qz.questions || []).forEach((q, qIndex) => allQuestions.push({ ...q, qIndex, training_id: lesson.id, product_name: lesson.product_name || qz.training?.product_name || '' }));
+      }
+      state.trainingCombinedQuiz = { questions: allQuestions, trainingCount: lessons.length };
+      renderProductTraining();
+      setTimeout(() => $('#trainingCombinedQuizForm')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+    } catch (err) {
+      state.trainingCombinedQuiz = { error: err.message || 'Không tải được bài test tổng' };
+      renderProductTraining();
+    }
+  });
+  $('#trainingCombinedQuizForm')?.addEventListener('submit', async e => {
+    e.preventDefault();
+    const qz = state.trainingCombinedQuiz || {};
+    const questions = qz.questions || [];
+    const byTraining = new Map();
+    questions.forEach((q, idx) => {
+      if (!byTraining.has(q.training_id)) byTraining.set(q.training_id, []);
+      const answers = byTraining.get(q.training_id);
+      answers[Number(q.qIndex || 0)] = Number($(`input[name="q_${idx}"]:checked`, e.target)?.value);
+    });
+    try {
+      let totalCorrect = 0, totalQuestions = 0, passedGroups = 0, totalGroups = 0;
+      for (const [trainingId, answers] of byTraining.entries()) {
+        const result = await api(`/api/product-trainings/${trainingId}/submit`, { method: 'POST', body: JSON.stringify({ answers }) });
+        totalCorrect += Number(result.correct_count || 0);
+        totalQuestions += Number(result.total_questions || 0);
+        passedGroups += result.passed ? 1 : 0;
+        totalGroups += 1;
+      }
+      const score = totalQuestions ? Math.round((totalCorrect / totalQuestions) * 10000) / 100 : 0;
+      toast(`${passedGroups === totalGroups ? 'Đạt bài test tổng' : 'Chưa đạt đủ bài'}: ${score}% (${totalCorrect}/${totalQuestions} câu đúng)`, passedGroups === totalGroups ? 'ok' : 'danger');
+      state.trainingCombinedQuiz = null;
       renderProductTraining();
     } catch (err) { toast(err.message, 'danger'); }
   });
