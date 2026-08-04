@@ -70,6 +70,48 @@ const ROLE_DEFAULTS = {
 };
 ROLE_DEFAULTS.office = { ...ROLE_DEFAULTS.manager };
 
+
+const VIOLATION_LEVELS = {
+  REMINDER: { label: 'Nhắc nhở', points: 1 },
+  M1: { label: 'Ký WN / M1', points: 3 },
+  M2: { label: 'M2 - Khiển trách bằng văn bản', points: 5 },
+  M3: { label: 'M3 - Ảnh hưởng KPI / thưởng', points: 10 },
+  M4: { label: 'M4 - Xử lý nghiêm trọng', points: 20 },
+};
+const VIOLATION_CATALOG = [
+  ['DV01','Dịch vụ & tác phong','Không đảm bảo grooming/đồng phục theo quy định','REMINDER'],
+  ['DV02','Dịch vụ & tác phong','Sử dụng điện thoại cá nhân trên sàn bán hàng','M1'],
+  ['DV03','Dịch vụ & tác phong','Đi muộn, về sớm hoặc tự ý đổi ca','M1'],
+  ['DV04','Dịch vụ & tác phong','Bỏ vị trí, ngồi khuất hoặc ngủ trong ca','M2'],
+  ['DV05','Dịch vụ & tác phong','Không tiếp cận, hỗ trợ khách kịp thời','M1'],
+  ['DV06','Dịch vụ & tác phong','Thái độ không phù hợp, gây phản hồi xấu về dịch vụ','M2'],
+  ['DV07','Dịch vụ & tác phong','Không tuân thủ điều phối hoặc phân công trong ca','M1'],
+  ['TN01','Thu ngân & hóa đơn','Không xuất hóa đơn cho khách','M2'],
+  ['TN02','Thu ngân & hóa đơn','Gộp/tách hóa đơn hoặc chia turn sai thực tế','M2'],
+  ['TN03','Thu ngân & hóa đơn','Hủy đơn hoặc sửa hóa đơn khi chưa được PKD duyệt','M2'],
+  ['TN04','Thu ngân & hóa đơn','Trừ điểm thành viên hoặc áp dụng giảm giá sai quy định','M2'],
+  ['TN05','Thu ngân & hóa đơn','Nhận thanh toán qua tài khoản/thẻ cá nhân','M4'],
+  ['HH01','Hàng hóa & kho','Tự ý xuất/nhập/điều chỉnh phiếu hàng hóa','M2'],
+  ['HH02','Hàng hóa & kho','Sai lệch phiếu, mã hàng, số lượng hoặc chứng từ kho','M2'],
+  ['HH03','Hàng hóa & kho','Không bàn giao hàng hóa, tiền hoặc vật tư đúng quy trình','M2'],
+  ['HH04','Hàng hóa & kho','Kiểm kê sai hoặc không báo cáo chênh lệch kịp thời','M2'],
+  ['HH05','Hàng hóa & kho','Gây thất thoát hàng hóa do bất cẩn hoặc không kiểm soát','M3'],
+  ['CS01','Đổi trả & dữ liệu khách hàng','Thực hiện đổi/trả sai quy định hoặc thiếu phê duyệt','M2'],
+  ['CS02','Đổi trả & dữ liệu khách hàng','Nhập sai, dùng sai hoặc làm sai lệch dữ liệu khách hàng','M2'],
+  ['CS03','Đổi trả & dữ liệu khách hàng','Tiết lộ hoặc sử dụng dữ liệu khách hàng sai mục đích','M4'],
+  ['BC01','Báo cáo & vận hành','Nộp báo cáo trễ, thiếu hoặc sai số liệu','M1'],
+  ['BC02','Báo cáo & vận hành','Không thực hiện checklist mở ca, đóng ca hoặc bàn giao','M1'],
+  ['BC03','Báo cáo & vận hành','Không khắc phục lỗi sau khi đã được nhắc nhở','M2'],
+  ['GL01','Gian lận & trung thực','Giữ/ghép hóa đơn hoặc thao tác để làm sai KPI','M4'],
+  ['GL02','Gian lận & trung thực','Giả mạo chứng từ, báo cáo, hình ảnh hoặc dữ liệu','M4'],
+  ['GL03','Gian lận & trung thực','Chiếm dụng tiền, hàng hóa hoặc tài sản công ty','M4'],
+  ['GL04','Gian lận & trung thực','Che giấu, bao che hoặc không báo cáo vi phạm nghiêm trọng','M3'],
+  ['AT01','An toàn & tài sản','Không tuân thủ quy định an toàn, PCCC hoặc bảo quản tài sản','M2'],
+  ['AT02','An toàn & tài sản','Hành vi gây rủi ro nghiêm trọng cho người, hàng hoặc cửa hàng','M3'],
+].map(([code, group, name, level]) => ({ code, group, name, level }));
+function violationCatalogItem(code) { return VIOLATION_CATALOG.find(x => x.code === String(code || '').trim()); }
+
+
 function nowIso() { return new Date().toISOString(); }
 function dateOnly(d) {
   if (d === null || d === undefined || d === '') return new Date().toISOString().slice(0, 10);
@@ -2266,14 +2308,25 @@ app.post('/api/tasks/:assignmentId/complete', requireAuth, upload.array('evidenc
 app.get('/api/violations', requireAuth, (req, res) => res.json({ violations: violationRowsForUser(req.user) }));
 
 app.post('/api/violations', requireAuth, requirePerm('can_manage_violations'), upload.array('evidence', 10), (req, res) => {
-  const { user_id, violation_type, description, points_deducted } = req.body || {};
+  const { user_id, violation_code, violation_level, description } = req.body || {};
   const target = getActiveUser(Number(user_id));
   if (!target) return res.status(400).json({ error: 'Nhân viên không hợp lệ' });
   if (req.user.role !== 'admin' && !userHasStore(req.user, target.store_id)) return res.status(403).json({ error: 'Không có quyền ghi nhận vi phạm nhân viên này' });
+  const catalog = violationCatalogItem(violation_code);
+  if (!catalog) return res.status(400).json({ error: 'Vui lòng chọn đúng danh mục vi phạm trong SOP chế tài' });
+  const levelKey = VIOLATION_LEVELS[violation_level] ? violation_level : catalog.level;
+  const level = VIOLATION_LEVELS[levelKey];
   const id = nextId('violations');
-  db.violations.push({ id, user_id: target.id, store_id: target.store_id, violation_type: violation_type || 'Vi phạm vận hành', description: description || '', points_deducted: Math.abs(Number(points_deducted || 0)), evidence_path: mergeStoredFilesAndLinks(saveUploadedFiles(req.files), req.body.evidence_link), created_by: req.user.id, created_at: nowIso() });
+  db.violations.push({
+    id, user_id: target.id, store_id: target.store_id,
+    violation_code: catalog.code, violation_group: catalog.group, violation_type: catalog.name,
+    violation_level: levelKey, level_label: level.label, points_deducted: level.points,
+    description: description || '',
+    evidence_path: mergeStoredFilesAndLinks(saveUploadedFiles(req.files), req.body.evidence_link),
+    created_by: req.user.id, created_at: nowIso()
+  });
   saveDb();
-  res.json({ ok: true, id });
+  res.json({ ok: true, id, violation_level: levelKey, points_deducted: level.points });
 });
 
 app.get('/api/checklist/templates', requireAuth, (_req, res) => res.json({ templates: loadChecklists() }));

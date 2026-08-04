@@ -1,0 +1,13 @@
+DEZUS STORE OPS V4.85 - VI PHAM THEO SOP CHE TAI
+
+1. Cap nhat thu muc code len server nhu cac phien ban truoc.
+2. Khoi dong lai web.
+3. Du lieu vi pham cu van duoc giu nguyen.
+
+CAP NHAT:
+- Them danh muc vi pham chon san theo SOP che tai.
+- Them muc xu ly: Nhac nho, Ky WN/M1, M2, M3, M4.
+- Tu dong goi y muc xu ly theo tung loi.
+- Tu dong khoa diem tru: 1 / 3 / 5 / 10 / 20 diem.
+- May chu tu tinh lai diem, khong lay diem nhap thu cong.
+- Danh sach hien ma loi, nhom loi, muc xu ly va diem tru.

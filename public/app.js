@@ -42,6 +42,52 @@ const state = {
 
 const app = $('#app');
 
+const VIOLATION_LEVELS = {
+  REMINDER: { label: 'Nhắc nhở', points: 1 },
+  M1: { label: 'Ký WN / M1', points: 3 },
+  M2: { label: 'M2 - Khiển trách bằng văn bản', points: 5 },
+  M3: { label: 'M3 - Ảnh hưởng KPI / thưởng', points: 10 },
+  M4: { label: 'M4 - Xử lý nghiêm trọng', points: 20 },
+};
+
+const VIOLATION_CATALOG = [
+  { code:'DV01', group:'Dịch vụ & tác phong', name:'Không đảm bảo grooming/đồng phục theo quy định', level:'REMINDER' },
+  { code:'DV02', group:'Dịch vụ & tác phong', name:'Sử dụng điện thoại cá nhân trên sàn bán hàng', level:'M1' },
+  { code:'DV03', group:'Dịch vụ & tác phong', name:'Đi muộn, về sớm hoặc tự ý đổi ca', level:'M1' },
+  { code:'DV04', group:'Dịch vụ & tác phong', name:'Bỏ vị trí, ngồi khuất hoặc ngủ trong ca', level:'M2' },
+  { code:'DV05', group:'Dịch vụ & tác phong', name:'Không tiếp cận, hỗ trợ khách kịp thời', level:'M1' },
+  { code:'DV06', group:'Dịch vụ & tác phong', name:'Thái độ không phù hợp, gây phản hồi xấu về dịch vụ', level:'M2' },
+  { code:'DV07', group:'Dịch vụ & tác phong', name:'Không tuân thủ điều phối hoặc phân công trong ca', level:'M1' },
+  { code:'TN01', group:'Thu ngân & hóa đơn', name:'Không xuất hóa đơn cho khách', level:'M2' },
+  { code:'TN02', group:'Thu ngân & hóa đơn', name:'Gộp/tách hóa đơn hoặc chia turn sai thực tế', level:'M2' },
+  { code:'TN03', group:'Thu ngân & hóa đơn', name:'Hủy đơn hoặc sửa hóa đơn khi chưa được PKD duyệt', level:'M2' },
+  { code:'TN04', group:'Thu ngân & hóa đơn', name:'Trừ điểm thành viên hoặc áp dụng giảm giá sai quy định', level:'M2' },
+  { code:'TN05', group:'Thu ngân & hóa đơn', name:'Nhận thanh toán qua tài khoản/thẻ cá nhân', level:'M4' },
+  { code:'HH01', group:'Hàng hóa & kho', name:'Tự ý xuất/nhập/điều chỉnh phiếu hàng hóa', level:'M2' },
+  { code:'HH02', group:'Hàng hóa & kho', name:'Sai lệch phiếu, mã hàng, số lượng hoặc chứng từ kho', level:'M2' },
+  { code:'HH03', group:'Hàng hóa & kho', name:'Không bàn giao hàng hóa, tiền hoặc vật tư đúng quy trình', level:'M2' },
+  { code:'HH04', group:'Hàng hóa & kho', name:'Kiểm kê sai hoặc không báo cáo chênh lệch kịp thời', level:'M2' },
+  { code:'HH05', group:'Hàng hóa & kho', name:'Gây thất thoát hàng hóa do bất cẩn hoặc không kiểm soát', level:'M3' },
+  { code:'CS01', group:'Đổi trả & dữ liệu khách hàng', name:'Thực hiện đổi/trả sai quy định hoặc thiếu phê duyệt', level:'M2' },
+  { code:'CS02', group:'Đổi trả & dữ liệu khách hàng', name:'Nhập sai, dùng sai hoặc làm sai lệch dữ liệu khách hàng', level:'M2' },
+  { code:'CS03', group:'Đổi trả & dữ liệu khách hàng', name:'Tiết lộ hoặc sử dụng dữ liệu khách hàng sai mục đích', level:'M4' },
+  { code:'BC01', group:'Báo cáo & vận hành', name:'Nộp báo cáo trễ, thiếu hoặc sai số liệu', level:'M1' },
+  { code:'BC02', group:'Báo cáo & vận hành', name:'Không thực hiện checklist mở ca, đóng ca hoặc bàn giao', level:'M1' },
+  { code:'BC03', group:'Báo cáo & vận hành', name:'Không khắc phục lỗi sau khi đã được nhắc nhở', level:'M2' },
+  { code:'GL01', group:'Gian lận & trung thực', name:'Giữ/ghép hóa đơn hoặc thao tác để làm sai KPI', level:'M4' },
+  { code:'GL02', group:'Gian lận & trung thực', name:'Giả mạo chứng từ, báo cáo, hình ảnh hoặc dữ liệu', level:'M4' },
+  { code:'GL03', group:'Gian lận & trung thực', name:'Chiếm dụng tiền, hàng hóa hoặc tài sản công ty', level:'M4' },
+  { code:'GL04', group:'Gian lận & trung thực', name:'Che giấu, bao che hoặc không báo cáo vi phạm nghiêm trọng', level:'M3' },
+  { code:'AT01', group:'An toàn & tài sản', name:'Không tuân thủ quy định an toàn, PCCC hoặc bảo quản tài sản', level:'M2' },
+  { code:'AT02', group:'An toàn & tài sản', name:'Hành vi gây rủi ro nghiêm trọng cho người, hàng hoặc cửa hàng', level:'M3' },
+];
+
+function violationCatalogOptions() {
+  const groups = [...new Set(VIOLATION_CATALOG.map(x => x.group))];
+  return '<option value="">Chọn lỗi theo SOP chế tài</option>' + groups.map(group => `<optgroup label="${esc(group)}">${VIOLATION_CATALOG.filter(x => x.group === group).map(x => `<option value="${x.code}">${esc(x.code)} - ${esc(x.name)}</option>`).join('')}</optgroup>`).join('');
+}
+
+
 const PERM_LABELS = {
   can_assign_tasks: 'Giao việc',
   can_manage_violations: 'Ghi vi phạm',
@@ -1327,21 +1373,34 @@ async function submitCompleteTask(e) {
 
 async function renderViolations() {
   const data = await api('/api/violations');
+  const levelOptions = Object.entries(VIOLATION_LEVELS).map(([key, item]) => `<option value="${key}">${esc(item.label)} (-${item.points} điểm)</option>`).join('');
   const form = can('can_manage_violations') ? `
-    <div class="card"><h3>Ghi nhận vi phạm</h3>
+    <div class="card"><h3>Ghi nhận vi phạm theo SOP chế tài</h3>
       <form id="violationForm" class="grid two" enctype="multipart/form-data">
         <div class="field"><label>Nhân viên</label><select name="user_id" required>${usersInStore(isAllStoreUser() ? '' : state.user.store_id).map(u => `<option value="${u.id}">${esc(u.full_name)} - ${esc(u.store_name || '')}</option>`).join('')}</select></div>
-        <div class="field"><label>Loại vi phạm</label><input class="input" name="violation_type" placeholder="VD: Quy trình thu ngân / Grooming / Hàng hóa" required></div>
-        <div class="field"><label>Điểm trừ</label><input class="input" type="number" name="points_deducted" value="5" min="0" max="100"></div>
+        <div class="field"><label>Danh mục vi phạm</label><select name="violation_code" id="violationCode" required>${violationCatalogOptions()}</select></div>
+        <div class="field"><label>Mức vi phạm</label><select name="violation_level" id="violationLevel" required>${levelOptions}</select><span class="hint">Hệ thống tự gợi ý theo SOP; có thể nâng mức khi tái phạm.</span></div>
+        <div class="field"><label>Điểm trừ tương ứng</label><input class="input" id="violationPoints" name="points_deducted" value="1" readonly><span class="hint">Điểm được khóa theo mức vi phạm.</span></div>
         <div class="field"><label>Ảnh/chứng từ dưới 12MB</label><input class="input" type="file" name="evidence" accept="image/*,.pdf,.xlsx,.docx" multiple></div>
         <div class="field"><label>Link Google Drive</label><input class="input" name="evidence_link" placeholder="Dán link nếu file nặng / video"></div>
-        <div class="field" style="grid-column:1/-1"><label>Nội dung vi phạm</label><textarea name="description" required placeholder="Mô tả lỗi, thời gian, tình huống, yêu cầu khắc phục"></textarea></div>
+        <div class="field" style="grid-column:1/-1"><label>Nội dung vi phạm</label><textarea name="description" required placeholder="Mô tả thời gian, tình huống, bằng chứng, lần tái phạm và yêu cầu khắc phục"></textarea></div>
         <div style="grid-column:1/-1"><button class="btn danger">Lưu vi phạm</button></div>
       </form>
     </div>` : '';
-  const list = data.violations.length ? `<div class="table-wrap"><table><thead><tr><th>Ngày</th><th>Nhân viên</th><th>Cửa hàng</th><th>Loại</th><th>Điểm trừ</th><th>Nội dung</th><th>Chứng từ</th></tr></thead><tbody>${data.violations.map(v => `<tr><td>${dt(v.created_at)}</td><td><b>${esc(v.employee_name)}</b></td><td>${esc(v.store_name || '')}</td><td>${esc(v.violation_type)}</td><td><span class="badge danger">-${v.points_deducted}</span></td><td>${esc(v.description || '')}</td><td>${v.evidence_path ? renderFiles(v.evidence_path) : ''}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Chưa có vi phạm</div>';
-  shell(`${form}<div class="card" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">Danh sách vi phạm</h3>${can('can_export') ? '<button class="btn secondary" data-export="violations">Tải CSV</button>' : ''}</div>${list}</div>`, 'Vi phạm', 'Quản lý ghi nhận; nhân viên chỉ xem vi phạm của mình');
-  $('#violationForm')?.addEventListener('submit', async e => { e.preventDefault(); if (hasFileOverLimit(e.target)) return; try { await api('/api/violations', { method: 'POST', body: new FormData(e.target) }); toast('Đã lưu vi phạm'); renderViolations(); } catch (err) { toast(err.message, 'danger'); } });
+  const list = data.violations.length ? `<div class="table-wrap"><table><thead><tr><th>Ngày</th><th>Nhân viên</th><th>Cửa hàng</th><th>Danh mục SOP</th><th>Mức xử lý</th><th>Điểm trừ</th><th>Nội dung</th><th>Chứng từ</th></tr></thead><tbody>${data.violations.map(v => `<tr><td>${dt(v.created_at)}</td><td><b>${esc(v.employee_name)}</b></td><td>${esc(v.store_name || '')}</td><td><b>${esc(v.violation_code || '')}</b>${v.violation_group ? `<br><span class="hint">${esc(v.violation_group)}</span>` : ''}<br>${esc(v.violation_type)}</td><td><span class="badge danger">${esc(v.level_label || v.violation_level || 'Chưa phân mức')}</span></td><td><span class="badge danger">-${v.points_deducted}</span></td><td>${esc(v.description || '')}</td><td>${v.evidence_path ? renderFiles(v.evidence_path) : ''}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Chưa có vi phạm</div>';
+  shell(`${form}<div class="card" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">Danh sách vi phạm</h3>${can('can_export') ? '<button class="btn secondary" data-export="violations">Tải CSV</button>' : ''}</div>${list}</div>`, 'Vi phạm', 'Danh mục và mức xử lý theo SOP chế tài; nhân viên chỉ xem vi phạm của mình');
+  const formEl = $('#violationForm');
+  const syncViolation = (preferCatalog = false) => {
+    if (!formEl) return;
+    const item = VIOLATION_CATALOG.find(x => x.code === $('#violationCode')?.value);
+    if (preferCatalog && item && $('#violationLevel')) $('#violationLevel').value = item.level;
+    const level = VIOLATION_LEVELS[$('#violationLevel')?.value] || VIOLATION_LEVELS.REMINDER;
+    if ($('#violationPoints')) $('#violationPoints').value = level.points;
+  };
+  $('#violationCode')?.addEventListener('change', () => syncViolation(true));
+  $('#violationLevel')?.addEventListener('change', () => syncViolation(false));
+  syncViolation(false);
+  formEl?.addEventListener('submit', async e => { e.preventDefault(); if (hasFileOverLimit(e.target)) return; try { await api('/api/violations', { method: 'POST', body: new FormData(e.target) }); toast('Đã lưu vi phạm theo SOP'); renderViolations(); } catch (err) { toast(err.message, 'danger'); } });
 }
 
 async function renderChecklists() {
