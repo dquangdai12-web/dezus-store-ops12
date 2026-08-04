@@ -1268,7 +1268,6 @@ function canManageSchedule(user, storeId) {
 function scheduleRowsForUser(user, storeId, dates) {
   db.work_schedules = db.work_schedules || [];
   let rows = db.work_schedules.filter(x => Number(x.store_id) === Number(storeId) && dates.includes(String(x.work_date)) && x.status !== 'deleted');
-  if (user.role === 'employee') rows = rows.filter(x => Number(x.user_id) === Number(user.id));
   return rows.map(x => {
     const emp = getUser(x.user_id);
     const shift = (db.shifts || []).find(s => Number(s.id) === Number(x.shift_id));
@@ -3063,7 +3062,6 @@ app.get('/api/schedules', requireAuth, (req, res) => {
   const week_start = scheduleWeekStart(req.query.week_start || new Date());
   const dates = scheduleWeekDates(week_start);
   let employees = db.users.filter(u => u.status === 'active' && Number(u.store_id) === Number(storeId) && u.role !== 'admin');
-  if (req.user.role === 'employee') employees = employees.filter(u => Number(u.id) === Number(req.user.id));
   employees = employees.sort((a, b) => a.role.localeCompare(b.role) || a.full_name.localeCompare(b.full_name, 'vi')).map(publicUser);
   res.json({ store_id: store.id, store_name: store.name, week_start, dates, shifts: activeShifts(), employees, schedules: scheduleRowsForUser(req.user, storeId, dates), can_manage: canManageSchedule(req.user, storeId) });
 });

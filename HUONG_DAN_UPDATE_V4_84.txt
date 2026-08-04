@@ -1,0 +1,11 @@
+DEZUS STORE OPS V4.84
+
+1. LỊCH LÀM VIỆC
+- Nhân sự tại một cửa hàng được xem toàn bộ lịch làm việc của cửa hàng đó.
+- Nhân sự không được xem lịch cửa hàng khác.
+- Quyền tạo/sửa lịch vẫn giữ nguyên theo phân quyền hiện tại.
+
+2. TOP DOANH THU THÁNG
+- Top 1: 🏆
+- Top 2: 🥈
+- Top 3: 🥉
