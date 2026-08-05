@@ -1,0 +1,7 @@
+DEZUS STORE OPS V4.88 - SỬA CÔNG VIỆC
+
+1. Thay toàn bộ source bằng bản V4.88 và deploy lại.
+2. Người có quyền Giao việc sẽ thấy nút "Sửa công việc".
+3. Có thể sửa tiêu đề, nội dung, ưu tiên, hạn hoàn thành, điểm trừ và người nhận.
+4. Các lượt đã hoàn thành vẫn được giữ nguyên để không mất minh chứng.
+5. Quyền Xóa công việc vẫn chỉ dành cho Admin.

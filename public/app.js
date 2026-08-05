@@ -91,6 +91,7 @@ function violationCatalogOptions(catalog = VIOLATION_CATALOG) {
 
 const PERM_LABELS = {
   can_assign_tasks: 'Giao việc',
+  can_edit_tasks: 'Sửa công việc',
   can_manage_violations: 'Ghi vi phạm',
   can_grade_checklists: 'Chấm checklist',
   can_manage_sales: 'Nhập doanh thu chung',
@@ -132,7 +133,7 @@ const PERM_LABELS = {
 const ROLE_PERMISSION_PRESETS = {
   employee: {},
   manager: {
-    can_assign_tasks: 1, can_manage_violations: 1, can_grade_checklists: 1,
+    can_assign_tasks: 1, can_edit_tasks: 1, can_manage_violations: 1, can_grade_checklists: 1,
     can_manage_sales: 1, can_manage_total_sales: 1, can_manage_daily_report: 1,
     can_manage_weekly_report: 1, can_view_weekly_report: 1, can_view_reports: 1,
     can_export: 1, can_view_store_sales_summary: 1, can_view_bonuses: 1,
@@ -144,7 +145,7 @@ const ROLE_PERMISSION_PRESETS = {
     can_manage_cdp: 1, can_view_cdp: 1, can_manage_ojti: 1, can_view_ojti: 1
   },
   office: {
-    can_assign_tasks: 1, can_manage_violations: 1, can_grade_checklists: 1,
+    can_assign_tasks: 1, can_edit_tasks: 1, can_manage_violations: 1, can_grade_checklists: 1,
     can_manage_sales: 1, can_manage_total_sales: 1, can_manage_daily_report: 1,
     can_manage_weekly_report: 1, can_view_weekly_report: 1, can_view_reports: 1,
     can_export: 1, can_view_store_sales_summary: 1, can_view_bonuses: 1,
@@ -1166,6 +1167,7 @@ async function renderWeeklyReport() {
 async function renderTasks() {
   const data = await api('/api/tasks');
   const tasks = data.tasks;
+  state.taskRows = tasks;
   let shiftData = { shifts: [] };
   if (can('can_assign_tasks')) {
     try { shiftData = await api('/api/shifts'); } catch (_err) { shiftData = { shifts: [] }; }
@@ -1234,7 +1236,7 @@ async function renderTasks() {
   const taskDayKey = (t) => String(t.task_date || (t.due_at || '').slice(0, 10) || '');
   const todayTasks = tasks.filter(t => taskDayKey(t) === todayKey || String(t.due_at || '').slice(0, 10) === todayKey);
   const otherTasks = tasks.filter(t => !todayTasks.some(x => Number(x.assignment_id) === Number(t.assignment_id)));
-  const todayBlock = todayTasks.length ? `<div class="card task-today-wrap" style="margin-top:16px"><div class="toolbar"><div><p class="eyebrow">Hạn hôm nay / việc trong ngày</p><h3>${todayTasks.length} công việc cần nhìn ngay hôm nay</h3><p class="hint">Ưu tiên hiển thị các việc có ngày việc hoặc hạn hoàn thành trong hôm nay.</p></div></div><div class="grid">${todayTasks.map(t => taskCard(t)).join('')}</div></div>` : '';
+  const todayBlock = todayTasks.length ? `<div class="card task-today-wrap" style="margin-top:16px"><div class="toolbar"><div><p class="eyebrow">Hạn hôm nay / việc trong ngày</p><h3>${todayTasks.length} công việc cần nhìn ngay hôm nay</h3></div></div><div class="grid">${todayTasks.map(t => taskCard(t)).join('')}</div></div>` : '';
   const grouped = otherTasks.map(t => taskCard(t)).join('') || '<div class="empty">Không còn công việc khác</div>';
   shell(`${assignForm}${todayBlock}<div class="card" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">Danh sách công việc theo ngày gần nhất</h3>${can('can_export') ? '<button class="btn secondary" data-export="tasks">Tải CSV</button>' : ''}</div><p class="hint">Hệ thống tự đưa công việc hôm nay lên đầu, sau đó tới các ngày gần nhất sắp tới. Việc theo ca sẽ tự cập nhật theo lịch ca tương lai khi đổi ca.</p><div class="grid">${grouped}</div></div>`, 'Công việc', 'Giao việc 1 lần, giao nhiều ngày, giao theo ca hoặc nhiều nhân viên cùng lúc');
   function refreshTaskAssignees(storeValue) {
@@ -1271,6 +1273,7 @@ async function renderTasks() {
   updateTaskRepeatUi();
   $('#taskForm')?.addEventListener('submit', submitTask);
   $$('.completeForm').forEach(f => f.addEventListener('submit', submitCompleteTask));
+  $$('.editTaskBtn').forEach(btn => btn.addEventListener('click', openTaskEditor));
   $$('.deleteTaskBtn').forEach(btn => btn.addEventListener('click', deleteTask));
 }
 
@@ -1295,18 +1298,85 @@ function taskCard(t) {
   const dueDay = String(t.due_at || '').slice(0, 10);
   const workDay = String(t.task_date || dueDay || '');
   const isToday = dueDay === todayKey || workDay === todayKey || Number(t.is_today || 0) === 1;
+  const isLate = !t.completed_at && t.due_at && new Date(t.due_at).getTime() < Date.now();
+  const priorityLabel = t.priority === 'high' ? 'Cao' : (t.priority === 'low' ? 'Thấp' : 'Trung bình');
+  const priorityIcon = t.priority === 'high' ? '!' : (t.priority === 'low' ? '↓' : '•');
   const todayBadges = isToday ? `<span class="badge warning">${dueDay === todayKey ? 'Hạn hôm nay' : 'Việc hôm nay'}</span>` : '';
-  const shiftSyncBadge = t.shift_ids && t.shift_ids.length ? '<span class="badge dark">Theo ca tự cập nhật</span>' : '';
-  return `<div class="card task-card ${isToday ? 'task-card-today' : ''}">
-    <div class="task-head">
-      <div><div class="task-badge-row">${todayBadges}${shiftSyncBadge}</div><h4>${esc(t.title)}</h4><div class="meta"><span>${esc(t.store_name || '')}</span>${t.task_date ? `<span>Ngày việc: ${dOnly(t.task_date)}</span>` : ''}${t.shift_label ? `<span>Ca: ${esc(t.shift_label)}</span>` : ''}${t.recurrence_label ? `<span>${esc(t.recurrence_label)}</span>` : ''}<span>Giao cho: ${esc(t.assignee_name)}</span><span>Hạn: ${dt(t.due_at)}</span><span>Điểm trừ: ${t.score_value}</span></div></div>
+  const lateBadge = isLate ? '<span class="badge danger">Đã quá hạn</span>' : '';
+  const shiftSyncBadge = t.shift_ids && t.shift_ids.length ? '<span class="badge dark">Theo ca</span>' : '';
+  return `<article class="card task-card ${isToday ? 'task-card-today' : ''} ${isLate ? 'task-card-late' : ''}">
+    <div class="task-card-topline">
+      <div class="task-badge-row">${todayBadges}${lateBadge}${shiftSyncBadge}<span class="task-priority priority-${esc(t.priority || 'medium')}"><b>${priorityIcon}</b> ${priorityLabel}</span></div>
       ${statusBadge(t.status)}
     </div>
-    ${t.description ? `<p>${esc(t.description)}</p>` : ''}
-    ${t.evidence_path ? `<div class="hint">Chứng từ: ${renderFiles(t.evidence_path)} • ${esc(t.evidence_note || '')}</div>` : ''}
-    ${canComplete ? `<form class="completeForm row" data-id="${t.assignment_id}" enctype="multipart/form-data"><input class="input" name="note" placeholder="Ghi chú hoàn thành"><input class="input" name="evidence" type="file" accept="image/*,.pdf,.xlsx,.docx" multiple><input class="input" name="evidence_link" placeholder="Link Drive nếu file >12MB"><button class="btn small">Hoàn thành</button></form>` : ''}
-    ${state.user.role === 'admin' ? `<div class="task-admin-actions"><button type="button" class="btn danger small deleteTaskBtn" data-task-id="${t.id}" data-task-title="${esc(t.title)}">Xóa công việc</button></div>` : ''}
-  </div>`;
+    <div class="task-card-main">
+      <div class="task-title-block"><h4>${esc(t.title)}</h4>${t.description ? `<p class="task-description">${esc(t.description)}</p>` : ''}</div>
+      <div class="task-info-grid">
+        <div class="task-info-item"><span>Cửa hàng</span><b>${esc(t.store_name || '-')}</b></div>
+        <div class="task-info-item"><span>Người nhận</span><b>${esc(t.assignee_name || '-')}</b></div>
+        ${t.task_date ? `<div class="task-info-item"><span>Ngày việc</span><b>${dOnly(t.task_date)}</b></div>` : ''}
+        <div class="task-info-item task-due-item"><span>Hạn hoàn thành</span><b>${dt(t.due_at)}</b></div>
+        ${t.shift_label ? `<div class="task-info-item"><span>Ca</span><b>${esc(t.shift_label)}</b></div>` : ''}
+        <div class="task-info-item"><span>Điểm trừ</span><b>${Number(t.score_value || 0)} điểm</b></div>
+      </div>
+      ${t.recurrence_label ? `<div class="task-repeat-note">↻ ${esc(t.recurrence_label)}</div>` : ''}
+      ${t.evidence_path ? `<div class="task-evidence"><b>Chứng từ đã nộp</b><div>${renderFiles(t.evidence_path)} ${t.evidence_note ? `• ${esc(t.evidence_note)}` : ''}</div></div>` : ''}
+    </div>
+    ${canComplete ? `<form class="completeForm task-complete-form" data-id="${t.assignment_id}" enctype="multipart/form-data"><input class="input" name="note" placeholder="Ghi chú hoàn thành"><input class="input" name="evidence" type="file" accept="image/*,.pdf,.xlsx,.docx" multiple><input class="input" name="evidence_link" placeholder="Link Drive nếu file lớn"><button class="btn small">Hoàn thành</button></form>` : ''}
+    ${(can('can_edit_tasks') || state.user.role === 'admin') ? `<div class="task-admin-actions"><button type="button" class="btn secondary small editTaskBtn" data-task-id="${t.id}">Sửa công việc</button>${state.user.role === 'admin' ? `<button type="button" class="btn danger small deleteTaskBtn" data-task-id="${t.id}" data-task-title="${esc(t.title)}">Xóa công việc</button>` : ''}</div>` : ''}
+  </article>`;
+}
+
+function closeTaskEditor() {
+  document.querySelector('.task-edit-overlay')?.remove();
+}
+
+function openTaskEditor(e) {
+  const taskId = Number(e.currentTarget.dataset.taskId);
+  const rows = (state.taskRows || []).filter(x => Number(x.id) === taskId);
+  const t = rows[0];
+  if (!t) return toast('Không tìm thấy công việc', 'danger');
+  const storeUsers = (state.users || []).filter(u => Number(u.active ?? 1) === 1 && u.role !== 'admin' && Number(u.store_id) === Number(t.store_id));
+  const selectedIds = new Set(rows.map(x => Number(x.assignee_id)));
+  const dueLocal = String(t.due_at || '').slice(0, 16);
+  const overlay = document.createElement('div');
+  overlay.className = 'task-edit-overlay';
+  overlay.innerHTML = `<div class="task-edit-modal card"><div class="toolbar"><div><p class="eyebrow">Chỉnh sửa công việc</p><h3>${esc(t.title)}</h3></div><button type="button" class="btn secondary small taskEditClose">Đóng</button></div>
+    <form id="taskEditForm" data-id="${t.id}" class="task-advanced-form">
+      <div class="grid two">
+        <div class="field" style="grid-column:span 2"><label>Tiêu đề</label><input name="title" value="${esc(t.title)}" required></div>
+        <div class="field" style="grid-column:span 2"><label>Nội dung / hướng dẫn</label><textarea name="description" rows="4">${esc(t.description || '')}</textarea></div>
+        <div class="field"><label>Hạn hoàn thành</label><input type="datetime-local" name="due_at" value="${esc(dueLocal)}" required></div>
+        <div class="field"><label>Mức ưu tiên</label><select name="priority"><option value="low" ${t.priority==='low'?'selected':''}>Thấp</option><option value="medium" ${!t.priority||t.priority==='medium'?'selected':''}>Trung bình</option><option value="high" ${t.priority==='high'?'selected':''}>Cao</option></select></div>
+        <div class="field"><label>Điểm trừ khi trễ</label><input type="number" name="score_value" min="0" max="100" value="${Number(t.score_value || 10)}"></div>
+        <div class="field"><label>Cửa hàng</label><input value="${esc(t.store_name || '')}" disabled></div>
+        <div class="field" style="grid-column:span 2"><label>Người nhận việc</label><div class="task-user-picker">${storeUsers.map(u => `<label class="task-user-option"><input type="checkbox" name="assignee_ids" value="${u.id}" ${selectedIds.has(Number(u.id))?'checked':''}><span class="task-user-dot"></span><span class="task-user-info"><b>${esc(u.full_name)}</b><small>${esc(u.store_name || t.store_name || '')}</small></span></label>`).join('') || '<div class="empty compact">Chưa có nhân sự trong cửa hàng</div>'}</div><span class="hint">Lượt đã hoàn thành được giữ nguyên để bảo toàn minh chứng.</span></div>
+      </div>
+      <div class="task-submit-row"><button class="btn">Lưu thay đổi</button></div>
+    </form></div>`;
+  document.body.appendChild(overlay);
+  overlay.querySelector('.taskEditClose')?.addEventListener('click', closeTaskEditor);
+  overlay.addEventListener('click', ev => { if (ev.target === overlay) closeTaskEditor(); });
+  overlay.querySelector('#taskEditForm')?.addEventListener('submit', saveTaskEdit);
+}
+
+async function saveTaskEdit(e) {
+  e.preventDefault();
+  const form = e.currentTarget;
+  const button = form.querySelector('button[type="submit"]');
+  const payload = Object.fromEntries(new FormData(form));
+  payload.assignee_ids = [...form.querySelectorAll('input[name="assignee_ids"]:checked')].map(x => Number(x.value));
+  if (!payload.assignee_ids.length) return toast('Vui lòng chọn ít nhất một người nhận việc', 'danger');
+  button.disabled = true; button.textContent = 'Đang lưu...';
+  try {
+    await api(`/api/tasks/${form.dataset.id}`, { method:'PATCH', body:JSON.stringify(payload) });
+    toast('Đã cập nhật công việc');
+    closeTaskEditor();
+    renderTasks();
+  } catch (err) {
+    toast(err.message, 'danger');
+    button.disabled = false; button.textContent = 'Lưu thay đổi';
+  }
 }
 
 async function submitTask(e) {
@@ -2868,7 +2938,7 @@ async function renderDocuments() {
   const docCategoryOf = d => docCategoryNames.includes(d.category || '') ? d.category : 'Quy trình';
   const docRow = d => {
     const searchText = [d.title, d.description, d.category, d.store_name, d.version, d.original_name, d.created_by_name].filter(Boolean).join(' ');
-    return `<tr class="doc-row" data-doc-text="${esc(searchText).toLowerCase()}"><td><b>${esc(d.title)}</b><br><span class="hint">${esc(d.description || '')}</span></td><td>${esc(d.store_name || 'Toàn hệ thống')}</td><td>${esc(d.version || '-')}</td><td>${d.external_url ? '<b>Link Google Drive</b><br><span class="hint">Không chiếm dung lượng</span>' : `${esc(d.original_name || '')}<br><span class="hint">${fileSizeLabel(d.size)}</span>`}</td><td>${money(d.download_count || 0)}</td><td>${esc(d.created_by_name || '')}</td><td>${dt(d.updated_at || d.created_at)}</td><td><div class="row"><button class="btn small docDownloadBtn" data-id="${d.id}" data-name="${esc(d.original_name || d.title || 'tai-lieu')}">${d.external_url ? 'Mở link' : 'Tải về'}</button>${can('can_manage_documents') ? `<button class="btn small danger docDeleteBtn" data-id="${d.id}" data-name="${esc(d.title)}">Xóa</button>` : ''}</div></td></tr>`;
+    return `<tr class="doc-row" data-doc-text="${esc(searchText).toLowerCase()}"><td><b>${esc(d.title)}</b><br><span class="hint">${esc(d.description || '')}</span></td><td>${esc(d.store_name || 'Toàn hệ thống')}</td><td>${esc(d.version || '-')}</td><td>${d.external_url ? '<b>Link Google Drive</b>' : `${esc(d.original_name || '')}<br><span class="hint">${fileSizeLabel(d.size)}</span>`}</td><td>${money(d.download_count || 0)}</td><td>${esc(d.created_by_name || '')}</td><td>${dt(d.updated_at || d.created_at)}</td><td><div class="row"><button class="btn small docDownloadBtn" data-id="${d.id}" data-name="${esc(d.original_name || d.title || 'tai-lieu')}">${d.external_url ? 'Mở link' : 'Tải về'}</button>${can('can_manage_documents') ? `<button class="btn small danger docDeleteBtn" data-id="${d.id}" data-name="${esc(d.title)}">Xóa</button>` : ''}</div></td></tr>`;
   };
   const renderDocGroup = (cat, list) => `<section class="doc-category-section" id="doc-cat-${cat.replace(/\s+/g, '-').toLowerCase()}"><div class="doc-category-head"><div><h3>${esc(cat)}</h3><p>${money(list.length)} tài liệu</p></div><span class="doc-category-badge">${esc(cat)}</span></div><div class="table-wrap doc-category-table"><table><thead><tr><th>Tài liệu</th><th>Phạm vi</th><th>Phiên bản</th><th>File / Link</th><th>Lượt tải</th><th>Người tải lên</th><th>Ngày cập nhật</th><th>Thao tác</th></tr></thead><tbody>${list.map(docRow).join('')}</tbody></table></div></section>`;
   const groupedRows = docCategoryNames.map(cat => ({ cat, list: docs.filter(d => docCategoryOf(d) === cat) })).filter(g => g.list.length);

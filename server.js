@@ -56,15 +56,15 @@ app.use(express.static(path.join(ROOT, 'public'), {
 
 const ROLE_DEFAULTS = {
   admin: {
-    can_assign_tasks: 1, can_manage_violations: 1, can_grade_checklists: 1,
+    can_assign_tasks: 1, can_edit_tasks: 1, can_manage_violations: 1, can_grade_checklists: 1,
     can_manage_sales: 1, can_manage_total_sales: 1, can_manage_daily_report: 1, can_set_sales_targets: 1, can_manage_weekly_report: 1, can_view_weekly_report: 1, can_view_reports: 1, can_manage_users: 1, can_export: 1, can_view_sales_target: 1, can_view_store_sales_summary: 1, can_manage_bonuses: 1, can_view_bonuses: 1, can_manage_documents: 1, can_view_documents: 1, can_manage_shifts: 1, can_manage_schedule: 1, can_view_schedule: 1, can_manage_orders: 1, can_view_orders: 1, can_manage_online_orders: 1, can_view_online_orders: 1, can_manage_product_feedback: 1, can_view_product_feedback: 1, can_manage_product_collections: 1, can_manage_product_training: 1, can_view_product_training: 1, can_manage_cdp_ojti: 1, can_view_cdp_ojti: 1, can_manage_cdp: 1, can_view_cdp: 1, can_manage_ojti: 1, can_view_ojti: 1
   },
   manager: {
-    can_assign_tasks: 1, can_manage_violations: 1, can_grade_checklists: 1,
+    can_assign_tasks: 1, can_edit_tasks: 1, can_manage_violations: 1, can_grade_checklists: 1,
     can_manage_sales: 1, can_manage_total_sales: 1, can_manage_daily_report: 1, can_set_sales_targets: 0, can_manage_weekly_report: 1, can_view_weekly_report: 1, can_view_reports: 1, can_manage_users: 0, can_export: 1, can_view_sales_target: 0, can_view_store_sales_summary: 1, can_manage_bonuses: 0, can_view_bonuses: 1, can_manage_documents: 1, can_view_documents: 1, can_manage_shifts: 0, can_manage_schedule: 1, can_view_schedule: 1, can_manage_orders: 1, can_view_orders: 1, can_manage_online_orders: 1, can_view_online_orders: 1, can_manage_product_feedback: 1, can_view_product_feedback: 1, can_manage_product_collections: 0, can_manage_product_training: 0, can_view_product_training: 1, can_manage_cdp_ojti: 1, can_view_cdp_ojti: 1, can_manage_cdp: 1, can_view_cdp: 1, can_manage_ojti: 1, can_view_ojti: 1
   },
   employee: {
-    can_assign_tasks: 0, can_manage_violations: 0, can_grade_checklists: 0,
+    can_assign_tasks: 0, can_edit_tasks: 0, can_manage_violations: 0, can_grade_checklists: 0,
     can_manage_sales: 0, can_manage_total_sales: 0, can_manage_daily_report: 0, can_set_sales_targets: 0, can_manage_weekly_report: 0, can_view_weekly_report: 0, can_view_reports: 0, can_manage_users: 0, can_export: 0, can_view_sales_target: 0, can_view_store_sales_summary: 0, can_manage_bonuses: 0, can_view_bonuses: 0, can_manage_documents: 0, can_view_documents: 1, can_manage_shifts: 0, can_manage_schedule: 0, can_view_schedule: 1, can_manage_orders: 0, can_view_orders: 1, can_manage_online_orders: 0, can_view_online_orders: 0, can_manage_product_feedback: 1, can_view_product_feedback: 1, can_manage_product_collections: 0, can_manage_product_training: 0, can_view_product_training: 1, can_manage_cdp_ojti: 0, can_view_cdp_ojti: 1, can_manage_cdp: 0, can_view_cdp: 1, can_manage_ojti: 0, can_view_ojti: 1
   }
 };
@@ -2277,6 +2277,45 @@ app.post('/api/tasks', requireAuth, requirePerm('can_assign_tasks'), (req, res) 
   if (!createdAssignments) return res.status(400).json({ error: 'Không có nhân viên hợp lệ trong ngày/ca đã chọn. Hãy kiểm tra lịch làm việc hoặc chọn nhân viên thủ công.' });
   saveDb();
   res.json({ ok: true, created_tasks: createdTasks, created_assignments: createdAssignments });
+});
+
+app.patch('/api/tasks/:taskId', requireAuth, requirePerm('can_edit_tasks'), (req, res) => {
+  const taskId = Number(req.params.taskId);
+  const task = db.tasks.find(x => Number(x.id) === taskId);
+  if (!task) return res.status(404).json({ error: 'Không tìm thấy công việc' });
+  if (!canAccessStore(req, task.store_id)) return res.status(403).json({ error: 'Không có quyền sửa công việc của cửa hàng này' });
+  const body = req.body || {};
+  const title = String(body.title || '').trim();
+  const dueAt = String(body.due_at || '').trim();
+  if (!title) return res.status(400).json({ error: 'Thiếu tiêu đề công việc' });
+  if (!dueAt || Number.isNaN(new Date(dueAt).getTime())) return res.status(400).json({ error: 'Hạn hoàn thành không hợp lệ' });
+  const requestedIds = Array.isArray(body.assignee_ids) ? [...new Set(body.assignee_ids.map(Number).filter(Boolean))] : null;
+  if (requestedIds && !requestedIds.length) return res.status(400).json({ error: 'Vui lòng chọn ít nhất một người nhận việc' });
+  if (requestedIds) {
+    const validIds = requestedIds.filter(uid => {
+      const u = getActiveUser(uid);
+      return u && u.role !== 'admin' && userHasStore(u, task.store_id);
+    });
+    if (!validIds.length) return res.status(400).json({ error: 'Không có nhân sự hợp lệ trong cửa hàng' });
+    const completed = db.task_assignees.filter(a => Number(a.task_id) === taskId && a.completed_at);
+    const completedIds = new Set(completed.map(a => Number(a.user_id)));
+    db.task_assignees = db.task_assignees.filter(a => Number(a.task_id) !== taskId || a.completed_at || validIds.includes(Number(a.user_id)));
+    const existingIds = new Set(db.task_assignees.filter(a => Number(a.task_id) === taskId).map(a => Number(a.user_id)));
+    validIds.forEach(uid => {
+      if (!existingIds.has(uid)) db.task_assignees.push({ id: nextId('task_assignees'), task_id: taskId, user_id: uid, completed_at: null, evidence_path: null, evidence_note: '', points_delta: 0 });
+    });
+    task.manual_assignee_ids = [...new Set([...validIds, ...completedIds])];
+  }
+  task.title = title;
+  task.description = String(body.description || '').trim();
+  task.due_at = dueAt;
+  task.task_date = dateOnly(dueAt);
+  task.priority = ['low','medium','high'].includes(String(body.priority)) ? String(body.priority) : 'medium';
+  task.score_value = Math.max(0, Math.min(100, Number(body.score_value || 0)));
+  task.updated_by = req.user.id;
+  task.updated_at = nowIso();
+  saveDb();
+  res.json({ ok: true, task_id: taskId });
 });
 
 app.delete('/api/tasks/:taskId', requireAuth, (req, res) => {

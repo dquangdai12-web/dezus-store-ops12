@@ -1,0 +1,11 @@
+DEZUS STORE OPS V4.89
+
+Nội dung cập nhật:
+1. Thêm quyền riêng "Sửa công việc" trong Quản lý tài khoản / phân quyền.
+2. Người có quyền Giao việc chưa chắc được Sửa công việc; Admin có toàn quyền.
+3. Xóa dòng mô tả ưu tiên việc hôm nay theo yêu cầu.
+4. Xóa chữ "Không chiếm dung lượng" tại phần Tài liệu.
+5. Thiết kế lại thẻ công việc: rõ tiêu đề, trạng thái, mức độ, người nhận, hạn, ca và điểm trừ.
+6. Giao diện tự chuyển 2 cột trên màn hình lớn và 1 cột trên mobile.
+
+Cập nhật web: thay toàn bộ source bằng bản này, giữ nguyên thư mục dữ liệu đang chạy nếu cần bảo toàn dữ liệu.
