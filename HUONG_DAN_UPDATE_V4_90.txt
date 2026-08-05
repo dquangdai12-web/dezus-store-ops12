@@ -1,0 +1,8 @@
+DEZUS STORE OPS V4.90
+
+- Desktop, Mac và iPad: phần Công việc hiển thị theo Timeline (mẫu 2).
+- Mobile: tự chuyển sang giao diện Mobile-first (mẫu 6).
+- Giữ nguyên chức năng giao việc, hoàn thành, sửa, xóa và phân quyền.
+- Không cần chọn giao diện thủ công; hệ thống tự nhận diện theo chiều rộng màn hình.
+
+Cập nhật như các phiên bản trước: sao lưu dữ liệu, chép đè mã nguồn, chạy lại web.

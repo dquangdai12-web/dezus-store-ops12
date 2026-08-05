@@ -1236,9 +1236,10 @@ async function renderTasks() {
   const taskDayKey = (t) => String(t.task_date || (t.due_at || '').slice(0, 10) || '');
   const todayTasks = tasks.filter(t => taskDayKey(t) === todayKey || String(t.due_at || '').slice(0, 10) === todayKey);
   const otherTasks = tasks.filter(t => !todayTasks.some(x => Number(x.assignment_id) === Number(t.assignment_id)));
-  const todayBlock = todayTasks.length ? `<div class="card task-today-wrap" style="margin-top:16px"><div class="toolbar"><div><p class="eyebrow">Hạn hôm nay / việc trong ngày</p><h3>${todayTasks.length} công việc cần nhìn ngay hôm nay</h3></div></div><div class="grid">${todayTasks.map(t => taskCard(t)).join('')}</div></div>` : '';
+  const mobileSummary = `<div class="task-mobile-summary"><div><b>${tasks.filter(t => !t.completed_at).length}</b><span>Chưa xong</span></div><div><b>${todayTasks.length}</b><span>Hôm nay</span></div><div><b>${tasks.filter(t => !t.completed_at && t.due_at && new Date(t.due_at).getTime() < Date.now()).length}</b><span>Quá hạn</span></div></div>`;
+  const todayBlock = todayTasks.length ? `<div class="card task-today-wrap task-timeline-wrap" style="margin-top:16px"><div class="toolbar"><div><p class="eyebrow">Hạn hôm nay / việc trong ngày</p><h3>${todayTasks.length} công việc cần nhìn ngay hôm nay</h3></div></div>${mobileSummary}<div class="grid task-timeline">${todayTasks.map(t => taskCard(t)).join('')}</div></div>` : mobileSummary;
   const grouped = otherTasks.map(t => taskCard(t)).join('') || '<div class="empty">Không còn công việc khác</div>';
-  shell(`${assignForm}${todayBlock}<div class="card" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">Danh sách công việc theo ngày gần nhất</h3>${can('can_export') ? '<button class="btn secondary" data-export="tasks">Tải CSV</button>' : ''}</div><p class="hint">Hệ thống tự đưa công việc hôm nay lên đầu, sau đó tới các ngày gần nhất sắp tới. Việc theo ca sẽ tự cập nhật theo lịch ca tương lai khi đổi ca.</p><div class="grid">${grouped}</div></div>`, 'Công việc', 'Giao việc 1 lần, giao nhiều ngày, giao theo ca hoặc nhiều nhân viên cùng lúc');
+  shell(`${assignForm}${todayBlock}<div class="card task-list-wrap task-timeline-wrap" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">Danh sách công việc theo ngày gần nhất</h3>${can('can_export') ? '<button class="btn secondary" data-export="tasks">Tải CSV</button>' : ''}</div><p class="hint">Hệ thống tự đưa công việc hôm nay lên đầu, sau đó tới các ngày gần nhất sắp tới. Việc theo ca sẽ tự cập nhật theo lịch ca tương lai khi đổi ca.</p><div class="grid task-timeline">${grouped}</div></div>`, 'Công việc', 'Giao việc 1 lần, giao nhiều ngày, giao theo ca hoặc nhiều nhân viên cùng lúc');
   function refreshTaskAssignees(storeValue) {
     const users = usersInStore(storeValue);
     const renderOptions = () => users.map(u => `<label class="task-user-option"><input type="checkbox" value="${u.id}"><span class="task-user-dot" aria-hidden="true"></span><span class="task-user-info"><b>${esc(u.full_name)}</b><small>${esc(u.store_name || '')}</small></span></label>`).join('') || '<div class="empty compact">Chưa có nhân viên trong cửa hàng này</div>';
@@ -1304,7 +1305,11 @@ function taskCard(t) {
   const todayBadges = isToday ? `<span class="badge warning">${dueDay === todayKey ? 'Hạn hôm nay' : 'Việc hôm nay'}</span>` : '';
   const lateBadge = isLate ? '<span class="badge danger">Đã quá hạn</span>' : '';
   const shiftSyncBadge = t.shift_ids && t.shift_ids.length ? '<span class="badge dark">Theo ca</span>' : '';
+  const timelineTime = t.due_at ? new Date(t.due_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '--:--';
   return `<article class="card task-card ${isToday ? 'task-card-today' : ''} ${isLate ? 'task-card-late' : ''}">
+    <div class="task-mobile-check" aria-hidden="true"></div>
+    <div class="task-timeline-time"><b>${timelineTime}</b><span>${workDay ? dOnly(workDay) : ''}</span></div>
+    <div class="task-card-content">
     <div class="task-card-topline">
       <div class="task-badge-row">${todayBadges}${lateBadge}${shiftSyncBadge}<span class="task-priority priority-${esc(t.priority || 'medium')}"><b>${priorityIcon}</b> ${priorityLabel}</span></div>
       ${statusBadge(t.status)}
@@ -1324,6 +1329,7 @@ function taskCard(t) {
     </div>
     ${canComplete ? `<form class="completeForm task-complete-form" data-id="${t.assignment_id}" enctype="multipart/form-data"><input class="input" name="note" placeholder="Ghi chú hoàn thành"><input class="input" name="evidence" type="file" accept="image/*,.pdf,.xlsx,.docx" multiple><input class="input" name="evidence_link" placeholder="Link Drive nếu file lớn"><button class="btn small">Hoàn thành</button></form>` : ''}
     ${(can('can_edit_tasks') || state.user.role === 'admin') ? `<div class="task-admin-actions"><button type="button" class="btn secondary small editTaskBtn" data-task-id="${t.id}">Sửa công việc</button>${state.user.role === 'admin' ? `<button type="button" class="btn danger small deleteTaskBtn" data-task-id="${t.id}" data-task-title="${esc(t.title)}">Xóa công việc</button>` : ''}</div>` : ''}
+    </div>
   </article>`;
 }
 
