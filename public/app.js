@@ -1362,7 +1362,7 @@ function openTaskEditor(e) {
   const rows = (state.taskRows || []).filter(x => Number(x.id) === taskId);
   const t = rows[0];
   if (!t) return toast('Không tìm thấy công việc', 'danger');
-  const storeUsers = (state.users || []).filter(u => Number(u.active ?? 1) === 1 && u.role !== 'admin' && Number(u.store_id) === Number(t.store_id));
+  const storeUsers = (state.boot?.users || []).filter(u => Number(u.active ?? 1) === 1 && u.role !== 'admin' && Number(u.store_id) === Number(t.store_id));
   const selectedIds = new Set(rows.map(x => Number(x.assignee_id)));
   const dueLocal = String(t.due_at || '').slice(0, 16);
   const overlay = document.createElement('div');

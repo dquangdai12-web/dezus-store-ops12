@@ -1,0 +1,15 @@
+DEZUS STORE OPS V4.95
+
+SỬA LỖI CHỌN LẠI NGƯỜI NHẬN KHI SỬA CÔNG VIỆC
+
+- Form Sửa công việc nay lấy đúng danh sách tài khoản đang hoạt động từ dữ liệu khởi tạo hệ thống.
+- Danh sách chỉ hiển thị nhân sự/quản lý thuộc đúng cửa hàng của công việc.
+- Những người đang được giao việc sẽ được tick sẵn.
+- Có thể bỏ chọn người cũ và chọn lại người mới trước khi lưu.
+- Hoạt động trên desktop, Mac, iPad và mobile.
+
+CẬP NHẬT
+1. Sao lưu thư mục data hiện tại.
+2. Chép đè server.js và thư mục public từ bản V4.95.
+3. Không chép đè thư mục data nếu đang có dữ liệu thật.
+4. Khởi động lại web.
