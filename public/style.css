@@ -3936,3 +3936,15 @@ body{letter-spacing:-.008em}
 /* ==== V4.91 FIXED TASK PENALTIES + ACCOUNT DELETE PERMISSION ==== */
 .task-fixed-penalty{display:grid;gap:5px;padding:12px 14px;border:1px solid #d9e4ef;border-radius:14px;background:#f7fbff;color:#334155}.task-fixed-penalty b{color:#b91c1c}.task-fixed-penalty span{font-size:12px;color:#7f1d1d}.markNotCompletedBtn{margin-top:8px}.task-card:has(.badge.danger){border-color:#fecaca}
 @media(max-width:860px){.markNotCompletedBtn{width:100%;min-height:42px}.task-fixed-penalty{font-size:13px}}
+
+
+/* V4.93 - Task exception summary */
+.task-exception-dashboard{border:1px solid rgba(220,38,38,.18);background:linear-gradient(180deg,#fff,#fffafa)}
+.task-exception-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 16px}
+.task-exception-tabs .active{background:#171717;color:#fff;border-color:#171717}
+.task-mobile-summary{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:680px){
+ .task-mobile-summary{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .task-exception-tabs{display:grid;grid-template-columns:1fr 1fr}
+ .task-exception-tabs .btn{white-space:normal;min-height:44px}
+}

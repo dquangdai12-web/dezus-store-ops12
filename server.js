@@ -1329,10 +1329,18 @@ function scheduleRowsForUser(user, storeId, dates) {
   }).sort((a, b) => String(a.work_date).localeCompare(String(b.work_date)) || String(a.employee_name).localeCompare(String(b.employee_name), 'vi'));
 }
 
-function taskStatus(row) {
+const TASK_OVERDUE_GRACE_MS = 4 * 60 * 60 * 1000;
+function taskStatus(row, refNow) {
+  const nowMs = refNow ? new Date(refNow).getTime() : Date.now();
+  const dueMs = new Date(row.due_at).getTime();
   if (String(row.resolution_status || '') === 'not_completed') return 'not_completed';
-  if (row.completed_at) return new Date(row.completed_at) <= new Date(row.due_at) ? 'completed_on_time' : 'completed_late';
-  return new Date() > new Date(row.due_at) ? 'overdue' : 'assigned';
+  if (row.completed_at) {
+    const completedMs = new Date(row.completed_at).getTime();
+    if (completedMs <= dueMs) return 'completed_on_time';
+    return completedMs - dueMs > TASK_OVERDUE_GRACE_MS ? 'not_completed' : 'completed_late';
+  }
+  if (!Number.isFinite(dueMs) || nowMs <= dueMs) return 'assigned';
+  return nowMs - dueMs > TASK_OVERDUE_GRACE_MS ? 'not_completed' : 'overdue';
 }
 function periodRange(period, ref) {
   const d = ref ? new Date(ref) : new Date();
@@ -1754,11 +1762,9 @@ function taskRowsForUser(user) {
       resolution_status: ta.resolution_status || '',
       not_completed_at: ta.not_completed_at || null,
       not_completed_reason: ta.not_completed_reason || '',
-      points_delta: String(ta.resolution_status || '') === 'not_completed'
+      points_delta: taskStatus({ ...ta, due_at: t.due_at }) === 'not_completed'
         ? -TASK_PENALTIES.NOT_COMPLETED
-        : (ta.completed_at && new Date(ta.completed_at) > new Date(t.due_at)
-          ? -TASK_PENALTIES.LATE
-          : (!ta.completed_at && new Date() > new Date(t.due_at) ? -TASK_PENALTIES.LATE : 0)),
+        : (['completed_late', 'overdue'].includes(taskStatus({ ...ta, due_at: t.due_at })) ? -TASK_PENALTIES.LATE : 0),
       ...t,
       store_name: s ? s.name : '',
       created_by_name: creator ? creator.full_name : ''
@@ -1906,10 +1912,11 @@ function computePerformance(scopeUser) {
     }).filter(Boolean);
     let onTime = 0, late = 0, overdue = 0, notCompleted = 0;
     assignments.forEach(a => {
-      if (String(a.resolution_status) === 'not_completed') notCompleted += 1;
-      else if (a.completed_at) {
-        if (new Date(a.completed_at) <= new Date(a.due_at)) onTime += 1; else late += 1;
-      } else if (now > new Date(a.due_at)) overdue += 1;
+      const status = taskStatus(a, now);
+      if (status === 'not_completed') notCompleted += 1;
+      else if (status === 'completed_on_time') onTime += 1;
+      else if (status === 'completed_late') late += 1;
+      else if (status === 'overdue') overdue += 1;
     });
     const totalTasks = assignments.length;
     const taskPenalty = (late + overdue) * TASK_PENALTIES.LATE + notCompleted * TASK_PENALTIES.NOT_COMPLETED;
@@ -2064,13 +2071,28 @@ app.delete('/api/users/:id', requireAuth, requirePerm('can_delete_users'), (req,
     const activeAdmins = db.users.filter(u => u.status === 'active' && u.role === 'admin');
     if (activeAdmins.length <= 1) return res.status(400).json({ error: 'Không thể xóa admin cuối cùng của hệ thống' });
   }
-  existing.status = 'inactive';
-  existing.inactive_at = nowIso();
-  existing.inactive_by = req.user.id;
-  existing.deleted_at = existing.inactive_at;
-  existing.deleted_by = req.user.id;
+  // Xóa vĩnh viễn tài khoản nhập sai và toàn bộ dữ liệu cá nhân gắn trực tiếp với tài khoản.
+  db.users = (db.users || []).filter(u => Number(u.id) !== id);
+  db.permissions = (db.permissions || []).filter(p => Number(p.user_id) !== id);
+  db.task_assignees = (db.task_assignees || []).filter(x => Number(x.user_id) !== id);
+  db.work_schedules = (db.work_schedules || []).filter(x => Number(x.user_id) !== id);
+  db.violations = (db.violations || []).filter(x => Number(x.user_id) !== id);
+  db.assessments = (db.assessments || []).filter(x => Number(x.employee_id) !== id && Number(x.user_id) !== id);
+  db.sales = (db.sales || []).filter(x => Number(x.user_id) !== id);
+  db.sales_targets = (db.sales_targets || []).filter(x => Number(x.user_id) !== id);
+  db.bonuses = (db.bonuses || []).filter(x => Number(x.user_id) !== id);
+  db.product_training_attempts = (db.product_training_attempts || []).filter(x => Number(x.user_id) !== id);
+  db.product_training_reads = (db.product_training_reads || []).filter(x => Number(x.user_id) !== id);
+  db.cdp_ojti = (db.cdp_ojti || []).filter(x => Number(x.user_id) !== id && Number(x.employee_id) !== id && Number(x.trainee_id) !== id);
+  // Không xóa công việc/tài liệu chung; chỉ bỏ tham chiếu người tạo nếu có.
+  ['tasks','documents','orders','online_orders','product_feedback','product_collections','product_trainings','weekly_reports','daily_reports'].forEach(key => {
+    (db[key] || []).forEach(row => {
+      if (Number(row.created_by) === id) row.created_by = null;
+      if (Number(row.updated_by) === id) row.updated_by = null;
+    });
+  });
   saveDb();
-  res.json({ ok: true });
+  res.json({ ok: true, permanently_deleted: true });
 });
 
 app.get('/api/tasks', requireAuth, (req, res) => res.json({ tasks: taskRowsForUser(req.user) }));
@@ -2356,7 +2378,16 @@ app.post('/api/tasks/:assignmentId/complete', requireAuth, upload.array('evidenc
   if (!isOwner && !canManagerAct) return res.status(403).json({ error: 'Chỉ nhân viên được giao hoặc quản lý cửa hàng được hoàn thành việc này' });
   const evidencePath = mergeStoredFilesAndLinks(saveUploadedFiles(req.files), req.body.evidence_link);
   const completedAt = nowIso();
-  const late = new Date(completedAt) > new Date(t.due_at);
+  const delayMs = new Date(completedAt).getTime() - new Date(t.due_at).getTime();
+  if (delayMs > TASK_OVERDUE_GRACE_MS) {
+    ta.resolution_status = 'not_completed';
+    ta.not_completed_at = completedAt;
+    ta.not_completed_reason = 'Hệ thống tự chuyển: quá hạn trên 4 tiếng';
+    ta.points_delta = -TASK_PENALTIES.NOT_COMPLETED;
+    saveDb();
+    return res.status(400).json({ error: 'Công việc đã quá hạn trên 4 tiếng và được hệ thống tính là Không hoàn thành (-10 điểm)' });
+  }
+  const late = delayMs > 0;
   ta.completed_at = completedAt;
   ta.resolution_status = late ? 'completed_late' : 'completed_on_time';
   delete ta.not_completed_at;

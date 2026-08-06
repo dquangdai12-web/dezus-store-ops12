@@ -1,0 +1,11 @@
+DEZUS STORE OPS V4.93
+
+1. Xóa tài khoản là xóa vĩnh viễn, không phải tạm khóa. Tài khoản và dữ liệu cá nhân gắn trực tiếp sẽ bị xóa khỏi hệ thống.
+2. Công việc tự tính trạng thái:
+- Đúng hạn: 0 điểm trừ.
+- Quá hạn từ 1 phút đến đủ 4 tiếng: -5 điểm.
+- Quá hạn trên 4 tiếng: tự chuyển Không hoàn thành, -10 điểm.
+3. Đã bỏ nút đánh dấu thủ công Không hoàn thành.
+4. Thêm khối Tổng hợp cần xử lý để xem riêng Quá hạn / Không hoàn thành.
+
+Cập nhật: thay toàn bộ source bản cũ bằng bản V4.93, giữ nguyên file db.json/data đang dùng trên server nếu bạn cập nhật thủ công.

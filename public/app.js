@@ -92,7 +92,7 @@ function violationCatalogOptions(catalog = VIOLATION_CATALOG) {
 const PERM_LABELS = {
   can_assign_tasks: 'Giao việc',
   can_edit_tasks: 'Sửa công việc',
-  can_delete_users: 'Xóa tài khoản',
+  can_delete_users: 'Xóa vĩnh viễn',
   can_manage_violations: 'Ghi vi phạm',
   can_grade_checklists: 'Chấm checklist',
   can_manage_sales: 'Nhập doanh thu chung',
@@ -462,10 +462,10 @@ async function downloadExport(type) {
 function statusBadge(status) {
   const map = {
     assigned: ['Đang mở', 'dark'],
-    overdue: ['Không đúng hạn', 'danger'],
+    overdue: ['Quá hạn dưới 4 tiếng', 'warn'],
     not_completed: ['Không hoàn thành', 'danger'],
     completed_on_time: ['Hoàn thành đúng hạn', 'ok'],
-    completed_late: ['Hoàn thành trễ hạn / bị trừ điểm', 'warn'],
+    completed_late: ['Hoàn thành trễ dưới 4 tiếng', 'warn'],
   };
   const [label, cls] = map[status] || [status, ''];
   return `<span class="badge ${cls}">${label}</span>`;
@@ -1238,10 +1238,22 @@ async function renderTasks() {
   const taskDayKey = (t) => String(t.task_date || (t.due_at || '').slice(0, 10) || '');
   const todayTasks = tasks.filter(t => taskDayKey(t) === todayKey || String(t.due_at || '').slice(0, 10) === todayKey);
   const otherTasks = tasks.filter(t => !todayTasks.some(x => Number(x.assignment_id) === Number(t.assignment_id)));
-  const mobileSummary = `<div class="task-mobile-summary"><div><b>${tasks.filter(t => !t.completed_at).length}</b><span>Chưa xong</span></div><div><b>${todayTasks.length}</b><span>Hôm nay</span></div><div><b>${tasks.filter(t => !t.completed_at && t.due_at && new Date(t.due_at).getTime() < Date.now()).length}</b><span>Quá hạn</span></div></div>`;
+  const overdueTasks = tasks.filter(t => t.status === 'overdue' || t.status === 'completed_late');
+  const notCompletedTasks = tasks.filter(t => t.status === 'not_completed');
+  const mobileSummary = `<div class="task-mobile-summary"><div><b>${tasks.filter(t => ['assigned','overdue'].includes(t.status)).length}</b><span>Chưa xong</span></div><div><b>${todayTasks.length}</b><span>Hôm nay</span></div><div><b>${overdueTasks.length}</b><span>Quá hạn</span></div><div><b>${notCompletedTasks.length}</b><span>Không hoàn thành</span></div></div>`;
+  const exceptionDashboard = `<div class="card task-exception-dashboard" style="margin-top:16px"><div class="section-title"><div><p class="eyebrow">Tổng hợp cần xử lý</p><h3>Quá hạn & Không hoàn thành</h3></div><span class="badge danger">${overdueTasks.length + notCompletedTasks.length} mục</span></div><div class="task-exception-tabs"><button type="button" class="btn secondary small taskExceptionTab active" data-filter="overdue">Quá hạn dưới 4 tiếng (${overdueTasks.length})</button><button type="button" class="btn secondary small taskExceptionTab" data-filter="not_completed">Không hoàn thành (${notCompletedTasks.length})</button></div><div id="taskExceptionList" class="grid task-timeline">${(overdueTasks.length ? overdueTasks : notCompletedTasks).map(t => taskCard(t)).join('') || '<div class="empty">Không có công việc cần xử lý</div>'}</div></div>`;
   const todayBlock = todayTasks.length ? `<div class="card task-today-wrap task-timeline-wrap" style="margin-top:16px"><div class="toolbar"><div><p class="eyebrow">Hạn hôm nay / việc trong ngày</p><h3>${todayTasks.length} công việc cần nhìn ngay hôm nay</h3></div></div>${mobileSummary}<div class="grid task-timeline">${todayTasks.map(t => taskCard(t)).join('')}</div></div>` : mobileSummary;
   const grouped = otherTasks.map(t => taskCard(t)).join('') || '<div class="empty">Không còn công việc khác</div>';
-  shell(`${assignForm}${todayBlock}<div class="card task-list-wrap task-timeline-wrap" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">Danh sách công việc theo ngày gần nhất</h3>${can('can_export') ? '<button class="btn secondary" data-export="tasks">Tải CSV</button>' : ''}</div><p class="hint">Hệ thống tự đưa công việc hôm nay lên đầu, sau đó tới các ngày gần nhất sắp tới. Việc theo ca sẽ tự cập nhật theo lịch ca tương lai khi đổi ca.</p><div class="grid task-timeline">${grouped}</div></div>`, 'Công việc', 'Giao việc 1 lần, giao nhiều ngày, giao theo ca hoặc nhiều nhân viên cùng lúc');
+  shell(`${assignForm}${exceptionDashboard}${todayBlock}<div class="card task-list-wrap task-timeline-wrap" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">Danh sách công việc theo ngày gần nhất</h3>${can('can_export') ? '<button class="btn secondary" data-export="tasks">Tải CSV</button>' : ''}</div><p class="hint">Hệ thống tự tính: trễ từ 1 phút đến 4 tiếng là Quá hạn (-5 điểm); quá 4 tiếng là Không hoàn thành (-10 điểm).</p><div class="grid task-timeline">${grouped}</div></div>`, 'Công việc', 'Giao việc 1 lần, giao nhiều ngày, giao theo ca hoặc nhiều nhân viên cùng lúc');
+  $$('.taskExceptionTab').forEach(btn => btn.addEventListener('click', () => {
+    $$('.taskExceptionTab').forEach(x => x.classList.toggle('active', x === btn));
+    const rows = btn.dataset.filter === 'not_completed' ? notCompletedTasks : overdueTasks;
+    const box = $('#taskExceptionList');
+    if (box) box.innerHTML = rows.map(t => taskCard(t)).join('') || '<div class="empty">Không có công việc trong nhóm này</div>';
+    $$('.completeForm', box || document).forEach(f => f.addEventListener('submit', submitCompleteTask));
+    $$('.editTaskBtn', box || document).forEach(x => x.addEventListener('click', openTaskEditor));
+    $$('.deleteTaskBtn', box || document).forEach(x => x.addEventListener('click', deleteTask));
+  }));
   function refreshTaskAssignees(storeValue) {
     const users = usersInStore(storeValue);
     const renderOptions = () => users.map(u => `<label class="task-user-option"><input type="checkbox" value="${u.id}"><span class="task-user-dot" aria-hidden="true"></span><span class="task-user-info"><b>${esc(u.full_name)}</b><small>${esc(u.store_name || '')}</small></span></label>`).join('') || '<div class="empty compact">Chưa có nhân viên trong cửa hàng này</div>';
@@ -1276,7 +1288,6 @@ async function renderTasks() {
   updateTaskRepeatUi();
   $('#taskForm')?.addEventListener('submit', submitTask);
   $$('.completeForm').forEach(f => f.addEventListener('submit', submitCompleteTask));
-  $$('.markNotCompletedBtn').forEach(btn => btn.addEventListener('click', markTaskNotCompleted));
   $$('.editTaskBtn').forEach(btn => btn.addEventListener('click', openTaskEditor));
   $$('.deleteTaskBtn').forEach(btn => btn.addEventListener('click', deleteTask));
 }
@@ -1299,16 +1310,16 @@ async function deleteTask(e) {
 function taskCard(t) {
   const isNotCompleted = String(t.status || t.resolution_status || '') === 'not_completed';
   const canComplete = (Number(t.assignee_id) === Number(state.user.id) || state.user.role !== 'employee') && !t.completed_at && !isNotCompleted;
-  const canMarkNotCompleted = !t.completed_at && !isNotCompleted && (state.user.role === 'admin' || can('can_edit_tasks'));
+
   const todayKey = new Date().toISOString().slice(0, 10);
   const dueDay = String(t.due_at || '').slice(0, 10);
   const workDay = String(t.task_date || dueDay || '');
   const isToday = dueDay === todayKey || workDay === todayKey || Number(t.is_today || 0) === 1;
-  const isLate = !t.completed_at && !isNotCompleted && t.due_at && new Date(t.due_at).getTime() < Date.now();
+  const isLate = String(t.status || '') === 'overdue' || String(t.status || '') === 'completed_late';
   const priorityLabel = t.priority === 'high' ? 'Cao' : (t.priority === 'low' ? 'Thấp' : 'Trung bình');
   const priorityIcon = t.priority === 'high' ? '!' : (t.priority === 'low' ? '↓' : '•');
   const todayBadges = isToday ? `<span class="badge warning">${dueDay === todayKey ? 'Hạn hôm nay' : 'Việc hôm nay'}</span>` : '';
-  const lateBadge = isNotCompleted ? '<span class="badge danger">Không hoàn thành • -10 điểm</span>' : (isLate ? '<span class="badge danger">Quá hạn • -5 điểm</span>' : '');
+  const lateBadge = isNotCompleted ? '<span class="badge danger">Không hoàn thành • quá 4 tiếng • -10 điểm</span>' : (isLate ? '<span class="badge warning">Quá hạn dưới 4 tiếng • -5 điểm</span>' : '');
   const shiftSyncBadge = t.shift_ids && t.shift_ids.length ? '<span class="badge dark">Theo ca</span>' : '';
   const timelineTime = t.due_at ? new Date(t.due_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '--:--';
   return `<article class="card task-card ${isToday ? 'task-card-today' : ''} ${isLate ? 'task-card-late' : ''}">
@@ -1333,7 +1344,6 @@ function taskCard(t) {
       ${t.evidence_path ? `<div class="task-evidence"><b>Chứng từ đã nộp</b><div>${renderFiles(t.evidence_path)} ${t.evidence_note ? `• ${esc(t.evidence_note)}` : ''}</div></div>` : ''}
     </div>
     ${canComplete ? `<form class="completeForm task-complete-form" data-id="${t.assignment_id}" enctype="multipart/form-data"><input class="input" name="note" placeholder="Ghi chú hoàn thành"><input class="input" name="evidence" type="file" accept="image/*,.pdf,.xlsx,.docx" multiple><input class="input" name="evidence_link" placeholder="Link Drive nếu file lớn"><button class="btn small">Hoàn thành</button></form>` : ''}
-    ${canMarkNotCompleted ? `<button type="button" class="btn danger small markNotCompletedBtn" data-assignment-id="${t.assignment_id}" data-task-title="${esc(t.title)}">Đánh dấu không hoàn thành</button>` : ''}
     ${(can('can_edit_tasks') || state.user.role === 'admin') ? `<div class="task-admin-actions"><button type="button" class="btn secondary small editTaskBtn" data-task-id="${t.id}">Sửa công việc</button>${state.user.role === 'admin' ? `<button type="button" class="btn danger small deleteTaskBtn" data-task-id="${t.id}" data-task-title="${esc(t.title)}">Xóa công việc</button>` : ''}</div>` : ''}
     </div>
   </article>`;
@@ -1452,23 +1462,6 @@ async function submitCompleteTask(e) {
   if (hasFileOverLimit(form)) return;
   const fd = new FormData(form);
   try { const res = await api(`/api/tasks/${form.dataset.id}/complete`, { method: 'POST', body: fd }); toast(res.status === 'completed_late' ? 'Hoàn thành nhưng đã trễ hạn, hệ thống tự trừ điểm' : 'Đã hoàn thành đúng hạn'); renderTasks(); } catch (err) { toast(err.message, 'danger'); }
-}
-
-async function markTaskNotCompleted(e) {
-  const btn = e.currentTarget;
-  const title = btn.dataset.taskTitle || 'công việc này';
-  const reason = prompt(`Lý do không hoàn thành: ${title}`, '') ?? null;
-  if (reason === null) return;
-  if (!confirm(`Xác nhận đánh dấu “Không hoàn thành” và trừ cố định 10 điểm cho ${title}?`)) return;
-  btn.disabled = true;
-  try {
-    await api(`/api/tasks/${btn.dataset.assignmentId}/not-completed`, { method: 'POST', body: JSON.stringify({ reason }) });
-    toast('Đã đánh dấu không hoàn thành và trừ 10 điểm');
-    renderTasks();
-  } catch (err) {
-    btn.disabled = false;
-    toast(err.message, 'danger');
-  }
 }
 
 async function renderViolations() {
@@ -3050,7 +3043,7 @@ async function renderAdmin() {
   const editUser = data.users.find(u => Number(u.id) === Number(state.adminEditUserId));
   const editBoxes = editUser ? Object.entries(PERM_LABELS).map(([key, label]) => `<label><input type="checkbox" name="${key}" ${Number(editUser.permissions?.[key]) === 1 ? 'checked' : ''}> ${label}</label>`).join(' ') : '';
   const editCard = editUser ? `<div class="card" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">Sửa quyền / thông tin tài khoản</h3><button class="btn secondary" id="cancelEditUserBtn">Đóng</button></div><form id="editUserForm" class="grid three"><input type="hidden" name="id" value="${editUser.id}"><div class="field"><label>Họ tên</label><input class="input" name="full_name" value="${esc(editUser.full_name)}" required></div><div class="field"><label>Vai trò</label><select name="role"><option value="employee" ${editUser.role === 'employee' ? 'selected' : ''}>Nhân viên</option><option value="manager" ${editUser.role === 'manager' ? 'selected' : ''}>Quản lý</option><option value="office" ${editUser.role === 'office' ? 'selected' : ''}>Khối văn phòng</option><option value="admin" ${editUser.role === 'admin' ? 'selected' : ''}>Admin</option></select></div><div class="field"><label>Cửa hàng áp dụng (chọn nhiều)</label><select name="store_ids" multiple size="5">${renderStoreMultiOptions(editUser.store_ids || (editUser.store_id ? [editUser.store_id] : []))}</select><div class="hint">Có thể cấp cùng lúc nhiều cửa hàng, ví dụ Quận 1 và Quận 7.</div></div><div class="field"><label>Trạng thái tài khoản</label><select class="input" name="status"><option value="active" ${editUser.status === 'active' ? 'selected' : ''}>Đang làm / đang dùng</option><option value="inactive" ${editUser.status !== 'active' ? 'selected' : ''}>Đã nghỉ / ngưng hoạt động</option></select></div><div class="field"><label>Reset mật khẩu (không bắt buộc)</label><input class="input" name="password" placeholder="Để trống nếu không đổi"></div><div class="field" style="grid-column:span 2"><label>Quyền chi tiết</label><div class="hint perm-check-grid">${editBoxes}</div></div><div style="grid-column:1/-1" class="row"><button class="btn">Lưu quyền</button><button class="btn secondary" type="button" id="cancelEditUserBtn2">Hủy</button></div></form></div>` : '';
-  const table = `<div class="table-wrap"><table><thead><tr><th>Họ tên</th><th>Tài khoản</th><th>Vai trò</th><th>Cửa hàng áp dụng</th><th>Trạng thái</th><th>Quyền</th><th>Thao tác</th></tr></thead><tbody>${data.users.map(u => { const hasView = Number(u.permissions.can_view_sales_target) === 1 && Number(u.permissions.can_view_store_sales_summary) === 1 && Number(u.permissions.can_view_bonuses) === 1; const hasTarget = Number(u.permissions.can_set_sales_targets) === 1; const inactive = u.status !== 'active'; const action = Number(u.id) === Number(state.user.id) ? '<span class="hint">Tài khoản hiện tại</span>' : `<div class="row wrap"><button class="btn small secondary editUserBtn" data-id="${u.id}">Sửa quyền</button><button class="btn small secondary quickPermBtn" data-id="${u.id}" data-mode="${hasView ? 'revoke' : 'grant'}">${hasView ? 'Thu hồi xem %/thưởng' : 'Cấp xem %/thưởng'}</button><button class="btn small secondary quickTargetBtn" data-id="${u.id}" data-mode="${hasTarget ? 'revoke' : 'grant'}">${hasTarget ? 'Thu hồi set target' : 'Cấp set target'}</button>${inactive ? `<button class="btn small ok restoreUserBtn" data-id="${u.id}" data-name="${esc(u.full_name)}">Mở lại</button>` : (can('can_delete_users') ? `<button class="btn small danger deleteUserBtn" data-id="${u.id}" data-name="${esc(u.full_name)}">Xóa tài khoản</button>` : '')}</div>`; return `<tr class="${inactive ? 'user-inactive-row' : ''}"><td><b>${esc(u.full_name)}</b>${inactive ? '<div class="hint">Dữ liệu cũ vẫn được giữ trong báo cáo</div>' : ''}</td><td>${esc(u.username)}</td><td>${roleLabel(u.role)}</td><td>${esc((u.store_names && u.store_names.length ? u.store_names.join(' • ') : (u.store_name || '')))}</td><td>${userStatusBadge(u.status)}</td><td>${Object.entries(PERM_LABELS).filter(([k]) => Number(u.permissions[k]) === 1).map(([,l]) => `<span class="badge">${esc(l)}</span>`).join(' ')}</td><td>${action}</td></tr>`; }).join('')}</tbody></table></div>`;
+  const table = `<div class="table-wrap"><table><thead><tr><th>Họ tên</th><th>Tài khoản</th><th>Vai trò</th><th>Cửa hàng áp dụng</th><th>Trạng thái</th><th>Quyền</th><th>Thao tác</th></tr></thead><tbody>${data.users.map(u => { const hasView = Number(u.permissions.can_view_sales_target) === 1 && Number(u.permissions.can_view_store_sales_summary) === 1 && Number(u.permissions.can_view_bonuses) === 1; const hasTarget = Number(u.permissions.can_set_sales_targets) === 1; const inactive = u.status !== 'active'; const action = Number(u.id) === Number(state.user.id) ? '<span class="hint">Tài khoản hiện tại</span>' : `<div class="row wrap"><button class="btn small secondary editUserBtn" data-id="${u.id}">Sửa quyền</button><button class="btn small secondary quickPermBtn" data-id="${u.id}" data-mode="${hasView ? 'revoke' : 'grant'}">${hasView ? 'Thu hồi xem %/thưởng' : 'Cấp xem %/thưởng'}</button><button class="btn small secondary quickTargetBtn" data-id="${u.id}" data-mode="${hasTarget ? 'revoke' : 'grant'}">${hasTarget ? 'Thu hồi set target' : 'Cấp set target'}</button>${inactive ? `<button class="btn small ok restoreUserBtn" data-id="${u.id}" data-name="${esc(u.full_name)}">Mở lại</button>` : (can('can_delete_users') ? `<button class="btn small danger deleteUserBtn" data-id="${u.id}" data-name="${esc(u.full_name)}">Xóa vĩnh viễn</button>` : '')}</div>`; return `<tr class="${inactive ? 'user-inactive-row' : ''}"><td><b>${esc(u.full_name)}</b>${inactive ? '<div class="hint">Dữ liệu cũ vẫn được giữ trong báo cáo</div>' : ''}</td><td>${esc(u.username)}</td><td>${roleLabel(u.role)}</td><td>${esc((u.store_names && u.store_names.length ? u.store_names.join(' • ') : (u.store_name || '')))}</td><td>${userStatusBadge(u.status)}</td><td>${Object.entries(PERM_LABELS).filter(([k]) => Number(u.permissions[k]) === 1).map(([,l]) => `<span class="badge">${esc(l)}</span>`).join(' ')}</td><td>${action}</td></tr>`; }).join('')}</tbody></table></div>`;
   const exports = `<div class="card" style="margin-top:16px"><h3>Tải dữ liệu</h3><div class="export-grid"><button class="btn secondary" data-export="tasks">Công việc</button><button class="btn secondary" data-export="violations">Vi phạm</button><button class="btn secondary" data-export="assessments">Checklist</button><button class="btn secondary" data-export="sales">Doanh thu cập nhật</button><button class="btn secondary" data-export="sales_targets">Target tháng</button><button class="btn secondary" data-export="sales_daily_targets">Target ngày</button><button class="btn secondary" data-export="bonuses">Tiền thưởng</button><button class="btn secondary" data-export="documents">Tài liệu</button><button class="btn secondary" data-export="orders">Order hàng</button><button class="btn secondary" data-export="online_orders">Đơn online</button><button class="btn secondary" data-export="product_feedback_summary">Tổng hợp đánh giá SP</button><button class="btn secondary" data-export="product_feedback">Chi tiết đánh giá SP</button><button class="btn secondary" data-export="product_collections">List BST/SKU</button><button class="btn secondary" data-export="product_trainings">Đào tạo SP</button><button class="btn secondary" data-export="product_training_attempts">Kết quả kiểm tra SP</button><button class="btn secondary" data-export="cdp_ojti">CDP/OJTI</button><button class="btn secondary" data-export="shifts">Ca làm</button><button class="btn secondary" data-export="work_schedules">Lịch làm việc</button><button class="btn secondary" data-export="performance">Tổng hợp điểm</button></div></div>`;
   shell(`${form}${editCard}<div class="card" style="margin-top:16px"><h3>Danh sách tài khoản</h3>${table}</div>${exports}`, 'Admin', 'Cấp quyền, phân quyền xem và tải dữ liệu');
   const createUserForm = $('#userForm');
@@ -3100,7 +3093,7 @@ async function renderAdmin() {
   }));
   $$('.deleteUserBtn').forEach(btn => btn.addEventListener('click', async () => {
     const name = btn.dataset.name || 'tài khoản này';
-    if (!confirm(`Xóa tài khoản ${name}? Tài khoản sẽ bị khóa đăng nhập; dữ liệu lịch sử vẫn được giữ để báo cáo không sai.`)) return;
+    if (!confirm(`Xóa vĩnh viễn ${name}? Tài khoản sẽ bị khóa đăng nhập; dữ liệu lịch sử vẫn được giữ để báo cáo không sai.`)) return;
     try {
       await api(`/api/users/${btn.dataset.id}`, { method: 'DELETE' });
       toast('Đã xóa và khóa tài khoản');
