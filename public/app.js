@@ -853,7 +853,7 @@ async function renderDashboard() {
   ]);
   const tasks = tasksData.tasks;
   const open = tasks.filter(t => t.status === 'assigned').length;
-  const late = tasks.filter(t => t.status === 'overdue' || t.status === 'completed_late').length;
+  const late = tasks.filter(t => ['overdue','completed_late','not_completed'].includes(t.status)).length;
   const done = tasks.filter(t => t.status === 'completed_on_time').length;
   const total = Math.max(tasks.length, 1);
   const onTimeRate = Math.round((done / total) * 100);
@@ -1240,8 +1240,12 @@ async function renderTasks() {
   const otherTasks = tasks.filter(t => !todayTasks.some(x => Number(x.assignment_id) === Number(t.assignment_id)));
   const overdueTasks = tasks.filter(t => t.status === 'overdue' || t.status === 'completed_late');
   const notCompletedTasks = tasks.filter(t => t.status === 'not_completed');
-  const mobileSummary = `<div class="task-mobile-summary"><div><b>${tasks.filter(t => ['assigned','overdue'].includes(t.status)).length}</b><span>Chưa xong</span></div><div><b>${todayTasks.length}</b><span>Hôm nay</span></div><div><b>${overdueTasks.length}</b><span>Quá hạn</span></div><div><b>${notCompletedTasks.length}</b><span>Không hoàn thành</span></div></div>`;
-  const exceptionDashboard = `<div class="card task-exception-dashboard" style="margin-top:16px"><div class="section-title"><div><p class="eyebrow">Tổng hợp cần xử lý</p><h3>Quá hạn & Không hoàn thành</h3></div><span class="badge danger">${overdueTasks.length + notCompletedTasks.length} mục</span></div><div class="task-exception-tabs"><button type="button" class="btn secondary small taskExceptionTab active" data-filter="overdue">Quá hạn dưới 4 tiếng (${overdueTasks.length})</button><button type="button" class="btn secondary small taskExceptionTab" data-filter="not_completed">Không hoàn thành (${notCompletedTasks.length})</button></div><div id="taskExceptionList" class="grid task-timeline">${(overdueTasks.length ? overdueTasks : notCompletedTasks).map(t => taskCard(t)).join('') || '<div class="empty">Không có công việc cần xử lý</div>'}</div></div>`;
+  const mobileSummary = state.user.role === 'admin'
+    ? `<div class="task-mobile-summary"><div><b>${tasks.filter(t => ['assigned','overdue'].includes(t.status)).length}</b><span>Chưa xong</span></div><div><b>${todayTasks.length}</b><span>Hôm nay</span></div><div><b>${overdueTasks.length}</b><span>Quá hạn</span></div><div><b>${notCompletedTasks.length}</b><span>Không hoàn thành</span></div></div>`
+    : `<div class="task-mobile-summary"><div><b>${tasks.filter(t => ['assigned','overdue'].includes(t.status)).length}</b><span>Chưa xong</span></div><div><b>${todayTasks.length}</b><span>Hôm nay</span></div></div>`;
+  const exceptionDashboard = state.user.role === 'admin'
+    ? `<div class="card task-exception-dashboard" style="margin-top:16px"><div class="section-title"><div><p class="eyebrow">Tổng hợp cần xử lý</p><h3>Quá hạn & Không hoàn thành</h3></div><span class="badge danger">${overdueTasks.length + notCompletedTasks.length} mục</span></div><div class="task-exception-tabs"><button type="button" class="btn secondary small taskExceptionTab active" data-filter="overdue">Quá hạn dưới 4 tiếng (${overdueTasks.length})</button><button type="button" class="btn secondary small taskExceptionTab" data-filter="not_completed">Không hoàn thành (${notCompletedTasks.length})</button></div><div id="taskExceptionList" class="grid task-timeline">${(overdueTasks.length ? overdueTasks : notCompletedTasks).map(t => taskCard(t)).join('') || '<div class="empty">Không có công việc cần xử lý</div>'}</div></div>`
+    : '';
   const todayBlock = todayTasks.length ? `<div class="card task-today-wrap task-timeline-wrap" style="margin-top:16px"><div class="toolbar"><div><p class="eyebrow">Hạn hôm nay / việc trong ngày</p><h3>${todayTasks.length} công việc cần nhìn ngay hôm nay</h3></div></div>${mobileSummary}<div class="grid task-timeline">${todayTasks.map(t => taskCard(t)).join('')}</div></div>` : mobileSummary;
   const grouped = otherTasks.map(t => taskCard(t)).join('') || '<div class="empty">Không còn công việc khác</div>';
   shell(`${assignForm}${exceptionDashboard}${todayBlock}<div class="card task-list-wrap task-timeline-wrap" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">Danh sách công việc theo ngày gần nhất</h3>${can('can_export') ? '<button class="btn secondary" data-export="tasks">Tải CSV</button>' : ''}</div><p class="hint">Hệ thống tự tính: trễ từ 1 phút đến 4 tiếng là Quá hạn (-5 điểm); quá 4 tiếng là Không hoàn thành (-10 điểm).</p><div class="grid task-timeline">${grouped}</div></div>`, 'Công việc', 'Giao việc 1 lần, giao nhiều ngày, giao theo ca hoặc nhiều nhân viên cùng lúc');

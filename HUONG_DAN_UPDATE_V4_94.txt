@@ -1,0 +1,6 @@
+DEZUS STORE OPS V4.94
+
+1. Khối Tổng hợp cần xử lý: Quá hạn / Không hoàn thành chỉ hiển thị cho Admin.
+2. Nhân viên và quản lý không còn thấy các ô Quá hạn / Không hoàn thành trong tóm tắt mobile.
+3. Ở Tổng quan, chỉ số Trễ / quá hạn đã gộp cả công việc Không hoàn thành.
+4. Giữ nguyên thuật toán: trễ đến 4 giờ = Quá hạn; trên 4 giờ = Không hoàn thành.
