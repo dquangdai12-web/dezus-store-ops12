@@ -3932,3 +3932,7 @@ body{letter-spacing:-.008em}
   .task-admin-actions .btn{width:100%}
   .task-badge-row{gap:5px}.task-card .badge,.task-priority{font-size:10px}
 }
+
+/* ==== V4.91 FIXED TASK PENALTIES + ACCOUNT DELETE PERMISSION ==== */
+.task-fixed-penalty{display:grid;gap:5px;padding:12px 14px;border:1px solid #d9e4ef;border-radius:14px;background:#f7fbff;color:#334155}.task-fixed-penalty b{color:#b91c1c}.task-fixed-penalty span{font-size:12px;color:#7f1d1d}.markNotCompletedBtn{margin-top:8px}.task-card:has(.badge.danger){border-color:#fecaca}
+@media(max-width:860px){.markNotCompletedBtn{width:100%;min-height:42px}.task-fixed-penalty{font-size:13px}}

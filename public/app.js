@@ -92,6 +92,7 @@ function violationCatalogOptions(catalog = VIOLATION_CATALOG) {
 const PERM_LABELS = {
   can_assign_tasks: 'Giao việc',
   can_edit_tasks: 'Sửa công việc',
+  can_delete_users: 'Xóa tài khoản',
   can_manage_violations: 'Ghi vi phạm',
   can_grade_checklists: 'Chấm checklist',
   can_manage_sales: 'Nhập doanh thu chung',
@@ -133,7 +134,7 @@ const PERM_LABELS = {
 const ROLE_PERMISSION_PRESETS = {
   employee: {},
   manager: {
-    can_assign_tasks: 1, can_edit_tasks: 1, can_manage_violations: 1, can_grade_checklists: 1,
+    can_assign_tasks: 1, can_edit_tasks: 1, can_delete_users: 0, can_manage_violations: 1, can_grade_checklists: 1,
     can_manage_sales: 1, can_manage_total_sales: 1, can_manage_daily_report: 1,
     can_manage_weekly_report: 1, can_view_weekly_report: 1, can_view_reports: 1,
     can_export: 1, can_view_store_sales_summary: 1, can_view_bonuses: 1,
@@ -461,7 +462,8 @@ async function downloadExport(type) {
 function statusBadge(status) {
   const map = {
     assigned: ['Đang mở', 'dark'],
-    overdue: ['Không hoàn thành đúng hạn', 'danger'],
+    overdue: ['Không đúng hạn', 'danger'],
+    not_completed: ['Không hoàn thành', 'danger'],
     completed_on_time: ['Hoàn thành đúng hạn', 'ok'],
     completed_late: ['Hoàn thành trễ hạn / bị trừ điểm', 'warn'],
   };
@@ -1193,7 +1195,7 @@ async function renderTasks() {
           <div class="field"><label>Tiêu đề công việc</label><input class="input" name="title" required placeholder="VD: Kiểm tra VM đầu ca"></div>
           <div class="field"><label>Cửa hàng</label><select name="store_id" id="taskStore" ${allowedStores.length <= 1 ? 'disabled' : ''}>${storeOptions}</select></div>
           <div class="field"><label>Mức độ</label><select name="priority"><option value="low">Thấp</option><option value="medium" selected>Trung bình</option><option value="high">Cao</option></select></div>
-          <div class="field"><label>Điểm trừ nếu trễ</label><input class="input" name="score_value" type="number" value="10" min="0" max="100"></div>
+          <div class="field"><label>Điểm phạt cố định</label><div class="task-fixed-penalty"><b>Trễ / quá hạn: -5 điểm</b><span>Không hoàn thành: -10 điểm</span></div></div>
         </div>
 
         <div class="task-mode-panel active" data-task-panel="single">
@@ -1274,6 +1276,7 @@ async function renderTasks() {
   updateTaskRepeatUi();
   $('#taskForm')?.addEventListener('submit', submitTask);
   $$('.completeForm').forEach(f => f.addEventListener('submit', submitCompleteTask));
+  $$('.markNotCompletedBtn').forEach(btn => btn.addEventListener('click', markTaskNotCompleted));
   $$('.editTaskBtn').forEach(btn => btn.addEventListener('click', openTaskEditor));
   $$('.deleteTaskBtn').forEach(btn => btn.addEventListener('click', deleteTask));
 }
@@ -1294,16 +1297,18 @@ async function deleteTask(e) {
 }
 
 function taskCard(t) {
-  const canComplete = (Number(t.assignee_id) === Number(state.user.id) || state.user.role !== 'employee') && !t.completed_at;
+  const isNotCompleted = String(t.status || t.resolution_status || '') === 'not_completed';
+  const canComplete = (Number(t.assignee_id) === Number(state.user.id) || state.user.role !== 'employee') && !t.completed_at && !isNotCompleted;
+  const canMarkNotCompleted = !t.completed_at && !isNotCompleted && (state.user.role === 'admin' || can('can_edit_tasks'));
   const todayKey = new Date().toISOString().slice(0, 10);
   const dueDay = String(t.due_at || '').slice(0, 10);
   const workDay = String(t.task_date || dueDay || '');
   const isToday = dueDay === todayKey || workDay === todayKey || Number(t.is_today || 0) === 1;
-  const isLate = !t.completed_at && t.due_at && new Date(t.due_at).getTime() < Date.now();
+  const isLate = !t.completed_at && !isNotCompleted && t.due_at && new Date(t.due_at).getTime() < Date.now();
   const priorityLabel = t.priority === 'high' ? 'Cao' : (t.priority === 'low' ? 'Thấp' : 'Trung bình');
   const priorityIcon = t.priority === 'high' ? '!' : (t.priority === 'low' ? '↓' : '•');
   const todayBadges = isToday ? `<span class="badge warning">${dueDay === todayKey ? 'Hạn hôm nay' : 'Việc hôm nay'}</span>` : '';
-  const lateBadge = isLate ? '<span class="badge danger">Đã quá hạn</span>' : '';
+  const lateBadge = isNotCompleted ? '<span class="badge danger">Không hoàn thành • -10 điểm</span>' : (isLate ? '<span class="badge danger">Quá hạn • -5 điểm</span>' : '');
   const shiftSyncBadge = t.shift_ids && t.shift_ids.length ? '<span class="badge dark">Theo ca</span>' : '';
   const timelineTime = t.due_at ? new Date(t.due_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '--:--';
   return `<article class="card task-card ${isToday ? 'task-card-today' : ''} ${isLate ? 'task-card-late' : ''}">
@@ -1328,6 +1333,7 @@ function taskCard(t) {
       ${t.evidence_path ? `<div class="task-evidence"><b>Chứng từ đã nộp</b><div>${renderFiles(t.evidence_path)} ${t.evidence_note ? `• ${esc(t.evidence_note)}` : ''}</div></div>` : ''}
     </div>
     ${canComplete ? `<form class="completeForm task-complete-form" data-id="${t.assignment_id}" enctype="multipart/form-data"><input class="input" name="note" placeholder="Ghi chú hoàn thành"><input class="input" name="evidence" type="file" accept="image/*,.pdf,.xlsx,.docx" multiple><input class="input" name="evidence_link" placeholder="Link Drive nếu file lớn"><button class="btn small">Hoàn thành</button></form>` : ''}
+    ${canMarkNotCompleted ? `<button type="button" class="btn danger small markNotCompletedBtn" data-assignment-id="${t.assignment_id}" data-task-title="${esc(t.title)}">Đánh dấu không hoàn thành</button>` : ''}
     ${(can('can_edit_tasks') || state.user.role === 'admin') ? `<div class="task-admin-actions"><button type="button" class="btn secondary small editTaskBtn" data-task-id="${t.id}">Sửa công việc</button>${state.user.role === 'admin' ? `<button type="button" class="btn danger small deleteTaskBtn" data-task-id="${t.id}" data-task-title="${esc(t.title)}">Xóa công việc</button>` : ''}</div>` : ''}
     </div>
   </article>`;
@@ -1354,7 +1360,7 @@ function openTaskEditor(e) {
         <div class="field" style="grid-column:span 2"><label>Nội dung / hướng dẫn</label><textarea name="description" rows="4">${esc(t.description || '')}</textarea></div>
         <div class="field"><label>Hạn hoàn thành</label><input type="datetime-local" name="due_at" value="${esc(dueLocal)}" required></div>
         <div class="field"><label>Mức ưu tiên</label><select name="priority"><option value="low" ${t.priority==='low'?'selected':''}>Thấp</option><option value="medium" ${!t.priority||t.priority==='medium'?'selected':''}>Trung bình</option><option value="high" ${t.priority==='high'?'selected':''}>Cao</option></select></div>
-        <div class="field"><label>Điểm trừ khi trễ</label><input type="number" name="score_value" min="0" max="100" value="${Number(t.score_value || 10)}"></div>
+        <div class="field"><label>Điểm phạt cố định</label><div class="task-fixed-penalty"><b>Trễ / quá hạn: -5 điểm</b><span>Không hoàn thành: -10 điểm</span></div></div>
         <div class="field"><label>Cửa hàng</label><input value="${esc(t.store_name || '')}" disabled></div>
         <div class="field" style="grid-column:span 2"><label>Người nhận việc</label><div class="task-user-picker">${storeUsers.map(u => `<label class="task-user-option"><input type="checkbox" name="assignee_ids" value="${u.id}" ${selectedIds.has(Number(u.id))?'checked':''}><span class="task-user-dot"></span><span class="task-user-info"><b>${esc(u.full_name)}</b><small>${esc(u.store_name || t.store_name || '')}</small></span></label>`).join('') || '<div class="empty compact">Chưa có nhân sự trong cửa hàng</div>'}</div><span class="hint">Lượt đã hoàn thành được giữ nguyên để bảo toàn minh chứng.</span></div>
       </div>
@@ -1446,6 +1452,23 @@ async function submitCompleteTask(e) {
   if (hasFileOverLimit(form)) return;
   const fd = new FormData(form);
   try { const res = await api(`/api/tasks/${form.dataset.id}/complete`, { method: 'POST', body: fd }); toast(res.status === 'completed_late' ? 'Hoàn thành nhưng đã trễ hạn, hệ thống tự trừ điểm' : 'Đã hoàn thành đúng hạn'); renderTasks(); } catch (err) { toast(err.message, 'danger'); }
+}
+
+async function markTaskNotCompleted(e) {
+  const btn = e.currentTarget;
+  const title = btn.dataset.taskTitle || 'công việc này';
+  const reason = prompt(`Lý do không hoàn thành: ${title}`, '') ?? null;
+  if (reason === null) return;
+  if (!confirm(`Xác nhận đánh dấu “Không hoàn thành” và trừ cố định 10 điểm cho ${title}?`)) return;
+  btn.disabled = true;
+  try {
+    await api(`/api/tasks/${btn.dataset.assignmentId}/not-completed`, { method: 'POST', body: JSON.stringify({ reason }) });
+    toast('Đã đánh dấu không hoàn thành và trừ 10 điểm');
+    renderTasks();
+  } catch (err) {
+    btn.disabled = false;
+    toast(err.message, 'danger');
+  }
 }
 
 async function renderViolations() {
@@ -2198,8 +2221,9 @@ async function renderProductTraining() {
     </details>`;
   }).join('') : '<div class="empty">Chưa có bài đào tạo sản phẩm</div>';
   const exportBtns = can('can_export') ? '<button class="btn secondary" data-export="product_trainings">Tải CSV đào tạo SP</button><button class="btn secondary" data-export="product_training_attempts">Tải CSV kết quả kiểm tra</button>' : '';
+  const deleteAllLessonsBtn = state.user?.role === 'admin' && rowsData.length ? '<button class="btn danger" id="trainingDeleteAllBtn" type="button">Xóa tất cả bài học</button>' : '';
   const listTitle = can('can_manage_product_training') ? 'Thư viện đào tạo sản phẩm' : 'Bài học sản phẩm cần học';
-  shell(`${adminTrainingGuide}${employeeTrainingGuide}${form}${trainingStats}<div class="card training-lesson-list-card" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">${listTitle}</h3>${filter}${exportBtns}</div>${rows}</div>`, 'Học & Test sản phẩm', 'Học từng bài trước, sau đó làm 1 bài test tổng chung cho toàn bộ bài học');
+  shell(`${adminTrainingGuide}${employeeTrainingGuide}${form}${trainingStats}<div class="card training-lesson-list-card" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">${listTitle}</h3>${filter}${exportBtns}${deleteAllLessonsBtn}</div>${rows}</div>`, 'Học & Test sản phẩm', 'Học từng bài trước, sau đó làm 1 bài test tổng chung cho toàn bộ bài học');
   $$('.training-view-image').forEach(img => img.addEventListener('error', () => {
     let fallbacks = [];
     try { fallbacks = JSON.parse(img.dataset.fallbacks || '[]'); } catch (_err) { fallbacks = []; }
@@ -2567,6 +2591,21 @@ async function renderProductTraining() {
     if (!confirm('Xóa bài đào tạo sản phẩm này?')) return;
     try { await api(`/api/product-trainings/${btn.dataset.id}`, { method: 'DELETE' }); toast('Đã xóa bài đào tạo'); renderProductTraining(); } catch (err) { toast(err.message, 'danger'); }
   }));
+  $('#trainingDeleteAllBtn')?.addEventListener('click', async () => {
+    const scopeText = state.trainingStoreId ? 'cửa hàng đang lọc' : 'toàn hệ thống';
+    if (!confirm(`Xóa TẤT CẢ bài học sản phẩm của ${scopeText}? Thao tác này không thể hoàn tác trên giao diện.`)) return;
+    const verify = prompt('Nhập XOA TAT CA để xác nhận:');
+    if (String(verify || '').trim().toUpperCase() !== 'XOA TAT CA') {
+      toast('Đã hủy xóa tất cả bài học', 'warning');
+      return;
+    }
+    try {
+      const result = await api('/api/product-trainings/delete-all', { method: 'POST', body: JSON.stringify({ store_id: state.trainingStoreId || null }) });
+      toast(`Đã xóa ${Number(result.deleted_count || 0)} bài học`, 'ok');
+      state.trainingCombinedQuiz = null;
+      renderProductTraining();
+    } catch (err) { toast(err.message, 'danger'); }
+  });
 }
 
 
@@ -2999,7 +3038,7 @@ async function renderBonuses() {
 async function renderReports() {
   const data = await api('/api/reports/performance');
   const rows = data.performance;
-  const perfTable = rows.length ? `<div class="table-wrap"><table><thead><tr><th>Top</th><th>Nhân viên</th><th>Cửa hàng</th><th>Điểm tổng</th><th>Công việc</th><th>Vi phạm</th><th>GUESTS</th><th>% đạt target</th></tr></thead><tbody>${rows.map((r, i) => `<tr><td><span class="badge dark">#${i + 1}</span></td><td><b>${esc(r.full_name)}</b></td><td>${esc(r.store_name || '')}</td><td><b>${r.final_score}/100</b></td><td>${r.task_score}%<br><span class="hint">Đúng hạn ${r.tasks_on_time}/${r.tasks_total}, trễ ${r.tasks_late}, quá hạn ${r.tasks_overdue}</span></td><td>${r.violation_score}%<br><span class="hint">${r.violations_count} lỗi, -${r.violation_deductions} điểm</span></td><td>${r.guests_score}%</td><td>${Number(r.achievement_percent || 0)}%<br><span class="hint">Index ${r.revenue_score}%</span></td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Chưa có dữ liệu tổng hợp</div>';
+  const perfTable = rows.length ? `<div class="table-wrap"><table><thead><tr><th>Top</th><th>Nhân viên</th><th>Cửa hàng</th><th>Điểm tổng</th><th>Công việc</th><th>Vi phạm</th><th>GUESTS</th><th>% đạt target</th></tr></thead><tbody>${rows.map((r, i) => `<tr><td><span class="badge dark">#${i + 1}</span></td><td><b>${esc(r.full_name)}</b></td><td>${esc(r.store_name || '')}</td><td><b>${r.final_score}/100</b></td><td>${r.task_score}%<br><span class="hint">Đúng hạn ${r.tasks_on_time}/${r.tasks_total}, trễ ${r.tasks_late}, quá hạn ${r.tasks_overdue}, không hoàn thành ${r.tasks_not_completed || 0}</span></td><td>${r.violation_score}%<br><span class="hint">${r.violations_count} lỗi, -${r.violation_deductions} điểm</span></td><td>${r.guests_score}%</td><td>${Number(r.achievement_percent || 0)}%<br><span class="hint">Index ${r.revenue_score}%</span></td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Chưa có dữ liệu tổng hợp</div>';
   const storeTable = data.storeSummary?.length ? `<div class="table-wrap"><table><thead><tr><th>Cửa hàng</th><th>OPS</th><th>VM</th><th>Vi phạm</th></tr></thead><tbody>${data.storeSummary.map(s => `<tr><td><b>${esc(s.store_name)}</b></td><td>${Math.round(s.ops_score || 0)}%</td><td>${Math.round(s.vm_score || 0)}%</td><td>${s.violations}</td></tr>`).join('')}</tbody></table></div>` : '';
   shell(`<div class="card"><div class="toolbar"><h3 style="margin-right:auto">Hiệu suất nhân viên</h3>${can('can_export') ? '<button class="btn secondary" data-export="performance">Tải CSV</button>' : ''}</div>${perfTable}</div><div class="card" style="margin-top:16px"><h3>Hiệu suất cửa hàng</h3>${storeTable || '<div class="empty">Chưa có điểm OPS/VM</div>'}</div><div class="card" style="margin-top:16px"><h3>Cách tính điểm tổng</h3><p class="hint">Điểm tổng tối đa 100 = 35% hiệu suất công việc + 20% điểm không vi phạm + 25% GUESTS checklist + 20% index doanh thu. Công việc trễ hạn/quá hạn tự bị ghi nhận không hoàn thành đúng hạn và trừ điểm.</p></div>`, 'Tổng hợp điểm', 'Hiệu suất cửa hàng và nhân viên, chuẩn hóa về thang 100 điểm');
 }
@@ -3011,7 +3050,7 @@ async function renderAdmin() {
   const editUser = data.users.find(u => Number(u.id) === Number(state.adminEditUserId));
   const editBoxes = editUser ? Object.entries(PERM_LABELS).map(([key, label]) => `<label><input type="checkbox" name="${key}" ${Number(editUser.permissions?.[key]) === 1 ? 'checked' : ''}> ${label}</label>`).join(' ') : '';
   const editCard = editUser ? `<div class="card" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">Sửa quyền / thông tin tài khoản</h3><button class="btn secondary" id="cancelEditUserBtn">Đóng</button></div><form id="editUserForm" class="grid three"><input type="hidden" name="id" value="${editUser.id}"><div class="field"><label>Họ tên</label><input class="input" name="full_name" value="${esc(editUser.full_name)}" required></div><div class="field"><label>Vai trò</label><select name="role"><option value="employee" ${editUser.role === 'employee' ? 'selected' : ''}>Nhân viên</option><option value="manager" ${editUser.role === 'manager' ? 'selected' : ''}>Quản lý</option><option value="office" ${editUser.role === 'office' ? 'selected' : ''}>Khối văn phòng</option><option value="admin" ${editUser.role === 'admin' ? 'selected' : ''}>Admin</option></select></div><div class="field"><label>Cửa hàng áp dụng (chọn nhiều)</label><select name="store_ids" multiple size="5">${renderStoreMultiOptions(editUser.store_ids || (editUser.store_id ? [editUser.store_id] : []))}</select><div class="hint">Có thể cấp cùng lúc nhiều cửa hàng, ví dụ Quận 1 và Quận 7.</div></div><div class="field"><label>Trạng thái tài khoản</label><select class="input" name="status"><option value="active" ${editUser.status === 'active' ? 'selected' : ''}>Đang làm / đang dùng</option><option value="inactive" ${editUser.status !== 'active' ? 'selected' : ''}>Đã nghỉ / ngưng hoạt động</option></select></div><div class="field"><label>Reset mật khẩu (không bắt buộc)</label><input class="input" name="password" placeholder="Để trống nếu không đổi"></div><div class="field" style="grid-column:span 2"><label>Quyền chi tiết</label><div class="hint perm-check-grid">${editBoxes}</div></div><div style="grid-column:1/-1" class="row"><button class="btn">Lưu quyền</button><button class="btn secondary" type="button" id="cancelEditUserBtn2">Hủy</button></div></form></div>` : '';
-  const table = `<div class="table-wrap"><table><thead><tr><th>Họ tên</th><th>Tài khoản</th><th>Vai trò</th><th>Cửa hàng áp dụng</th><th>Trạng thái</th><th>Quyền</th><th>Thao tác</th></tr></thead><tbody>${data.users.map(u => { const hasView = Number(u.permissions.can_view_sales_target) === 1 && Number(u.permissions.can_view_store_sales_summary) === 1 && Number(u.permissions.can_view_bonuses) === 1; const hasTarget = Number(u.permissions.can_set_sales_targets) === 1; const inactive = u.status !== 'active'; const action = Number(u.id) === Number(state.user.id) ? '<span class="hint">Tài khoản hiện tại</span>' : `<div class="row wrap"><button class="btn small secondary editUserBtn" data-id="${u.id}">Sửa quyền</button><button class="btn small secondary quickPermBtn" data-id="${u.id}" data-mode="${hasView ? 'revoke' : 'grant'}">${hasView ? 'Thu hồi xem %/thưởng' : 'Cấp xem %/thưởng'}</button><button class="btn small secondary quickTargetBtn" data-id="${u.id}" data-mode="${hasTarget ? 'revoke' : 'grant'}">${hasTarget ? 'Thu hồi set target' : 'Cấp set target'}</button>${inactive ? `<button class="btn small ok restoreUserBtn" data-id="${u.id}" data-name="${esc(u.full_name)}">Mở lại</button>` : `<button class="btn small danger deleteUserBtn" data-id="${u.id}" data-name="${esc(u.full_name)}">Ngưng hoạt động / Nghỉ việc</button>`}</div>`; return `<tr class="${inactive ? 'user-inactive-row' : ''}"><td><b>${esc(u.full_name)}</b>${inactive ? '<div class="hint">Dữ liệu cũ vẫn được giữ trong báo cáo</div>' : ''}</td><td>${esc(u.username)}</td><td>${roleLabel(u.role)}</td><td>${esc((u.store_names && u.store_names.length ? u.store_names.join(' • ') : (u.store_name || '')))}</td><td>${userStatusBadge(u.status)}</td><td>${Object.entries(PERM_LABELS).filter(([k]) => Number(u.permissions[k]) === 1).map(([,l]) => `<span class="badge">${esc(l)}</span>`).join(' ')}</td><td>${action}</td></tr>`; }).join('')}</tbody></table></div>`;
+  const table = `<div class="table-wrap"><table><thead><tr><th>Họ tên</th><th>Tài khoản</th><th>Vai trò</th><th>Cửa hàng áp dụng</th><th>Trạng thái</th><th>Quyền</th><th>Thao tác</th></tr></thead><tbody>${data.users.map(u => { const hasView = Number(u.permissions.can_view_sales_target) === 1 && Number(u.permissions.can_view_store_sales_summary) === 1 && Number(u.permissions.can_view_bonuses) === 1; const hasTarget = Number(u.permissions.can_set_sales_targets) === 1; const inactive = u.status !== 'active'; const action = Number(u.id) === Number(state.user.id) ? '<span class="hint">Tài khoản hiện tại</span>' : `<div class="row wrap"><button class="btn small secondary editUserBtn" data-id="${u.id}">Sửa quyền</button><button class="btn small secondary quickPermBtn" data-id="${u.id}" data-mode="${hasView ? 'revoke' : 'grant'}">${hasView ? 'Thu hồi xem %/thưởng' : 'Cấp xem %/thưởng'}</button><button class="btn small secondary quickTargetBtn" data-id="${u.id}" data-mode="${hasTarget ? 'revoke' : 'grant'}">${hasTarget ? 'Thu hồi set target' : 'Cấp set target'}</button>${inactive ? `<button class="btn small ok restoreUserBtn" data-id="${u.id}" data-name="${esc(u.full_name)}">Mở lại</button>` : (can('can_delete_users') ? `<button class="btn small danger deleteUserBtn" data-id="${u.id}" data-name="${esc(u.full_name)}">Xóa tài khoản</button>` : '')}</div>`; return `<tr class="${inactive ? 'user-inactive-row' : ''}"><td><b>${esc(u.full_name)}</b>${inactive ? '<div class="hint">Dữ liệu cũ vẫn được giữ trong báo cáo</div>' : ''}</td><td>${esc(u.username)}</td><td>${roleLabel(u.role)}</td><td>${esc((u.store_names && u.store_names.length ? u.store_names.join(' • ') : (u.store_name || '')))}</td><td>${userStatusBadge(u.status)}</td><td>${Object.entries(PERM_LABELS).filter(([k]) => Number(u.permissions[k]) === 1).map(([,l]) => `<span class="badge">${esc(l)}</span>`).join(' ')}</td><td>${action}</td></tr>`; }).join('')}</tbody></table></div>`;
   const exports = `<div class="card" style="margin-top:16px"><h3>Tải dữ liệu</h3><div class="export-grid"><button class="btn secondary" data-export="tasks">Công việc</button><button class="btn secondary" data-export="violations">Vi phạm</button><button class="btn secondary" data-export="assessments">Checklist</button><button class="btn secondary" data-export="sales">Doanh thu cập nhật</button><button class="btn secondary" data-export="sales_targets">Target tháng</button><button class="btn secondary" data-export="sales_daily_targets">Target ngày</button><button class="btn secondary" data-export="bonuses">Tiền thưởng</button><button class="btn secondary" data-export="documents">Tài liệu</button><button class="btn secondary" data-export="orders">Order hàng</button><button class="btn secondary" data-export="online_orders">Đơn online</button><button class="btn secondary" data-export="product_feedback_summary">Tổng hợp đánh giá SP</button><button class="btn secondary" data-export="product_feedback">Chi tiết đánh giá SP</button><button class="btn secondary" data-export="product_collections">List BST/SKU</button><button class="btn secondary" data-export="product_trainings">Đào tạo SP</button><button class="btn secondary" data-export="product_training_attempts">Kết quả kiểm tra SP</button><button class="btn secondary" data-export="cdp_ojti">CDP/OJTI</button><button class="btn secondary" data-export="shifts">Ca làm</button><button class="btn secondary" data-export="work_schedules">Lịch làm việc</button><button class="btn secondary" data-export="performance">Tổng hợp điểm</button></div></div>`;
   shell(`${form}${editCard}<div class="card" style="margin-top:16px"><h3>Danh sách tài khoản</h3>${table}</div>${exports}`, 'Admin', 'Cấp quyền, phân quyền xem và tải dữ liệu');
   const createUserForm = $('#userForm');
@@ -3061,10 +3100,10 @@ async function renderAdmin() {
   }));
   $$('.deleteUserBtn').forEach(btn => btn.addEventListener('click', async () => {
     const name = btn.dataset.name || 'tài khoản này';
-    if (!confirm(`Ngưng hoạt động / đánh dấu nghỉ việc cho ${name}? Tài khoản này sẽ không đăng nhập được nữa, nhưng dữ liệu cũ vẫn được giữ trong báo cáo.`)) return;
+    if (!confirm(`Xóa tài khoản ${name}? Tài khoản sẽ bị khóa đăng nhập; dữ liệu lịch sử vẫn được giữ để báo cáo không sai.`)) return;
     try {
       await api(`/api/users/${btn.dataset.id}`, { method: 'DELETE' });
-      toast('Đã chuyển tài khoản sang trạng thái đã nghỉ / ngưng hoạt động');
+      toast('Đã xóa và khóa tài khoản');
       await loadBase();
       renderAdmin();
     } catch (err) { toast(err.message, 'danger'); }

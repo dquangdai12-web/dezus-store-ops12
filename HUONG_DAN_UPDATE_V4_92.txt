@@ -1,0 +1,13 @@
+DEZUS STORE OPS V4.92
+
+Cập nhật phần Học & Test sản phẩm:
+- Admin có nút "Xóa tất cả bài học".
+- Có 2 bước xác nhận, gồm nhập chính xác XOA TAT CA.
+- Nếu đang lọc một cửa hàng, chỉ xóa toàn bộ bài học của cửa hàng đó.
+- Nếu không lọc cửa hàng, xóa toàn bộ bài học trên hệ thống.
+- Nhân viên và quản lý không nhìn thấy, không gọi được chức năng này.
+
+Cách cập nhật:
+1. Sao lưu thư mục và dữ liệu hiện tại.
+2. Chép đè public/app.js và server.js từ bản V4.92.
+3. Khởi động lại server.

@@ -56,19 +56,24 @@ app.use(express.static(path.join(ROOT, 'public'), {
 
 const ROLE_DEFAULTS = {
   admin: {
-    can_assign_tasks: 1, can_edit_tasks: 1, can_manage_violations: 1, can_grade_checklists: 1,
+    can_assign_tasks: 1, can_edit_tasks: 1, can_delete_users: 1, can_manage_violations: 1, can_grade_checklists: 1,
     can_manage_sales: 1, can_manage_total_sales: 1, can_manage_daily_report: 1, can_set_sales_targets: 1, can_manage_weekly_report: 1, can_view_weekly_report: 1, can_view_reports: 1, can_manage_users: 1, can_export: 1, can_view_sales_target: 1, can_view_store_sales_summary: 1, can_manage_bonuses: 1, can_view_bonuses: 1, can_manage_documents: 1, can_view_documents: 1, can_manage_shifts: 1, can_manage_schedule: 1, can_view_schedule: 1, can_manage_orders: 1, can_view_orders: 1, can_manage_online_orders: 1, can_view_online_orders: 1, can_manage_product_feedback: 1, can_view_product_feedback: 1, can_manage_product_collections: 1, can_manage_product_training: 1, can_view_product_training: 1, can_manage_cdp_ojti: 1, can_view_cdp_ojti: 1, can_manage_cdp: 1, can_view_cdp: 1, can_manage_ojti: 1, can_view_ojti: 1
   },
   manager: {
-    can_assign_tasks: 1, can_edit_tasks: 1, can_manage_violations: 1, can_grade_checklists: 1,
+    can_assign_tasks: 1, can_edit_tasks: 1, can_delete_users: 0, can_manage_violations: 1, can_grade_checklists: 1,
     can_manage_sales: 1, can_manage_total_sales: 1, can_manage_daily_report: 1, can_set_sales_targets: 0, can_manage_weekly_report: 1, can_view_weekly_report: 1, can_view_reports: 1, can_manage_users: 0, can_export: 1, can_view_sales_target: 0, can_view_store_sales_summary: 1, can_manage_bonuses: 0, can_view_bonuses: 1, can_manage_documents: 1, can_view_documents: 1, can_manage_shifts: 0, can_manage_schedule: 1, can_view_schedule: 1, can_manage_orders: 1, can_view_orders: 1, can_manage_online_orders: 1, can_view_online_orders: 1, can_manage_product_feedback: 1, can_view_product_feedback: 1, can_manage_product_collections: 0, can_manage_product_training: 0, can_view_product_training: 1, can_manage_cdp_ojti: 1, can_view_cdp_ojti: 1, can_manage_cdp: 1, can_view_cdp: 1, can_manage_ojti: 1, can_view_ojti: 1
   },
   employee: {
-    can_assign_tasks: 0, can_edit_tasks: 0, can_manage_violations: 0, can_grade_checklists: 0,
+    can_assign_tasks: 0, can_edit_tasks: 0, can_delete_users: 0, can_manage_violations: 0, can_grade_checklists: 0,
     can_manage_sales: 0, can_manage_total_sales: 0, can_manage_daily_report: 0, can_set_sales_targets: 0, can_manage_weekly_report: 0, can_view_weekly_report: 0, can_view_reports: 0, can_manage_users: 0, can_export: 0, can_view_sales_target: 0, can_view_store_sales_summary: 0, can_manage_bonuses: 0, can_view_bonuses: 0, can_manage_documents: 0, can_view_documents: 1, can_manage_shifts: 0, can_manage_schedule: 0, can_view_schedule: 1, can_manage_orders: 0, can_view_orders: 1, can_manage_online_orders: 0, can_view_online_orders: 0, can_manage_product_feedback: 1, can_view_product_feedback: 1, can_manage_product_collections: 0, can_manage_product_training: 0, can_view_product_training: 1, can_manage_cdp_ojti: 0, can_view_cdp_ojti: 1, can_manage_cdp: 0, can_view_cdp: 1, can_manage_ojti: 0, can_view_ojti: 1
   }
 };
 ROLE_DEFAULTS.office = { ...ROLE_DEFAULTS.manager };
+
+const TASK_PENALTIES = Object.freeze({
+  LATE: 5,
+  NOT_COMPLETED: 10,
+});
 
 
 const VIOLATION_LEVELS = {
@@ -1325,6 +1330,7 @@ function scheduleRowsForUser(user, storeId, dates) {
 }
 
 function taskStatus(row) {
+  if (String(row.resolution_status || '') === 'not_completed') return 'not_completed';
   if (row.completed_at) return new Date(row.completed_at) <= new Date(row.due_at) ? 'completed_on_time' : 'completed_late';
   return new Date() > new Date(row.due_at) ? 'overdue' : 'assigned';
 }
@@ -1745,7 +1751,14 @@ function taskRowsForUser(user) {
       completed_at: ta.completed_at || null,
       evidence_path: ta.evidence_path || null,
       evidence_note: ta.evidence_note || '',
-      points_delta: ta.points_delta || 0,
+      resolution_status: ta.resolution_status || '',
+      not_completed_at: ta.not_completed_at || null,
+      not_completed_reason: ta.not_completed_reason || '',
+      points_delta: String(ta.resolution_status || '') === 'not_completed'
+        ? -TASK_PENALTIES.NOT_COMPLETED
+        : (ta.completed_at && new Date(ta.completed_at) > new Date(t.due_at)
+          ? -TASK_PENALTIES.LATE
+          : (!ta.completed_at && new Date() > new Date(t.due_at) ? -TASK_PENALTIES.LATE : 0)),
       ...t,
       store_name: s ? s.name : '',
       created_by_name: creator ? creator.full_name : ''
@@ -1767,7 +1780,7 @@ function taskRowsForUser(user) {
       const da = taskWorkDate(a), dbb = taskWorkDate(b);
       if (da !== dbb) return ra === 2 ? dbb.localeCompare(da) : da.localeCompare(dbb);
       if (a.status !== b.status) {
-        const order = { assigned: 0, overdue: 1, completed_late: 2, completed_on_time: 3 };
+        const order = { assigned: 0, overdue: 1, not_completed: 2, completed_late: 3, completed_on_time: 4 };
         return (order[a.status] ?? 9) - (order[b.status] ?? 9);
       }
       return new Date(a.due_at) - new Date(b.due_at) || new Date(b.created_at) - new Date(a.created_at);
@@ -1889,16 +1902,18 @@ function computePerformance(scopeUser) {
   return users.map(u => {
     const assignments = db.task_assignees.filter(ta => Number(ta.user_id) === Number(u.id)).map(ta => {
       const t = db.tasks.find(x => Number(x.id) === Number(ta.task_id));
-      return t ? { completed_at: ta.completed_at, due_at: t.due_at } : null;
+      return t ? { completed_at: ta.completed_at, due_at: t.due_at, resolution_status: ta.resolution_status || '' } : null;
     }).filter(Boolean);
-    let onTime = 0, late = 0, overdue = 0;
+    let onTime = 0, late = 0, overdue = 0, notCompleted = 0;
     assignments.forEach(a => {
-      if (a.completed_at) {
+      if (String(a.resolution_status) === 'not_completed') notCompleted += 1;
+      else if (a.completed_at) {
         if (new Date(a.completed_at) <= new Date(a.due_at)) onTime += 1; else late += 1;
       } else if (now > new Date(a.due_at)) overdue += 1;
     });
     const totalTasks = assignments.length;
-    const taskScore = totalTasks ? Math.max(0, Math.round((onTime / totalTasks) * 100 - late * 5 - overdue * 10)) : 100;
+    const taskPenalty = (late + overdue) * TASK_PENALTIES.LATE + notCompleted * TASK_PENALTIES.NOT_COMPLETED;
+    const taskScore = totalTasks ? Math.max(0, Math.round((onTime / totalTasks) * 100 - taskPenalty)) : 100;
     const vRows = db.violations.filter(v => Number(v.user_id) === Number(u.id));
     const violationDeductions = vRows.reduce((sum, v) => sum + Number(v.points_deducted || 0), 0);
     const violationScore = Math.max(0, 100 - violationDeductions);
@@ -1920,6 +1935,8 @@ function computePerformance(scopeUser) {
       tasks_on_time: onTime,
       tasks_late: late,
       tasks_overdue: overdue,
+      tasks_not_completed: notCompleted,
+      task_penalty: taskPenalty,
       task_score: taskScore,
       violations_count: vRows.length,
       violation_deductions: violationDeductions,
@@ -2038,7 +2055,7 @@ app.patch('/api/users/:id', requireAuth, requirePerm('can_manage_users'), (req, 
   res.json({ ok: true });
 });
 
-app.delete('/api/users/:id', requireAuth, requirePerm('can_manage_users'), (req, res) => {
+app.delete('/api/users/:id', requireAuth, requirePerm('can_delete_users'), (req, res) => {
   const id = Number(req.params.id);
   const existing = getUser(id);
   if (!existing) return res.status(404).json({ error: 'Không tìm thấy tài khoản' });
@@ -2262,7 +2279,7 @@ app.post('/api/tasks', requireAuth, requirePerm('can_assign_tasks'), (req, res) 
       recurrence_batch: useMultiDate ? batchId : null,
       recurrence_label: useMultiDate ? (selectedWeekdays.length ? `Lặp ${modeLabel || 'theo tuần'}: ${selectedWeekdays.map(weekdayLabel).filter(Boolean).join(', ')}` : `Lặp mỗi ${Math.max(1, Number(repeat_every_days || 1))} ngày`) : '',
       store_id: storeId,
-      score_value: Number(score_value || 10),
+      score_value: TASK_PENALTIES.LATE,
       assignment_mode: selectedShiftIds.length ? 'shift' : (useMultiDate ? 'multi' : 'single'),
       manual_assignee_ids: manualAssignees,
       created_by: req.user.id,
@@ -2311,7 +2328,7 @@ app.patch('/api/tasks/:taskId', requireAuth, requirePerm('can_edit_tasks'), (req
   task.due_at = dueAt;
   task.task_date = dateOnly(dueAt);
   task.priority = ['low','medium','high'].includes(String(body.priority)) ? String(body.priority) : 'medium';
-  task.score_value = Math.max(0, Math.min(100, Number(body.score_value || 0)));
+  task.score_value = TASK_PENALTIES.LATE;
   task.updated_by = req.user.id;
   task.updated_at = nowIso();
   saveDb();
@@ -2341,12 +2358,33 @@ app.post('/api/tasks/:assignmentId/complete', requireAuth, upload.array('evidenc
   const completedAt = nowIso();
   const late = new Date(completedAt) > new Date(t.due_at);
   ta.completed_at = completedAt;
+  ta.resolution_status = late ? 'completed_late' : 'completed_on_time';
+  delete ta.not_completed_at;
+  delete ta.not_completed_by;
+  delete ta.not_completed_reason;
   if (evidencePath) ta.evidence_path = evidencePath;
   ta.evidence_note = req.body.note || '';
-  ta.points_delta = late ? -Math.abs(Number(t.score_value || 10)) : 0;
+  ta.points_delta = late ? -TASK_PENALTIES.LATE : 0;
   syncOjtiTaskRemarkFromAssignment(t, ta);
   saveDb();
   res.json({ ok: true, status: late ? 'completed_late' : 'completed_on_time', points_delta: ta.points_delta });
+});
+
+app.post('/api/tasks/:assignmentId/not-completed', requireAuth, (req, res) => {
+  const assignmentId = Number(req.params.assignmentId);
+  const ta = db.task_assignees.find(x => Number(x.id) === assignmentId);
+  const t = ta ? db.tasks.find(x => Number(x.id) === Number(ta.task_id)) : null;
+  if (!ta || !t) return res.status(404).json({ error: 'Không tìm thấy công việc' });
+  const canMark = req.user.role === 'admin' || (Number(req.user.permissions?.can_edit_tasks) === 1 && canAccessStore(req, t.store_id));
+  if (!canMark) return res.status(403).json({ error: 'Không có quyền đánh dấu không hoàn thành' });
+  if (ta.completed_at) return res.status(400).json({ error: 'Công việc đã hoàn thành, không thể chuyển sang không hoàn thành' });
+  ta.resolution_status = 'not_completed';
+  ta.not_completed_at = nowIso();
+  ta.not_completed_by = req.user.id;
+  ta.not_completed_reason = String(req.body?.reason || '').trim();
+  ta.points_delta = -TASK_PENALTIES.NOT_COMPLETED;
+  saveDb();
+  res.json({ ok: true, status: 'not_completed', points_delta: ta.points_delta });
 });
 
 app.get('/api/violations', requireAuth, (req, res) => res.json({ violations: violationRowsForUser(req.user), catalog: allViolationCatalog() }));
@@ -3675,6 +3713,24 @@ app.patch('/api/product-trainings/:id', requireAuth, requirePerm('can_manage_pro
   saveDb();
   syncTrainingProductCollections(req.user.id);
   res.json({ ok: true });
+});
+
+app.post('/api/product-trainings/delete-all', requireAuth, (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Chỉ Admin được xóa tất cả bài học' });
+  const requestedStoreId = req.body?.store_id ? Number(req.body.store_id) : null;
+  if (requestedStoreId && !getStore(requestedStoreId)) return res.status(400).json({ error: 'Cửa hàng không hợp lệ' });
+  const rows = (db.product_trainings || []).filter(r => r.status !== 'deleted' && (!requestedStoreId || Number(r.store_id) === requestedStoreId));
+  const deletedAt = nowIso();
+  rows.forEach(row => {
+    row.status = 'deleted';
+    row.deleted_at = deletedAt;
+    row.deleted_by = req.user.id;
+  });
+  if (rows.length) {
+    saveDb();
+    syncTrainingProductCollections(req.user.id);
+  }
+  res.json({ ok: true, deleted_count: rows.length, store_id: requestedStoreId });
 });
 
 app.delete('/api/product-trainings/:id', requireAuth, requirePerm('can_manage_product_training'), (req, res) => {

@@ -1,0 +1,8 @@
+DEZUS STORE OPS V4.91
+
+1. Thêm quyền riêng “Xóa tài khoản” trong phân quyền.
+2. Người có quyền mới thấy và sử dụng nút Xóa tài khoản.
+3. Công việc có thêm trạng thái “Không hoàn thành” dành cho Admin/người có quyền sửa công việc.
+4. Điểm phạt cố định: trễ hoặc quá hạn -5 điểm; không hoàn thành -10 điểm.
+5. Hệ thống không lấy điểm nhập tay khi tính hiệu suất, tránh sai thuật toán.
+6. Dữ liệu lịch sử tài khoản vẫn được giữ để báo cáo không bị mất.
