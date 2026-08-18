@@ -489,14 +489,7 @@ function userDisplayName(u) {
 }
 
 function isAllStoreUser(user = state.user) {
-  const ids = Array.isArray(user?.store_ids) && user.store_ids.length ? user.store_ids : (user?.store_id ? [user.store_id] : []);
-  return user?.role === 'admin' || user?.role === 'office' || (user?.role === 'manager' && ids.length > 1);
-}
-
-function selectableStores(user = state.user) {
-  if (user?.role === 'admin' || user?.role === 'office') return state.boot.stores;
-  const ids = Array.isArray(user?.store_ids) && user.store_ids.length ? user.store_ids.map(Number) : (user?.store_id ? [Number(user.store_id)] : []);
-  return state.boot.stores.filter(s => ids.includes(Number(s.id)));
+  return user?.role === 'admin' || user?.role === 'office';
 }
 
 function storeName(id) {
@@ -950,7 +943,7 @@ function weeklyPromotionInputRows(rows = []) {
 
 
 async function downloadWeeklyReport() {
-  const storeId = isAllStoreUser() ? (state.weeklyStoreId || selectableStores()[0]?.id || '') : state.user.store_id;
+  const storeId = isAllStoreUser() ? (state.weeklyStoreId || state.boot.stores[0]?.id || '') : state.user.store_id;
   const weekStart = state.weeklyWeekStart || mondayOf(new Date().toISOString().slice(0, 10));
   try {
     const userStatus = state.weeklyUserStatus || 'active';
@@ -1045,11 +1038,11 @@ function dailyReportOverviewBox(data = {}) {
 
 async function renderDailyReport() {
   const reportDate = state.dailyReportDate || isoDateLocal(new Date());
-  const defaultStoreId = isAllStoreUser() ? (state.dailyReportStoreId || selectableStores()[0]?.id || '') : state.user.store_id;
+  const defaultStoreId = isAllStoreUser() ? (state.dailyReportStoreId || state.boot.stores[0]?.id || '') : state.user.store_id;
   state.dailyReportStoreId = defaultStoreId;
   state.dailyReportDate = reportDate;
   const data = await api(`/api/daily-report?report_date=${encodeURIComponent(reportDate)}${defaultStoreId ? `&store_id=${encodeURIComponent(defaultStoreId)}` : ''}`);
-  const storeOptions = selectableStores().map(s => `<option value="${s.id}" ${Number(s.id) === Number(data.store_id) ? 'selected' : ''}>${esc(s.name)}</option>`).join('');
+  const storeOptions = state.boot.stores.map(s => `<option value="${s.id}" ${Number(s.id) === Number(data.store_id) ? 'selected' : ''}>${esc(s.name)}</option>`).join('');
   const storeFilter = isAllStoreUser() ? `<div class="field"><label>Cửa hàng</label><select class="input" id="dailyReportStoreFilter" name="store_id">${storeOptions}</select></div>` : `<input type="hidden" name="store_id" value="${esc(data.store_id)}">`;
   const canEdit = canAny('can_manage_daily_report','can_manage_sales');
   const salesRows = (data.sales_entries || []).map(r => `<tr class="daily-sales-row" data-user="${r.user_id}">
@@ -1114,14 +1107,14 @@ async function renderDailyReport() {
 }
 
 async function renderWeeklyReport() {
-  const defaultStoreId = isAllStoreUser() ? (state.weeklyStoreId || selectableStores()[0]?.id || '') : state.user.store_id;
+  const defaultStoreId = isAllStoreUser() ? (state.weeklyStoreId || state.boot.stores[0]?.id || '') : state.user.store_id;
   state.weeklyStoreId = defaultStoreId;
   const weekStart = state.weeklyWeekStart || mondayOf(new Date().toISOString().slice(0, 10));
   state.weeklyWeekStart = weekStart;
   const weeklyUserStatus = state.weeklyUserStatus || 'active';
   const data = await api(`/api/weekly-report?week_start=${encodeURIComponent(weekStart)}${defaultStoreId ? `&store_id=${encodeURIComponent(defaultStoreId)}` : ''}&user_status=${encodeURIComponent(weeklyUserStatus)}`);
   state.weeklyWeekStart = data.week_start || weekStart;
-  const storeOptions = selectableStores().map(s => `<option value="${s.id}" ${Number(s.id) === Number(data.store_id) ? 'selected' : ''}>${esc(s.name)}</option>`).join('');
+  const storeOptions = state.boot.stores.map(s => `<option value="${s.id}" ${Number(s.id) === Number(data.store_id) ? 'selected' : ''}>${esc(s.name)}</option>`).join('');
   const storeFilter = isAllStoreUser() ? `<div class="field"><label>Cửa hàng</label><select class="input" id="weeklyStoreFilter">${storeOptions}</select></div>` : '';
   const weeklyStatusFilter = `<div class="field"><label>Nhân sự hiển thị</label><select class="input" id="weeklyUserStatusFilter"><option value="active" ${weeklyUserStatus === 'active' ? 'selected' : ''}>Nhân sự đang làm</option><option value="inactive" ${weeklyUserStatus === 'inactive' ? 'selected' : ''}>Nhân sự đã nghỉ</option><option value="all" ${weeklyUserStatus === 'all' ? 'selected' : ''}>Tất cả nhân sự</option></select></div>`;
   const t = data.totals || {};
@@ -1184,8 +1177,8 @@ async function renderTasks() {
   }
   const shifts = shiftData.shifts || [];
   const userStoreIds = Array.isArray(state.user.store_ids) && state.user.store_ids.length ? state.user.store_ids.map(Number) : (state.user.store_id ? [Number(state.user.store_id)] : []);
-  const allowedStores = selectableStores();
-  const storeId = allowedStores[0]?.id || state.user.store_id || selectableStores()[0]?.id || '';
+  const allowedStores = isAllStoreUser() ? state.boot.stores : state.boot.stores.filter(s => userStoreIds.includes(Number(s.id)));
+  const storeId = allowedStores[0]?.id || state.user.store_id || state.boot.stores[0]?.id || '';
   const storeOptions = allowedStores.map(s => `<option value="${s.id}" ${Number(s.id) === Number(storeId) ? 'selected' : ''}>${esc(s.name)}</option>`).join('');
   const shiftOptions = shifts.map(sh => `<option value="${sh.id}">${esc(sh.code || sh.name)} • ${esc(sh.start_time || '')}-${esc(sh.end_time || '')}</option>`).join('');
   const taskUserPicker = (id, users, hint = '') => `<div class="task-user-picker" id="${id}" role="group" aria-label="Chọn nhân viên">${users.map(u => `<label class="task-user-option"><input type="checkbox" value="${u.id}"><span class="task-user-dot" aria-hidden="true"></span><span class="task-user-info"><b>${esc(u.full_name)}</b><small>${esc(u.store_name || '')}</small></span></label>`).join('') || '<div class="empty compact">Chưa có nhân viên trong cửa hàng này</div>'}</div>${hint ? `<span class="hint">${hint}</span>` : ''}`;
@@ -1478,16 +1471,12 @@ async function submitCompleteTask(e) {
 
 async function renderViolations() {
   const data = await api('/api/violations');
-  const allowedStores = selectableStores();
-  const violationStoreId = state.violationStoreId || (allowedStores[0]?.id || state.user?.store_id || '');
-  state.violationStoreId = violationStoreId;
   const catalog = Array.isArray(data.catalog) && data.catalog.length ? data.catalog : VIOLATION_CATALOG;
   const levelOptions = Object.entries(VIOLATION_LEVELS).map(([key, item]) => `<option value="${key}">${esc(item.label)} (-${item.points} điểm)</option>`).join('');
   const form = can('can_manage_violations') ? `
     <div class="card"><h3>Ghi nhận vi phạm theo SOP chế tài</h3>
       <form id="violationForm" class="grid two" enctype="multipart/form-data">
-        ${allowedStores.length > 1 ? `<div class="field"><label>Cửa hàng</label><select class="input" id="violationStoreFilter" name="store_id">${allowedStores.map(s => `<option value="${s.id}" ${Number(s.id)===Number(violationStoreId)?'selected':''}>${esc(s.name)}</option>`).join('')}</select></div>` : `<input type="hidden" name="store_id" value="${esc(violationStoreId)}">`}
-        <div class="field"><label>Nhân viên</label><select name="user_id" required>${usersInStore(violationStoreId).map(u => `<option value="${u.id}">${esc(u.full_name)} - ${esc(u.store_name || '')}</option>`).join('')}</select></div>
+        <div class="field"><label>Nhân viên</label><select name="user_id" required>${usersInStore(isAllStoreUser() ? '' : state.user.store_id).map(u => `<option value="${u.id}">${esc(u.full_name)} - ${esc(u.store_name || '')}</option>`).join('')}</select></div>
         <div class="field"><label>Danh mục vi phạm</label><select name="violation_code" id="violationCode" required>${violationCatalogOptions(catalog)}</select></div>
         <div class="field"><label>Mức vi phạm</label><select name="violation_level" id="violationLevel" required>${levelOptions}</select><span class="hint">Hệ thống tự gợi ý theo SOP; có thể nâng mức khi tái phạm.</span></div>
         <div class="field"><label>Điểm trừ tương ứng</label><input class="input" id="violationPoints" name="points_deducted" value="1" readonly><span class="hint">Điểm được khóa theo mức vi phạm.</span></div>
@@ -1506,8 +1495,7 @@ async function renderViolations() {
       </form>
     </details></div>` : '';
   const actionHead = state.user?.role === 'admin' ? '<th>Thao tác</th>' : '';
-  const visibleViolations = data.violations.filter(v => !violationStoreId || allowedStores.length <= 1 || Number(v.store_id) === Number(violationStoreId));
-  const list = visibleViolations.length ? `<div class="table-wrap"><table><thead><tr><th>Ngày</th><th>Nhân viên</th><th>Cửa hàng</th><th>Danh mục SOP</th><th>Mức xử lý</th><th>Điểm trừ</th><th>Nội dung</th><th>Chứng từ</th>${actionHead}</tr></thead><tbody>${visibleViolations.map(v => `<tr><td>${dt(v.created_at)}</td><td><b>${esc(v.employee_name)}</b></td><td>${esc(v.store_name || '')}</td><td><b>${esc(v.violation_code || '')}</b>${v.violation_group ? `<br><span class="hint">${esc(v.violation_group)}</span>` : ''}<br>${esc(v.violation_type)}</td><td><span class="badge danger">${esc(v.level_label || v.violation_level || 'Chưa phân mức')}</span></td><td><span class="badge danger">-${v.points_deducted}</span></td><td>${esc(v.description || '')}</td><td>${v.evidence_path ? renderFiles(v.evidence_path) : ''}</td>${state.user?.role === 'admin' ? `<td><button class="btn small danger violationDeleteBtn" data-id="${v.id}" type="button">Xóa</button></td>` : ''}</tr>`).join('')}</tbody></table></div>` : '<div class="empty">Chưa có vi phạm</div>';
+  const list = data.violations.length ? `<div class="table-wrap"><table><thead><tr><th>Ngày</th><th>Nhân viên</th><th>Cửa hàng</th><th>Danh mục SOP</th><th>Mức xử lý</th><th>Điểm trừ</th><th>Nội dung</th><th>Chứng từ</th>${actionHead}</tr></thead><tbody>${data.violations.map(v => `<tr><td>${dt(v.created_at)}</td><td><b>${esc(v.employee_name)}</b></td><td>${esc(v.store_name || '')}</td><td><b>${esc(v.violation_code || '')}</b>${v.violation_group ? `<br><span class="hint">${esc(v.violation_group)}</span>` : ''}<br>${esc(v.violation_type)}</td><td><span class="badge danger">${esc(v.level_label || v.violation_level || 'Chưa phân mức')}</span></td><td><span class="badge danger">-${v.points_deducted}</span></td><td>${esc(v.description || '')}</td><td>${v.evidence_path ? renderFiles(v.evidence_path) : ''}</td>${state.user?.role === 'admin' ? `<td><button class="btn small danger violationDeleteBtn" data-id="${v.id}" type="button">Xóa</button></td>` : ''}</tr>`).join('')}</tbody></table></div>` : '<div class="empty">Chưa có vi phạm</div>';
   shell(`${form}<div class="card" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">Danh sách vi phạm</h3>${can('can_export') ? '<button class="btn secondary" data-export="violations">Tải CSV</button>' : ''}</div>${list}</div>`, 'Vi phạm', 'Danh mục và mức xử lý theo SOP chế tài; nhân viên chỉ xem vi phạm của mình');
   const formEl = $('#violationForm');
   const syncViolation = (preferCatalog = false) => {
@@ -1597,7 +1585,7 @@ async function renderAssessmentDetail(id) {
 
 function checklistForm(t) {
   const sections = t.sections || [];
-  const storeOptions = selectableStores().map(s => `<option value="${s.id}" ${Number(s.id) === Number(state.user.store_id) ? 'selected' : ''}>${esc(s.name)}</option>`).join('');
+  const storeOptions = state.boot.stores.map(s => `<option value="${s.id}" ${Number(s.id) === Number(state.user.store_id) ? 'selected' : ''}>${esc(s.name)}</option>`).join('');
   const target = t.target_type === 'employee' ? `<div class="field"><label>Đại sứ kinh doanh</label><select name="employee_id" id="checkEmployee" required>${usersInStore(isAllStoreUser() ? '' : state.user.store_id).map(u => `<option value="${u.id}">${esc(u.full_name)} - ${esc(u.store_name || '')}</option>`).join('')}</select></div>` : '';
   const sectionHtml = sections.map(sec => {
     const items = t.items.filter(i => i.section_id === sec.id);
@@ -1638,7 +1626,7 @@ async function submitChecklist(e) {
 async function renderSales() {
   const currentMonth = state.salesMonth || new Date().toISOString().slice(0,7);
   state.salesMonth = currentMonth;
-  const defaultStoreId = isAllStoreUser() ? (state.salesStoreId || selectableStores()[0]?.id || '') : state.user.store_id;
+  const defaultStoreId = isAllStoreUser() ? (state.salesStoreId || state.boot.stores[0]?.id || '') : state.user.store_id;
   state.salesStoreId = defaultStoreId;
   const salesUserStatus = state.salesUserStatus || 'active';
   const [data, summary] = await Promise.all([
@@ -1909,7 +1897,7 @@ async function deleteOrderIds(ids) {
 async function renderOnlineOrders() {
   const userStoreIds = Array.isArray(state.user?.store_ids) && state.user.store_ids.length ? state.user.store_ids.map(Number) : (state.user?.store_id ? [Number(state.user.store_id)] : []);
   const allScope = isAllStoreUser() || userStoreIds.length > 1;
-  const allowedStores = selectableStores();
+  const allowedStores = isAllStoreUser() ? state.boot.stores : state.boot.stores.filter(s => userStoreIds.includes(Number(s.id)));
   const defaultStoreId = allScope ? (allowedStores.some(s => Number(s.id) === Number(state.onlineOrderStoreId)) ? state.onlineOrderStoreId : (allowedStores[0]?.id || '')) : (userStoreIds[0] || '');
   state.onlineOrderStoreId = defaultStoreId;
   const month = state.onlineOrderMonth || new Date().toISOString().slice(0, 7);
@@ -1956,13 +1944,13 @@ async function renderOnlineOrders() {
 
 async function renderOrders() {
   const allScope = isAllStoreUser() || (!state.user.store_id && (can('can_manage_orders') || can('can_view_orders')));
-  const defaultStoreId = allScope ? (state.orderStoreId || selectableStores()[0]?.id || '') : (state.user.store_id || '');
+  const defaultStoreId = allScope ? (state.orderStoreId || state.boot.stores[0]?.id || '') : (state.user.store_id || '');
   state.orderStoreId = defaultStoreId;
   const data = await api(`/api/orders${defaultStoreId ? `?store_id=${defaultStoreId}` : ''}`);
   const orders = data.orders || [];
   const batches = [...new Set(orders.map(orderBatchName))].sort((a, b) => a.localeCompare(b, 'vi'));
   const groups = groupOrdersByBatch(orders);
-  const storeOptions = selectableStores().map(s => `<option value="${s.id}" ${Number(s.id) === Number(defaultStoreId) ? 'selected' : ''}>${esc(s.name)}</option>`).join('');
+  const storeOptions = state.boot.stores.map(s => `<option value="${s.id}" ${Number(s.id) === Number(defaultStoreId) ? 'selected' : ''}>${esc(s.name)}</option>`).join('');
   const batchOptions = batches.map(b => `<option value="${esc(b)}"></option>`).join('');
   const storeSelect = allScope ? `<div class="field"><label>Cửa hàng</label><select class="input" id="orderStoreFilter" name="store_id">${storeOptions}</select></div>` : `<input type="hidden" name="store_id" value="${esc(defaultStoreId)}">`;
   const form = can('can_manage_orders') ? `<div class="card"><h3>Tạo order hàng theo lần</h3><p class="hint">Nhập cùng một tên lần/tag để gom order nhiều ngày vào chung 1 lần. Ví dụ: <b>Lần 1 - Tuần 31</b>. Nếu ngày 1 nhập 1, ngày 2 nhập 1 cùng SKU và cùng lần, bảng sẽ cộng thành tổng 2 sản phẩm trong tag đó.</p><form id="orderForm"><div class="grid four">${storeSelect}<div class="field"><label>Lần / tag order</label><input class="input" name="batch_name" list="orderBatchList" placeholder="VD: Lần 1 - Tuần 31" required><datalist id="orderBatchList">${batchOptions}</datalist></div><div class="field"><label>Ngày order</label><input class="input" type="date" name="order_date" value="${new Date().toISOString().slice(0,10)}" required></div><div class="field" style="align-self:end"><button class="btn">Lưu vào lần</button></div></div><div class="table-wrap" style="margin-top:12px"><table><thead><tr><th>SKU</th><th>Tên SP</th><th>Size</th><th>Số lượng</th><th>Ghi chú</th></tr></thead><tbody>${orderInputRows(8)}</tbody></table></div></form></div>` : '';
@@ -2011,7 +1999,7 @@ async function renderOrders() {
 
 async function renderProductFeedback() {
   const allScope = isAllStoreUser() || (!state.user.store_id && (can('can_manage_product_feedback') || can('can_view_product_feedback')));
-  const defaultStoreId = allScope ? (state.feedbackStoreId || selectableStores()[0]?.id || '') : (state.user.store_id || '');
+  const defaultStoreId = allScope ? (state.feedbackStoreId || state.boot.stores[0]?.id || '') : (state.user.store_id || '');
   state.feedbackStoreId = defaultStoreId;
   const month = state.feedbackMonth || new Date().toISOString().slice(0, 7);
   state.feedbackMonth = month;
@@ -2022,7 +2010,7 @@ async function renderProductFeedback() {
   const data = await api(`/api/product-feedback?month=${month}${defaultStoreId ? `&store_id=${defaultStoreId}` : ''}${state.feedbackCollectionId ? `&collection_id=${state.feedbackCollectionId}` : ''}`);
   const rowsData = data.feedback || [];
   const summaryData = data.summary || [];
-  const storeOptions = selectableStores().map(s => `<option value="${s.id}" ${Number(s.id) === Number(defaultStoreId) ? 'selected' : ''}>${esc(s.name)}</option>`).join('');
+  const storeOptions = state.boot.stores.map(s => `<option value="${s.id}" ${Number(s.id) === Number(defaultStoreId) ? 'selected' : ''}>${esc(s.name)}</option>`).join('');
   const storeField = allScope ? `<div class="field"><label>Cửa hàng</label><select class="input" id="feedbackStoreFilter" name="store_id">${storeOptions}</select></div>` : `<input type="hidden" name="store_id" value="${esc(defaultStoreId)}">`;
   const collectionOptions = collections.map(c => `<option value="${c.id}" ${Number(c.id) === Number(state.feedbackCollectionId) ? 'selected' : ''}>${esc(c.name)}${c.store_name && c.store_name !== 'Toàn hệ thống' ? ' • ' + esc(c.store_name) : ''}</option>`).join('');
   const productOptions = selectedCollection?.items?.length ? selectedCollection.items.map(i => `<option value="${esc(JSON.stringify({ sku: i.sku || '', product_name: i.product_name || '' }))}">${esc(i.sku || '')}${i.sku ? ' - ' : ''}${esc(i.product_name || '')}</option>`).join('') : '';
@@ -2100,7 +2088,7 @@ async function renderProductTraining() {
   state.trainingStoreId = defaultStoreId;
   const data = await api(`/api/product-trainings${defaultStoreId ? `?store_id=${defaultStoreId}` : ''}`);
   const rowsData = data.trainings || [];
-  const storeOptions = `<option value="">Toàn hệ thống</option>${selectableStores().map(s => `<option value="${s.id}" ${Number(s.id) === Number(defaultStoreId) ? 'selected' : ''}>${esc(s.name)}</option>`).join('')}`;
+  const storeOptions = `<option value="">Toàn hệ thống</option>${state.boot.stores.map(s => `<option value="${s.id}" ${Number(s.id) === Number(defaultStoreId) ? 'selected' : ''}>${esc(s.name)}</option>`).join('')}`;
   const quizHelp = `Mỗi dòng 1 câu theo mẫu: Câu hỏi | Đáp án A | Đáp án B | Đáp án C | Đáp án D | A. Ví dụ: Chất liệu chính là gì? | Cotton | Linen | Denim | Kate | A`;
   const quickPaste = can('can_manage_product_training') ? `<div class="training-quick-fill"><div class="toolbar"><div><h3>Điền nhanh từ file training BST</h3><p class="hint">Copy bảng từ Excel/Google Sheets rồi dán vào đây. Hệ thống tự gom theo TÊN SẢN PHẨM, không lấy SKU làm khóa; nhiều màu/mã cùng tên chỉ giữ 1 bài học + 1 bài test. Cột “Link ảnh sản phẩm” sẽ tự đổ vào đúng ô ảnh và hiển thị trực tiếp trên web.</p></div></div><textarea class="input" id="trainingQuickPaste" rows="5" placeholder="Dán bảng training ở đây. Dòng đầu nên là tiêu đề cột."></textarea><div class="toolbar"><button class="btn secondary" type="button" id="trainingFillFirstBtn">Đổ sản phẩm đầu vào form</button><button class="btn" type="button" id="trainingSaveAllBtn">Lưu nhanh sau khi gom màu</button><button class="btn secondary" type="button" id="trainingTemplateBtn">Tải mẫu copy</button><span class="hint" id="trainingQuickHint"></span></div></div>` : '';
   const adminTrainingGuide = can('can_manage_product_training') ? `<div class="card training-flow-guide training-flow-guide-soft"><h3>Luồng học mới cho nhân viên</h3><div class="training-flow-steps"><div><b>1. Học theo từng sản phẩm</b><p>Nhân viên xem ảnh, màu hiện có, chất liệu, form và cách tư vấn trong từng thẻ bài học.</p></div><div><b>2. Xác nhận đã học</b><p>Mỗi bài học chỉ cần bấm Đã học xong. Không làm test ngay trong thẻ sản phẩm.</p></div><div><b>3. Làm bài test tổng</b><p>Sau khi học xong toàn bộ bài đang áp dụng, nhân viên làm 1 bài test tổng chung.</p></div></div></div>` : '';
@@ -2646,7 +2634,7 @@ async function renderCdpOjti() {
   const posKey = state.cdpOjtiPosition;
   const pos = positions.find(p => p.key === posKey) || positions[0];
   const bucket = pos[type] || { sections: [], open_fields: [] };
-  const selectedStoreId = state.cdpOjtiStoreId || (isAllStoreUser() ? (selectableStores()[0]?.id || '') : (state.user?.store_id || ''));
+  const selectedStoreId = state.cdpOjtiStoreId || (isAllStoreUser() ? (state.boot.stores[0]?.id || '') : (state.user?.store_id || ''));
   const recordQuery = new URLSearchParams({ type, position_key: posKey });
   if (selectedStoreId) recordQuery.set('store_id', selectedStoreId);
   const recordData = await api(`/api/cdp-ojti-records?${recordQuery.toString()}`);
@@ -2656,7 +2644,7 @@ async function renderCdpOjti() {
   const itemMap = new Map((edit?.item_values || []).map(v => [String(v.code), v]));
   const openValues = edit?.open_values || {};
   const selectedTraineeId = Number((edit?.trainee_ids || [])[0] || (state.user?.role === 'employee' ? state.user.id : '') || 0);
-  const storeOptions = selectableStores().map(st => `<option value="${st.id}" ${Number(st.id) === Number(selectedStoreId) ? 'selected' : ''}>${esc(st.name)}</option>`).join('');
+  const storeOptions = state.boot.stores.map(st => `<option value="${st.id}" ${Number(st.id) === Number(selectedStoreId) ? 'selected' : ''}>${esc(st.name)}</option>`).join('');
   const people = usersInStore(selectedStoreId);
   const traineeOptions = ['<option value="">Chọn 1 nhân sự</option>'].concat(people.map(u => `<option value="${u.id}" ${Number(selectedTraineeId) === Number(u.id) ? 'selected' : ''}>${esc(u.full_name)} - ${roleLabel(u.role)}</option>`)).join('');
   const trainerOptions = ['<option value="">Chọn người đào tạo</option>'].concat(people.map(u => `<option value="${u.id}" ${Number(edit?.trainer_id || state.user?.id) === Number(u.id) ? 'selected' : ''}>${esc(u.full_name)}</option>`)).join('');
@@ -2873,7 +2861,7 @@ async function renderSchedule() {
   const month = state.scheduleMonth || currentMonthLocal();
   const weeks = scheduleMonthWeeks(month);
   const firstWeek = weeks[0]?.week_start || mondayOf(`${month}-01`);
-  const storeId = isAllStoreUser() ? (state.scheduleStoreId || selectableStores()[0]?.id || '') : state.user.store_id;
+  const storeId = isAllStoreUser() ? (state.scheduleStoreId || state.boot.stores[0]?.id || '') : state.user.store_id;
   const makeQuery = (weekStart) => {
     const q = new URLSearchParams({ week_start: weekStart });
     if (storeId) q.set('store_id', storeId);
@@ -2889,7 +2877,7 @@ async function renderSchedule() {
   const canManage = Number(base.can_manage) === 1 || can('can_manage_schedule');
   const isEditing = canManage && state.scheduleEditMode;
   const storeSelect = isAllStoreUser()
-    ? `<div class="field"><label>Cửa hàng</label><select class="input" id="scheduleStoreFilter">${selectableStores().map(st => `<option value="${st.id}" ${Number(st.id) === Number(base.store_id) ? 'selected' : ''}>${esc(st.name)}</option>`).join('')}</select></div>`
+    ? `<div class="field"><label>Cửa hàng</label><select class="input" id="scheduleStoreFilter">${state.boot.stores.map(st => `<option value="${st.id}" ${Number(st.id) === Number(base.store_id) ? 'selected' : ''}>${esc(st.name)}</option>`).join('')}</select></div>`
     : `<div class="field"><label>Cửa hàng</label><input class="input" value="${esc(base.store_name || state.user.store_name || '')}" disabled></div>`;
   const actions = canManage
     ? (isEditing
@@ -2977,7 +2965,7 @@ async function renderDocuments() {
   const data = await api('/api/documents');
   const docs = data.documents || [];
   const categoryOptions = ['Quy trình', 'Biểu mẫu', 'Đào tạo', 'Thông báo', 'Khác'].map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
-  const storeOptions = `<option value="">Toàn hệ thống</option>${selectableStores().map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('')}`;
+  const storeOptions = `<option value="">Toàn hệ thống</option>${state.boot.stores.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('')}`;
   const uploadForm = can('can_manage_documents') ? `
     <div class="card"><h3>Tải tài liệu / quy trình lên hệ thống</h3>
       <form id="documentForm" class="grid three" enctype="multipart/form-data">
@@ -3039,32 +3027,21 @@ async function renderDocuments() {
 
 async function renderBonuses() {
   const data = await api('/api/bonuses');
-  const allowedStores = selectableStores();
-  const bonusStoreId = state.bonusStoreId || (allowedStores[0]?.id || state.user?.store_id || '');
-  state.bonusStoreId = bonusStoreId;
-  const bonusPeople = salesStaffInStore(bonusStoreId);
-  const bonusStoreField = allowedStores.length > 1 ? `<div class="field"><label>Cửa hàng</label><select class="input" id="bonusStoreFilter" name="store_id">${allowedStores.map(s => `<option value="${s.id}" ${Number(s.id)===Number(bonusStoreId)?'selected':''}>${esc(s.name)}</option>`).join('')}</select></div>` : `<input type="hidden" name="store_id" value="${esc(bonusStoreId)}">`;
-  const form = can('can_manage_bonuses') ? `<div class="card"><h3>Nhập tiền công/thưởng nhân viên</h3><p class="hint">Mỗi lần nhập thêm sẽ cộng vào tổng tiền công/thưởng của nhân viên. Bảng bên dưới hiển thị tổng theo nhân viên, không tách từng ngày.</p><form id="bonusForm" class="grid three">${bonusStoreField}<div class="field"><label>Nhân viên</label><select name="user_id" required>${bonusPeople.map(u => `<option value="${u.id}">${esc(u.full_name)} - ${esc(u.store_name || '')}</option>`).join('')}</select></div><div class="field"><label>Ngày ghi nhận</label><input class="input" type="date" name="bonus_date" value="${new Date().toISOString().slice(0,10)}" required></div><div class="field"><label>Loại tiền công/thưởng</label><select name="bonus_type"><option value="Hotbill">Hotbill</option><option value="Thưởng tuần">Thưởng tuần</option><option value="Thưởng KPI">Thưởng KPI</option><option value="Thưởng khác">Thưởng khác</option></select></div><div class="field"><label>Số tiền cộng thêm</label><input class="input" type="text" inputmode="numeric" data-number-format name="amount" required placeholder="100.000"></div><div class="field" style="grid-column:span 2"><label>Ghi chú</label><input class="input" name="note" placeholder="VD: Hotbill / thưởng tuần W30"></div><div style="grid-column:1/-1"><button class="btn">Cộng tiền</button></div></form></div>` : '';
-  const rows = (data.summary || []).filter(b => !bonusStoreId || allowedStores.length <= 1 || Number(b.store_id) === Number(bonusStoreId));
+  const bonusPeople = salesStaffInStore(isAllStoreUser() ? '' : state.user.store_id);
+  const form = can('can_manage_bonuses') ? `<div class="card"><h3>Nhập tiền công/thưởng nhân viên</h3><p class="hint">Mỗi lần nhập thêm sẽ cộng vào tổng tiền công/thưởng của nhân viên. Bảng bên dưới hiển thị tổng theo nhân viên, không tách từng ngày.</p><form id="bonusForm" class="grid three"><div class="field"><label>Nhân viên</label><select name="user_id" required>${bonusPeople.map(u => `<option value="${u.id}">${esc(u.full_name)} - ${esc(u.store_name || '')}</option>`).join('')}</select></div><div class="field"><label>Ngày ghi nhận</label><input class="input" type="date" name="bonus_date" value="${new Date().toISOString().slice(0,10)}" required></div><div class="field"><label>Loại tiền công/thưởng</label><select name="bonus_type"><option value="Hotbill">Hotbill</option><option value="Thưởng tuần">Thưởng tuần</option><option value="Thưởng KPI">Thưởng KPI</option><option value="Thưởng khác">Thưởng khác</option></select></div><div class="field"><label>Số tiền cộng thêm</label><input class="input" type="text" inputmode="numeric" data-number-format name="amount" required placeholder="100.000"></div><div class="field" style="grid-column:span 2"><label>Ghi chú</label><input class="input" name="note" placeholder="VD: Hotbill / thưởng tuần W30"></div><div style="grid-column:1/-1"><button class="btn">Cộng tiền</button></div></form></div>` : '';
+  const rows = data.summary || [];
   const list = rows.length ? `<div class="table-wrap"><table><thead><tr><th>Nhân viên</th><th>Cửa hàng</th><th>Tổng tiền công/thưởng</th><th>Hotbill</th><th>Thưởng tuần</th><th>Thưởng KPI</th><th>Khác</th><th>Số lần nhập</th><th>Cập nhật gần nhất</th><th>Ghi chú gần nhất</th></tr></thead><tbody>${rows.map(b => `<tr><td><b>${esc(b.employee_name)}</b></td><td>${esc(b.store_name || '')}</td><td><b>${money(b.total_amount)}đ</b></td><td>${money(b.hotbill_amount)}đ</td><td>${money(b.week_amount)}đ</td><td>${money(b.kpi_amount)}đ</td><td>${money(b.other_amount)}đ</td><td>${money(b.entries_count || 0)}</td><td>${dOnly(b.latest_date)}</td><td>${esc(b.latest_note || '')}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Chưa có dữ liệu tiền công/thưởng</div>';
   shell(`${form}<div class="card" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">Tổng tiền công/thưởng theo nhân viên</h3>${can('can_export') ? '<button class="btn secondary" data-export="bonuses">Tải CSV chi tiết</button>' : ''}</div>${list}</div>`, 'Tiền công/thưởng', 'Cộng tiền hotbill, thưởng tuần, thưởng KPI vào tổng tiền công của nhân viên');
-  $('#bonusStoreFilter')?.addEventListener('change', e => { state.bonusStoreId = e.target.value; renderBonuses(); });
   $('#bonusForm')?.addEventListener('submit', async e => { e.preventDefault(); try { await api('/api/bonuses', { method: 'POST', body: JSON.stringify((() => { const payload = Object.fromEntries(new FormData(e.target)); payload.amount = cleanNumberInput(payload.amount); return payload; })()) }); toast('Đã cộng tiền công/thưởng'); renderBonuses(); } catch (err) { toast(err.message, 'danger'); } });
 }
 
 async function renderReports() {
   const data = await api('/api/reports/performance');
-  const allowedStores = selectableStores();
-  const reportStoreId = state.reportStoreId || (allowedStores[0]?.id || '');
-  state.reportStoreId = reportStoreId;
-  const rows = data.performance.filter(r => !reportStoreId || allowedStores.length <= 1 || Number(r.store_id) === Number(reportStoreId));
-  const storeSummaryRowsFiltered = (data.storeSummary || []).filter(r => !reportStoreId || allowedStores.length <= 1 || Number(r.store_id) === Number(reportStoreId));
+  const rows = data.performance;
   const perfTable = rows.length ? `<div class="table-wrap"><table><thead><tr><th>Top</th><th>Nhân viên</th><th>Cửa hàng</th><th>Điểm tổng</th><th>Công việc</th><th>Vi phạm</th><th>GUESTS</th><th>% đạt target</th></tr></thead><tbody>${rows.map((r, i) => `<tr><td><span class="badge dark">#${i + 1}</span></td><td><b>${esc(r.full_name)}</b></td><td>${esc(r.store_name || '')}</td><td><b>${r.final_score}/100</b></td><td>${r.task_score}%<br><span class="hint">Đúng hạn ${r.tasks_on_time}/${r.tasks_total}, trễ ${r.tasks_late}, quá hạn ${r.tasks_overdue}, không hoàn thành ${r.tasks_not_completed || 0}</span></td><td>${r.violation_score}%<br><span class="hint">${r.violations_count} lỗi, -${r.violation_deductions} điểm</span></td><td>${r.guests_score}%</td><td>${Number(r.achievement_percent || 0)}%<br><span class="hint">Index ${r.revenue_score}%</span></td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Chưa có dữ liệu tổng hợp</div>';
-  const storeTable = storeSummaryRowsFiltered.length ? `<div class="table-wrap"><table><thead><tr><th>Cửa hàng</th><th>OPS</th><th>VM</th><th>Vi phạm</th></tr></thead><tbody>${storeSummaryRowsFiltered.map(s => `<tr><td><b>${esc(s.store_name)}</b></td><td>${Math.round(s.ops_score || 0)}%</td><td>${Math.round(s.vm_score || 0)}%</td><td>${s.violations}</td></tr>`).join('')}</tbody></table></div>` : '';
-  const reportStoreField = allowedStores.length > 1 ? `<div class="field"><label>Cửa hàng</label><select class="input" id="reportStoreFilter">${allowedStores.map(s => `<option value="${s.id}" ${Number(s.id)===Number(reportStoreId)?'selected':''}>${esc(s.name)}</option>`).join('')}</select></div>` : '';
-  shell(`<div class="card"><div class="toolbar"><h3 style="margin-right:auto">Hiệu suất nhân viên</h3>${reportStoreField}${can('can_export') ? '<button class="btn secondary" data-export="performance">Tải CSV</button>' : ''}</div>${perfTable}</div><div class="card" style="margin-top:16px"><h3>Hiệu suất cửa hàng</h3>${storeTable || '<div class="empty">Chưa có điểm OPS/VM</div>'}</div><div class="card" style="margin-top:16px"><h3>Cách tính điểm tổng</h3><p class="hint">Điểm tổng tối đa 100 = 35% hiệu suất công việc + 20% điểm không vi phạm + 25% GUESTS checklist + 20% index doanh thu. Công việc trễ hạn/quá hạn tự bị ghi nhận không hoàn thành đúng hạn và trừ điểm.</p></div>`, 'Tổng hợp điểm', 'Hiệu suất cửa hàng và nhân viên, chuẩn hóa về thang 100 điểm');  $('#reportStoreFilter')?.addEventListener('change', e => { state.reportStoreId = e.target.value; renderReports(); });
+  const storeTable = data.storeSummary?.length ? `<div class="table-wrap"><table><thead><tr><th>Cửa hàng</th><th>OPS</th><th>VM</th><th>Vi phạm</th></tr></thead><tbody>${data.storeSummary.map(s => `<tr><td><b>${esc(s.store_name)}</b></td><td>${Math.round(s.ops_score || 0)}%</td><td>${Math.round(s.vm_score || 0)}%</td><td>${s.violations}</td></tr>`).join('')}</tbody></table></div>` : '';
+  shell(`<div class="card"><div class="toolbar"><h3 style="margin-right:auto">Hiệu suất nhân viên</h3>${can('can_export') ? '<button class="btn secondary" data-export="performance">Tải CSV</button>' : ''}</div>${perfTable}</div><div class="card" style="margin-top:16px"><h3>Hiệu suất cửa hàng</h3>${storeTable || '<div class="empty">Chưa có điểm OPS/VM</div>'}</div><div class="card" style="margin-top:16px"><h3>Cách tính điểm tổng</h3><p class="hint">Điểm tổng tối đa 100 = 35% hiệu suất công việc + 20% điểm không vi phạm + 25% GUESTS checklist + 20% index doanh thu. Công việc trễ hạn/quá hạn tự bị ghi nhận không hoàn thành đúng hạn và trừ điểm.</p></div>`, 'Tổng hợp điểm', 'Hiệu suất cửa hàng và nhân viên, chuẩn hóa về thang 100 điểm');
 }
-
 
 async function renderAdmin() {
   const data = await api('/api/users?status=all');
