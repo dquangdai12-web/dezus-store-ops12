@@ -3306,7 +3306,8 @@ app.get('/api/orders', requireAuth, (req, res) => {
 
 app.post('/api/orders', requireAuth, requirePerm('can_manage_orders'), (req, res) => {
   const { store_id, order_date, batch_name, items } = req.body || {};
-  const storeId = isAllStoreRole(req.user) ? Number(store_id || getPrimaryStoreId(req.user) || 0) : Number(getPrimaryStoreId(req.user) || store_id || 0);
+  const requestedStoreId = Number(store_id || 0);
+  const storeId = isAllStoreRole(req.user) ? (requestedStoreId || Number(getPrimaryStoreId(req.user) || 0)) : (requestedStoreId || Number(getPrimaryStoreId(req.user) || 0));
   const store = getStore(storeId);
   if (!store) return res.status(400).json({ error: 'Cửa hàng không hợp lệ' });
   if (!canManageOrderScope(req.user, storeId)) return res.status(403).json({ error: 'Không có quyền tạo order cửa hàng này' });
@@ -3388,7 +3389,8 @@ app.get('/api/online-orders', requireAuth, (req, res) => {
 
 app.post('/api/online-orders', requireAuth, requirePerm('can_manage_online_orders'), (req, res) => {
   const { store_id, order_date, invoice_no, order_value, packer_id, note } = req.body || {};
-  const storeId = isAllStoreRole(req.user) ? Number(store_id || getPrimaryStoreId(req.user) || 0) : Number(getPrimaryStoreId(req.user) || store_id || 0);
+  const requestedStoreId = Number(store_id || 0);
+  const storeId = requestedStoreId || Number(getPrimaryStoreId(req.user) || 0);
   const store = getStore(storeId);
   if (!store) return res.status(400).json({ error: 'Cửa hàng không hợp lệ' });
   if (!canManageOnlineOrderScope(req.user, storeId)) return res.status(403).json({ error: 'Không có quyền nhập đơn online cửa hàng này' });
