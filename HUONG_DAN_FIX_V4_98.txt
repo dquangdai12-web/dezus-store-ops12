@@ -1,0 +1,4 @@
+V4.98 - FIX WEB TRANG TRẮNG
+- Sửa hàm chọn cửa hàng nhiều cửa hàng để luôn an toàn khi bootstrap chưa có stores.
+- Bổ sung bắt lỗi render toàn cục: nếu một module lỗi, web không còn trắng toàn trang mà hiển thị thông báo và nút Tải lại.
+- Giữ logic quản lý 2+ cửa hàng chọn cửa hàng ở các module đã cập nhật.
