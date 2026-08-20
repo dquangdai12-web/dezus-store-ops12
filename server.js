@@ -150,6 +150,40 @@ function toNumber(v, fallback = 0) {
   const n = Number(normalized);
   return Number.isFinite(n) ? n : fallback;
 }
+
+// Decimal KPI values (UPT, CR, etc.) must preserve the decimal separator.
+// Unlike money inputs, "2.50" means 2.50, not 250.
+function toDecimalNumber(v, fallback = 0) {
+  if (v === null || v === undefined || v === '') return fallback;
+  if (typeof v === 'number') return Number.isFinite(v) ? v : fallback;
+  let raw = String(v).trim().replace(/\s/g, '').replace(/[^0-9,.-]/g, '');
+  if (!raw) return fallback;
+  if (raw.includes(',') && raw.includes('.')) {
+    // Treat the last separator as the decimal separator.
+    const lastComma = raw.lastIndexOf(',');
+    const lastDot = raw.lastIndexOf('.');
+    const decimalSep = lastComma > lastDot ? ',' : '.';
+    const thousandsSep = decimalSep === ',' ? '.' : ',';
+    raw = raw.split(thousandsSep).join('');
+    if (decimalSep === ',') raw = raw.replace(',', '.');
+  } else if (raw.includes(',')) {
+    raw = raw.replace(',', '.');
+  }
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function normalizeSavedTargetUpt(v) {
+  const n = Number(v || 0);
+  // UPT thực tế không thể ở mức hàng trăm; dữ liệu cũ 2.50 từng bị lưu thành 250.
+  return n > 20 && n <= 2000 ? n / 100 : n;
+}
+
+function normalizeSavedTargetCr(v) {
+  const n = Number(v || 0);
+  // CR hợp lệ theo % nằm trong 0-100; dữ liệu cũ 35.00 có thể bị lưu thành 3500.
+  return n > 100 && n <= 10000 ? n / 100 : n;
+}
 function clone(v) { return JSON.parse(JSON.stringify(v)); }
 function slugCode(name) { return String(name).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '').toUpperCase(); }
 
@@ -206,7 +240,7 @@ function loadDb() {
       assessments: parsed.assessments || [],
       assessment_items: parsed.assessment_items || [],
       sales: parsed.sales || [],
-      sales_targets: parsed.sales_targets || [],
+      sales_targets: (parsed.sales_targets || []).map(t => ({ ...t, target_upt: normalizeSavedTargetUpt(t.target_upt), target_cr: normalizeSavedTargetCr(t.target_cr) })),
       sales_daily_targets: parsed.sales_daily_targets || [],
       sales_store_days: parsed.sales_store_days || [],
       bonuses: parsed.bonuses || [],
@@ -251,6 +285,9 @@ function getStore(id) { return db.stores.find(s => Number(s.id) === Number(id));
 function getUser(id) { return db.users.find(u => Number(u.id) === Number(id)); }
 function getActiveUser(id) { const u = getUser(id); return u && u.status === 'active' ? u : null; }
 function isAllStoreRole(user) { return user?.role === 'admin' || user?.role === 'office'; }
+function canSelectAssignedStore(user) {
+  return isAllStoreRole(user) || (user?.role === 'manager' && getUserStoreIds(user).length > 1);
+}
 function getPermissions(userId, role) {
   const defaults = ROLE_DEFAULTS[role] || ROLE_DEFAULTS.employee;
   const row = db.permissions.find(p => Number(p.user_id) === Number(userId)) || {};
@@ -2020,6 +2057,83 @@ app.get('/api/users', requireAuth, requirePerm('can_manage_users'), (req, res) =
   res.json({ users, status: statusMode });
 });
 
+
+app.get('/api/stores', requireAuth, requirePerm('can_manage_users'), (req, res) => {
+  const statusMode = ['active', 'inactive', 'all'].includes(String(req.query.status || 'active')) ? String(req.query.status || 'active') : 'active';
+  let rows = (db.stores || []).slice();
+  if (statusMode === 'active') rows = rows.filter(s => String(s.status || 'active') === 'active');
+  if (statusMode === 'inactive') rows = rows.filter(s => String(s.status || 'active') !== 'active');
+  rows.sort((a, b) => Number(a.id) - Number(b.id));
+  const stores = rows.map(s => ({
+    ...clone(s),
+    users_count: (db.users || []).filter(u => String(u.status || 'active') !== 'deleted' && userHasStore(publicUser(u), s.id)).length
+  }));
+  res.json({ stores, status: statusMode });
+});
+
+app.post('/api/stores', requireAuth, requirePerm('can_manage_users'), (req, res) => {
+  const name = String(req.body?.name || '').trim();
+  if (!name) return res.status(400).json({ error: 'Vui lòng nhập tên chi nhánh' });
+  if ((db.stores || []).some(s => String(s.name || '').trim().toLowerCase() === name.toLowerCase() && String(s.status || 'active') !== 'deleted')) {
+    return res.status(400).json({ error: 'Chi nhánh đã tồn tại' });
+  }
+  const id = nextId('stores');
+  const store = { id, name, code: slugCode(name), status: 'active', created_at: nowIso(), created_by: req.user.id };
+  db.stores.push(store);
+  saveDb();
+  res.json({ ok: true, store: clone(store) });
+});
+
+app.patch('/api/stores/:id', requireAuth, requirePerm('can_manage_users'), (req, res) => {
+  const id = Number(req.params.id);
+  const store = (db.stores || []).find(s => Number(s.id) === id);
+  if (!store) return res.status(404).json({ error: 'Không tìm thấy chi nhánh' });
+  const name = String(req.body?.name || '').trim();
+  if (!name) return res.status(400).json({ error: 'Vui lòng nhập tên chi nhánh' });
+  if ((db.stores || []).some(s => Number(s.id) !== id && String(s.name || '').trim().toLowerCase() === name.toLowerCase() && String(s.status || 'active') !== 'deleted')) {
+    return res.status(400).json({ error: 'Tên chi nhánh đã tồn tại' });
+  }
+  store.name = name;
+  store.code = slugCode(name);
+  store.updated_at = nowIso();
+  store.updated_by = req.user.id;
+  saveDb();
+  res.json({ ok: true, store: clone(store) });
+});
+
+app.delete('/api/stores/:id', requireAuth, requirePerm('can_manage_users'), (req, res) => {
+  const id = Number(req.params.id);
+  const store = (db.stores || []).find(s => Number(s.id) === id);
+  if (!store) return res.status(404).json({ error: 'Không tìm thấy chi nhánh' });
+  const refs = [];
+  const hasRef = (arr, fn) => Array.isArray(arr) && arr.some(fn);
+  if (hasRef(db.users, u => String(u.status || 'active') !== 'deleted' && (Number(u.store_id) === id || getUserStoreIds(u).includes(id)))) refs.push('tài khoản');
+  if (hasRef(db.tasks, x => Number(x.store_id) === id)) refs.push('công việc');
+  if (hasRef(db.violations, x => Number(x.store_id) === id)) refs.push('vi phạm');
+  if (hasRef(db.assessments, x => Number(x.store_id) === id)) refs.push('đánh giá');
+  if (hasRef(db.sales, x => Number(x.store_id) === id)) refs.push('doanh thu');
+  if (hasRef(db.sales_targets, x => Number(x.store_id) === id)) refs.push('target tháng');
+  if (hasRef(db.sales_daily_targets, x => Number(x.store_id) === id)) refs.push('target ngày');
+  if (hasRef(db.sales_store_days, x => Number(x.store_id) === id)) refs.push('tổng khách/ngày');
+  if (hasRef(db.bonuses, x => Number(x.store_id) === id)) refs.push('thưởng');
+  if (hasRef(db.documents, x => Number(x.store_id) === id)) refs.push('tài liệu');
+  if (hasRef(db.shifts, x => Number(x.store_id) === id)) refs.push('ca làm');
+  if (hasRef(db.work_schedules, x => Number(x.store_id) === id)) refs.push('lịch làm việc');
+  if (hasRef(db.orders, x => Number(x.store_id) === id)) refs.push('order hàng');
+  if (hasRef(db.online_orders, x => Number(x.store_id) === id)) refs.push('đơn online');
+  if (hasRef(db.product_feedback, x => Number(x.store_id) === id)) refs.push('đánh giá sản phẩm');
+  if (hasRef(db.product_collections, x => Number(x.store_id) === id)) refs.push('bộ sưu tập');
+  if (hasRef(db.product_trainings, x => Number(x.store_id) === id)) refs.push('đào tạo sản phẩm');
+  if (hasRef(db.weekly_reports, x => Number(x.store_id) === id)) refs.push('báo cáo tuần');
+  if (hasRef(db.daily_reports, x => Number(x.store_id) === id)) refs.push('báo cáo ngày');
+  if (hasRef(db.cdp_ojti, x => Number(x.store_id) === id)) refs.push('CDP/OJTI');
+  if (refs.length) return res.status(400).json({ error: `Không thể xóa chi nhánh vì đang có dữ liệu liên quan: ${refs.join(', ')}` });
+  db.stores = (db.stores || []).filter(s => Number(s.id) !== id);
+  saveDb();
+  res.json({ ok: true, deleted: true });
+});
+
+
 app.post('/api/users', requireAuth, requirePerm('can_manage_users'), (req, res) => {
   const { full_name, username, password, role, store_id, store_ids, permissions } = req.body || {};
   if (!full_name || !username || !password || !['admin', 'office', 'manager', 'employee'].includes(role)) return res.status(400).json({ error: 'Thiếu thông tin tài khoản' });
@@ -2669,7 +2783,7 @@ function buildWeeklyReport(user, rawWeekStart, rawStoreId, rawUserStatus = 'acti
 
 app.post('/api/sales/daily', requireAuth, requireAnyPerm('can_manage_total_sales','can_manage_sales'), (req, res) => {
   const { store_id, sale_date, customer_count, customer_new_count, customer_old_count, note, entries } = req.body || {};
-  const storeId = isAllStoreRole(req.user) ? Number(store_id || getPrimaryStoreId(req.user)) : Number(getPrimaryStoreId(req.user));
+  const storeId = canSelectAssignedStore(req.user) ? Number(store_id || getPrimaryStoreId(req.user)) : Number(getPrimaryStoreId(req.user));
   const store = getStore(storeId);
   if (!store) return res.status(400).json({ error: 'Cửa hàng không hợp lệ' });
   if (req.user.role !== 'admin' && !userHasStore(req.user, storeId)) return res.status(403).json({ error: 'Không có quyền nhập doanh thu cửa hàng này' });
@@ -2702,15 +2816,15 @@ app.post('/api/sales/targets', requireAuth, requirePerm('can_set_sales_targets')
     if (row) {
       row.target = revenueTarget;
       row.target_revenue = revenueTarget;
-      row.target_upt = toNumber(target_upt, 0);
+      row.target_upt = toDecimalNumber(target_upt, 0);
       row.target_atv = toNumber(target_atv, 0);
-      row.target_cr = toNumber(target_cr, 0);
+      row.target_cr = toDecimalNumber(target_cr, 0);
       row.note = note || '';
       row.store_id = employeeStoreId;
       row.updated_by = req.user.id;
       row.updated_at = nowIso();
     } else {
-      row = { id: nextId('sales_targets'), user_id: employee.id, store_id: employeeStoreId, target_month, target: revenueTarget, target_revenue: revenueTarget, target_upt: toNumber(target_upt, 0), target_atv: toNumber(target_atv, 0), target_cr: toNumber(target_cr, 0), note: note || '', created_by: req.user.id, created_at: nowIso(), updated_by: req.user.id, updated_at: nowIso() };
+      row = { id: nextId('sales_targets'), user_id: employee.id, store_id: employeeStoreId, target_month, target: revenueTarget, target_revenue: revenueTarget, target_upt: toDecimalNumber(target_upt, 0), target_atv: toNumber(target_atv, 0), target_cr: toDecimalNumber(target_cr, 0), note: note || '', created_by: req.user.id, created_at: nowIso(), updated_by: req.user.id, updated_at: nowIso() };
       db.sales_targets.push(row);
     }
     saved.push(row);
@@ -2723,7 +2837,7 @@ app.post('/api/sales/targets', requireAuth, requirePerm('can_set_sales_targets')
 app.post('/api/sales/daily-targets', requireAuth, requirePerm('can_set_sales_targets'), (req, res) => {
   const { store_id, target_date, start_date, end_date, target_revenue, note } = req.body || {};
   let { dates } = req.body || {};
-  const storeId = isAllStoreRole(req.user) ? Number(store_id || getPrimaryStoreId(req.user)) : Number(getPrimaryStoreId(req.user));
+  const storeId = canSelectAssignedStore(req.user) ? Number(store_id || getPrimaryStoreId(req.user)) : Number(getPrimaryStoreId(req.user));
   const store = getStore(storeId);
   if (!store) return res.status(400).json({ error: 'Cửa hàng không hợp lệ' });
   if (req.user.role !== 'admin' && !userHasStore(req.user, storeId)) return res.status(403).json({ error: 'Không có quyền set target cửa hàng này' });
@@ -2804,7 +2918,7 @@ app.get('/api/sales/leaderboard', requireAuth, (req, res) => {
 
 app.get('/api/sales/store-summary', requireAuth, (req, res) => {
   const month = /^\d{4}-\d{2}$/.test(String(req.query.month || '')) ? String(req.query.month) : dateOnly(new Date()).slice(0, 7);
-  const storeId = isAllStoreRole(req.user) ? Number(req.query.store_id || getPrimaryStoreId(req.user) || db.stores[0]?.id) : Number(getPrimaryStoreId(req.user));
+  const storeId = canSelectAssignedStore(req.user) ? Number(req.query.store_id || getPrimaryStoreId(req.user) || db.stores[0]?.id) : Number(getPrimaryStoreId(req.user));
   const store = getStore(storeId);
   if (!store) return res.status(400).json({ error: 'Cửa hàng không hợp lệ' });
   if (!canViewStoreSales(req.user, storeId)) return res.status(403).json({ error: 'Không có quyền xem tổng doanh thu cửa hàng' });

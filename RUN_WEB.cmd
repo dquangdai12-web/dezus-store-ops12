@@ -34,11 +34,20 @@ if not exist node_modules\express (
 )
 
 echo.
-echo Starting Dezus Store Ops...
+echo Checking old Dezus Store Ops process on port 3076...
+for /f "tokens=5" %%P in ('netstat -ano ^| findstr ":3076" ^| findstr "LISTENING"') do (
+  echo Closing old process PID %%P...
+  taskkill /PID %%P /F >nul 2>nul
+)
+
+timeout /t 1 /nobreak >nul
+
+echo.
+echo Starting Dezus Store Ops V4.121...
 echo Open browser: http://localhost:3076
 echo Login: admin / 123456
 echo.
 set PORT=3076
-start "" "http://localhost:3076"
+start "" "http://localhost:3076/?v=4.121"
 npm start
 pause

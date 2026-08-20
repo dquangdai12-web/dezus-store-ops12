@@ -1,0 +1,17 @@
+Dezus Store Ops V4.121
+
+Cap nhat nhanh:
+1. Giai nen file nay vao thu muc moi hoac de len thu muc web dang dung.
+2. Neu dang cap nhat de GIU DU LIEU, KHONG xoa cac thu muc/data sau cua ban:
+   - data/store_ops.json
+   - uploads/
+   - documents/
+3. Neu copy de len thu muc web cu, chon Replace file trung ten.
+4. Chay RUN_WEB.cmd.
+
+Ban nay da cap nhat:
+- Doi logo DZ thanh logo DEZUS tu anh ban gui.
+- Doi menu 'Doi MK' thanh 'Doi Mat Khau'.
+- Tong quan: hien toan bo thanh vien o Top % doanh thu, bo cuc 2 hang, muc Vi pham chuyen xuong ben duoi.
+
+- V4.121: Top 1/2/3 duoc dua vao thanh that, icon nam trong thanh; RUN_WEB mo dung version moi de tranh cache.
