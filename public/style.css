@@ -5218,3 +5218,82 @@ body{letter-spacing:-.008em}
   .sales-summary-shell .sales-summary-grid{gap:10px!important}
   .sales-summary-shell .sales-summary-grid .sales-kpi{border-radius:16px!important}
 }
+
+
+/* V4.139 restrict green only to % đạt target, Cần bán/ngày, and achieved target items */
+/* Base: keep sales summary elegant and neutral */
+.sales-summary-shell{
+  background:linear-gradient(180deg,#f8fafc 0%, #f2f5f8 100%)!important;
+  border:1px solid #e3e8ef!important;
+  box-shadow:0 10px 28px rgba(15,23,42,.04)!important;
+}
+.sales-summary-shell .sales-summary-grid .sales-kpi{
+  background:#ffffff!important;
+  border:1px solid #dbe4ee!important;
+  box-shadow:0 8px 18px rgba(15,23,42,.04)!important;
+}
+.sales-summary-shell .sales-summary-grid .sales-kpi::before,
+.sales-summary-shell .sales-summary-grid .sales-kpi::after{display:none!important;content:none!important}
+.sales-summary-shell .sales-summary-grid .sales-kpi .label{color:#4b5563!important}
+.sales-summary-shell .sales-summary-grid .sales-kpi .num{color:#111827!important}
+.sales-summary-shell .sales-summary-grid .sales-kpi .hint{color:#667085!important}
+
+/* Card backgrounds: only Cần bán/ngày gets clear green treatment */
+.sales-summary-shell .sales-summary-grid .kpi-revenue{background:linear-gradient(180deg,#fffaf4 0%,#ffffff 100%)!important}
+.sales-summary-shell .sales-summary-grid .kpi-timeline{background:linear-gradient(180deg,#f7fafc 0%,#ffffff 100%)!important}
+.sales-summary-shell .sales-summary-grid .kpi-dailyneed{background:linear-gradient(180deg,#ecf8f0 0%,#ffffff 100%)!important;border-color:#cfe7d8!important;box-shadow:0 10px 22px rgba(34,139,84,.08)!important}
+.sales-summary-shell .sales-summary-grid .kpi-dailytarget{background:linear-gradient(180deg,#f7fafc 0%,#ffffff 100%)!important}
+.sales-summary-shell .sales-summary-grid .kpi-upt,
+.sales-summary-shell .sales-summary-grid .kpi-atv,
+.sales-summary-shell .sales-summary-grid .kpi-asp,
+.sales-summary-shell .sales-summary-grid .kpi-cr,
+.sales-summary-shell .sales-summary-grid .kpi-new,
+.sales-summary-shell .sales-summary-grid .kpi-old,
+.sales-summary-shell .sales-summary-grid .kpi-totalguest{background:linear-gradient(180deg,#fbfcfd 0%,#ffffff 100%)!important}
+
+/* Green only for % đạt target */
+.percent-target-badge,
+.sales-summary-shell .percent-target-badge,
+.leaderboard-table .percent-target-badge,
+.table-wrap .percent-target-badge{
+  background:#eaf7ef!important;
+  color:#1f5132!important;
+  border:1px solid #c8e3d2!important;
+}
+.percent-target-badge:before,
+.sales-summary-shell .percent-target-badge:before,
+.leaderboard-table .percent-target-badge:before,
+.table-wrap .percent-target-badge:before{background:#34a853!important}
+
+/* Achieved/exceeded target items = green. Not achieved = neutral gray, never red */
+.sales-summary-shell .badge.ok,
+.table-wrap .badge.ok,
+.leaderboard-table .badge.ok{
+  background:#eaf7ef!important;
+  color:#1f5132!important;
+  border:1px solid #c8e3d2!important;
+}
+.sales-summary-shell .badge.ok:before,
+.table-wrap .badge.ok:before,
+.leaderboard-table .badge.ok:before{background:#34a853!important}
+
+.sales-summary-shell .neutral-target-badge,
+.sales-summary-shell .badge.danger,
+.table-wrap .neutral-target-badge,
+.table-wrap .badge.danger,
+.leaderboard-table .neutral-target-badge,
+.leaderboard-table .badge.danger{
+  background:#f2f4f7!important;
+  color:#344054!important;
+  border:1px solid #d9dee5!important;
+}
+.sales-summary-shell .neutral-target-badge:before,
+.sales-summary-shell .badge.danger:before,
+.table-wrap .neutral-target-badge:before,
+.table-wrap .badge.danger:before,
+.leaderboard-table .neutral-target-badge:before,
+.leaderboard-table .badge.danger:before{background:#98a2b3!important}
+
+/* Keep % ngày and % lũy kế green as requested */
+.sales-target-percent,
+.sales-target-percent b{color:#111827!important}
