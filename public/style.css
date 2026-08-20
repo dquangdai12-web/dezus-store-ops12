@@ -5016,3 +5016,13 @@ body{letter-spacing:-.008em}
   .sales-leaderboard-premium .rank-card strong{font-size:20px!important}
   .sales-summary-grid .sales-kpi .num{font-size:15px!important}
 }
+
+
+/* V4.131 black text on monthly sales summary + remove editor mode */
+.sales-summary-grid .sales-kpi,
+.sales-summary-grid .sales-kpi .label,
+.sales-summary-grid .sales-kpi .num,
+.sales-summary-grid .sales-kpi .hint{color:#111827!important}
+.sales-summary-grid .sales-kpi .hint .badge,
+.sales-summary-grid .sales-kpi .hint .target-badge,
+.sales-summary-grid .sales-kpi .hint .percent-badge{color:inherit}

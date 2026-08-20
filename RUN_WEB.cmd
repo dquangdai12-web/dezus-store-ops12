@@ -24,6 +24,14 @@ if not exist package.json (
 )
 
 if not exist node_modules\express (
+  goto :install_packages
+)
+if not exist node_modules\xlsx (
+  goto :install_packages
+)
+goto :packages_ready
+
+:install_packages
   echo Installing packages. First time may take a few minutes...
   npm install --no-audit --no-fund --omit=dev
   if errorlevel 1 (
@@ -31,7 +39,8 @@ if not exist node_modules\express (
     pause
     exit /b 1
   )
-)
+
+:packages_ready
 
 echo.
 echo Checking old Dezus Store Ops process on port 3076...
@@ -43,11 +52,11 @@ for /f "tokens=5" %%P in ('netstat -ano ^| findstr ":3076" ^| findstr "LISTENING
 timeout /t 1 /nobreak >nul
 
 echo.
-echo Starting Dezus Store Ops V4.126...
+echo Starting Dezus Store Ops V4.132...
 echo Open browser: http://localhost:3076
 echo Login: admin / 123456
 echo.
 set PORT=3076
-start "" "http://localhost:3076/?v=4.126"
+start "" "http://localhost:3076/?v=4.132"
 npm start
 pause

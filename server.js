@@ -9,6 +9,7 @@ const express = require('express');
 const multer = require('multer');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const XLSX = require('xlsx');
 
 const PORT = Number(process.env.PORT || 3000);
 const JWT_SECRET = process.env.JWT_SECRET || 'CHANGE_ME_DEZUS_STORE_OPS_SECRET';
@@ -1695,6 +1696,52 @@ function toCsv(rows) {
   const headers = Object.keys(rows[0]);
   return [headers.join(','), ...rows.map(r => headers.map(h => csvEscape(r[h])).join(','))].join('\n');
 }
+
+function excelHeaderLabel(key) {
+  const labels = {
+    id:'ID', task_id:'Mã công việc', title:'Tiêu đề', priority:'Ưu tiên', due_at:'Hạn hoàn thành', store_id:'Mã chi nhánh', store_name:'Chi nhánh', cua_hang:'Chi nhánh', assignee_name:'Người thực hiện', completed_at:'Thời gian hoàn thành', evidence_path:'Minh chứng', evidence_note:'Ghi chú minh chứng', points_delta:'Điểm', status:'Trạng thái',
+    sale_date:'Ngày', ngay:'Ngày', employee_name:'Nhân viên', nhan_vien:'Nhân viên', revenue:'Doanh thu', doanh_thu:'Doanh thu', bill_count:'Bill', bill:'Bill', item_count:'Số món', so_mon:'Số món', khach_moi:'Khách mới', khach_cu:'Khách cũ', luot_khach_tong:'Lượt khách tổng', upt:'UPT', atv:'ATV', asp:'ASP', cr:'CR', note:'Ghi chú', ghi_chu:'Ghi chú', created_at:'Ngày tạo', updated_at:'Ngày cập nhật', ngay_cap_nhat:'Ngày cập nhật',
+    target_month:'Tháng target', target:'Target doanh thu', target_revenue:'Target doanh thu', target_ngay:'Target ngày', target_upt:'Target UPT', target_atv:'Target ATV', target_cr:'Target CR', target_date:'Ngày target',
+    code:'Mã', name:'Tên', start_time:'Giờ bắt đầu', end_time:'Giờ kết thúc', work_date:'Ngày làm việc', role:'Vai trò', shift_code:'Mã ca', shift_name:'Tên ca',
+    lan_order:'Lần order', sku:'SKU', product_name:'Tên sản phẩm', ten_sp:'Tên sản phẩm', size:'Size', tong_so_luong:'Tổng số lượng', ngay_dau:'Ngày đầu', ngay_cuoi:'Ngày cuối', trang_thai:'Trạng thái', so_dong_gop:'Số dòng gộp', nguoi_tao:'Người tạo',
+    so_hoa_don:'Số hóa đơn', gia_tri_don:'Giá trị đơn', doanh_thu_huong_30:'Doanh thu hưởng 30%', nhan_vien_dong:'Nhân viên đóng đơn', nguoi_nhap:'Người nhập',
+    thang_bst:'Tháng BST', bst_list:'BST / List', kieu_dang:'Kiểu dáng', chat_lieu:'Chất liệu', loi_san_pham:'Lỗi sản phẩm', danh_gia_khach:'Đánh giá khách', mong_muon_tai_san_pham:'Mong muốn tái sản phẩm',
+    so_lan_danh_gia:'Số lần đánh giá', de_xuat_tai:'Đề xuất tái', khong_tai:'Không tái', theo_doi_them:'Theo dõi thêm', ket_luan:'Kết luận', tong_hop_kieu_dang:'Tổng hợp kiểu dáng', tong_hop_chat_lieu:'Tổng hợp chất liệu', tong_hop_loi:'Tổng hợp lỗi', tong_hop_y_kien_khach:'Tổng hợp ý kiến khách',
+    thang:'Tháng', pham_vi:'Phạm vi', ghi_chu_sp:'Ghi chú sản phẩm', ghi_chu_bst:'Ghi chú BST', ngay_tao:'Ngày tạo', bat_buoc_hoc:'Bắt buộc học', han_hoc:'Hạn học', ty_le_dat:'Tỷ lệ đạt', so_cau_hoi:'Số câu hỏi', mau_hien_co:'Màu hiện có', anh_san_pham:'Ảnh sản phẩm', link_san_pham:'Link sản phẩm', ngay_hang_ve:'Ngày hàng về', kieu_dang_form:'Kiểu dáng / form', diem_ban_hang:'Điểm bán hàng', huong_dan_bao_quan_tu_van:'Hướng dẫn bảo quản / tư vấn', loi_can_luu_y:'Lỗi cần lưu ý', ghi_chu_dao_tao:'Ghi chú đào tạo',
+    bai_dao_tao:'Bài đào tạo', diem:'Điểm', dung:'Số câu đúng', tong_cau:'Tổng câu', ket_qua:'Kết quả', ngay_lam_bai:'Ngày làm bài',
+    loai:'Loại', vi_tri:'Vị trí', nhan_su:'Nhân sự', nguoi_dao_tao:'Người đào tạo', ma_tieu_chi:'Mã tiêu chí', nhom:'Nhóm', nang_luc:'Năng lực', tieu_chi:'Tiêu chí', ngay_training:'Ngày training', remark_cong_viec_hang_ngay:'Remark công việc hàng ngày', ngay_hoan_thanh_cong_viec:'Ngày hoàn thành công việc', link_cong_viec:'Link công việc', ghi_chu_training:'Ghi chú training', ghi_chu_chung:'Ghi chú chung', ngay_ke_hoach:'Ngày kế hoạch', gio_han:'Giờ hạn', tieu_de:'Tiêu đề', muc_tieu:'Mục tiêu', noi_dung:'Nội dung',
+    category:'Danh mục', version:'Phiên bản', storage_type:'Loại lưu trữ', original_name:'Tên file', external_url:'Link', created_by_name:'Người tạo', download_count:'Lượt tải', description:'Mô tả',
+    phan:'Phần', tu_ngay:'Từ ngày', den_ngay:'Đến ngày', target_tuan:'Target tuần', phan_tram_dat:'% đạt', target_tuan_uoc_tinh:'Target tuần ước tính', ty_trong_dt:'% tỷ trọng DT', trang_thai_nhan_su:'Trạng thái nhân sự', feedback:'Feedback', van_de:'Vấn đề', hanh_dong_tuan_toi:'Hành động tuần tới', feedback_san_pham:'Feedback sản phẩm', top:'Top', san_pham:'Sản phẩm', ten_ctkm:'Tên CTKM', so_bill_tham_gia:'Số bill tham gia'
+  };
+  if (labels[key]) return labels[key];
+  return String(key || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+function excelCellValue(v) {
+  if (v === null || v === undefined) return '';
+  if (Array.isArray(v)) return v.map(x => typeof x === 'object' ? JSON.stringify(x) : String(x)).join(' | ');
+  if (typeof v === 'object') return JSON.stringify(v);
+  return v;
+}
+function toExcelBuffer(rows, sheetName = 'Du lieu') {
+  const safeRows = Array.isArray(rows) ? rows : [];
+  const keys = [];
+  safeRows.forEach(r => Object.keys(r || {}).forEach(k => { if (!keys.includes(k)) keys.push(k); }));
+  if (!keys.length) keys.push('noi_dung');
+  const aoa = [keys.map(excelHeaderLabel)];
+  safeRows.forEach(r => aoa.push(keys.map(k => excelCellValue(r?.[k]))));
+  if (!safeRows.length) aoa.push(['Không có dữ liệu']);
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols'] = keys.map((k, idx) => {
+    let max = String(aoa[0][idx] || '').length;
+    for (let i = 1; i < Math.min(aoa.length, 300); i++) max = Math.max(max, String(aoa[i]?.[idx] ?? '').length);
+    return { wch: Math.min(Math.max(max + 2, 10), 42) };
+  });
+  ws['!autofilter'] = { ref: XLSX.utils.encode_range({s:{r:0,c:0},e:{r:Math.max(0,aoa.length-1),c:Math.max(0,keys.length-1)}}) };
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, String(sheetName || 'Du lieu').replace(/[\\/?*\[\]:]/g, ' ').slice(0,31));
+  return XLSX.write(wb, { type:'buffer', bookType:'xlsx', compression:true });
+}
+
 function loadChecklists() {
   const runtimePath = path.join(DATA_DIR, 'checklists.json');
   const sourcePath = path.join(ROOT, 'data', 'checklists.json');
@@ -3329,7 +3376,7 @@ app.post('/api/weekly-report', requireAuth, (req, res) => {
   res.json({ ok: true, id: row.id });
 });
 
-app.get('/api/weekly-report/export.csv', requireAuth, requirePerm('can_export'), (req, res) => {
+app.get('/api/weekly-report/export.xlsx', requireAuth, requirePerm('can_export'), (req, res) => {
   try {
     const data = buildWeeklyReport(req.user, req.query.week_start, req.query.store_id, req.query.user_status);
     const rows = [];
@@ -3338,9 +3385,10 @@ app.get('/api/weekly-report/export.csv', requireAuth, requirePerm('can_export'),
     data.employees.forEach(e => rows.push({ phan: 'Ca nhan', cua_hang: data.store_name, nhan_vien: e.full_name, trang_thai_nhan_su: e.user_status === 'active' ? 'Dang lam' : 'Da nghi/ngung hoat dong', doanh_thu: e.revenue, target_tuan_uoc_tinh: e.target, phan_tram_dat: e.achievement_percent, ty_trong_dt: e.revenue_percent, bill: e.bill_count, so_mon: e.item_count, upt: e.upt, atv: e.atv, asp: e.asp }));
     (data.top_products || []).forEach((p, idx) => rows.push({ phan: 'Top san pham ban chay', top: idx + 1, cua_hang: data.store_name, san_pham: p.name, so_mon: p.quantity || 0, feedback_san_pham: p.note || '' }));
     (data.promotions || []).forEach(p => rows.push({ phan: 'CTKM', cua_hang: data.store_name, ten_ctkm: p.name, so_bill_tham_gia: p.bill_count || 0, ghi_chu: p.note || '' }));
-    res.header('Content-Type', 'text/csv; charset=utf-8');
-    res.attachment(`bao-cao-tuan-${data.store_name}-${data.week_start}.csv`);
-    res.send('\uFEFF' + toCsv(rows));
+    const buffer = toExcelBuffer(rows, 'Bao cao tuan');
+    res.header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.attachment(`bao-cao-tuan-${data.store_name}-${data.week_start}.xlsx`);
+    res.send(buffer);
   } catch (err) {
     res.status(403).json({ error: err.message || 'Không tải được báo cáo tuần' });
   }
@@ -3944,7 +3992,7 @@ app.get('/api/reports/performance', requireAuth, (req, res) => {
   res.json({ performance, storeSummary: storeSummaryRows(req.user) });
 });
 
-app.get('/api/export/:type.csv', requireAuth, requirePerm('can_export'), (req, res) => {
+app.get('/api/export/:type.xlsx', requireAuth, requirePerm('can_export'), (req, res) => {
   const type = req.params.type;
   let rows = [];
   if (type === 'tasks') {
@@ -4031,9 +4079,10 @@ app.get('/api/export/:type.csv', requireAuth, requirePerm('can_export'), (req, r
   } else {
     return res.status(404).json({ error: 'Loại xuất dữ liệu không hợp lệ' });
   }
-  res.header('Content-Type', 'text/csv; charset=utf-8');
-  res.attachment(`${type}-${dateOnly(new Date())}.csv`);
-  res.send('\uFEFF' + toCsv(rows));
+  const buffer = toExcelBuffer(rows, type);
+  res.header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  res.attachment(`${type}-${dateOnly(new Date())}.xlsx`);
+  res.send(buffer);
 });
 
 

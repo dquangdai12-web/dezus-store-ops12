@@ -1,6 +1,6 @@
 {
   "name": "dezus-store-ops-v4-14-training-quiz",
-  "version": "4.14.0",
+  "version": "4.132.0",
   "description": "Dezus Store Ops - Đào tạo sản phẩm có bài kiểm tra trắc nghiệm, hạn học và trừ điểm khi không hoàn thành.",
   "main": "server.js",
   "scripts": {
@@ -10,7 +10,8 @@
     "bcryptjs": "^2.4.3",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
-    "multer": "^1.4.5-lts.1"
+    "multer": "^1.4.5-lts.1",
+    "xlsx": "^0.18.5"
   },
   "engines": {
     "node": ">=18"
