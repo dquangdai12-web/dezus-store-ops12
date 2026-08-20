@@ -5054,3 +5054,38 @@ body{letter-spacing:-.008em}
   color:#137a45!important;
   border-color:#b9e4cc!important;
 }
+
+
+/* V4.134 clean monochrome sales visuals */
+.sales-summary-grid .sales-kpi{
+  background:#ffffff!important;
+  color:#111827!important;
+  border:1px solid #d9e2ec!important;
+  box-shadow:0 6px 18px rgba(15,23,42,.04)!important;
+}
+.sales-summary-grid .sales-kpi::before,
+.sales-summary-grid .sales-kpi::after{display:none!important;content:none!important}
+.sales-summary-grid .sales-kpi .label{color:#5f6b7a!important}
+.sales-summary-grid .sales-kpi .num{color:#111827!important}
+.sales-summary-grid .sales-kpi .hint{color:#667085!important}
+.sales-summary-grid .sales-kpi .hint b{color:#111827!important}
+
+.percent-target-badge,
+.leaderboard-table .badge.danger.percent-target-badge,
+.sales-summary-grid .badge.danger.percent-target-badge,
+.table-wrap .badge.danger.percent-target-badge,
+.sales-summary-grid .badge.ok.percent-target-badge{
+  background:#f3f5f7!important;
+  color:#344054!important;
+  border-color:#d7dde5!important;
+}
+.percent-target-badge:before{background:#98a2b3!important}
+.sales-green-value,
+.sales-green-value b,
+.sales-green-value .badge{color:#111827!important}
+
+/* Revenue tables: numbers remain neutral, no red/green emphasis */
+.leaderboard-table td,
+.leaderboard-table td b,
+.table-wrap td.sales-green-value,
+.table-wrap td.sales-green-value b{color:#111827!important}
