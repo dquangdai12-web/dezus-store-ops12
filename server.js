@@ -1475,24 +1475,44 @@ function aggregateKpiTargetsForStore(storeId, months) {
 }
 
 
-function periodPaceMetrics(start, end, target, revenue) {
-  const startD = new Date(`${dateOnly(start)}T00:00:00Z`);
-  const endD = new Date(`${dateOnly(end)}T00:00:00Z`);
-  const todayD = new Date(`${dateOnly(new Date())}T00:00:00Z`);
+function periodPaceMetrics(start, end, target, revenue, _closedDates = []) {
+  const startDate = dateOnly(start);
+  const endDate = dateOnly(end);
+  const startD = new Date(`${startDate}T00:00:00Z`);
+  const endD = new Date(`${endDate}T00:00:00Z`);
   const dayMs = 24 * 60 * 60 * 1000;
   const totalDays = Math.max(1, Math.round((endD - startD) / dayMs));
-  let elapsedDays;
-  if (todayD < startD) elapsedDays = 0;
-  else if (todayD >= endD) elapsedDays = totalDays;
-  else elapsedDays = Math.min(totalDays, Math.max(1, Math.floor((todayD - startD) / dayMs) + 1));
+
+  // V4.129: Chốt ngày theo mốc 23:00 giờ Việt Nam.
+  // Trước 23:00: hôm nay chưa tính là ngày đã qua. Từ 23:00: tính luôn hôm nay.
+  // Tháng quá khứ = đủ toàn bộ số ngày; tháng tương lai = 0 ngày.
+  const parts = Object.fromEntries(new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', hourCycle: 'h23'
+  }).formatToParts(new Date()).filter(x => x.type !== 'literal').map(x => [x.type, x.value]));
+  const todayDate = `${parts.year}-${parts.month}-${parts.day}`;
+  const currentHour = Number(parts.hour || 0);
+  const todayD = new Date(`${todayDate}T00:00:00Z`);
+
+  let elapsedDays = 0;
+  if (todayD >= endD) {
+    elapsedDays = totalDays;
+  } else if (todayD < startD) {
+    elapsedDays = 0;
+  } else {
+    const completedBeforeToday = Math.max(0, Math.round((todayD - startD) / dayMs));
+    elapsedDays = completedBeforeToday + (currentHour >= 23 ? 1 : 0);
+    elapsedDays = Math.min(totalDays, Math.max(0, elapsedDays));
+  }
+
   const daysRemaining = Math.max(0, totalDays - elapsedDays);
   const rev = toNumber(revenue, 0);
   const tgt = toNumber(target, 0);
   const dailyAverage = elapsedDays > 0 ? rev / elapsedDays : 0;
-  const projectedRevenue = Math.round(todayD >= endD ? rev : dailyAverage * totalDays);
+  const projectedRevenue = elapsedDays > 0 ? Math.round(dailyAverage * totalDays) : 0;
   const pacePercent = tgt ? Math.round((projectedRevenue / tgt) * 10000) / 100 : 0;
   const dailyNeeded = daysRemaining > 0 ? Math.ceil(Math.max(tgt - rev, 0) / daysRemaining) : Math.max(Math.ceil(tgt - rev), 0);
-  return { pace_percent: pacePercent, projected_revenue: projectedRevenue, days_elapsed: elapsedDays, days_remaining: daysRemaining, daily_needed: dailyNeeded };
+  return { pace_percent: pacePercent, projected_revenue: projectedRevenue, days_elapsed: elapsedDays, days_closed: elapsedDays, days_remaining: daysRemaining, daily_needed: dailyNeeded };
 }
 
 function salesRowsForUserPeriod(userId, start, end) {
@@ -1523,7 +1543,7 @@ function salesProgressForUserPeriod(userId, start, end) {
     atv: bill_count ? Math.round(revenue / bill_count) : 0,
     asp: item_count ? Math.round(revenue / item_count) : 0,
     cr: 0,
-    ...periodPaceMetrics(start, end, target, revenue),
+    ...periodPaceMetrics(start, end, target, revenue, rows.map(r => r.sale_date)),
     last_update
   };
 }
@@ -1601,7 +1621,12 @@ function storeSalesProgressForPeriod(storeId, start, end) {
     atv: bill_count ? Math.round(revenue / bill_count) : 0,
     asp: item_count ? Math.round(revenue / item_count) : 0,
     cr: customer_count ? Math.round((bill_count / customer_count) * 10000) / 100 : 0,
-    ...periodPaceMetrics(start, end, target, revenue),
+    ...periodPaceMetrics(start, end, target, revenue, [
+      ...rows.map(r => r.sale_date),
+      ...(db.sales_store_days || [])
+        .filter(x => Number(x.store_id) === Number(storeId) && dateVal(x.sale_date) >= start && dateVal(x.sale_date) < end)
+        .map(x => x.sale_date)
+    ]),
     last_update
   };
 }
@@ -3000,7 +3025,12 @@ app.get('/api/sales/store-summary', requireAuth, (req, res) => {
   totals.target_cr = targetMetrics.target_cr;
   totals.achievement_percent = target ? Math.round((totals.revenue / target) * 10000) / 100 : 0;
   totals.daily_achievement_percent = totals.daily_target ? Math.round((totals.revenue / totals.daily_target) * 10000) / 100 : 0;
-  Object.assign(totals, periodPaceMetrics(start, end, target, totals.revenue));
+  Object.assign(totals, periodPaceMetrics(start, end, target, totals.revenue, [
+    ...salesRows.map(r => r.sale_date),
+    ...(db.sales_store_days || [])
+      .filter(x => Number(x.store_id) === Number(storeId) && dateVal(x.sale_date) >= start && dateVal(x.sale_date) < end)
+      .map(x => x.sale_date)
+  ]));
   res.json({ month, store_id: store.id, store_name: store.name, monthly_target: target, target_metrics: targetMetrics, totals, rows });
 });
 

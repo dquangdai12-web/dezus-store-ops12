@@ -877,7 +877,7 @@ function overviewLeaderboardCards(rows) {
   const detailRows = rows.slice();
   const showToggle = isMobile && detailRows.length > 5;
   const visibleRows = (showToggle && !state.overviewRevenueExpanded) ? detailRows.slice(0, 5) : detailRows;
-  const podium = `<div class="leaderboard-premium overview-podium-full">${podiumRows.map(r => `<article class="rank-card rank-${r.rank} premium-rank-card"><div class="premium-rank-bar"><span class="rank-balance-slot" aria-hidden="true"></span><span class="rank-no">Top ${r.rank}</span><span class="rank-icon-slot">${premiumRankIcon(r.rank)}</span></div><div class="premium-card-body"><b class="employee-name-line">${userDisplayName(r)}</b><span>${esc(r.store_name || '')}</span><strong>${Number(r.achievement_percent || 0)}%</strong></div></article>`).join('')}</div>`;
+  const podium = isMobile ? '' : `<div class="leaderboard-premium overview-podium-full">${podiumRows.map(r => `<article class="rank-card rank-${r.rank} premium-rank-card"><div class="premium-rank-bar"><span class="rank-balance-slot" aria-hidden="true"></span><span class="rank-no">Top ${r.rank}</span><span class="rank-icon-slot">${premiumRankIcon(r.rank)}</span></div><div class="premium-card-body"><b class="employee-name-line">${userDisplayName(r)}</b><span>${esc(r.store_name || '')}</span><strong>${Number(r.achievement_percent || 0)}%</strong></div></article>`).join('')}</div>`;
   const columnsCount = isMobile ? 1 : (visibleRows.length > 18 ? 3 : 2);
   const chunkSize = Math.ceil(visibleRows.length / columnsCount);
   const columns = Array.from({ length: columnsCount }, (_, i) => visibleRows.slice(i * chunkSize, (i + 1) * chunkSize)).filter(col => col.length);

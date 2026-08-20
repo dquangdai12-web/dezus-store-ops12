@@ -1,0 +1,12 @@
+DEZUS STORE OPS V4.124 - MOBILE LIVE EDITOR
+
+1. Giai nen file ZIP vao thu muc moi.
+2. Chay RUN_EDITOR.cmd.
+3. Dang nhap web nhu binh thuong. Neu dung data demo moi: admin / 123456.
+4. Tren web se co nut 🎨 o goc duoi.
+5. Mo tung muc that cua web va chinh truc tiep.
+6. Tab Chon phan tu: bam nut chon, sau do click vao dung noi dung/card/nut/icon tren web.
+7. Tab Icon co hon 180 icon/ky hieu.
+8. Tab Xuat: Copy JSON hoac tai file JSON, gui lai cho ChatGPT de ap vao ban chinh.
+
+Luu y: day la ban demo editor tren chinh giao dien V4.123, khong phai mockup rieng.
