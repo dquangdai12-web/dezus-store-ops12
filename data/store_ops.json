@@ -66,61 +66,61 @@
       "id": 1,
       "full_name": "Admin PKD",
       "username": "admin",
-      "password_hash": "$2a$10$6JrQQSBlQIbAPNzb5zy.6OT8jhbpdnXXJhtiebLmyua.ryYWiC1au",
+      "password_hash": "$2a$10$xdrOh8wVRA9hmOWX7ZgfWuKUQ8IWDNcEAczHrg3sKnfMkpmtIXVLi",
       "role": "admin",
       "store_id": null,
       "status": "active",
-      "created_at": "2026-08-20T05:00:40.364Z"
+      "created_at": "2026-08-20T08:39:15.463Z"
     },
     {
       "id": 2,
       "full_name": "QL Bà Triệu",
       "username": "qly.bt",
-      "password_hash": "$2a$10$6JrQQSBlQIbAPNzb5zy.6OT8jhbpdnXXJhtiebLmyua.ryYWiC1au",
+      "password_hash": "$2a$10$xdrOh8wVRA9hmOWX7ZgfWuKUQ8IWDNcEAczHrg3sKnfMkpmtIXVLi",
       "role": "manager",
       "store_id": 1,
       "status": "active",
-      "created_at": "2026-08-20T05:00:40.366Z"
+      "created_at": "2026-08-20T08:39:15.464Z"
     },
     {
       "id": 3,
       "full_name": "ĐSKD Bà Triệu 01",
       "username": "nv.bt1",
-      "password_hash": "$2a$10$6JrQQSBlQIbAPNzb5zy.6OT8jhbpdnXXJhtiebLmyua.ryYWiC1au",
+      "password_hash": "$2a$10$xdrOh8wVRA9hmOWX7ZgfWuKUQ8IWDNcEAczHrg3sKnfMkpmtIXVLi",
       "role": "employee",
       "store_id": 1,
       "status": "active",
-      "created_at": "2026-08-20T05:00:40.366Z"
+      "created_at": "2026-08-20T08:39:15.464Z"
     },
     {
       "id": 4,
       "full_name": "ĐSKD Bà Triệu 02",
       "username": "nv.bt2",
-      "password_hash": "$2a$10$6JrQQSBlQIbAPNzb5zy.6OT8jhbpdnXXJhtiebLmyua.ryYWiC1au",
+      "password_hash": "$2a$10$xdrOh8wVRA9hmOWX7ZgfWuKUQ8IWDNcEAczHrg3sKnfMkpmtIXVLi",
       "role": "employee",
       "store_id": 1,
       "status": "active",
-      "created_at": "2026-08-20T05:00:40.366Z"
+      "created_at": "2026-08-20T08:39:15.464Z"
     },
     {
       "id": 5,
       "full_name": "QL Đà Nẵng",
       "username": "qly.dn",
-      "password_hash": "$2a$10$6JrQQSBlQIbAPNzb5zy.6OT8jhbpdnXXJhtiebLmyua.ryYWiC1au",
+      "password_hash": "$2a$10$xdrOh8wVRA9hmOWX7ZgfWuKUQ8IWDNcEAczHrg3sKnfMkpmtIXVLi",
       "role": "manager",
       "store_id": 2,
       "status": "active",
-      "created_at": "2026-08-20T05:00:40.366Z"
+      "created_at": "2026-08-20T08:39:15.464Z"
     },
     {
       "id": 6,
       "full_name": "ĐSKD Đà Nẵng 01",
       "username": "nv.dn1",
-      "password_hash": "$2a$10$6JrQQSBlQIbAPNzb5zy.6OT8jhbpdnXXJhtiebLmyua.ryYWiC1au",
+      "password_hash": "$2a$10$xdrOh8wVRA9hmOWX7ZgfWuKUQ8IWDNcEAczHrg3sKnfMkpmtIXVLi",
       "role": "employee",
       "store_id": 2,
       "status": "active",
-      "created_at": "2026-08-20T05:00:40.366Z"
+      "created_at": "2026-08-20T08:39:15.464Z"
     }
   ],
   "permissions": [
@@ -380,7 +380,7 @@
       "end_time": "16:30",
       "note": "Ca sáng",
       "status": "active",
-      "created_at": "2026-08-20T05:00:40.366Z"
+      "created_at": "2026-08-20T08:39:15.464Z"
     },
     {
       "id": 2,
@@ -390,7 +390,7 @@
       "end_time": "22:00",
       "note": "Ca chiều",
       "status": "active",
-      "created_at": "2026-08-20T05:00:40.366Z"
+      "created_at": "2026-08-20T08:39:15.464Z"
     },
     {
       "id": 3,
@@ -400,7 +400,7 @@
       "end_time": "22:00",
       "note": "Ca gãy / full peak",
       "status": "active",
-      "created_at": "2026-08-20T05:00:40.366Z"
+      "created_at": "2026-08-20T08:39:15.464Z"
     },
     {
       "id": 4,
@@ -410,7 +410,7 @@
       "end_time": "17:00",
       "note": "",
       "status": "active",
-      "created_at": "2026-08-20T05:00:40.366Z"
+      "created_at": "2026-08-20T08:39:15.464Z"
     },
     {
       "id": 5,
@@ -420,7 +420,7 @@
       "end_time": "20:30",
       "note": "",
       "status": "active",
-      "created_at": "2026-08-20T05:00:40.366Z"
+      "created_at": "2026-08-20T08:39:15.464Z"
     }
   ],
   "tasks": [],

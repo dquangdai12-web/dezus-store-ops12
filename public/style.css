@@ -4971,3 +4971,48 @@ body{letter-spacing:-.008em}
     text-align:center;
   }
 }
+
+
+/* V4.130 colorful monthly sales summary + mobile revenue top fix */
+.sales-summary-grid{gap:12px!important}
+.sales-summary-grid .sales-kpi{position:relative;overflow:hidden;border-radius:18px!important;border:1px solid #d8e2ec!important;box-shadow:0 10px 24px rgba(15,23,42,.05)!important;background:#fff!important}
+.sales-summary-grid .sales-kpi::before{content:'';position:absolute;inset:0 auto 0 0;width:5px;border-radius:18px 0 0 18px;opacity:.98}
+.sales-summary-grid .sales-kpi::after{content:'';position:absolute;right:-18px;top:-18px;width:92px;height:92px;border-radius:999px;opacity:.14;background:currentColor}
+.sales-summary-grid .sales-kpi .label{position:relative;z-index:1;font-size:12px!important;text-transform:uppercase;letter-spacing:.04em;font-weight:800!important}
+.sales-summary-grid .sales-kpi .num{position:relative;z-index:1;letter-spacing:-.03em}
+.sales-summary-grid .sales-kpi .hint{position:relative;z-index:1}
+.sales-summary-grid .kpi-revenue{background:linear-gradient(180deg,#fffaf1,#ffffff)!important;color:#b26b00}.sales-summary-grid .kpi-revenue::before{background:#f4b740}.sales-summary-grid .kpi-revenue .num{color:#8d5200!important}
+.sales-summary-grid .kpi-timeline{background:linear-gradient(180deg,#f2f9ff,#ffffff)!important;color:#0b73c8}.sales-summary-grid .kpi-timeline::before{background:#48a7ff}.sales-summary-grid .kpi-timeline .num{color:#0e5a97!important}
+.sales-summary-grid .kpi-dailyneed{background:linear-gradient(180deg,#fff5f3,#ffffff)!important;color:#d4482c}.sales-summary-grid .kpi-dailyneed::before{background:#ff7a59}.sales-summary-grid .kpi-dailyneed .num{color:#b93820!important}
+.sales-summary-grid .kpi-dailytarget{background:linear-gradient(180deg,#fbf6ff,#ffffff)!important;color:#8753d8}.sales-summary-grid .kpi-dailytarget::before{background:#b084ff}.sales-summary-grid .kpi-dailytarget .num{color:#6e3ec0!important}
+.sales-summary-grid .kpi-upt{background:linear-gradient(180deg,#f3fcf6,#ffffff)!important;color:#19914f}.sales-summary-grid .kpi-upt::before{background:#39c276}.sales-summary-grid .kpi-upt .num{color:#13773f!important}
+.sales-summary-grid .kpi-atv{background:linear-gradient(180deg,#f6fbff,#ffffff)!important;color:#2578b6}.sales-summary-grid .kpi-atv::before{background:#5bb2f0}.sales-summary-grid .kpi-atv .num{color:#1f6598!important}
+.sales-summary-grid .kpi-asp{background:linear-gradient(180deg,#fff9ef,#ffffff)!important;color:#be7d16}.sales-summary-grid .kpi-asp::before{background:#f2c14e}.sales-summary-grid .kpi-asp .num{color:#9a6310!important}
+.sales-summary-grid .kpi-cr{background:linear-gradient(180deg,#fff6f8,#ffffff)!important;color:#cf4767}.sales-summary-grid .kpi-cr::before{background:#f77996}.sales-summary-grid .kpi-cr .num{color:#b53857!important}
+.sales-summary-grid .kpi-new{background:linear-gradient(180deg,#f4fbff,#ffffff)!important;color:#1a86a8}.sales-summary-grid .kpi-new::before{background:#59c5e7}.sales-summary-grid .kpi-new .num{color:#176e89!important}
+.sales-summary-grid .kpi-old{background:linear-gradient(180deg,#f7f6ff,#ffffff)!important;color:#6d63db}.sales-summary-grid .kpi-old::before{background:#9d95ff}.sales-summary-grid .kpi-old .num{color:#544bbd!important}
+.sales-summary-grid .kpi-totalguest{background:linear-gradient(180deg,#f5faf5,#ffffff)!important;color:#3a8a48}.sales-summary-grid .kpi-totalguest::before{background:#6ecb7d}.sales-summary-grid .kpi-totalguest .num{color:#2f733b!important}
+
+/* Mobile: make revenue Top doanh thu fully visible */
+@media (max-width:860px){
+  .sales-leaderboard-premium{grid-template-columns:1fr!important;gap:10px!important;margin-bottom:10px!important}
+  .sales-leaderboard-premium .rank-card{padding:12px 12px 11px!important;min-height:auto!important;overflow:visible!important;gap:4px!important}
+  .sales-leaderboard-premium .rank-card .rank-no{font-size:12px!important;margin-bottom:2px!important;padding-right:40px!important}
+  .sales-leaderboard-premium .rank-card b,
+  .sales-leaderboard-premium .employee-name-line{font-size:14px!important;line-height:1.28!important;white-space:normal!important;overflow:visible!important;text-overflow:unset!important;display:block!important;padding-right:0!important}
+  .sales-leaderboard-premium .rank-card span{font-size:11.5px!important;white-space:normal!important;overflow:visible!important;text-overflow:unset!important;display:block!important}
+  .sales-leaderboard-premium .rank-card strong{font-size:22px!important;line-height:1.05!important;margin-top:6px!important}
+  .sales-leaderboard-premium .rank-card .rank-cup{width:34px!important;height:34px!important;top:10px!important;right:10px!important;font-size:19px!important}
+  .sales-summary-grid{grid-template-columns:1fr!important;gap:10px!important}
+  .sales-summary-grid .sales-kpi{padding:13px 14px!important;border-radius:16px!important}
+  .sales-summary-grid .sales-kpi .label{font-size:11px!important}
+  .sales-summary-grid .sales-kpi .num{font-size:16px!important;line-height:1.18!important;word-break:break-word!important}
+  .sales-summary-grid .sales-kpi .hint{font-size:11px!important;line-height:1.35!important}
+}
+@media (max-width:560px){
+  .sales-leaderboard-premium .rank-card{padding:11px!important}
+  .sales-leaderboard-premium .rank-card b,
+  .sales-leaderboard-premium .employee-name-line{font-size:13.5px!important}
+  .sales-leaderboard-premium .rank-card strong{font-size:20px!important}
+  .sales-summary-grid .sales-kpi .num{font-size:15px!important}
+}
