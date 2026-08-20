@@ -5026,3 +5026,31 @@ body{letter-spacing:-.008em}
 .sales-summary-grid .sales-kpi .hint .badge,
 .sales-summary-grid .sales-kpi .hint .target-badge,
 .sales-summary-grid .sales-kpi .hint .percent-badge{color:inherit}
+
+
+/* V4.133 target visuals: remove red, highlight requested sales metrics in green */
+.percent-target-badge{
+  background:#e8f7ef!important;
+  color:#137a45!important;
+  border-color:#b9e4cc!important;
+}
+.percent-target-badge:before{background:#137a45!important}
+.sales-green-value,
+.sales-green-value b{color:#137a45!important}
+.sales-green-value .badge{color:#137a45!important}
+.sales-summary-grid .kpi-timeline .num,
+.sales-summary-grid .kpi-timeline .hint,
+.sales-summary-grid .kpi-dailyneed .num,
+.sales-summary-grid .kpi-dailyneed .hint{color:#137a45!important}
+.sales-summary-grid .kpi-timeline::before,
+.sales-summary-grid .kpi-dailyneed::before{background:#35b779!important}
+.sales-summary-grid .kpi-timeline,
+.sales-summary-grid .kpi-dailyneed{background:linear-gradient(180deg,#f2fbf6,#ffffff)!important}
+/* Percent target badges in sales views never show danger red */
+.leaderboard-table .badge.danger.percent-target-badge,
+.sales-summary-grid .badge.danger.percent-target-badge,
+.table-wrap .badge.danger.percent-target-badge{
+  background:#e8f7ef!important;
+  color:#137a45!important;
+  border-color:#b9e4cc!important;
+}
