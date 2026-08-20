@@ -43,11 +43,11 @@ for /f "tokens=5" %%P in ('netstat -ano ^| findstr ":3076" ^| findstr "LISTENING
 timeout /t 1 /nobreak >nul
 
 echo.
-echo Starting Dezus Store Ops V4.121...
+echo Starting Dezus Store Ops V4.123...
 echo Open browser: http://localhost:3076
 echo Login: admin / 123456
 echo.
 set PORT=3076
-start "" "http://localhost:3076/?v=4.121"
+start "" "http://localhost:3076/?v=4.123"
 npm start
 pause

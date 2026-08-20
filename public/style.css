@@ -4770,3 +4770,204 @@ body{letter-spacing:-.008em}
   .premium-rank-card .premium-rank-bar .rank-no{font-size:12.5px!important}
   .premium-rank-card .premium-rank-bar .rank-icon-slot .premium-rank-icon{width:37px!important;height:37px!important}
 }
+
+
+/* V4.122 larger employee/store names in Top 1-3 + mobile optimization */
+.premium-card-body b{
+  font-size:17px!important;
+  line-height:1.24!important;
+  font-weight:800!important;
+  letter-spacing:-.01em!important;
+}
+.premium-card-body span{
+  font-size:12.5px!important;
+  line-height:1.2!important;
+  font-weight:600!important;
+  color:#667085!important;
+}
+.premium-card-body strong{
+  font-size:29px!important;
+}
+.premium-rank-card{
+  min-height:114px!important;
+}
+.premium-rank-card .premium-rank-bar .rank-no{
+  font-size:14px!important;
+}
+.premium-rank-card .premium-rank-bar .rank-icon-slot{
+  width:48px!important;
+  height:48px!important;
+}
+.premium-rank-card .premium-rank-bar .rank-icon-slot .premium-rank-icon{
+  width:40px!important;
+  height:40px!important;
+}
+
+/* mobile-first polishing */
+@media(max-width:860px){
+  .hero-card{
+    padding:14px!important;
+    gap:12px!important;
+  }
+  .hero-card h3{
+    font-size:18px!important;
+  }
+  .hero-score{
+    padding:14px!important;
+    border-radius:16px!important;
+  }
+  .dash-kpis{
+    grid-template-columns:1fr 1fr!important;
+    gap:10px!important;
+  }
+  .dashboard-kpi,.top-month-kpi{
+    min-height:98px!important;
+    padding:13px 14px!important;
+    border-radius:16px!important;
+  }
+  .dashboard-kpi .label,.top-month-kpi .label{
+    font-size:11px!important;
+  }
+  .dashboard-kpi .num,.top-month-kpi .num{
+    font-size:18px!important;
+  }
+  .dashboard-kpi .hint,.top-month-kpi .hint{
+    font-size:11px!important;
+  }
+
+  .overview-leaderboard-card.overview-leaderboard-full{
+    padding:12px!important;
+    border-radius:18px!important;
+  }
+  .overview-leaderboard-card .section-title{
+    margin-bottom:8px!important;
+    align-items:flex-start!important;
+    gap:8px!important;
+  }
+  .overview-leaderboard-card .section-title h3{
+    font-size:15px!important;
+    line-height:1.3!important;
+  }
+  .overview-leaderboard-card .section-title .badge{
+    font-size:10.5px!important;
+    padding:6px 10px!important;
+  }
+  .overview-podium-full{
+    grid-template-columns:1fr!important;
+    gap:10px!important;
+    margin-bottom:10px!important;
+  }
+  .premium-rank-card{
+    min-height:auto!important;
+    padding:12px 12px 11px!important;
+    border-radius:16px!important;
+  }
+  .premium-rank-bar{
+    height:32px!important;
+  }
+  .premium-rank-card .premium-rank-bar .rank-no{
+    font-size:14px!important;
+  }
+  .premium-rank-card .premium-rank-bar .rank-icon-slot{
+    width:50px!important;
+    height:50px!important;
+    right:4px!important;
+  }
+  .premium-rank-card .premium-rank-bar .rank-icon-slot .premium-rank-icon{
+    width:42px!important;
+    height:42px!important;
+  }
+  .premium-card-body{
+    grid-template-columns:minmax(0,1fr) auto!important;
+    column-gap:10px!important;
+    row-gap:4px!important;
+    padding-top:10px!important;
+  }
+  .premium-card-body b{
+    font-size:16px!important;
+    line-height:1.24!important;
+  }
+  .premium-card-body span{
+    font-size:12px!important;
+    line-height:1.2!important;
+  }
+  .premium-card-body strong{
+    font-size:28px!important;
+    line-height:1!important;
+  }
+
+  .overview-detail-split,.overview-detail-split.columns-3{
+    grid-template-columns:1fr!important;
+    gap:8px!important;
+  }
+  .overview-detail-table-wrap{
+    border-radius:14px!important;
+    overflow:hidden!important;
+  }
+  .overview-detail-table thead th,
+  .overview-detail-table tbody td{
+    padding:9px 10px!important;
+  }
+  .overview-detail-table thead th{
+    font-size:10px!important;
+  }
+  .overview-detail-table tbody td,
+  .overview-detail-table tbody td b{
+    font-size:12px!important;
+  }
+
+  .overview-violations-card{
+    padding:14px 12px!important;
+    border-radius:18px!important;
+  }
+}
+
+@media(max-width:560px){
+  .page-title h2{
+    font-size:20px!important;
+  }
+  .dash-kpis{
+    grid-template-columns:1fr!important;
+  }
+  .dashboard-kpi,.top-month-kpi{
+    min-height:92px!important;
+  }
+  .premium-rank-card{
+    padding:11px 11px 10px!important;
+  }
+  .premium-rank-card .premium-rank-bar .rank-no{
+    font-size:13.5px!important;
+  }
+  .premium-card-body b{
+    font-size:15px!important;
+  }
+  .premium-card-body span{
+    font-size:11.5px!important;
+  }
+  .premium-card-body strong{
+    font-size:26px!important;
+  }
+}
+
+
+/* V4.123 mobile revenue detail expand/collapse */
+.overview-mobile-more{display:none}
+@media(max-width:860px){
+  .overview-mobile-more{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    padding-top:10px;
+  }
+  .overview-mobile-more .btn{
+    min-width:220px;
+    border-radius:999px;
+  }
+  .overview-mobile-more .hint{
+    font-size:11px;
+    color:#667085;
+    text-align:center;
+  }
+}

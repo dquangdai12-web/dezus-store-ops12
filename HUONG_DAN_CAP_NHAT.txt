@@ -1,4 +1,4 @@
-Dezus Store Ops V4.121
+Dezus Store Ops V4.123
 
 Cap nhat nhanh:
 1. Giai nen file nay vao thu muc moi hoac de len thu muc web dang dung.
@@ -14,4 +14,4 @@ Ban nay da cap nhat:
 - Doi menu 'Doi MK' thanh 'Doi Mat Khau'.
 - Tong quan: hien toan bo thanh vien o Top % doanh thu, bo cuc 2 hang, muc Vi pham chuyen xuong ben duoi.
 
-- V4.121: Top 1/2/3 duoc dua vao thanh that, icon nam trong thanh; RUN_WEB mo dung version moi de tranh cache.
+- V4.123: Top 1/2/3 duoc dua vao thanh that, icon nam trong thanh; RUN_WEB mo dung version moi de tranh cache.

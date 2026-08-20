@@ -38,6 +38,7 @@ const state = {
   scheduleEditMode: false,
   navOpenGroup: localStorage.getItem('dezus_ops_nav_group') || 'overview',
   adminEditUserId: null,
+  overviewRevenueExpanded: false,
 };
 
 const app = $('#app');
@@ -871,15 +872,19 @@ function premiumRankIcon(rank) {
 
 function overviewLeaderboardCards(rows) {
   if (!rows?.length) return '<div class="empty">Chưa có dữ liệu doanh thu/target</div>';
+  const isMobile = window.matchMedia('(max-width: 860px)').matches;
   const podiumRows = rows.slice(0, 3);
   const detailRows = rows.slice();
+  const showToggle = isMobile && detailRows.length > 5;
+  const visibleRows = (showToggle && !state.overviewRevenueExpanded) ? detailRows.slice(0, 5) : detailRows;
   const podium = `<div class="leaderboard-premium overview-podium-full">${podiumRows.map(r => `<article class="rank-card rank-${r.rank} premium-rank-card"><div class="premium-rank-bar"><span class="rank-balance-slot" aria-hidden="true"></span><span class="rank-no">Top ${r.rank}</span><span class="rank-icon-slot">${premiumRankIcon(r.rank)}</span></div><div class="premium-card-body"><b class="employee-name-line">${userDisplayName(r)}</b><span>${esc(r.store_name || '')}</span><strong>${Number(r.achievement_percent || 0)}%</strong></div></article>`).join('')}</div>`;
-  const columnsCount = detailRows.length > 18 ? 3 : 2;
-  const chunkSize = Math.ceil(detailRows.length / columnsCount);
-  const columns = Array.from({ length: columnsCount }, (_, i) => detailRows.slice(i * chunkSize, (i + 1) * chunkSize)).filter(col => col.length);
+  const columnsCount = isMobile ? 1 : (visibleRows.length > 18 ? 3 : 2);
+  const chunkSize = Math.ceil(visibleRows.length / columnsCount);
+  const columns = Array.from({ length: columnsCount }, (_, i) => visibleRows.slice(i * chunkSize, (i + 1) * chunkSize)).filter(col => col.length);
   const detailTable = col => `<div class="overview-detail-table-wrap"><table class="overview-detail-table"><thead><tr><th>TOP</th><th>NHÂN VIÊN</th><th>CỬA HÀNG</th><th>% ĐẠT TARGET</th></tr></thead><tbody>${col.map(r => `<tr><td><span class="badge dark">Top ${r.rank}</span></td><td><b>${userDisplayName(r)}</b></td><td>${esc(r.store_name || '')}</td><td>${percentBadge(r.achievement_percent || 0)}</td></tr>`).join('')}</tbody></table></div>`;
   const detail = `<div class="overview-detail-split columns-${columns.length}">${columns.map(detailTable).join('')}</div>`;
-  return `${podium}${detail}`;
+  const mobileToggle = showToggle ? `<div class="overview-mobile-more"><button class="btn secondary small" id="toggleOverviewRevenueBtn">${state.overviewRevenueExpanded ? 'Thu gọn' : 'Xem thêm để hiện toàn bộ'}</button><div class="hint">${state.overviewRevenueExpanded ? `Đang hiển thị toàn bộ ${detailRows.length} nhân viên` : 'Đang hiển thị 5 nhân viên đầu tiên'}</div></div>` : '';
+  return `${podium}${detail}${mobileToggle}`;
 }
 
 async function renderDashboard() {
@@ -926,6 +931,10 @@ async function renderDashboard() {
       ${violationsData.violations.slice(0, 6).map(v => `<div class="activity-item"><div><b>${esc(v.employee_name)}</b><span>${esc(v.store_name || '')} • ${dt(v.created_at)}</span><p>${esc(v.description || '')}</p></div><span class="badge danger">-${v.points_deducted}</span></div>`).join('') || '<div class="empty">Chưa có vi phạm</div>'}
     </section>
   `, 'Tổng Quan', '');
+  $('#toggleOverviewRevenueBtn')?.addEventListener('click', () => {
+    state.overviewRevenueExpanded = !state.overviewRevenueExpanded;
+    renderDashboard();
+  });
 }
 
 function tableLeaderboard(rows, showAmounts = false) {
