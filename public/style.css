@@ -5528,3 +5528,28 @@ section.card>.toolbar+p.hint{display:none!important}
 
 /* V4.165 separate weekly/monthly inventory uploads */
 .pa-xnt-upload-tabs{display:grid;gap:12px}.pa-xnt-form{border:1px solid #dde5ee;border-radius:16px;padding:14px;background:#fbfcfe}.pa-xnt-form-head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:12px}.pa-xnt-form-head b{font-size:14px;color:#172033}.pa-xnt-form-head span{font-size:11px;color:#667085;background:#eef2f6;border-radius:999px;padding:5px 8px}.pa-xnt-form .btn{margin-top:10px}@media(max-width:760px){.pa-xnt-form-head{align-items:flex-start;flex-direction:column}.pa-xnt-form .grid.two{grid-template-columns:1fr!important}}
+
+
+/* V4.166 - Sapo history only inside Upload tab, collapsed by default */
+.pa-history-details{padding:0!important;overflow:hidden}
+.pa-history-details>summary{list-style:none}
+.pa-history-details>summary::-webkit-details-marker{display:none}
+.pa-history-summary{
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:14px 16px;
+  background:#fff;
+}
+.pa-history-summary>span:first-child{display:flex;align-items:center;gap:10px;min-width:0}
+.pa-history-summary b{font-size:14px;color:#172033}
+.pa-history-summary small{font-size:11px;color:#7b8494;font-weight:650}
+.pa-history-details[open] .pa-history-summary{border-bottom:1px solid #e5eaf0;background:#f8fafc}
+.pa-history-body{padding:14px 16px 16px}
+@media(max-width:760px){
+  .pa-history-summary{padding:12px}
+  .pa-history-summary>span:first-child{align-items:flex-start;flex-direction:column;gap:2px}
+  .pa-history-body{padding:12px}
+}
