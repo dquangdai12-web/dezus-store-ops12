@@ -3307,15 +3307,27 @@ function aggregateProductAnalytics(user, opts={}) {
     stockByProduct.forEach((qty,key)=>{const x=getRow('',key);x.stock_qty=qty;});
   }
   const periodDays=Math.max(1,Math.floor((new Date(`${end}T00:00:00Z`)-new Date(`${start}T00:00:00Z`))/86400000)+1);
+  let fullPeriodEnd=end;
+  if(requestedPeriodType==='week') fullPeriodEnd=addDaysUtc(start,6);
+  else if(requestedPeriodType==='month'){
+    const [fy,fm]=start.slice(0,7).split('-').map(Number);
+    fullPeriodEnd=dateOnly(new Date(Date.UTC(fy,fm,0)));
+  }
+  const remainingDays=Math.max(0,Math.floor((new Date(`${fullPeriodEnd}T00:00:00Z`)-new Date(`${end}T00:00:00Z`))/86400000));
   let rows=Array.from(grouped.values()).map(x=>{
     const sellingDays=x.arrival_date&&x.arrival_date>start?Math.max(1,Math.floor((new Date(`${end}T00:00:00Z`)-new Date(`${x.arrival_date}T00:00:00Z`))/86400000)+1):periodDays;
     const posVelocity=Math.round((x.pos_qty/sellingDays)*100)/100,onlineVelocity=Math.round((x.online_qty/sellingDays)*100)/100,velocity=Math.round((x.sold_qty/sellingDays)*100)/100;
     const daysCover=velocity>0?Math.round((x.stock_qty/velocity)*10)/10:null;
-    const sellableQty=velocity>0?Math.min(Math.max(0,x.stock_qty),Math.ceil(velocity*periodDays)):0;
+    // Forecast for the unelapsed part of the selected week/month.
+    // potential_sell_qty = demand that could be sold if stock were always sufficient.
+    // miss_sale_qty = estimated demand that current stock cannot cover.
+    const potentialSellQty=velocity>0&&remainingDays>0?Math.ceil(velocity*remainingDays):0;
+    const coveredSellQty=Math.min(Math.max(0,x.stock_qty),potentialSellQty);
+    const missSaleQty=Math.max(0,potentialSellQty-Math.max(0,x.stock_qty));
     const reserveRecommended=velocity>0?Math.ceil(velocity*7):0;
     const daysSince=x.arrival_date?Math.max(0,Math.floor((new Date(`${end}T00:00:00Z`)-new Date(`${x.arrival_date}T00:00:00Z`))/86400000)+1):null;
     const slowScore=(daysSince||periodDays)*Math.max(0,x.stock_qty)/Math.max(1,x.sold_qty);
-    return {...x,pos_qty:Math.round(x.pos_qty*100)/100,online_qty:Math.round(x.online_qty*100)/100,sold_qty:Math.round(x.sold_qty*100)/100,revenue:Math.round(x.revenue),stock_qty:Math.round(x.stock_qty*100)/100,velocity,pos_velocity:posVelocity,online_velocity:onlineVelocity,selling_days:sellingDays,days_cover:daysCover,sellable_qty:Math.round(sellableQty*100)/100,reserve_recommended:Math.round(reserveRecommended*100)/100,days_since_arrival:daysSince,slow_score:Math.round(slowScore*100)/100};
+    return {...x,pos_qty:Math.round(x.pos_qty*100)/100,online_qty:Math.round(x.online_qty*100)/100,sold_qty:Math.round(x.sold_qty*100)/100,revenue:Math.round(x.revenue),stock_qty:Math.round(x.stock_qty*100)/100,velocity,pos_velocity:posVelocity,online_velocity:onlineVelocity,selling_days:sellingDays,days_cover:daysCover,sellable_qty:Math.round(potentialSellQty*100)/100,potential_sell_qty:Math.round(potentialSellQty*100)/100,covered_sell_qty:Math.round(coveredSellQty*100)/100,miss_sale_qty:Math.round(missSaleQty*100)/100,remaining_days:remainingDays,reserve_recommended:Math.round(reserveRecommended*100)/100,days_since_arrival:daysSince,slow_score:Math.round(slowScore*100)/100};
   });
   rows=rows.filter(r=>!isAggregateProductName(r.product_name));
   if(searchKey)rows=rows.filter(r=>normalizeExcelHeader(r.product_name).includes(searchKey));
@@ -3335,8 +3347,8 @@ function aggregateProductAnalytics(user, opts={}) {
   const imports=rows.filter(r=>eligible(r)&&(r.import_qty>0||r.stock_qty>0)).slice().sort((a,b)=>b.import_qty-a.import_qty||b.stock_qty-a.stock_qty);
   const slow=rows.filter(r=>eligible(r)&&r.stock_qty>0&&r.revenue>0).slice().sort((a,b)=>b.slow_score-a.slow_score||b.stock_qty-a.stock_qty||a.velocity-b.velocity);
   const speed=rows.filter(r=>eligible(r)&&(r.revenue>0||r.stock_qty>0||r.import_qty>0)).slice().sort((a,b)=>b.velocity-a.velocity||b.sold_qty-a.sold_qty);
-  const totals=rows.reduce((a,r)=>{['pos_qty','online_qty','sold_qty','import_qty','export_qty','stock_qty','sellable_qty','reserve_recommended'].forEach(k=>a[k]+=Number(r[k]||0));a.revenue+=Number(r.revenue||0);return a;},{pos_qty:0,online_qty:0,sold_qty:0,import_qty:0,export_qty:0,stock_qty:0,sellable_qty:0,reserve_recommended:0,revenue:0});
-  return {source_mode:'sales_inventory',inventory_period_type:requestedPeriodType,inventory_period_found:exactInv.length>0,start,end,store_id:scope,store_name:scope==='all'?'Toàn hệ thống':(getStore(scope)?.name||''),period_days:periodDays,search:opts.q||'',totals,rows:speed,best_sellers:best,top_stock:stock.slice(0,100),top_imports:imports.slice(0,100),slow_movers:slow.slice(0,100)};
+  const totals=rows.reduce((a,r)=>{['pos_qty','online_qty','sold_qty','import_qty','export_qty','stock_qty','sellable_qty','potential_sell_qty','covered_sell_qty','miss_sale_qty','reserve_recommended'].forEach(k=>a[k]+=Number(r[k]||0));a.revenue+=Number(r.revenue||0);return a;},{pos_qty:0,online_qty:0,sold_qty:0,import_qty:0,export_qty:0,stock_qty:0,sellable_qty:0,potential_sell_qty:0,covered_sell_qty:0,miss_sale_qty:0,reserve_recommended:0,revenue:0});
+  return {source_mode:'sales_inventory',inventory_period_type:requestedPeriodType,inventory_period_found:exactInv.length>0,start,end,full_period_end:fullPeriodEnd,remaining_days:remainingDays,store_id:scope,store_name:scope==='all'?'Toàn hệ thống':(getStore(scope)?.name||''),period_days:periodDays,search:opts.q||'',totals,rows:speed,best_sellers:best,top_stock:stock.slice(0,100),top_imports:imports.slice(0,100),slow_movers:slow.slice(0,100)};
 }
 
 function weeklyAutoBestSellers(storeId,start,endExclusive) {
@@ -3423,7 +3435,9 @@ app.get('/api/product-analytics/export.xlsx', requireAuth, (req,res)=>{
       toc_do_pos_ngay:Number(r.pos_velocity||0),
       toc_do_online_ngay:Number(r.online_velocity||0),
       toc_do_tong_ngay:Number(r.velocity||0),
-      so_luong_co_the_ban:Number(r.sellable_qty||0),
+      co_the_ban_them_neu_du_hang:Number(r.potential_sell_qty??r.sellable_qty??0),
+      miss_sale_uoc_tinh:Number(r.miss_sale_qty||0),
+      so_ngay_con_lai:Number(r.remaining_days||0),
       du_tru_de_xuat:Number(r.reserve_recommended||0),
       days_of_cover:r.days_cover==null?'':Number(r.days_cover),
       ngay_nhap_gan_nhat:r.arrival_date||''

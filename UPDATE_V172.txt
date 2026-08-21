@@ -1,0 +1,7 @@
+DEZUS STORE OPS v4.172
+
+Cập nhật:
+1. Bỏ tab Tốc độ bán.
+2. Bỏ tab Hàng bán chạy.
+3. Mục Tổng hợp bỏ thẻ Top bán chạy để gọn hơn.
+4. Mục Chi tiết nhập hàng thêm cột Tồn đầu kỳ.

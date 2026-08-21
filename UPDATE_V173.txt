@@ -1,0 +1,10 @@
+DEZUS STORE OPS v4.173
+
+Cập nhật:
+1. Giữ lại Top bán chạy trong mục Tổng hợp.
+2. Tab Hàng bán chạy riêng vẫn bỏ để tránh trùng với Chi tiết bán hàng.
+3. Chi tiết nhập hàng có Hàng đầu kỳ.
+4. Có thể bán thêm = tốc độ bán hiện tại x số ngày còn lại của tuần/tháng, giả định luôn đủ hàng.
+5. Miss sale ƯT = phần nhu cầu bán thêm ước tính vượt quá tồn cuối kỳ hiện tại.
+6. Thêm Ngày còn lại để nhìn rõ số ngày dùng cho forecast.
+7. Excel export bổ sung Có thể bán thêm, Miss sale ước tính và số ngày còn lại.
