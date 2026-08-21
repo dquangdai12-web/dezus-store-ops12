@@ -3411,7 +3411,22 @@ app.get('/api/product-analytics/export.xlsx', requireAuth, (req,res)=>{
   try{
     const data=aggregateProductAnalytics(req.user,{store_id:req.query.store_id,start:req.query.start,end:req.query.end,q:req.query.q,period_type:req.query.period_type});
     const rows=(data.rows||[]).map((r,i)=>({
-      stt:i+1,ten_san_pham:r.product_name||'',ban_pos:Number(r.pos_qty||0),ban_online:Number(r.online_qty||0),tong_ban:Number(r.sold_qty||0),doanh_thu:Number(r.revenue||0),so_luong_nhap:Number(r.import_qty||0),chuyen_kho_vao:Number(r.transfer_in_qty||0),chuyen_kho_ra:Number(r.transfer_out_qty||0),ton_cuoi_ky:Number(r.stock_qty||0),toc_do_pos_ngay:Number(r.pos_velocity||0),toc_do_online_ngay:Number(r.online_velocity||0),toc_do_tong_ngay:Number(r.velocity||0),so_luong_co_the_ban:Number(r.sellable_qty||0),du_tru_de_xuat:Number(r.reserve_recommended||0),days_of_cover:r.days_cover==null?'':Number(r.days_cover),ngay_nhap_gan_nhat:r.arrival_date||''
+      stt:i+1,
+      ten_san_pham:r.product_name||'',
+      ban_pos:Number(r.pos_qty||0),
+      ban_online:Number(r.online_qty||0),
+      tong_ban:Number(r.sold_qty||0),
+      doanh_thu:Number(r.revenue||0),
+      tong_nhap:Number(r.import_qty||0),
+      tong_xuat:Number(r.export_qty||0),
+      ton_cuoi_ky:Number(r.stock_qty||0),
+      toc_do_pos_ngay:Number(r.pos_velocity||0),
+      toc_do_online_ngay:Number(r.online_velocity||0),
+      toc_do_tong_ngay:Number(r.velocity||0),
+      so_luong_co_the_ban:Number(r.sellable_qty||0),
+      du_tru_de_xuat:Number(r.reserve_recommended||0),
+      days_of_cover:r.days_cover==null?'':Number(r.days_cover),
+      ngay_nhap_gan_nhat:r.arrival_date||''
     }));
     const buffer=toExcelBuffer(rows,'Phan tich hang hoa');
     res.header('Content-Type','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');

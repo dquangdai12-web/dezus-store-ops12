@@ -2298,6 +2298,18 @@ function productAnalyticsRangeForPeriod(period) {
 }
 function productAnalyticsSortRows(rows, mode='speed') {
   rows=Array.isArray(rows)?rows.slice():[];
+  const headerSort=(state.productAnalyticsHeaderSort||{})[mode];
+  if(headerSort?.field){
+    const {field,dir='desc',type='number'}=headerSort;
+    const d=dir==='asc'?1:-1;
+    rows.sort((a,b)=>{
+      if(type==='text') return String(a[field]||'').localeCompare(String(b[field]||''),'vi',{sensitivity:'base'})*d;
+      const av=a[field]==null?(d===1?Number.POSITIVE_INFINITY:Number.NEGATIVE_INFINITY):Number(a[field]||0);
+      const bv=b[field]==null?(d===1?Number.POSITIVE_INFINITY:Number.NEGATIVE_INFINITY):Number(b[field]||0);
+      return (av-bv)*d || String(a.product_name||'').localeCompare(String(b.product_name||''),'vi',{sensitivity:'base'});
+    });
+    return rows;
+  }
   const selected=(state.productAnalyticsSort||{})[mode]||'default';
   const configs={
     sales:{default:null,sold_desc:['sold_qty',-1],sold_asc:['sold_qty',1],stock_desc:['stock_qty',-1],stock_asc:['stock_qty',1],import_desc:['import_qty',-1],import_asc:['import_qty',1],velocity_desc:['velocity',-1],velocity_asc:['velocity',1],name_asc:['product_name',1,'text'],name_desc:['product_name',-1,'text']},
@@ -2330,17 +2342,31 @@ function productAnalyticsSortControl(mode='speed') {
   const options=[...(metric[mode]||metric.speed),...common].map(([v,l])=>`<option value="${v}" ${v===value?'selected':''}>${l}</option>`).join('');
   return `<select class="input pa-sort-select" data-pa-sort-mode="${mode}" style="width:auto;min-width:210px" aria-label="Sắp xếp dữ liệu">${options}</select>`;
 }
+function productAnalyticsSortHeader(label,mode,field,type='number'){
+  const active=(state.productAnalyticsHeaderSort||{})[mode]||{};
+  const isActive=active.field===field;
+  const arrow=isActive?(active.dir==='asc'?'↑':'↓'):'↕';
+  const title=isActive?(active.dir==='asc'?'Đang sắp xếp nhỏ → lớn. Bấm để đổi lớn → nhỏ':'Đang sắp xếp lớn → nhỏ. Bấm để đổi nhỏ → lớn'):'Bấm để sắp xếp lớn/nhỏ';
+  return `<button type="button" class="pa-th-sort ${isActive?'active':''}" data-pa-sort-mode="${mode}" data-pa-sort-field="${field}" data-pa-sort-type="${type}" title="${title}"><span>${label}</span><span class="pa-th-arrow">${arrow}</span></button>`;
+}
 function productAnalyticsTable(rows, mode='speed') {
   rows=productAnalyticsSortRows(rows,mode);
   if(!rows.length)return '<div class="empty">Chưa có dữ liệu trong thời gian đã chọn</div>';
   const rank=i=>`<span class="badge dark">${i+1}</span>`;
-  const unknownHead=rows.some(r=>Number(r.unknown_qty||0)>0)?'<th>Chưa rõ kênh</th>':'';
-  const unknownCell=r=>rows.some(x=>Number(x.unknown_qty||0)>0)?`<td>${money(r.unknown_qty||0)}</td>`:'';
-  if(mode==='sales')return `<div class="table-wrap product-analytics-table"><table><thead><tr><th>STT</th><th>Tên sản phẩm</th><th>Bán POS</th><th>Bán Online</th><th>Tổng bán</th><th>Nhập hàng</th><th>Chuyển kho vào</th><th>Tổng nhập</th><th>Chuyển kho ra</th><th>Tồn cuối kỳ</th><th>TĐ POS/ngày</th><th>TĐ Online/ngày</th><th>TĐ tổng/ngày</th></tr></thead><tbody>${rows.map((r,i)=>`<tr><td>${rank(i)}</td><td><b>${esc(r.product_name||'')}</b></td><td><b>${money(r.pos_qty||0)}</b></td><td><b>${money(r.online_qty||0)}</b></td><td><b>${money(r.sold_qty||0)}</b></td><td>${money(r.purchase_in_qty||0)}</td><td>${money(r.transfer_in_qty||0)}</td><td>${money(r.import_qty||0)}</td><td>${money(r.transfer_out_qty||0)}</td><td><b>${money(r.stock_qty||0)}</b></td><td>${fmt2(r.pos_velocity||0)}</td><td>${fmt2(r.online_velocity||0)}</td><td><b>${fmt2(r.velocity||0)}</b></td></tr>`).join('')}</tbody></table></div>`;
-  if(mode==='imports')return `<div class="table-wrap product-analytics-table"><table><thead><tr><th>STT</th><th>Tên sản phẩm</th><th>Ngày nhập gần nhất</th><th>Số ngày bán</th><th>Số lượng nhập</th><th>Bán POS</th><th>Bán Online</th>${unknownHead}<th>Tổng bán</th><th>Tồn</th><th>Tốc độ bán/ngày</th><th>SL có thể bán</th><th>Dự trữ đề xuất</th><th>Days of Cover</th></tr></thead><tbody>${rows.map((r,i)=>`<tr><td>${rank(i)}</td><td><b>${esc(r.product_name||'')}</b></td><td>${r.arrival_date?dOnly(r.arrival_date):'-'}</td><td>${r.selling_days??r.days_since_arrival??'-'}</td><td><b>${money(r.import_qty||0)}</b></td><td>${money(r.pos_qty||0)}</td><td>${money(r.online_qty||0)}</td>${unknownCell(r)}<td>${money(r.sold_qty||0)}</td><td><b>${money(r.stock_qty||0)}</b></td><td>${fmt2(r.velocity||0)}</td><td><b>${money(r.sellable_qty||0)}</b></td><td>${money(r.reserve_recommended||0)}</td><td>${r.days_cover==null?'-':`${r.days_cover} ngày`}</td></tr>`).join('')}</tbody></table></div>`;
-  if(mode==='stock')return `<div class="table-wrap product-analytics-table"><table><thead><tr><th>STT</th><th>Tên sản phẩm</th><th>Tồn hiện tại</th><th>Bán POS</th><th>Bán Online</th>${unknownHead}<th>Tổng bán</th><th>Tốc độ bán/ngày</th><th>Days of Cover</th></tr></thead><tbody>${rows.map((r,i)=>`<tr><td>${rank(i)}</td><td><b>${esc(r.product_name||'')}</b></td><td><b>${money(r.stock_qty||0)}</b></td><td>${money(r.pos_qty||0)}</td><td>${money(r.online_qty||0)}</td>${unknownCell(r)}<td>${money(r.sold_qty||0)}</td><td>${fmt2(r.velocity||0)}</td><td>${r.days_cover==null?'-':`${r.days_cover} ngày`}</td></tr>`).join('')}</tbody></table></div>`;
-  if(mode==='slow')return `<div class="table-wrap product-analytics-table"><table><thead><tr><th>STT</th><th>Tên sản phẩm</th><th>Ngày nhập gần nhất</th><th>Đã bán từ đợt hàng</th><th>Tồn</th><th>Bán POS</th><th>Bán Online</th>${unknownHead}<th>Tổng bán</th><th>Tốc độ bán/ngày</th><th>Days of Cover</th></tr></thead><tbody>${rows.map((r,i)=>`<tr><td>${rank(i)}</td><td><b>${esc(r.product_name||'')}</b></td><td>${r.arrival_date?dOnly(r.arrival_date):'-'}</td><td>${r.days_since_arrival==null?'-':`${r.days_since_arrival} ngày`}</td><td><b>${money(r.stock_qty||0)}</b></td><td>${money(r.pos_qty||0)}</td><td>${money(r.online_qty||0)}</td>${unknownCell(r)}<td>${money(r.sold_qty||0)}</td><td>${fmt2(r.velocity||0)}</td><td>${r.days_cover==null?'-':`${r.days_cover} ngày`}</td></tr>`).join('')}</tbody></table></div>`;
-  return `<div class="table-wrap product-analytics-table"><table><thead><tr><th>Top</th><th>Tên sản phẩm</th><th>Bán POS</th><th>Bán Online</th>${unknownHead}<th>Tổng bán</th><th>TĐ POS/ngày</th><th>TĐ Online/ngày</th><th>TĐ tổng/ngày</th><th>Tồn</th><th>SL có thể bán</th><th>Dự trữ đề xuất</th><th>Days of Cover</th></tr></thead><tbody>${rows.map((r,i)=>`<tr><td>${rank(i)}</td><td><b>${esc(r.product_name||'')}</b></td><td><b>${money(r.pos_qty||0)}</b></td><td><b>${money(r.online_qty||0)}</b></td>${unknownCell(r)}<td><b>${money(r.sold_qty||0)}</b></td><td>${fmt2(r.pos_velocity||0)}</td><td>${fmt2(r.online_velocity||0)}</td><td><b>${fmt2(r.velocity||0)}</b></td><td>${money(r.stock_qty||0)}</td><td>${money(r.sellable_qty||0)}</td><td>${money(r.reserve_recommended||0)}</td><td>${r.days_cover==null?'-':`${r.days_cover} ngày`}</td></tr>`).join('')}</tbody></table></div>`;
+  const unknown=rows.some(r=>Number(r.unknown_qty||0)>0);
+  const H=(label,field,type='number')=>`<th>${productAnalyticsSortHeader(label,mode,field,type)}</th>`;
+  const unknownHead=unknown?H('Chưa rõ kênh','unknown_qty'):'';
+  const unknownCell=r=>unknown?`<td>${money(r.unknown_qty||0)}</td>`:'';
+
+  if(mode==='sales')return `<div class="table-wrap product-analytics-table"><table><thead><tr><th>STT</th>${H('Tên sản phẩm','product_name','text')}${H('Bán POS','pos_qty')}${H('Bán Online','online_qty')}${H('Tổng bán','sold_qty')}${H('Tổng nhập','import_qty')}${H('Tổng xuất','export_qty')}${H('Tồn cuối kỳ','stock_qty')}${H('TĐ POS/ngày','pos_velocity')}${H('TĐ Online/ngày','online_velocity')}${H('TĐ tổng/ngày','velocity')}</tr></thead><tbody>${rows.map((r,i)=>`<tr><td>${rank(i)}</td><td><b>${esc(r.product_name||'')}</b></td><td><b>${money(r.pos_qty||0)}</b></td><td><b>${money(r.online_qty||0)}</b></td><td><b>${money(r.sold_qty||0)}</b></td><td><b>${money(r.import_qty||0)}</b></td><td>${money(r.export_qty||0)}</td><td><b>${money(r.stock_qty||0)}</b></td><td>${fmt2(r.pos_velocity||0)}</td><td>${fmt2(r.online_velocity||0)}</td><td><b>${fmt2(r.velocity||0)}</b></td></tr>`).join('')}</tbody></table></div>`;
+
+  if(mode==='imports')return `<div class="table-wrap product-analytics-table"><table><thead><tr><th>STT</th>${H('Tên sản phẩm','product_name','text')}${H('Ngày nhập gần nhất','arrival_date','text')}${H('Số ngày bán','selling_days')}${H('Tổng nhập','import_qty')}${H('Tổng xuất','export_qty')}${H('Bán POS','pos_qty')}${H('Bán Online','online_qty')}${unknownHead}${H('Tổng bán','sold_qty')}${H('Tồn cuối kỳ','stock_qty')}${H('Tốc độ bán/ngày','velocity')}${H('SL có thể bán','sellable_qty')}${H('Dự trữ đề xuất','reserve_recommended')}${H('Days of Cover','days_cover')}</tr></thead><tbody>${rows.map((r,i)=>`<tr><td>${rank(i)}</td><td><b>${esc(r.product_name||'')}</b></td><td>${r.arrival_date?dOnly(r.arrival_date):'-'}</td><td>${r.selling_days??r.days_since_arrival??'-'}</td><td><b>${money(r.import_qty||0)}</b></td><td>${money(r.export_qty||0)}</td><td>${money(r.pos_qty||0)}</td><td>${money(r.online_qty||0)}</td>${unknownCell(r)}<td>${money(r.sold_qty||0)}</td><td><b>${money(r.stock_qty||0)}</b></td><td>${fmt2(r.velocity||0)}</td><td><b>${money(r.sellable_qty||0)}</b></td><td>${money(r.reserve_recommended||0)}</td><td>${r.days_cover==null?'-':`${r.days_cover} ngày`}</td></tr>`).join('')}</tbody></table></div>`;
+
+  if(mode==='stock')return `<div class="table-wrap product-analytics-table"><table><thead><tr><th>STT</th>${H('Tên sản phẩm','product_name','text')}${H('Tồn hiện tại','stock_qty')}${H('Bán POS','pos_qty')}${H('Bán Online','online_qty')}${unknownHead}${H('Tổng bán','sold_qty')}${H('Tốc độ bán/ngày','velocity')}${H('Days of Cover','days_cover')}</tr></thead><tbody>${rows.map((r,i)=>`<tr><td>${rank(i)}</td><td><b>${esc(r.product_name||'')}</b></td><td><b>${money(r.stock_qty||0)}</b></td><td>${money(r.pos_qty||0)}</td><td>${money(r.online_qty||0)}</td>${unknownCell(r)}<td>${money(r.sold_qty||0)}</td><td>${fmt2(r.velocity||0)}</td><td>${r.days_cover==null?'-':`${r.days_cover} ngày`}</td></tr>`).join('')}</tbody></table></div>`;
+
+  if(mode==='slow')return `<div class="table-wrap product-analytics-table"><table><thead><tr><th>STT</th>${H('Tên sản phẩm','product_name','text')}${H('Ngày nhập gần nhất','arrival_date','text')}${H('Đã bán từ đợt hàng','days_since_arrival')}${H('Tồn','stock_qty')}${H('Bán POS','pos_qty')}${H('Bán Online','online_qty')}${unknownHead}${H('Tổng bán','sold_qty')}${H('Tốc độ bán/ngày','velocity')}${H('Days of Cover','days_cover')}</tr></thead><tbody>${rows.map((r,i)=>`<tr><td>${rank(i)}</td><td><b>${esc(r.product_name||'')}</b></td><td>${r.arrival_date?dOnly(r.arrival_date):'-'}</td><td>${r.days_since_arrival==null?'-':`${r.days_since_arrival} ngày`}</td><td><b>${money(r.stock_qty||0)}</b></td><td>${money(r.pos_qty||0)}</td><td>${money(r.online_qty||0)}</td>${unknownCell(r)}<td>${money(r.sold_qty||0)}</td><td>${fmt2(r.velocity||0)}</td><td>${r.days_cover==null?'-':`${r.days_cover} ngày`}</td></tr>`).join('')}</tbody></table></div>`;
+
+  return `<div class="table-wrap product-analytics-table"><table><thead><tr><th>Top</th>${H('Tên sản phẩm','product_name','text')}${H('Bán POS','pos_qty')}${H('Bán Online','online_qty')}${unknownHead}${H('Tổng bán','sold_qty')}${H('TĐ POS/ngày','pos_velocity')}${H('TĐ Online/ngày','online_velocity')}${H('TĐ tổng/ngày','velocity')}${H('Tồn','stock_qty')}${H('SL có thể bán','sellable_qty')}${H('Dự trữ đề xuất','reserve_recommended')}${H('Days of Cover','days_cover')}</tr></thead><tbody>${rows.map((r,i)=>`<tr><td>${rank(i)}</td><td><b>${esc(r.product_name||'')}</b></td><td><b>${money(r.pos_qty||0)}</b></td><td><b>${money(r.online_qty||0)}</b></td>${unknownCell(r)}<td><b>${money(r.sold_qty||0)}</b></td><td>${fmt2(r.pos_velocity||0)}</td><td>${fmt2(r.online_velocity||0)}</td><td><b>${fmt2(r.velocity||0)}</b></td><td>${money(r.stock_qty||0)}</td><td>${money(r.sellable_qty||0)}</td><td>${money(r.reserve_recommended||0)}</td><td>${r.days_cover==null?'-':`${r.days_cover} ngày`}</td></tr>`).join('')}</tbody></table></div>`;
 }
 async function renderProductAnalytics(){
   const isAll=state.user?.role==='admin'||state.user?.role==='office';
@@ -2428,7 +2454,17 @@ async function renderProductAnalytics(){
   $('#paWeekStart')?.addEventListener('change',e=>{state.productAnalyticsWeekStart=mondayOf(e.target.value||isoDateLocal(new Date()));renderProductAnalytics();});
   $('#paDay')?.addEventListener('change',e=>{state.productAnalyticsDay=e.target.value||isoDateLocal(new Date());renderProductAnalytics();});
   const doSearch=()=>{state.productAnalyticsSearch=$('#paSearch')?.value?.trim()||'';renderProductAnalytics();};$('#paSearchBtn')?.addEventListener('click',doSearch);$('#paSearch')?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();doSearch();}});
-  $$('.pa-sort-select').forEach(sel=>sel.addEventListener('change',e=>{state.productAnalyticsSort=state.productAnalyticsSort||{};state.productAnalyticsSort[e.target.dataset.paSortMode]=e.target.value;renderProductAnalytics();}));
+  $$('.pa-sort-select').forEach(sel=>sel.addEventListener('change',e=>{const mode=e.target.dataset.paSortMode;state.productAnalyticsSort=state.productAnalyticsSort||{};state.productAnalyticsSort[mode]=e.target.value;state.productAnalyticsHeaderSort=state.productAnalyticsHeaderSort||{};delete state.productAnalyticsHeaderSort[mode];renderProductAnalytics();}));
+  $$('.pa-th-sort').forEach(btn=>btn.addEventListener('click',()=>{
+    const mode=btn.dataset.paSortMode,field=btn.dataset.paSortField,type=btn.dataset.paSortType||'number';
+    state.productAnalyticsHeaderSort=state.productAnalyticsHeaderSort||{};
+    const current=state.productAnalyticsHeaderSort[mode];
+    const dir=current?.field===field&&current?.dir==='desc'?'asc':'desc';
+    state.productAnalyticsHeaderSort[mode]={field,dir,type};
+    state.productAnalyticsSort=state.productAnalyticsSort||{};
+    state.productAnalyticsSort[mode]='default';
+    renderProductAnalytics();
+  }));
   $('#paExportExcel')?.addEventListener('click',async()=>{try{const res=await fetch(`/api/product-analytics/export.xlsx?${query}`,{headers:{Authorization:`Bearer ${state.token}`}});if(!res.ok){const j=await res.json().catch(()=>({}));throw new Error(j.error||'Không tải được Excel');}const blob=await res.blob();const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=`phan-tich-hang-hoa-${range.start}-${range.end}.xlsx`;link.click();URL.revokeObjectURL(link.href);}catch(err){toast(err.message,'danger');}});
   if(isAdmin){
     $$('.pa-upload-filter [data-upload-type]').forEach(btn=>btn.onclick=()=>{const type=btn.dataset.uploadType;$$('.pa-upload-filter [data-upload-type]').forEach(x=>x.classList.toggle('active',x===btn));$$('#paUploadHistory [data-upload-row]').forEach(row=>row.style.display=(type==='all'||row.dataset.uploadRow===type)?'grid':'none');});

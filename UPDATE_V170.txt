@@ -1,0 +1,3 @@
+DEZUS STORE OPS v4.170
+
+Rút gọn XNT: chỉ hiển thị Tổng nhập và Tổng xuất; giữ Tồn cuối kỳ và các chỉ số bán/tốc độ. Header vẫn có nút sắp xếp ↑/↓. Excel export cũng rút gọn theo cùng cấu trúc.

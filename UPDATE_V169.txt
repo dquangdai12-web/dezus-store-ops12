@@ -1,0 +1,7 @@
+DEZUS STORE OPS v4.169
+
+Cập nhật:
+1. Bổ sung chi tiết toàn bộ cơ cấu nhập/xuất trong Phân tích hàng hóa.
+2. Giải thích rõ vì sao Tổng nhập > 0 nhưng Nhập hàng/Chuyển kho vào = 0 (do còn các nguồn như Trả hàng bán, Kiểm kho vào, Nhập khác).
+3. Bảng Chi tiết bán hàng và Chi tiết nhập hàng nay hiển thị: Tồn đầu kỳ, Nhập hàng, Trả hàng bán, Chuyển kho vào, Kiểm kho vào, Nhập khác, Tổng nhập, Xuất bán, Trả hàng nhập, Chuyển kho ra, Kiểm kho ra, Xuất khác, Tổng xuất, Tồn cuối kỳ.
+4. File Excel export cũng bổ sung đầy đủ các cột chi tiết này.

@@ -5553,3 +5553,20 @@ section.card>.toolbar+p.hint{display:none!important}
   .pa-history-summary>span:first-child{align-items:flex-start;flex-direction:column;gap:2px}
   .pa-history-body{padding:12px}
 }
+
+
+/* v4.168 - sort trực tiếp tại tiêu đề cột Phân tích hàng hóa */
+.product-analytics-table thead th{vertical-align:middle}
+.product-analytics-table .pa-th-sort{
+  appearance:none;border:0;background:transparent;color:inherit;font:inherit;font-weight:700;
+  width:100%;padding:0;display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  cursor:pointer;white-space:nowrap;line-height:1.15;
+}
+.product-analytics-table th:nth-child(2) .pa-th-sort{justify-content:flex-start}
+.product-analytics-table .pa-th-sort:hover{color:#0f5d82}
+.product-analytics-table .pa-th-sort.active{color:#0b5f88}
+.product-analytics-table .pa-th-arrow{
+  display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;
+  border-radius:5px;background:rgba(15,93,130,.08);font-size:13px;font-weight:900;line-height:1;
+}
+.product-analytics-table .pa-th-sort.active .pa-th-arrow{background:rgba(15,93,130,.16)}
