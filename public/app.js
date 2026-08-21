@@ -48,6 +48,7 @@ const state = {
   productAnalyticsStoreId: '',
   productAnalyticsTab: 'summary',
   productAnalyticsSearch: '',
+  productAnalyticsSort: {},
 };
 
 const app = $('#app');
@@ -2295,8 +2296,42 @@ function productAnalyticsRangeForPeriod(period) {
   const end=month===currentMonthLocal()?today:monthEnd;
   return {start,end};
 }
+function productAnalyticsSortRows(rows, mode='speed') {
+  rows=Array.isArray(rows)?rows.slice():[];
+  const selected=(state.productAnalyticsSort||{})[mode]||'default';
+  const configs={
+    sales:{default:null,sold_desc:['sold_qty',-1],sold_asc:['sold_qty',1],stock_desc:['stock_qty',-1],stock_asc:['stock_qty',1],import_desc:['import_qty',-1],import_asc:['import_qty',1],velocity_desc:['velocity',-1],velocity_asc:['velocity',1],name_asc:['product_name',1,'text'],name_desc:['product_name',-1,'text']},
+    imports:{default:null,import_desc:['import_qty',-1],import_asc:['import_qty',1],stock_desc:['stock_qty',-1],stock_asc:['stock_qty',1],sold_desc:['sold_qty',-1],sold_asc:['sold_qty',1],velocity_desc:['velocity',-1],velocity_asc:['velocity',1],name_asc:['product_name',1,'text'],name_desc:['product_name',-1,'text']},
+    stock:{default:null,stock_desc:['stock_qty',-1],stock_asc:['stock_qty',1],sold_desc:['sold_qty',-1],sold_asc:['sold_qty',1],velocity_desc:['velocity',-1],velocity_asc:['velocity',1],cover_desc:['days_cover',-1],cover_asc:['days_cover',1],name_asc:['product_name',1,'text'],name_desc:['product_name',-1,'text']},
+    slow:{default:null,stock_desc:['stock_qty',-1],stock_asc:['stock_qty',1],sold_desc:['sold_qty',-1],sold_asc:['sold_qty',1],velocity_desc:['velocity',-1],velocity_asc:['velocity',1],cover_desc:['days_cover',-1],cover_asc:['days_cover',1],name_asc:['product_name',1,'text'],name_desc:['product_name',-1,'text']},
+    speed:{default:null,sold_desc:['sold_qty',-1],sold_asc:['sold_qty',1],velocity_desc:['velocity',-1],velocity_asc:['velocity',1],stock_desc:['stock_qty',-1],stock_asc:['stock_qty',1],cover_desc:['days_cover',-1],cover_asc:['days_cover',1],name_asc:['product_name',1,'text'],name_desc:['product_name',-1,'text']}
+  };
+  const cfg=(configs[mode]||configs.speed)[selected];
+  if(!cfg)return rows;
+  const [field,dir,type]=cfg;
+  rows.sort((a,b)=>{
+    if(type==='text')return String(a[field]||'').localeCompare(String(b[field]||''),'vi',{sensitivity:'base'})*dir;
+    const av=a[field]==null?(dir===1?Number.POSITIVE_INFINITY:Number.NEGATIVE_INFINITY):Number(a[field]||0);
+    const bv=b[field]==null?(dir===1?Number.POSITIVE_INFINITY:Number.NEGATIVE_INFINITY):Number(b[field]||0);
+    return (av-bv)*dir || String(a.product_name||'').localeCompare(String(b.product_name||''),'vi',{sensitivity:'base'});
+  });
+  return rows;
+}
+function productAnalyticsSortControl(mode='speed') {
+  const value=(state.productAnalyticsSort||{})[mode]||'default';
+  const common=[['default','Sắp xếp mặc định'],['name_asc','Tên A → Z'],['name_desc','Tên Z → A']];
+  const metric={
+    sales:[['sold_desc','Tổng bán: lớn → nhỏ'],['sold_asc','Tổng bán: nhỏ → lớn'],['stock_desc','Tồn: lớn → nhỏ'],['stock_asc','Tồn: nhỏ → lớn'],['import_desc','Nhập: lớn → nhỏ'],['import_asc','Nhập: nhỏ → lớn'],['velocity_desc','Tốc độ: lớn → nhỏ'],['velocity_asc','Tốc độ: nhỏ → lớn']],
+    imports:[['import_desc','Nhập: lớn → nhỏ'],['import_asc','Nhập: nhỏ → lớn'],['stock_desc','Tồn: lớn → nhỏ'],['stock_asc','Tồn: nhỏ → lớn'],['sold_desc','Tổng bán: lớn → nhỏ'],['sold_asc','Tổng bán: nhỏ → lớn'],['velocity_desc','Tốc độ: lớn → nhỏ'],['velocity_asc','Tốc độ: nhỏ → lớn']],
+    stock:[['stock_desc','Tồn: lớn → nhỏ'],['stock_asc','Tồn: nhỏ → lớn'],['sold_desc','Tổng bán: lớn → nhỏ'],['sold_asc','Tổng bán: nhỏ → lớn'],['velocity_desc','Tốc độ: lớn → nhỏ'],['velocity_asc','Tốc độ: nhỏ → lớn'],['cover_desc','Days of Cover: lớn → nhỏ'],['cover_asc','Days of Cover: nhỏ → lớn']],
+    slow:[['stock_desc','Tồn: lớn → nhỏ'],['stock_asc','Tồn: nhỏ → lớn'],['sold_desc','Tổng bán: lớn → nhỏ'],['sold_asc','Tổng bán: nhỏ → lớn'],['velocity_desc','Tốc độ: lớn → nhỏ'],['velocity_asc','Tốc độ: nhỏ → lớn'],['cover_desc','Days of Cover: lớn → nhỏ'],['cover_asc','Days of Cover: nhỏ → lớn']],
+    speed:[['velocity_desc','Tốc độ: lớn → nhỏ'],['velocity_asc','Tốc độ: nhỏ → lớn'],['sold_desc','Tổng bán: lớn → nhỏ'],['sold_asc','Tổng bán: nhỏ → lớn'],['stock_desc','Tồn: lớn → nhỏ'],['stock_asc','Tồn: nhỏ → lớn'],['cover_desc','Days of Cover: lớn → nhỏ'],['cover_asc','Days of Cover: nhỏ → lớn']]
+  };
+  const options=[...(metric[mode]||metric.speed),...common].map(([v,l])=>`<option value="${v}" ${v===value?'selected':''}>${l}</option>`).join('');
+  return `<select class="input pa-sort-select" data-pa-sort-mode="${mode}" style="width:auto;min-width:210px" aria-label="Sắp xếp dữ liệu">${options}</select>`;
+}
 function productAnalyticsTable(rows, mode='speed') {
-  rows=Array.isArray(rows)?rows:[];
+  rows=productAnalyticsSortRows(rows,mode);
   if(!rows.length)return '<div class="empty">Chưa có dữ liệu trong thời gian đã chọn</div>';
   const rank=i=>`<span class="badge dark">${i+1}</span>`;
   const unknownHead=rows.some(r=>Number(r.unknown_qty||0)>0)?'<th>Chưa rõ kênh</th>':'';
@@ -2330,12 +2365,12 @@ async function renderProductAnalytics(){
   const tabDefs=[['summary','Tổng hợp'],['sales','Chi tiết bán hàng'],['speed','Tốc độ bán'],['imports','Chi tiết nhập hàng'],['stock','Hàng tồn nhiều'],['best','Hàng bán chạy'],['slow','Hàng bán chậm']];if(isAdmin)tabDefs.push(['upload','Nhập file Sapo']);if(!isAdmin&&state.productAnalyticsTab==='upload')state.productAnalyticsTab='summary';
   const tabs=tabDefs.map(([k,l])=>`<button class="btn ${state.productAnalyticsTab===k?'':'secondary'} pa-tab" data-tab="${k}" type="button">${l}</button>`).join('');
   let content='';
-  if(state.productAnalyticsTab==='summary'){const best=(data.best_sellers||[]).slice(0,5),stock=(data.top_stock||[]).slice(0,5),slow=(data.slow_movers||[]).slice(0,5);const mini=(title,rows,field,suffix='')=>`<div class="card pa-mini"><h3>${title}</h3>${rows.length?rows.map((r,i)=>`<div class="pa-rank"><span class="badge dark">${i+1}</span><b>${esc(r.product_name||'')}</b><strong>${field==='velocity'?fmt2(r[field]||0):money(r[field]||0)}${suffix}</strong></div>`).join(''):'<div class="empty">Chưa có dữ liệu</div>'}</div>`;content=`<div class="grid three pa-summary-grid">${mini('Top bán chạy',best,'sold_qty',' món')}${mini('Tồn nhiều',stock,'stock_qty','')}${mini('Bán chậm / tồn nhiều',slow,'stock_qty',' tồn')}</div><div class="card" style="margin-top:14px"><div class="section-title"><h3>Chi tiết tổng hợp</h3><span class="badge">${data.period_days||1} ngày</span></div>${productAnalyticsTable(data.rows||[],'speed')}</div>`;}
-  else if(state.productAnalyticsTab==='sales')content=`<div class="card"><div class="section-title"><h3>Chi tiết bán hàng</h3><span class="badge">POS / Online</span></div>${productAnalyticsTable(data.rows||[],'sales')}</div>`;
-  else if(state.productAnalyticsTab==='best')content=`<div class="card"><div class="section-title"><h3>15 sản phẩm bán chạy</h3><span class="badge">Gộp theo tên</span></div>${productAnalyticsTable((data.best_sellers||[]).slice(0,15),'speed')}</div>`;
-  else if(state.productAnalyticsTab==='stock')content=`<div class="card"><h3>Hàng tồn nhiều</h3>${productAnalyticsTable(data.top_stock||[],'stock')}</div>`;
-  else if(state.productAnalyticsTab==='imports')content=`<div class="card"><h3>Chi tiết nhập hàng</h3>${productAnalyticsTable(data.top_imports||[],'imports')}</div>`;
-  else if(state.productAnalyticsTab==='slow')content=`<div class="card"><h3>Hàng bán chậm</h3>${productAnalyticsTable(data.slow_movers||[],'slow')}</div>`;
+  if(state.productAnalyticsTab==='summary'){const best=(data.best_sellers||[]).slice(0,5),stock=(data.top_stock||[]).slice(0,5),slow=(data.slow_movers||[]).slice(0,5);const mini=(title,rows,field,suffix='')=>`<div class="card pa-mini"><h3>${title}</h3>${rows.length?rows.map((r,i)=>`<div class="pa-rank"><span class="badge dark">${i+1}</span><b>${esc(r.product_name||'')}</b><strong>${field==='velocity'?fmt2(r[field]||0):money(r[field]||0)}${suffix}</strong></div>`).join(''):'<div class="empty">Chưa có dữ liệu</div>'}</div>`;content=`<div class="grid three pa-summary-grid">${mini('Top bán chạy',best,'sold_qty',' món')}${mini('Tồn nhiều',stock,'stock_qty','')}${mini('Bán chậm / tồn nhiều',slow,'stock_qty',' tồn')}</div><div class="card" style="margin-top:14px"><div class="section-title"><h3>Chi tiết tổng hợp</h3><div class="row">${productAnalyticsSortControl('speed')}<span class="badge">${data.period_days||1} ngày</span></div></div>${productAnalyticsTable(data.rows||[],'speed')}</div>`;}
+  else if(state.productAnalyticsTab==='sales')content=`<div class="card"><div class="section-title"><h3>Chi tiết bán hàng</h3><div class="row">${productAnalyticsSortControl('sales')}<span class="badge">POS / Online</span></div></div>${productAnalyticsTable(data.rows||[],'sales')}</div>`;
+  else if(state.productAnalyticsTab==='best')content=`<div class="card"><div class="section-title"><h3>15 sản phẩm bán chạy</h3><div class="row">${productAnalyticsSortControl('speed')}<span class="badge">Gộp theo tên</span></div></div>${productAnalyticsTable((data.best_sellers||[]).slice(0,15),'speed')}</div>`;
+  else if(state.productAnalyticsTab==='stock')content=`<div class="card"><div class="section-title"><h3>Hàng tồn nhiều</h3>${productAnalyticsSortControl('stock')}</div>${productAnalyticsTable(data.top_stock||[],'stock')}</div>`;
+  else if(state.productAnalyticsTab==='imports')content=`<div class="card"><div class="section-title"><h3>Chi tiết nhập hàng</h3>${productAnalyticsSortControl('imports')}</div>${productAnalyticsTable(data.top_imports||[],'imports')}</div>`;
+  else if(state.productAnalyticsTab==='slow')content=`<div class="card"><div class="section-title"><h3>Hàng bán chậm</h3>${productAnalyticsSortControl('slow')}</div>${productAnalyticsTable(data.slow_movers||[],'slow')}</div>`;
   else if(state.productAnalyticsTab==='upload'&&isAdmin)content=`
   <div class="grid two pa-upload-grid">
     <div class="card">
@@ -2375,7 +2410,7 @@ async function renderProductAnalytics(){
       </div>
     </div>
   </div>`
-  else content=`<div class="card"><h3>Tốc độ bán</h3>${productAnalyticsTable(data.rows||[],'speed')}</div>`;
+  else content=`<div class="card"><div class="section-title"><h3>Tốc độ bán</h3>${productAnalyticsSortControl('speed')}</div>${productAnalyticsTable(data.rows||[],'speed')}</div>`;
   const sourceWarning='';
   const exportBtn=`<button class="btn secondary" id="paExportExcel" type="button">Tải Excel</button>`;
   const uploadBatches=(uploadStatus?.batches||[]);
@@ -2393,6 +2428,7 @@ async function renderProductAnalytics(){
   $('#paWeekStart')?.addEventListener('change',e=>{state.productAnalyticsWeekStart=mondayOf(e.target.value||isoDateLocal(new Date()));renderProductAnalytics();});
   $('#paDay')?.addEventListener('change',e=>{state.productAnalyticsDay=e.target.value||isoDateLocal(new Date());renderProductAnalytics();});
   const doSearch=()=>{state.productAnalyticsSearch=$('#paSearch')?.value?.trim()||'';renderProductAnalytics();};$('#paSearchBtn')?.addEventListener('click',doSearch);$('#paSearch')?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();doSearch();}});
+  $$('.pa-sort-select').forEach(sel=>sel.addEventListener('change',e=>{state.productAnalyticsSort=state.productAnalyticsSort||{};state.productAnalyticsSort[e.target.dataset.paSortMode]=e.target.value;renderProductAnalytics();}));
   $('#paExportExcel')?.addEventListener('click',async()=>{try{const res=await fetch(`/api/product-analytics/export.xlsx?${query}`,{headers:{Authorization:`Bearer ${state.token}`}});if(!res.ok){const j=await res.json().catch(()=>({}));throw new Error(j.error||'Không tải được Excel');}const blob=await res.blob();const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=`phan-tich-hang-hoa-${range.start}-${range.end}.xlsx`;link.click();URL.revokeObjectURL(link.href);}catch(err){toast(err.message,'danger');}});
   if(isAdmin){
     $$('.pa-upload-filter [data-upload-type]').forEach(btn=>btn.onclick=()=>{const type=btn.dataset.uploadType;$$('.pa-upload-filter [data-upload-type]').forEach(x=>x.classList.toggle('active',x===btn));$$('#paUploadHistory [data-upload-row]').forEach(row=>row.style.display=(type==='all'||row.dataset.uploadRow===type)?'grid':'none');});

@@ -3264,7 +3264,17 @@ function aggregateProductAnalytics(user, opts={}) {
     if(requestedPeriodType==='month') return String(r.inventory_period_type||'')==='month';
     return false; // Day view has sales data only; XNT is uploaded as Week or Month.
   });
-  const exactInv=invAll.filter(r=>r.period_start===start && r.period_end===end);
+  // Match XNT by the selected calendar period, not by the current-to-date display end.
+  // Example: on Friday 21/08 the Week view is 17/08→21/08 for sales, while an uploaded weekly XNT
+  // is stored as 17/08→23/08. Likewise current-month sales end today while monthly XNT is stored to month-end.
+  // Requiring r.period_end===end made current Week/Month inventory appear as 0/0 even after a successful upload.
+  let inventoryMatchEnd=end;
+  if(requestedPeriodType==='week') inventoryMatchEnd=addDaysUtc(start,6);
+  else if(requestedPeriodType==='month'){
+    const [yy,mm]=start.slice(0,7).split('-').map(Number);
+    inventoryMatchEnd=dateOnly(new Date(Date.UTC(yy,mm,0)));
+  }
+  const exactInv=invAll.filter(r=>r.period_start===start && r.period_end===inventoryMatchEnd);
   const latestSnapshot=new Map();
   exactInv.forEach(r=>{const k=`${r.store_id}|${r.product_key}`;const old=latestSnapshot.get(k);if(!old||String(r.snapshot_date)>String(old.snapshot_date))latestSnapshot.set(k,r);});
   // Only the exact XNT file for the selected week/month is used.

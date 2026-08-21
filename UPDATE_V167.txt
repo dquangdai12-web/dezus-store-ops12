@@ -1,0 +1,5 @@
+DEZUS STORE OPS v4.167
+
+Đã sửa:
+1. XNT tuần/tháng hiện đúng ở tuần/tháng hiện tại.
+2. Thêm sắp xếp lớn→nhỏ, nhỏ→lớn, A→Z, Z→A tại các bảng Phân tích hàng hóa.
