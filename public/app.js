@@ -39,7 +39,10 @@ const state = {
   navOpenGroup: localStorage.getItem('dezus_ops_nav_group') || 'overview',
   adminEditUserId: null,
   overviewRevenueExpanded: false,
-  productAnalyticsPeriod: 'this_month',
+  productAnalyticsPeriod: 'month',
+  productAnalyticsMonth: currentMonthLocal(),
+  productAnalyticsWeekStart: mondayOf(isoDateLocal(new Date())),
+  productAnalyticsDay: isoDateLocal(new Date()),
   productAnalyticsStart: `${currentMonthLocal()}-01`,
   productAnalyticsEnd: isoDateLocal(new Date()),
   productAnalyticsStoreId: '',
@@ -2273,18 +2276,24 @@ async function renderOrders() {
 
 function productAnalyticsRangeForPeriod(period) {
   const today=isoDateLocal(new Date());
-  const thisMonday=mondayOf(today);
-  if(period==='this_week') return {start:thisMonday,end:today};
-  if(period==='last_week') {
-    const lastMonday=isoDateLocal(new Date(parseLocalDate(thisMonday).getTime()-7*86400000));
-    const lastSunday=isoDateLocal(new Date(parseLocalDate(thisMonday).getTime()-86400000));
-    return {start:lastMonday,end:lastSunday};
+  if(period==='day') {
+    const day=state.productAnalyticsDay||today;
+    return {start:day,end:day};
   }
-  if(period==='last_month'){
-    const d=parseLocalDate(`${currentMonthLocal()}-01`);d.setMonth(d.getMonth()-1);const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0');const start=`${y}-${m}-01`;const end=isoDateLocal(new Date(y,d.getMonth()+1,0));return {start,end};
+  if(period==='week') {
+    const picked=state.productAnalyticsWeekStart||mondayOf(today);
+    const start=mondayOf(picked);
+    state.productAnalyticsWeekStart=start;
+    const sunday=isoDateLocal(new Date(parseLocalDate(start).getTime()+6*86400000));
+    const end=start<=today&&sunday>=today?today:sunday;
+    return {start,end};
   }
-  if(period==='custom') return {start:state.productAnalyticsStart||today,end:state.productAnalyticsEnd||today};
-  const start=`${currentMonthLocal()}-01`;return {start,end:today};
+  const month=state.productAnalyticsMonth||currentMonthLocal();
+  const start=`${month}-01`;
+  const md=parseLocalDate(start);
+  const monthEnd=isoDateLocal(new Date(md.getFullYear(),md.getMonth()+1,0));
+  const end=month===currentMonthLocal()?today:monthEnd;
+  return {start,end};
 }
 function productAnalyticsTable(rows, mode='speed') {
   rows=Array.isArray(rows)?rows:[];
@@ -2308,9 +2317,14 @@ async function renderProductAnalytics(){
   const query=`store_id=${encodeURIComponent(state.productAnalyticsStoreId||'all')}&start=${range.start}&end=${range.end}&q=${encodeURIComponent(state.productAnalyticsSearch||'')}`;
   const data=await api(`/api/product-analytics?${query}`);
   const storeSelect=isAll?`<div class="field"><label>Cửa hàng</label><select class="input" id="paStore"><option value="all" ${state.productAnalyticsStoreId==='all'?'selected':''}>Toàn hệ thống</option>${stores.map(st=>`<option value="${st.id}" ${String(st.id)===String(state.productAnalyticsStoreId)?'selected':''}>${esc(st.name)}</option>`).join('')}</select></div>`:`<div class="field"><label>Cửa hàng</label><input class="input" value="${esc(data.store_name||'')}" disabled></div>`;
-  const periodBtns=[['this_week','Tuần này'],['last_week','Tuần trước'],['this_month','Tháng này'],['last_month','Tháng trước'],['custom','Tùy chọn ngày']].map(([k,l])=>`<button class="btn ${state.productAnalyticsPeriod===k?'':'secondary'} pa-period-btn" data-period="${k}" type="button">${l}</button>`).join('');
-  const custom=state.productAnalyticsPeriod==='custom'?`<div class="field"><label>Từ ngày</label><input class="input" type="date" id="paStart" value="${range.start}"></div><div class="field"><label>Đến ngày</label><input class="input" type="date" id="paEnd" value="${range.end}"></div><button class="btn" id="paApplyCustom" type="button">Xem</button>`:'';
-  const search=`<div class="field pa-search-field"><label>Tìm sản phẩm</label><div class="row" style="gap:6px"><input class="input" id="paSearch" value="${esc(state.productAnalyticsSearch||'')}" placeholder="Nhập tên sản phẩm..."><button class="btn secondary" id="paSearchBtn" type="button">Tìm</button></div></div>`;
+  if(!['month','week','day'].includes(state.productAnalyticsPeriod)) state.productAnalyticsPeriod='month';
+  const periodPickerInput=state.productAnalyticsPeriod==='month'
+    ? `<input class="input pa-period-value" type="month" id="paMonth" value="${esc(state.productAnalyticsMonth||currentMonthLocal())}">`
+    : state.productAnalyticsPeriod==='week'
+      ? `<input class="input pa-period-value" type="date" id="paWeekStart" value="${esc(range.start)}" title="Ngày đầu tuần">`
+      : `<input class="input pa-period-value" type="date" id="paDay" value="${esc(state.productAnalyticsDay||range.start)}">`;
+  const periodPicker=`<div class="field pa-period-field"><label>Thời gian</label><div class="pa-period-control"><select class="input" id="paPeriodType"><option value="day" ${state.productAnalyticsPeriod==='day'?'selected':''}>Ngày</option><option value="week" ${state.productAnalyticsPeriod==='week'?'selected':''}>Tuần</option><option value="month" ${state.productAnalyticsPeriod==='month'?'selected':''}>Tháng</option></select>${periodPickerInput}</div></div>`;
+  const search=`<div class="field pa-search-field"><label>Tìm sản phẩm</label><div class="pa-search-control"><input class="input" id="paSearch" value="${esc(state.productAnalyticsSearch||'')}" placeholder="Nhập tên sản phẩm..."><button class="btn pa-search-btn" id="paSearchBtn" type="button">Tìm</button></div></div>`;
   const t=data.totals||{};
   const kpis=`<div class="grid four pa-kpis"><div class="card kpi pa-kpi"><div class="label">Bán POS</div><div class="num">${money(t.pos_qty||0)}</div></div><div class="card kpi pa-kpi"><div class="label">Bán Online</div><div class="num">${money(t.online_qty||0)}</div></div><div class="card kpi pa-kpi"><div class="label">Tổng nhập / Tồn</div><div class="num">${money(t.import_qty||0)} / ${money(t.stock_qty||0)}</div></div><div class="card kpi pa-kpi"><div class="label">Có thể bán theo tốc độ</div><div class="num">${money(t.sellable_qty||0)}</div></div></div>`;
   const tabDefs=[['summary','Tổng hợp'],['sales','Chi tiết bán hàng'],['speed','Tốc độ bán'],['imports','Chi tiết nhập hàng'],['stock','Hàng tồn nhiều'],['best','Hàng bán chạy'],['slow','Hàng bán chậm']];if(isAdmin)tabDefs.push(['upload','Nhập file Sapo']);if(!isAdmin&&state.productAnalyticsTab==='upload')state.productAnalyticsTab='summary';
@@ -2349,8 +2363,11 @@ async function renderProductAnalytics(){
   </div>`
   else content=`<div class="card"><h3>Tốc độ bán</h3>${productAnalyticsTable(data.rows||[],'speed')}</div>`;
   const sourceWarning='';
-  shell(`<div class="card pa-filter-card"><div class="toolbar"><div style="margin-right:auto"><h3 style="margin:0">Phân tích hàng hóa</h3><div class="hint">${esc(data.store_name||'')} • ${dOnly(range.start)} → ${dOnly(range.end)}</div></div></div><div class="pa-periods">${periodBtns}</div><div class="grid four pa-filter-grid">${storeSelect}${search}${custom}</div></div>${sourceWarning}${kpis}<div class="toolbar pa-tabs">${tabs}</div>${content}`,'Phân tích hàng hóa','');
-  $$('.pa-period-btn').forEach(b=>b.onclick=()=>{state.productAnalyticsPeriod=b.dataset.period;renderProductAnalytics();});$$('.pa-tab').forEach(b=>b.onclick=()=>{state.productAnalyticsTab=b.dataset.tab;renderProductAnalytics();});$('#paStore')?.addEventListener('change',e=>{state.productAnalyticsStoreId=e.target.value;renderProductAnalytics();});$('#paApplyCustom')?.addEventListener('click',()=>{state.productAnalyticsStart=$('#paStart')?.value||range.start;state.productAnalyticsEnd=$('#paEnd')?.value||range.end;renderProductAnalytics();});
+  shell(`<div class="card pa-filter-card"><div class="toolbar"><div style="margin-right:auto"><h3 style="margin:0">Phân tích hàng hóa</h3><div class="hint">${esc(data.store_name||'')} • ${dOnly(range.start)} → ${dOnly(range.end)}</div></div></div><div class="pa-filter-grid">${storeSelect}${search}${periodPicker}</div></div>${sourceWarning}${kpis}<div class="toolbar pa-tabs">${tabs}</div>${content}`,'Phân tích hàng hóa','');
+  $('#paPeriodType')?.addEventListener('change',e=>{state.productAnalyticsPeriod=e.target.value;renderProductAnalytics();});$$('.pa-tab').forEach(b=>b.onclick=()=>{state.productAnalyticsTab=b.dataset.tab;renderProductAnalytics();});$('#paStore')?.addEventListener('change',e=>{state.productAnalyticsStoreId=e.target.value;renderProductAnalytics();});
+  $('#paMonth')?.addEventListener('change',e=>{state.productAnalyticsMonth=e.target.value||currentMonthLocal();renderProductAnalytics();});
+  $('#paWeekStart')?.addEventListener('change',e=>{state.productAnalyticsWeekStart=mondayOf(e.target.value||isoDateLocal(new Date()));renderProductAnalytics();});
+  $('#paDay')?.addEventListener('change',e=>{state.productAnalyticsDay=e.target.value||isoDateLocal(new Date());renderProductAnalytics();});
   const doSearch=()=>{state.productAnalyticsSearch=$('#paSearch')?.value?.trim()||'';renderProductAnalytics();};$('#paSearchBtn')?.addEventListener('click',doSearch);$('#paSearch')?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();doSearch();}});
   const bindUpload=(id,url)=>{$(id)?.addEventListener('submit',async e=>{e.preventDefault();const btn=e.target.querySelector('button[type=submit]');if(btn){btn.disabled=true;btn.textContent='Đang đọc file...';}try{const fd=new FormData(e.target);const out=await api(url,{method:'POST',body:fd});toast(out.message||'Đã cập nhật dữ liệu');renderProductAnalytics();}catch(err){toast(err.message,'danger');if(btn){btn.disabled=false;btn.textContent='Thử lại';}}});};if(isAdmin){bindUpload('#paSalesUpload','/api/product-analytics/import-sales');bindUpload('#paInventoryUpload','/api/product-analytics/import-inventory');}
 }

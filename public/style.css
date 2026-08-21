@@ -5495,3 +5495,20 @@ body{letter-spacing:-.008em}
 section.card>h2+p.hint,
 section.card>h3+p.hint,
 section.card>.toolbar+p.hint{display:none!important}
+
+
+/* V4.161 product analytics filter row: Store | Search | Period */
+.pa-filter-grid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:12px!important;align-items:end!important;margin-top:14px!important}
+.pa-filter-grid>.field{min-width:0!important;margin:0!important}
+.pa-search-control,.pa-period-control{display:grid!important;align-items:stretch!important;gap:7px!important}
+.pa-search-control{grid-template-columns:minmax(0,1fr) auto!important}
+.pa-period-control{grid-template-columns:112px minmax(0,1fr)!important}
+.pa-search-control .input,.pa-period-control .input,.pa-filter-grid>.field>.input{width:100%!important;min-width:0!important;height:42px!important}
+.pa-search-btn{height:42px!important;min-width:68px!important;padding:0 18px!important;background:#17375e!important;border-color:#17375e!important;color:#fff!important;box-shadow:0 6px 14px rgba(23,55,94,.18)!important}
+.pa-search-btn:hover{background:#102a49!important;border-color:#102a49!important;color:#fff!important}
+.pa-period-field label,.pa-search-field label,.pa-filter-grid>.field>label{margin-bottom:6px!important}
+@media(max-width:860px){
+  .pa-filter-grid{grid-template-columns:1fr!important;gap:10px!important}
+  .pa-period-control{grid-template-columns:105px minmax(0,1fr)!important}
+  .pa-search-btn{min-width:72px!important}
+}

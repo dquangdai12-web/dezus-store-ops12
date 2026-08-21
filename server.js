@@ -3245,7 +3245,9 @@ function aggregateProductAnalytics(user, opts={}) {
   const searchKey=normalizeExcelHeader(opts.q||'');
   const allSales=(db.product_sales_imports||[]).filter(r=>r.status!=='deleted' && storeAllowed(r.store_id) && Number(r.revenue||0)>0);
   const exactPeriodSales=allSales.filter(r=>r.granularity==='period' && r.period_start===start && r.period_end===end);
-  const sales=exactPeriodSales.length ? exactPeriodSales : allSales.filter(r=>r.granularity!=='period' && r.sale_date>=start && r.sale_date<endExclusive);
+  const dailySales=allSales.filter(r=>r.granularity!=='period' && r.sale_date>=start && r.sale_date<endExclusive);
+  // Daily uploads are authoritative for flexible Day/Week/Month views. Old period summaries must not hide newer daily data.
+  const sales=dailySales.length ? dailySales : exactPeriodSales;
 
   const invAll=(db.product_inventory_imports||[]).filter(r=>r.status!=='deleted' && storeAllowed(r.store_id) && String(r.snapshot_date||'')<=end);
   const exactInv=invAll.filter(r=>r.period_start===start && r.period_end===end);
@@ -3311,7 +3313,8 @@ function weeklyAutoBestSellers(storeId,start,endExclusive) {
   const scoped=(db.product_sales_imports||[]).filter(r=>r.status!=='deleted' && Number(r.store_id)===Number(storeId) && Number(r.revenue||0)>0);
   const exactPeriod=scoped.filter(r=>r.granularity==='period' && r.period_start===start && r.period_end===weekEnd);
   const containedPeriods=scoped.filter(r=>r.granularity==='period' && r.period_start>=start && r.period_end<=weekEnd);
-  const sourceRows=exactPeriod.length ? exactPeriod : (containedPeriods.length ? containedPeriods : scoped.filter(r=>r.granularity!=='period' && r.sale_date>=start && r.sale_date<endExclusive));
+  const dailyRows=scoped.filter(r=>r.granularity!=='period' && r.sale_date>=start && r.sale_date<endExclusive);
+  const sourceRows=dailyRows.length ? dailyRows : (exactPeriod.length ? exactPeriod : containedPeriods);
   sourceRows.forEach(r=>{if(isAggregateProductName(r.product_name))return;const key=r.product_key||productNameKey(r.product_name);const x=map.get(key)||{name:r.product_name,quantity:0,revenue:0};x.quantity+=Number(r.quantity||0);x.revenue+=Number(r.revenue||0);map.set(key,x);});
   return Array.from(map.values()).filter(x=>x.revenue>0&&!isAggregateProductName(x.name)).sort((a,b)=>b.quantity-a.quantity||b.revenue-a.revenue).slice(0,5).map(x=>({name:x.name,sku:'',quantity:Math.round(x.quantity*100)/100,bill_count:0,note:'Tự động từ Báo cáo doanh thu theo sản phẩm'}));
 }
