@@ -3255,11 +3255,20 @@ function aggregateProductAnalytics(user, opts={}) {
   // Fall back to an exact whole-period upload only when no day-level data exists in the selected range.
   const sales=atomicSales.length ? atomicSales : exactPeriodSales;
 
-  const invAll=(db.product_inventory_imports||[]).filter(r=>r.status!=='deleted' && storeAllowed(r.store_id) && String(r.snapshot_date||'')<=end);
+  const requestedPeriodType=String(opts.period_type||'').toLowerCase();
+  const invBase=(db.product_inventory_imports||[]).filter(r=>r.status!=='deleted' && storeAllowed(r.store_id));
+  // Inventory is intentionally separated by view type: Week only reads weekly XNT uploads,
+  // Month only reads monthly XNT uploads. Never mix weekly data into a month or vice versa.
+  const invAll=invBase.filter(r=>{
+    if(requestedPeriodType==='week') return String(r.inventory_period_type||'')==='week';
+    if(requestedPeriodType==='month') return String(r.inventory_period_type||'')==='month';
+    return false; // Day view has sales data only; XNT is uploaded as Week or Month.
+  });
   const exactInv=invAll.filter(r=>r.period_start===start && r.period_end===end);
   const latestSnapshot=new Map();
-  invAll.forEach(r=>{const k=`${r.store_id}|${r.product_key}`;const old=latestSnapshot.get(k);if(!old||String(r.snapshot_date)>String(old.snapshot_date))latestSnapshot.set(k,r);});
-  const periodInv=exactInv.length ? exactInv : invAll.filter(r=>String(r.snapshot_date)>=start&&String(r.snapshot_date)<endExclusive);
+  exactInv.forEach(r=>{const k=`${r.store_id}|${r.product_key}`;const old=latestSnapshot.get(k);if(!old||String(r.snapshot_date)>String(old.snapshot_date))latestSnapshot.set(k,r);});
+  // Only the exact XNT file for the selected week/month is used.
+  const periodInv=exactInv;
 
   const grouped=new Map();
   function getRow(name,key){
@@ -3317,7 +3326,7 @@ function aggregateProductAnalytics(user, opts={}) {
   const slow=rows.filter(r=>eligible(r)&&r.stock_qty>0&&r.revenue>0).slice().sort((a,b)=>b.slow_score-a.slow_score||b.stock_qty-a.stock_qty||a.velocity-b.velocity);
   const speed=rows.filter(r=>eligible(r)&&(r.revenue>0||r.stock_qty>0||r.import_qty>0)).slice().sort((a,b)=>b.velocity-a.velocity||b.sold_qty-a.sold_qty);
   const totals=rows.reduce((a,r)=>{['pos_qty','online_qty','sold_qty','import_qty','export_qty','stock_qty','sellable_qty','reserve_recommended'].forEach(k=>a[k]+=Number(r[k]||0));a.revenue+=Number(r.revenue||0);return a;},{pos_qty:0,online_qty:0,sold_qty:0,import_qty:0,export_qty:0,stock_qty:0,sellable_qty:0,reserve_recommended:0,revenue:0});
-  return {source_mode:'sales_inventory',start,end,store_id:scope,store_name:scope==='all'?'Toàn hệ thống':(getStore(scope)?.name||''),period_days:periodDays,search:opts.q||'',totals,rows:speed,best_sellers:best,top_stock:stock.slice(0,100),top_imports:imports.slice(0,100),slow_movers:slow.slice(0,100)};
+  return {source_mode:'sales_inventory',inventory_period_type:requestedPeriodType,inventory_period_found:exactInv.length>0,start,end,store_id:scope,store_name:scope==='all'?'Toàn hệ thống':(getStore(scope)?.name||''),period_days:periodDays,search:opts.q||'',totals,rows:speed,best_sellers:best,top_stock:stock.slice(0,100),top_imports:imports.slice(0,100),slow_movers:slow.slice(0,100)};
 }
 
 function weeklyAutoBestSellers(storeId,start,endExclusive) {
@@ -3343,9 +3352,17 @@ app.get('/api/product-analytics/uploads', requireAuth, (req,res)=>{
     ...db.product_sales_imports.filter(r=>r.status!=='deleted').map(r=>Number(r.batch_id||0)),
     ...db.product_inventory_imports.filter(r=>r.status!=='deleted').map(r=>Number(r.batch_id||0))
   ]);
-  const batches=(db.product_import_batches||[]).filter(b=>activeBatchIds.has(Number(b.id))).map(b=>({
-    id:b.id,type:b.type,file_name:b.file_name||'',period_start:b.period_start||'',period_end:b.period_end||'',granularity:b.granularity||'',rows_valid:Number(b.rows_valid||0),created_at:b.created_at||'',created_by_name:getUser(b.created_by)?.full_name||''
-  })).sort((a,b)=>String(b.created_at).localeCompare(String(a.created_at)));
+  const batches=(db.product_import_batches||[]).filter(b=>b.status!=='deleted'&&activeBatchIds.has(Number(b.id))).map(b=>{
+    const bid=Number(b.id);
+    const sourceRows=b.type==='sales'
+      ? db.product_sales_imports.filter(r=>r.status!=='deleted'&&Number(r.batch_id)===bid)
+      : db.product_inventory_imports.filter(r=>r.status!=='deleted'&&Number(r.batch_id)===bid);
+    const storeIds=[...new Set(sourceRows.map(r=>Number(r.store_id)).filter(Boolean))];
+    return {
+      id:b.id,type:b.type,inventory_period_type:b.inventory_period_type||'',file_name:b.file_name||'',period_start:b.period_start||'',period_end:b.period_end||'',granularity:b.granularity||'',rows_valid:Number(b.rows_valid||0),created_at:b.created_at||'',created_by_name:getUser(b.created_by)?.full_name||'',
+      store_ids:storeIds,store_names:storeIds.map(id=>getStore(id)?.name||`CH ${id}`)
+    };
+  }).sort((a,b)=>String(b.created_at).localeCompare(String(a.created_at)));
   const salesMap=new Map();
   db.product_sales_imports.filter(r=>r.status!=='deleted').forEach(r=>{
     const sid=Number(r.store_id); const st=getStore(sid)?.name||`CH ${sid}`;
@@ -3356,14 +3373,33 @@ app.get('/api/product-analytics/uploads', requireAuth, (req,res)=>{
   const invMap=new Map();
   db.product_inventory_imports.filter(r=>r.status!=='deleted').forEach(r=>{
     const sid=Number(r.store_id); const st=getStore(sid)?.name||`CH ${sid}`; const start=dateOnly(r.period_start||r.snapshot_date), end=dateOnly(r.period_end||r.snapshot_date); if(!start)return;
-    const k=`${sid}|${start}|${end}`; invMap.set(k,{store_id:sid,store_name:st,start,end});
+    const ipt=String(r.inventory_period_type||''); const k=`${sid}|${ipt}|${start}|${end}`; invMap.set(k,{store_id:sid,store_name:st,start,end,inventory_period_type:ipt});
   });
   res.json({sales:Array.from(salesMap.values()).sort((a,b)=>String(b.start).localeCompare(String(a.start))||a.store_name.localeCompare(b.store_name,'vi')),inventory:Array.from(invMap.values()).sort((a,b)=>String(b.start).localeCompare(String(a.start))||a.store_name.localeCompare(b.store_name,'vi')),batches:batches.slice(0,100)});
 });
 
+app.delete('/api/product-analytics/uploads/:batchId', requireAuth, (req,res)=>{
+  if(req.user.role!=='admin') return res.status(403).json({error:'Chỉ Admin được xóa dữ liệu đã upload'});
+  const batchId=Number(req.params.batchId||0);
+  if(!batchId) return res.status(400).json({error:'Batch dữ liệu không hợp lệ'});
+  db.product_import_batches=db.product_import_batches||[];
+  db.product_sales_imports=db.product_sales_imports||[];
+  db.product_inventory_imports=db.product_inventory_imports||[];
+  db.product_zero_value_exclusions=db.product_zero_value_exclusions||[];
+  const batch=db.product_import_batches.find(b=>Number(b.id)===batchId&&b.status!=='deleted');
+  if(!batch) return res.status(404).json({error:'Không tìm thấy dữ liệu upload này hoặc dữ liệu đã bị xóa'});
+  let deletedRows=0;
+  [db.product_sales_imports,db.product_inventory_imports,db.product_zero_value_exclusions].forEach(list=>list.forEach(r=>{
+    if(r.status!=='deleted'&&Number(r.batch_id)===batchId){r.status='deleted';r.deleted_at=nowIso();r.deleted_by=req.user.id;deletedRows++;}
+  }));
+  batch.status='deleted';batch.deleted_at=nowIso();batch.deleted_by=req.user.id;
+  saveDb();
+  res.json({ok:true,deleted_rows:deletedRows,message:`Đã xóa lần upload ${batch.file_name||('#'+batchId)} (${deletedRows} dòng dữ liệu).`});
+});
+
 app.get('/api/product-analytics/export.xlsx', requireAuth, (req,res)=>{
   try{
-    const data=aggregateProductAnalytics(req.user,{store_id:req.query.store_id,start:req.query.start,end:req.query.end,q:req.query.q});
+    const data=aggregateProductAnalytics(req.user,{store_id:req.query.store_id,start:req.query.start,end:req.query.end,q:req.query.q,period_type:req.query.period_type});
     const rows=(data.rows||[]).map((r,i)=>({
       stt:i+1,ten_san_pham:r.product_name||'',ban_pos:Number(r.pos_qty||0),ban_online:Number(r.online_qty||0),tong_ban:Number(r.sold_qty||0),doanh_thu:Number(r.revenue||0),so_luong_nhap:Number(r.import_qty||0),chuyen_kho_vao:Number(r.transfer_in_qty||0),chuyen_kho_ra:Number(r.transfer_out_qty||0),ton_cuoi_ky:Number(r.stock_qty||0),toc_do_pos_ngay:Number(r.pos_velocity||0),toc_do_online_ngay:Number(r.online_velocity||0),toc_do_tong_ngay:Number(r.velocity||0),so_luong_co_the_ban:Number(r.sellable_qty||0),du_tru_de_xuat:Number(r.reserve_recommended||0),days_of_cover:r.days_cover==null?'':Number(r.days_cover),ngay_nhap_gan_nhat:r.arrival_date||''
     }));
@@ -3374,7 +3410,7 @@ app.get('/api/product-analytics/export.xlsx', requireAuth, (req,res)=>{
 });
 
 app.get('/api/product-analytics', requireAuth, (req,res)=>{
-  try { res.json(aggregateProductAnalytics(req.user,{store_id:req.query.store_id,start:req.query.start,end:req.query.end,q:req.query.q})); }
+  try { res.json(aggregateProductAnalytics(req.user,{store_id:req.query.store_id,start:req.query.start,end:req.query.end,q:req.query.q,period_type:req.query.period_type})); }
   catch(err){ res.status(400).json({error:err.message||'Không thể tổng hợp hàng hóa'}); }
 });
 
@@ -3463,7 +3499,7 @@ app.post('/api/product-analytics/import-sales', requireAuth, upload.single('file
         db.product_sales_imports.push({id:nextId('product_sales_imports'),...x,batch_id:batchId,quantity:Math.round(x.quantity*100)/100,revenue:Math.round(x.revenue),status:'active',created_at:nowIso(),created_by:req.user.id});inserted++;
       } else {
         const existing=db.product_sales_imports.find(r=>r.status!=='deleted'&&r.granularity!=='period'&&Number(r.store_id)===Number(x.store_id)&&r.sale_date===x.sale_date&&r.source===x.source&&r.product_key===x.product_key);
-        if(existing){existing.product_name=x.product_name;existing.quantity=Math.round(x.quantity*100)/100;existing.revenue=Math.round(x.revenue);existing.updated_at=nowIso();existing.updated_by=req.user.id;replaced++;}
+        if(existing){existing.product_name=x.product_name;existing.quantity=Math.round(x.quantity*100)/100;existing.revenue=Math.round(x.revenue);existing.batch_id=batchId;existing.updated_at=nowIso();existing.updated_by=req.user.id;replaced++;}
         else{db.product_sales_imports.push({id:nextId('product_sales_imports'),...x,batch_id:batchId,quantity:Math.round(x.quantity*100)/100,revenue:Math.round(x.revenue),status:'active',created_at:nowIso(),created_by:req.user.id});inserted++;}
       }
     });
@@ -3485,9 +3521,20 @@ app.post('/api/product-analytics/import-inventory', requireAuth, upload.single('
   if (!req.file) return res.status(400).json({error:'Chưa chọn file Xuất nhập tồn'});
   try {
     const selected=effectiveProductStoreId(req.user,req.body.store_id);
-    const reportStart=/^\d{4}-\d{2}-\d{2}$/.test(String(req.body.report_start||''))?String(req.body.report_start):'';
-    const reportEnd=/^\d{4}-\d{2}-\d{2}$/.test(String(req.body.report_end||''))?String(req.body.report_end):'';
-    if(!reportStart||!reportEnd||reportEnd<reportStart)return res.status(400).json({error:'Vui lòng chọn đúng Từ ngày / Đến ngày của Báo cáo xuất nhập tồn'});
+    const inventoryPeriodType=String(req.body.inventory_period_type||'').toLowerCase();
+    let reportStart='', reportEnd='';
+    if(inventoryPeriodType==='week'){
+      const ws=/^\d{4}-\d{2}-\d{2}$/.test(String(req.body.week_start||''))?String(req.body.week_start):'';
+      if(!ws)return res.status(400).json({error:'Vui lòng chọn ngày đầu tuần cho file XNT tuần'});
+      reportStart=ws; reportEnd=addDaysUtc(ws,6);
+    }else if(inventoryPeriodType==='month'){
+      const mk=/^\d{4}-\d{2}$/.test(String(req.body.month||''))?String(req.body.month):'';
+      if(!mk)return res.status(400).json({error:'Vui lòng chọn tháng cho file XNT tháng'});
+      reportStart=`${mk}-01`;
+      const [yy,mm]=mk.split('-').map(Number); reportEnd=dateOnly(new Date(Date.UTC(yy,mm,0)));
+    }else{
+      return res.status(400).json({error:'Vui lòng chọn loại XNT theo Tuần hoặc theo Tháng'});
+    }
     const rawRows=readInventoryDetailRows(req.file.path);const agg=new Map();let skippedName=0,skippedStore=0;
     rawRows.forEach(row=>{
       const name=normalizeProductName(excelRowValue(row,['Sản phẩm','Tên sản phẩm','Tên hàng hóa','Tên hàng','Product name']));if(!name){skippedName++;return;}
@@ -3515,7 +3562,7 @@ app.post('/api/product-analytics/import-inventory', requireAuth, upload.single('
       let closing=n(['Cuối kỳ Số lượng','Tồn kho cuối kỳ Số lượng','Tồn cuối kỳ','Tồn cuối','Closing stock','Tồn kho']);
       if(!closing && opening+totalIn-totalOut!==0)closing=Math.max(0,opening+totalIn-totalOut);
       const key=productNameKey(name),k=`${sid}|${reportStart}|${reportEnd}|${key}`;
-      const x=agg.get(k)||{store_id:sid,snapshot_date:reportEnd,period_start:reportStart,period_end:reportEnd,product_key:key,product_name:name,stock_qty:0,opening_qty:0,import_qty:0,purchase_in_qty:0,sales_return_in_qty:0,transfer_in_qty:0,inventory_in_qty:0,other_in_qty:0,export_qty:0,sale_out_qty:0,purchase_return_out_qty:0,transfer_out_qty:0,inventory_out_qty:0,other_out_qty:0,arrival_date:'',exclude_top_stock:false};
+      const x=agg.get(k)||{store_id:sid,snapshot_date:reportEnd,period_start:reportStart,period_end:reportEnd,inventory_period_type:inventoryPeriodType,product_key:key,product_name:name,stock_qty:0,opening_qty:0,import_qty:0,purchase_in_qty:0,sales_return_in_qty:0,transfer_in_qty:0,inventory_in_qty:0,other_in_qty:0,export_qty:0,sale_out_qty:0,purchase_return_out_qty:0,transfer_out_qty:0,inventory_out_qty:0,other_out_qty:0,arrival_date:'',exclude_top_stock:false};
       if(excludeTopStock)x.exclude_top_stock=true;
       x.opening_qty+=opening;x.purchase_in_qty+=purchaseIn;x.sales_return_in_qty+=salesReturnIn;x.transfer_in_qty+=transferIn;x.inventory_in_qty+=inventoryIn;x.other_in_qty+=otherIn;x.import_qty+=totalIn;x.sale_out_qty+=saleOut;x.purchase_return_out_qty+=purchaseReturnOut;x.transfer_out_qty+=transferOut;x.inventory_out_qty+=inventoryOut;x.other_out_qty+=otherOut;x.export_qty+=totalOut;x.stock_qty+=closing;
       // XNT is period-level, so arrival date is only safe when there was no opening stock and purchase receipt occurred in this period.
@@ -3524,11 +3571,11 @@ app.post('/api/product-analytics/import-inventory', requireAuth, upload.single('
     });
     db.product_inventory_imports=db.product_inventory_imports||[];db.product_import_batches=db.product_import_batches||[];
     const touchedStores=new Set(Array.from(agg.values()).map(x=>Number(x.store_id)));
-    db.product_inventory_imports.forEach(r=>{if(r.status!=='deleted'&&r.period_start===reportStart&&r.period_end===reportEnd&&touchedStores.has(Number(r.store_id))){r.status='deleted';r.deleted_at=nowIso();r.deleted_by=req.user.id;}});
+    db.product_inventory_imports.forEach(r=>{if(r.status!=='deleted'&&String(r.inventory_period_type||'')===inventoryPeriodType&&r.period_start===reportStart&&r.period_end===reportEnd&&touchedStores.has(Number(r.store_id))){r.status='deleted';r.deleted_at=nowIso();r.deleted_by=req.user.id;}});
     const batchId=nextId('product_import_batches');let inserted=0;
     agg.forEach(x=>{db.product_inventory_imports.push({id:nextId('product_inventory_imports'),...x,batch_id:batchId,status:'active',created_at:nowIso(),created_by:req.user.id});inserted++;});
-    db.product_import_batches.push({id:batchId,type:'inventory_detail',file_name:req.file.originalname||'',period_start:reportStart,period_end:reportEnd,rows_raw:rawRows.length,rows_valid:agg.size,inserted,skipped_name:skippedName,skipped_store:skippedStore,created_at:nowIso(),created_by:req.user.id});saveDb();
-    res.json({ok:true,raw_rows:rawRows.length,valid_rows:agg.size,inserted,message:`Đã cập nhật ${agg.size} sản phẩm từ Báo cáo Xuất nhập tồn – Mẫu chi tiết. Điều chuyển kho được tách riêng, không tính là bán hàng.`});
+    db.product_import_batches.push({id:batchId,type:'inventory_detail',inventory_period_type:inventoryPeriodType,file_name:req.file.originalname||'',period_start:reportStart,period_end:reportEnd,rows_raw:rawRows.length,rows_valid:agg.size,inserted,skipped_name:skippedName,skipped_store:skippedStore,created_at:nowIso(),created_by:req.user.id});saveDb();
+    res.json({ok:true,raw_rows:rawRows.length,valid_rows:agg.size,inserted,message:`Đã cập nhật ${agg.size} sản phẩm XNT theo ${inventoryPeriodType==='week'?'tuần':'tháng'}. Điều chuyển kho được tách riêng, không tính là bán hàng.`});
   }catch(err){res.status(400).json({error:err.message||'Không đọc được Báo cáo xuất nhập tồn Sapo'});}finally{try{fs.unlinkSync(req.file.path)}catch{}}
 });
 

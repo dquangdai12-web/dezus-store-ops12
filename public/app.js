@@ -2314,7 +2314,7 @@ async function renderProductAnalytics(){
   if(!state.productAnalyticsStoreId)state.productAnalyticsStoreId=isAll?'all':String(state.user?.store_id||state.user?.store_ids?.[0]||'');
   if(!isAll)state.productAnalyticsStoreId=String(state.user?.store_id||state.user?.store_ids?.[0]||'');
   const range=productAnalyticsRangeForPeriod(state.productAnalyticsPeriod);state.productAnalyticsStart=range.start;state.productAnalyticsEnd=range.end;
-  const query=`store_id=${encodeURIComponent(state.productAnalyticsStoreId||'all')}&start=${range.start}&end=${range.end}&q=${encodeURIComponent(state.productAnalyticsSearch||'')}`;
+  const query=`store_id=${encodeURIComponent(state.productAnalyticsStoreId||'all')}&start=${range.start}&end=${range.end}&period_type=${encodeURIComponent(state.productAnalyticsPeriod||'month')}&q=${encodeURIComponent(state.productAnalyticsSearch||'')}`;
   const [data,uploadStatus]=await Promise.all([api(`/api/product-analytics?${query}`),isAdmin?api('/api/product-analytics/uploads').catch(()=>({sales:[],inventory:[],batches:[]})):Promise.resolve(null)]);
   const storeSelect=isAll?`<div class="field"><label>Cửa hàng</label><select class="input" id="paStore"><option value="all" ${state.productAnalyticsStoreId==='all'?'selected':''}>Toàn hệ thống</option>${stores.map(st=>`<option value="${st.id}" ${String(st.id)===String(state.productAnalyticsStoreId)?'selected':''}>${esc(st.name)}</option>`).join('')}</select></div>`:`<div class="field"><label>Cửa hàng</label><input class="input" value="${esc(data.store_name||'')}" disabled></div>`;
   if(!['month','week','day'].includes(state.productAnalyticsPeriod)) state.productAnalyticsPeriod='month';
@@ -2349,22 +2349,42 @@ async function renderProductAnalytics(){
         <div><button class="btn" type="submit">Upload doanh thu</button></div>
       </form>
     </div>
-    <div class="card">
+    <div class="card pa-inventory-upload-card">
       <div class="section-title"><h3>2. Xuất nhập tồn – Mẫu chi tiết</h3><span class="badge">Kho / Tồn</span></div>
-      
-      <form id="paInventoryUpload" class="grid two">
-        <div class="field" style="grid-column:1/-1"><label>File Xuất nhập tồn (.xls/.xlsx/.csv)</label><input class="input" type="file" name="file" accept=".xlsx,.xls,.csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required></div>
-        <div class="field"><label>Từ ngày báo cáo</label><input class="input" type="date" name="report_start" value="${range.start}" required></div>
-        <div class="field"><label>Đến ngày báo cáo</label><input class="input" type="date" name="report_end" value="${range.end}" required></div>
-        <div class="field" style="grid-column:1/-1"><label>Dữ liệu cửa hàng</label><select class="input" name="store_id"><option value="all">Tự nhận chi nhánh trong file</option>${stores.map(st=>`<option value="${st.id}">${esc(st.name)}</option>`).join('')}</select></div>
-        <div><button class="btn" type="submit">Upload Xuất nhập tồn</button></div>
-      </form>
+      <div class="pa-xnt-upload-tabs">
+        <form id="paInventoryWeekUpload" class="pa-xnt-form">
+          <div class="pa-xnt-form-head"><b>XNT theo tuần</b><span>Chỉ dùng khi xem Tuần</span></div>
+          <div class="grid two">
+            <div class="field" style="grid-column:1/-1"><label>File Xuất nhập tồn tuần</label><input class="input" type="file" name="file" accept=".xlsx,.xls,.csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required></div>
+            <input type="hidden" name="inventory_period_type" value="week">
+            <div class="field"><label>Ngày đầu tuần</label><input class="input" type="date" name="week_start" value="${esc(state.productAnalyticsWeekStart||mondayOf(isoDateLocal(new Date())))}" required></div>
+            <div class="field"><label>Dữ liệu cửa hàng</label><select class="input" name="store_id"><option value="all">Tự nhận chi nhánh trong file</option>${stores.map(st=>`<option value="${st.id}">${esc(st.name)}</option>`).join('')}</select></div>
+          </div>
+          <button class="btn" type="submit">Upload XNT tuần</button>
+        </form>
+        <form id="paInventoryMonthUpload" class="pa-xnt-form">
+          <div class="pa-xnt-form-head"><b>XNT theo tháng</b><span>Chỉ dùng khi xem Tháng</span></div>
+          <div class="grid two">
+            <div class="field" style="grid-column:1/-1"><label>File Xuất nhập tồn tháng</label><input class="input" type="file" name="file" accept=".xlsx,.xls,.csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required></div>
+            <input type="hidden" name="inventory_period_type" value="month">
+            <div class="field"><label>Tháng</label><input class="input" type="month" name="month" value="${esc(state.productAnalyticsMonth||currentMonthLocal())}" required></div>
+            <div class="field"><label>Dữ liệu cửa hàng</label><select class="input" name="store_id"><option value="all">Tự nhận chi nhánh trong file</option>${stores.map(st=>`<option value="${st.id}">${esc(st.name)}</option>`).join('')}</select></div>
+          </div>
+          <button class="btn" type="submit">Upload XNT tháng</button>
+        </form>
+      </div>
     </div>
   </div>`
   else content=`<div class="card"><h3>Tốc độ bán</h3>${productAnalyticsTable(data.rows||[],'speed')}</div>`;
   const sourceWarning='';
   const exportBtn=`<button class="btn secondary" id="paExportExcel" type="button">Tải Excel</button>`;
-  const uploadStatusBlock=isAdmin?`<div class="card pa-upload-status-card" style="margin-top:14px"><div class="section-title"><h3>Dữ liệu đã upload</h3><span class="badge">Chỉ Admin</span></div><div class="grid two"><div><b>Doanh thu theo sản phẩm</b><div class="pa-upload-days">${(uploadStatus?.sales||[]).length?(uploadStatus.sales||[]).map(x=>`<span class="badge dark">${esc(x.store_name)} • ${dOnly(x.start)}${x.end&&x.end!==x.start?` → ${dOnly(x.end)}`:''}</span>`).join(''):'<div class="empty">Chưa có dữ liệu</div>'}</div></div><div><b>Xuất nhập tồn</b><div class="pa-upload-days">${(uploadStatus?.inventory||[]).length?(uploadStatus.inventory||[]).map(x=>`<span class="badge">${esc(x.store_name)} • ${dOnly(x.start)}${x.end&&x.end!==x.start?` → ${dOnly(x.end)}`:''}</span>`).join(''):'<div class="empty">Chưa có dữ liệu</div>'}</div></div></div></div>`:'';
+  const uploadBatches=(uploadStatus?.batches||[]);
+  const uploadStatusBlock=isAdmin?`<div class="card pa-upload-status-card pa-history-card" style="margin-top:14px">
+    <div class="section-title pa-history-title"><div><h3>Lịch sử dữ liệu Sapo</h3></div><span class="badge">Chỉ Admin</span></div>
+    <div class="pa-history-kpis"><div><span>Doanh thu</span><b>${(uploadStatus?.sales||[]).length}</b><small>kỳ đang có dữ liệu</small></div><div><span>Xuất nhập tồn</span><b>${(uploadStatus?.inventory||[]).length}</b><small>kỳ đang có dữ liệu</small></div></div>
+    <div class="pa-history-toolbar"><div class="pillbar pa-upload-filter"><button class="active" data-upload-type="all" type="button">Tất cả</button><button data-upload-type="sales" type="button">Doanh thu</button><button data-upload-type="inventory_detail" type="button">XNT</button></div><span class="hint">Hiện 10 lần upload gần nhất</span></div>
+    <div class="pa-history-list" id="paUploadHistory">${uploadBatches.length?uploadBatches.slice(0,10).map(b=>`<div class="pa-history-row" data-upload-row="${esc(b.type)}"><span class="badge ${b.type==='sales'?'dark':''}">${b.type==='sales'?'Doanh thu':`XNT ${b.inventory_period_type==='week'?'Tuần':b.inventory_period_type==='month'?'Tháng':''}`}</span><div class="pa-history-main"><b>${esc((b.store_names||[]).join(', ')||'Không xác định cửa hàng')}</b><span>${dOnly(b.period_start)}${b.period_end&&b.period_end!==b.period_start?` → ${dOnly(b.period_end)}`:''} • ${money(b.rows_valid||0)} dòng</span><small>${esc(b.file_name||'')} ${b.created_at?`• ${dt(b.created_at)}`:''}</small></div><button class="btn danger pa-delete-upload" data-batch-id="${b.id}" type="button">Xóa</button></div>`).join(''):'<div class="empty">Chưa có dữ liệu upload</div>'}</div>
+  </div>`:'';
   shell(`<div class="card pa-filter-card"><div class="toolbar"><div style="margin-right:auto"><h3 style="margin:0">Phân tích hàng hóa</h3><div class="hint">${esc(data.store_name||'')} • ${dOnly(range.start)} → ${dOnly(range.end)}</div></div>${exportBtn}</div><div class="pa-filter-grid">${storeSelect}${search}${periodPicker}</div></div>${uploadStatusBlock}${sourceWarning}${kpis}<div class="toolbar pa-tabs">${tabs}</div>${content}`,'Phân tích hàng hóa','');
   $('#paPeriodType')?.addEventListener('change',e=>{state.productAnalyticsPeriod=e.target.value;renderProductAnalytics();});$$('.pa-tab').forEach(b=>b.onclick=()=>{state.productAnalyticsTab=b.dataset.tab;renderProductAnalytics();});$('#paStore')?.addEventListener('change',e=>{state.productAnalyticsStoreId=e.target.value;renderProductAnalytics();});
   $('#paMonth')?.addEventListener('change',e=>{state.productAnalyticsMonth=e.target.value||currentMonthLocal();renderProductAnalytics();});
@@ -2372,7 +2392,11 @@ async function renderProductAnalytics(){
   $('#paDay')?.addEventListener('change',e=>{state.productAnalyticsDay=e.target.value||isoDateLocal(new Date());renderProductAnalytics();});
   const doSearch=()=>{state.productAnalyticsSearch=$('#paSearch')?.value?.trim()||'';renderProductAnalytics();};$('#paSearchBtn')?.addEventListener('click',doSearch);$('#paSearch')?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();doSearch();}});
   $('#paExportExcel')?.addEventListener('click',async()=>{try{const res=await fetch(`/api/product-analytics/export.xlsx?${query}`,{headers:{Authorization:`Bearer ${state.token}`}});if(!res.ok){const j=await res.json().catch(()=>({}));throw new Error(j.error||'Không tải được Excel');}const blob=await res.blob();const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=`phan-tich-hang-hoa-${range.start}-${range.end}.xlsx`;link.click();URL.revokeObjectURL(link.href);}catch(err){toast(err.message,'danger');}});
-  const bindUpload=(id,url)=>{$(id)?.addEventListener('submit',async e=>{e.preventDefault();const btn=e.target.querySelector('button[type=submit]');if(btn){btn.disabled=true;btn.textContent='Đang đọc file...';}try{const fd=new FormData(e.target);const out=await api(url,{method:'POST',body:fd});toast(out.message||'Đã cập nhật dữ liệu');renderProductAnalytics();}catch(err){toast(err.message,'danger');if(btn){btn.disabled=false;btn.textContent='Thử lại';}}});};if(isAdmin){bindUpload('#paSalesUpload','/api/product-analytics/import-sales');bindUpload('#paInventoryUpload','/api/product-analytics/import-inventory');}
+  if(isAdmin){
+    $$('.pa-upload-filter [data-upload-type]').forEach(btn=>btn.onclick=()=>{const type=btn.dataset.uploadType;$$('.pa-upload-filter [data-upload-type]').forEach(x=>x.classList.toggle('active',x===btn));$$('#paUploadHistory [data-upload-row]').forEach(row=>row.style.display=(type==='all'||row.dataset.uploadRow===type)?'grid':'none');});
+    $$('.pa-delete-upload').forEach(btn=>btn.onclick=async()=>{const id=btn.dataset.batchId;if(!confirm('Xóa lần upload này? Dữ liệu của lần upload này sẽ bị loại khỏi phân tích hàng hóa.'))return;btn.disabled=true;try{const out=await api(`/api/product-analytics/uploads/${id}`,{method:'DELETE'});toast(out.message||'Đã xóa dữ liệu');renderProductAnalytics();}catch(err){toast(err.message,'danger');btn.disabled=false;}});
+  }
+  const bindUpload=(id,url)=>{$(id)?.addEventListener('submit',async e=>{e.preventDefault();const btn=e.target.querySelector('button[type=submit]');if(btn){btn.disabled=true;btn.textContent='Đang đọc file...';}try{const fd=new FormData(e.target);const out=await api(url,{method:'POST',body:fd});toast(out.message||'Đã cập nhật dữ liệu');renderProductAnalytics();}catch(err){toast(err.message,'danger');if(btn){btn.disabled=false;btn.textContent='Thử lại';}}});};if(isAdmin){bindUpload('#paSalesUpload','/api/product-analytics/import-sales');bindUpload('#paInventoryWeekUpload','/api/product-analytics/import-inventory');bindUpload('#paInventoryMonthUpload','/api/product-analytics/import-inventory');}
 }
 
 async function renderProductFeedback() {
