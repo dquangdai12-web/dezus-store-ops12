@@ -5512,3 +5512,10 @@ section.card>.toolbar+p.hint{display:none!important}
   .pa-period-control{grid-template-columns:105px minmax(0,1fr)!important}
   .pa-search-btn{min-width:72px!important}
 }
+
+
+/* V4.163 Product Analytics upload coverage */
+.pa-upload-status-card{border:1px solid #dfe6ee!important;background:#fbfcfe!important}
+.pa-upload-days{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px;max-height:150px;overflow:auto;padding-right:3px}
+.pa-upload-days .badge{padding:6px 9px!important}
+@media(max-width:860px){.pa-upload-status-card .grid.two{grid-template-columns:1fr!important}.pa-upload-days{max-height:120px}}

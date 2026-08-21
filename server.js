@@ -3333,6 +3333,46 @@ function weeklyAutoBestSellers(storeId,start,endExclusive) {
   return Array.from(map.values()).filter(x=>x.revenue>0&&!isAggregateProductName(x.name)).sort((a,b)=>b.quantity-a.quantity||b.revenue-a.revenue).slice(0,5).map(x=>({name:x.name,sku:'',quantity:Math.round(x.quantity*100)/100,bill_count:0,note:'Tự động từ Báo cáo doanh thu theo sản phẩm'}));
 }
 
+
+app.get('/api/product-analytics/uploads', requireAuth, (req,res)=>{
+  if(req.user.role!=='admin') return res.status(403).json({error:'Chỉ Admin được xem dữ liệu đã upload'});
+  db.product_sales_imports=db.product_sales_imports||[];
+  db.product_inventory_imports=db.product_inventory_imports||[];
+  db.product_import_batches=db.product_import_batches||[];
+  const activeBatchIds=new Set([
+    ...db.product_sales_imports.filter(r=>r.status!=='deleted').map(r=>Number(r.batch_id||0)),
+    ...db.product_inventory_imports.filter(r=>r.status!=='deleted').map(r=>Number(r.batch_id||0))
+  ]);
+  const batches=(db.product_import_batches||[]).filter(b=>activeBatchIds.has(Number(b.id))).map(b=>({
+    id:b.id,type:b.type,file_name:b.file_name||'',period_start:b.period_start||'',period_end:b.period_end||'',granularity:b.granularity||'',rows_valid:Number(b.rows_valid||0),created_at:b.created_at||'',created_by_name:getUser(b.created_by)?.full_name||''
+  })).sort((a,b)=>String(b.created_at).localeCompare(String(a.created_at)));
+  const salesMap=new Map();
+  db.product_sales_imports.filter(r=>r.status!=='deleted').forEach(r=>{
+    const sid=Number(r.store_id); const st=getStore(sid)?.name||`CH ${sid}`;
+    const start=r.granularity==='period'?dateOnly(r.period_start):dateOnly(r.sale_date);
+    const end=r.granularity==='period'?dateOnly(r.period_end):dateOnly(r.sale_date);
+    if(!start)return; const k=`${sid}|${start}|${end}`; salesMap.set(k,{store_id:sid,store_name:st,start,end});
+  });
+  const invMap=new Map();
+  db.product_inventory_imports.filter(r=>r.status!=='deleted').forEach(r=>{
+    const sid=Number(r.store_id); const st=getStore(sid)?.name||`CH ${sid}`; const start=dateOnly(r.period_start||r.snapshot_date), end=dateOnly(r.period_end||r.snapshot_date); if(!start)return;
+    const k=`${sid}|${start}|${end}`; invMap.set(k,{store_id:sid,store_name:st,start,end});
+  });
+  res.json({sales:Array.from(salesMap.values()).sort((a,b)=>String(b.start).localeCompare(String(a.start))||a.store_name.localeCompare(b.store_name,'vi')),inventory:Array.from(invMap.values()).sort((a,b)=>String(b.start).localeCompare(String(a.start))||a.store_name.localeCompare(b.store_name,'vi')),batches:batches.slice(0,100)});
+});
+
+app.get('/api/product-analytics/export.xlsx', requireAuth, (req,res)=>{
+  try{
+    const data=aggregateProductAnalytics(req.user,{store_id:req.query.store_id,start:req.query.start,end:req.query.end,q:req.query.q});
+    const rows=(data.rows||[]).map((r,i)=>({
+      stt:i+1,ten_san_pham:r.product_name||'',ban_pos:Number(r.pos_qty||0),ban_online:Number(r.online_qty||0),tong_ban:Number(r.sold_qty||0),doanh_thu:Number(r.revenue||0),so_luong_nhap:Number(r.import_qty||0),chuyen_kho_vao:Number(r.transfer_in_qty||0),chuyen_kho_ra:Number(r.transfer_out_qty||0),ton_cuoi_ky:Number(r.stock_qty||0),toc_do_pos_ngay:Number(r.pos_velocity||0),toc_do_online_ngay:Number(r.online_velocity||0),toc_do_tong_ngay:Number(r.velocity||0),so_luong_co_the_ban:Number(r.sellable_qty||0),du_tru_de_xuat:Number(r.reserve_recommended||0),days_of_cover:r.days_cover==null?'':Number(r.days_cover),ngay_nhap_gan_nhat:r.arrival_date||''
+    }));
+    const buffer=toExcelBuffer(rows,'Phan tich hang hoa');
+    res.header('Content-Type','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.attachment(`phan-tich-hang-hoa-${data.start}-${data.end}.xlsx`);res.send(buffer);
+  }catch(err){res.status(400).json({error:err.message||'Không thể tải Excel phân tích hàng hóa'});}
+});
+
 app.get('/api/product-analytics', requireAuth, (req,res)=>{
   try { res.json(aggregateProductAnalytics(req.user,{store_id:req.query.store_id,start:req.query.start,end:req.query.end,q:req.query.q})); }
   catch(err){ res.status(400).json({error:err.message||'Không thể tổng hợp hàng hóa'}); }
