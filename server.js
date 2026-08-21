@@ -3831,6 +3831,11 @@ function buildDailyReport(user, rawDate, rawStoreId) {
   const legacyStoreNote = report ? String(report.store_note || '').trim() : (storeDay ? String(storeDay.note || '').trim() : '');
   const morningSituation = report && report.store_situation_morning !== undefined ? String(report.store_situation_morning || '').trim() : (!report && legacyStoreNote ? legacyStoreNote : '');
   const eveningSituation = report && report.store_situation_evening !== undefined ? String(report.store_situation_evening || '').trim() : '';
+  const hasShiftCustomers = !!(report && ['customer_new_morning','customer_old_morning','customer_new_afternoon','customer_old_afternoon'].some(k => report[k] !== undefined));
+  const customerNewMorning = hasShiftCustomers ? toNumber(report.customer_new_morning, 0) : customerMetrics.customer_new_count;
+  const customerOldMorning = hasShiftCustomers ? toNumber(report.customer_old_morning, 0) : customerMetrics.customer_old_count;
+  const customerNewAfternoon = hasShiftCustomers ? toNumber(report.customer_new_afternoon, 0) : 0;
+  const customerOldAfternoon = hasShiftCustomers ? toNumber(report.customer_old_afternoon, 0) : 0;
   return {
     store_id: storeId,
     store_name: store.name,
@@ -3838,6 +3843,10 @@ function buildDailyReport(user, rawDate, rawStoreId) {
     customer_count: customerCount,
     customer_new_count: customerMetrics.customer_new_count,
     customer_old_count: customerMetrics.customer_old_count,
+    customer_new_morning: customerNewMorning,
+    customer_old_morning: customerOldMorning,
+    customer_new_afternoon: customerNewAfternoon,
+    customer_old_afternoon: customerOldAfternoon,
     store_note: legacyStoreNote,
     store_situation_morning: morningSituation,
     store_situation_evening: eveningSituation,
@@ -3871,6 +3880,12 @@ function dailyReportZaloText(payload) {
   const customerNew = Number(payload.customer_new_count || 0);
   const customerOld = Number(payload.customer_old_count || 0);
   const customerTotal = (customerNew || customerOld) ? customerNew + customerOld : Number(payload.customer_count || 0);
+  const newMorning = Number(payload.customer_new_morning || 0);
+  const oldMorning = Number(payload.customer_old_morning || 0);
+  const newAfternoon = Number(payload.customer_new_afternoon || 0);
+  const oldAfternoon = Number(payload.customer_old_afternoon || 0);
+  lines.push(`Khách ca sáng: Mới ${fmt(newMorning)} | Cũ ${fmt(oldMorning)}`);
+  lines.push(`Khách ca chiều: Mới ${fmt(newAfternoon)} | Cũ ${fmt(oldAfternoon)}`);
   lines.push(`Tổng: ${fmt(total.revenue)}đ | Bill ${fmt(total.bill_count)} | Món ${fmt(total.item_count)} | Khách mới ${fmt(customerNew)} | Khách cũ ${fmt(customerOld)} | Lượt khách tổng ${fmt(customerTotal)}`);
   lines.push(`UPT: ${total.bill_count ? Math.round((total.item_count / total.bill_count) * 100) / 100 : 0} | ATV: ${total.bill_count ? fmt(Math.round(total.revenue / total.bill_count)) + 'đ' : '0đ'} | ASP: ${total.item_count ? fmt(Math.round(total.revenue / total.item_count)) + 'đ' : '0đ'} | CR: ${customerTotal ? Math.round((total.bill_count / customerTotal) * 10000) / 100 : 0}%`);
   if (payload.store_situation_morning || payload.store_situation_evening || payload.store_note) {
@@ -3902,7 +3917,7 @@ app.get('/api/daily-report', requireAuth, (req, res) => {
 });
 
 app.post('/api/daily-report', requireAuth, requireAnyPerm('can_manage_daily_report','can_manage_sales'), (req, res) => {
-  const { store_id, report_date, customer_count, customer_new_count, customer_old_count, store_note, store_situation_morning, store_situation_evening, sales_entries, missing_size_items, product_feedback_items } = req.body || {};
+  const { store_id, report_date, customer_count, customer_new_count, customer_old_count, customer_new_morning, customer_old_morning, customer_new_afternoon, customer_old_afternoon, store_note, store_situation_morning, store_situation_evening, sales_entries, missing_size_items, product_feedback_items } = req.body || {};
   const storeId = isAllStoreRole(req.user) ? Number(store_id || getPrimaryStoreId(req.user)) : Number(getPrimaryStoreId(req.user));
   const store = getStore(storeId);
   if (!store) return res.status(400).json({ error: 'Cửa hàng không hợp lệ' });
@@ -3919,7 +3934,14 @@ app.post('/api/daily-report', requireAuth, requireAnyPerm('can_manage_daily_repo
   const morningSituation = String(store_situation_morning || '').trim();
   const eveningSituation = String(store_situation_evening || '').trim();
   const combinedStoreNote = String(store_note || [morningSituation ? `Ca sáng: ${morningSituation}` : '', eveningSituation ? `Ca tối: ${eveningSituation}` : ''].filter(Boolean).join('\n')).trim();
-  const dailyCustomerCounts = customerCountsFromInput(customer_count, customer_new_count, customer_old_count);
+  const shiftNewMorning = Math.max(0, toNumber(customer_new_morning, 0));
+  const shiftOldMorning = Math.max(0, toNumber(customer_old_morning, 0));
+  const shiftNewAfternoon = Math.max(0, toNumber(customer_new_afternoon, 0));
+  const shiftOldAfternoon = Math.max(0, toNumber(customer_old_afternoon, 0));
+  const hasShiftCustomerInput = [customer_new_morning, customer_old_morning, customer_new_afternoon, customer_old_afternoon].some(v => v !== undefined && v !== null && v !== '');
+  const dailyCustomerCounts = hasShiftCustomerInput
+    ? customerCountsFromInput(shiftNewMorning + shiftOldMorning + shiftNewAfternoon + shiftOldAfternoon, shiftNewMorning + shiftNewAfternoon, shiftOldMorning + shiftOldAfternoon)
+    : customerCountsFromInput(customer_count, customer_new_count, customer_old_count);
   upsertStoreSalesDay(storeId, d, dailyCustomerCounts.customer_count, combinedStoreNote, req.user.id, dailyCustomerCounts.customer_new_count, dailyCustomerCounts.customer_old_count);
 
   const missingItems = normalizeMissingSizeItems(missing_size_items);
@@ -3996,10 +4018,14 @@ app.post('/api/daily-report', requireAuth, requireAnyPerm('can_manage_daily_repo
     generatedFeedbackIds.push(id);
   });
 
-  const summaryPayload = { report_date: d, store_name: store.name, customer_count: dailyCustomerCounts.customer_count, customer_new_count: dailyCustomerCounts.customer_new_count, customer_old_count: dailyCustomerCounts.customer_old_count, store_note: combinedStoreNote, store_situation_morning: morningSituation, store_situation_evening: eveningSituation, sales_entries: cleanSales, missing_size_items: missingItems, product_feedback_items: feedbackItems };
+  const summaryPayload = { report_date: d, store_name: store.name, customer_count: dailyCustomerCounts.customer_count, customer_new_count: dailyCustomerCounts.customer_new_count, customer_old_count: dailyCustomerCounts.customer_old_count, customer_new_morning: shiftNewMorning, customer_old_morning: shiftOldMorning, customer_new_afternoon: shiftNewAfternoon, customer_old_afternoon: shiftOldAfternoon, store_note: combinedStoreNote, store_situation_morning: morningSituation, store_situation_evening: eveningSituation, sales_entries: cleanSales, missing_size_items: missingItems, product_feedback_items: feedbackItems };
   row.customer_new_count = dailyCustomerCounts.customer_new_count;
   row.customer_old_count = dailyCustomerCounts.customer_old_count;
   row.customer_count = dailyCustomerCounts.customer_count;
+  row.customer_new_morning = shiftNewMorning;
+  row.customer_old_morning = shiftOldMorning;
+  row.customer_new_afternoon = shiftNewAfternoon;
+  row.customer_old_afternoon = shiftOldAfternoon;
   row.store_note = combinedStoreNote;
   row.store_situation_morning = morningSituation;
   row.store_situation_evening = eveningSituation;

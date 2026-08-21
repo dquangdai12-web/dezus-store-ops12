@@ -5476,3 +5476,22 @@ body{letter-spacing:-.008em}
 .loyalty-paste-zone b{font-size:12.5px;color:#24364a}.loyalty-paste-zone span{font-size:11.5px;color:#667085}
 .loyalty-paste-preview{display:flex;align-items:center;gap:8px;margin-top:6px}.loyalty-paste-preview:empty{display:none}.loyalty-paste-preview img{width:54px;height:54px;object-fit:cover;border-radius:10px;border:1px solid #d8e2ec}.loyalty-paste-preview span{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media(max-width:860px){.loyalty-paste-zone{min-height:72px}.loyalty-card .grid.four{grid-template-columns:1fr!important}.loyalty-evidence-field{grid-column:1/-1!important}}
+
+
+/* V4.156 daily report customer split by shift */
+.daily-customer-shifts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:12px}
+.daily-shift-customer-card,.daily-shift-total-card{border:1px solid #dbe4ee;border-radius:16px;background:#fbfcfd;padding:13px}
+.daily-shift-customer-card .section-title{margin-bottom:8px}.daily-shift-customer-card .section-title h3{font-size:13px;margin:0}.daily-shift-total-card{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;background:#f4f8fb}
+@media(max-width:860px){.daily-customer-shifts{grid-template-columns:1fr}.daily-shift-total-card{grid-template-columns:1fr 1fr}.daily-shift-total-card .field:last-child{grid-column:1/-1}}
+
+
+/* V4.157 remove all title/section explanatory copy globally */
+.page-title>p{display:none!important}
+.card>h2+p.hint,
+.card>h3+p.hint,
+.card>h4+p.hint,
+.card>.toolbar+p.hint,
+.card>.section-title+p.hint,
+section.card>h2+p.hint,
+section.card>h3+p.hint,
+section.card>.toolbar+p.hint{display:none!important}
