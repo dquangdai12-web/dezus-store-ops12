@@ -1,0 +1,7 @@
+DEZUS STORE OPS v4.171
+
+Cập nhật:
+1. Canh lại tiêu đề cột và dữ liệu trong bảng Phân tích hàng hóa cho thẳng hàng.
+2. Cột Tên sản phẩm giữ căn trái.
+3. Các cột số liệu căn giữa đồng bộ với tiêu đề.
+4. Icon mũi tên sort đặt cố định bên phải tiêu đề để không làm lệch chữ.
