@@ -1,7 +1,7 @@
 {
-  "name": "dezus-store-ops-v4-14-training-quiz",
-  "version": "4.132.0",
-  "description": "Dezus Store Ops - Đào tạo sản phẩm có bài kiểm tra trắc nghiệm, hạn học và trừ điểm khi không hoàn thành.",
+  "name": "dezus-store-ops-v4-141-product-analytics",
+  "version": "4.155.0",
+  "description": "Dezus Store Ops - Phân tích hàng hóa theo tên sản phẩm từ file Sapo POS, bestseller, tốc độ bán, nhập và tồn.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

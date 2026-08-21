@@ -1,0 +1,30 @@
+DEZUS STORE OPS V4.145 - DỮ LIỆU HÀNG HÓA TỪ SAPO
+
+CHỈ ADMIN ĐƯỢC UPLOAD FILE.
+
+1) FILE SỐ BÁN
+Sapo > Báo cáo > Báo cáo doanh thu theo sản phẩm > Xuất file.
+- Chọn đúng khoảng thời gian trước khi xuất.
+- Khi upload vào Dezus Store Ops, chọn Từ ngày / Đến ngày giống hệt kỳ trên Sapo.
+- POS được tính riêng.
+- Tất cả nguồn khác POS được tính Online.
+- Dòng có Tổng doanh thu / Doanh thu thuần / Giá trị = 0 bị loại khỏi phân tích Top và tốc độ bán.
+- Dữ liệu được gộp theo TÊN SẢN PHẨM, không theo SKU/size/màu.
+
+2) FILE KHO / TỒN
+Sapo > Báo cáo > Báo cáo xuất nhập tồn > Mẫu chi tiết > Xuất báo cáo.
+Nên có các cột: Sản phẩm, Phiên bản, Mã SKU, Chi nhánh, Đầu kỳ, Nhập hàng, Trả hàng bán, Chuyển kho, Kiểm kho, Nhập khác, Tổng SL nhập, Bán hàng, Trả hàng nhập, Chuyển kho, Kiểm kho, Xuất khác, Tổng SL xuất, Tồn cuối kỳ.
+- File này CHỈ dùng cho nhập / xuất / chuyển kho / tồn.
+- Cột Bán hàng trong file Xuất nhập tồn KHÔNG được dùng để tính số bán trên dashboard.
+- Số bán luôn lấy từ file Doanh thu theo sản phẩm.
+- Điều chuyển kho không làm tăng số bán.
+- Nếu file có cột Chi nhánh, chọn "Tự nhận chi nhánh trong file".
+- Nếu file không có cột Chi nhánh, hãy xuất riêng từng chi nhánh và chọn đúng cửa hàng khi upload.
+
+3) CÁCH XEM
+Admin/Văn phòng: Toàn hệ thống hoặc từng chi nhánh.
+Cửa hàng: chỉ cửa hàng của tài khoản.
+Bộ lọc: Hôm nay / Tháng này / Tháng trước / Tùy chọn ngày / tìm theo tên sản phẩm.
+
+LƯU Ý VỀ NGÀY VỀ HÀNG
+Báo cáo Xuất nhập tồn là dữ liệu theo kỳ, không có ngày nhập chi tiết từng giao dịch. Web chỉ có thể xác định gần đúng đợt hàng bắt đầu trong kỳ khi đầu kỳ = 0 và có Nhập hàng > 0. Muốn ngày nhập chính xác từng giao dịch phải dùng thêm Sổ kho, nhưng Sổ kho không được dùng để tính số bán.

@@ -210,9 +210,9 @@ function defaultDb() {
   const permissions = users.map(u => ({ user_id: u.id, ...ROLE_DEFAULTS[u.role] }));
   return {
     version: 2,
-    nextIds: { stores: 6, users: 7, tasks: 1, task_assignees: 1, violations: 1, violation_catalog_custom: 1, assessments: 1, assessment_items: 1, sales: 1, sales_targets: 1, sales_daily_targets: 1, sales_store_days: 1, bonuses: 1, documents: 1, shifts: 6, work_schedules: 1, orders: 1, online_orders: 1, product_feedback: 1, product_collections: 1, product_collection_items: 1, product_trainings: 1, product_training_attempts: 1, product_training_reads: 1, weekly_reports: 1, daily_reports: 1, cdp_ojti: 1 },
+    nextIds: { stores: 6, users: 7, tasks: 1, task_assignees: 1, violations: 1, violation_catalog_custom: 1, assessments: 1, assessment_items: 1, sales: 1, sales_targets: 1, sales_daily_targets: 1, sales_store_days: 1, bonuses: 1, documents: 1, shifts: 6, work_schedules: 1, orders: 1, online_orders: 1, product_feedback: 1, product_collections: 1, product_collection_items: 1, product_trainings: 1, product_training_attempts: 1, product_training_reads: 1, weekly_reports: 1, daily_reports: 1, cdp_ojti: 1, product_sales_imports: 1, product_inventory_imports: 1, product_import_batches: 1, loyalty_claims: 1, ggnv_claims: 1, bill_cancel_claims: 1 },
     stores, users, permissions, shifts,
-    tasks: [], task_assignees: [], violations: [], violation_catalog_custom: [], assessments: [], assessment_items: [], sales: [], sales_targets: [], sales_daily_targets: [], sales_store_days: [], bonuses: [], documents: [], orders: [], online_orders: [], product_feedback: [], product_collections: [], product_collection_items: [], product_trainings: [], product_training_attempts: [], product_training_reads: [], weekly_reports: [], daily_reports: [], cdp_ojti: [], work_schedules: []
+    tasks: [], task_assignees: [], violations: [], violation_catalog_custom: [], assessments: [], assessment_items: [], sales: [], sales_targets: [], sales_daily_targets: [], sales_store_days: [], bonuses: [], documents: [], orders: [], online_orders: [], product_feedback: [], product_collections: [], product_collection_items: [], product_trainings: [], product_training_attempts: [], product_training_reads: [], weekly_reports: [], daily_reports: [], cdp_ojti: [], product_sales_imports: [], product_inventory_imports: [], product_import_batches: [], loyalty_claims: [], ggnv_claims: [], bill_cancel_claims: [], work_schedules: []
   };
 }
 
@@ -257,6 +257,12 @@ function loadDb() {
       weekly_reports: parsed.weekly_reports || [],
       daily_reports: parsed.daily_reports || [],
       cdp_ojti: parsed.cdp_ojti || [],
+      product_sales_imports: parsed.product_sales_imports || [],
+      product_inventory_imports: parsed.product_inventory_imports || [],
+      product_import_batches: parsed.product_import_batches || [],
+      loyalty_claims: parsed.loyalty_claims || [],
+      ggnv_claims: parsed.ggnv_claims || [],
+      bill_cancel_claims: parsed.bill_cancel_claims || [],
       shifts: parsed.shifts || base.shifts,
       work_schedules: parsed.work_schedules || []
     };
@@ -1669,18 +1675,45 @@ function upsertStoreSalesDay(storeId, saleDate, customerCount, note, actorId, cu
   return row;
 }
 
+function approvedLoyaltyAmount(userId, saleDate) {
+  const d = dateOnly(saleDate || new Date());
+  return (db.loyalty_claims || [])
+    .filter(x => x.status === 'approved' && Number(x.user_id) === Number(userId) && String(x.sale_date) === d)
+    .reduce((sum, x) => sum + Number(x.discount_amount || 0), 0);
+}
+
+function recomputeSalesRevenueWithLoyalty(userId, saleDate, actorId = null) {
+  const employee = getUser(Number(userId));
+  if (!employee) return null;
+  const d = dateOnly(saleDate || new Date());
+  let row = (db.sales || []).find(sa => Number(sa.user_id) === Number(userId) && String(sa.sale_date) === d);
+  const loyalty = approvedLoyaltyAmount(userId, d);
+  if (!row && loyalty <= 0) return null;
+  if (!row) {
+    row = { id: nextId('sales'), user_id: employee.id, store_id: getPrimaryStoreId(employee), sale_date: d, base_revenue: 0, revenue: loyalty, bill_count: 0, item_count: 0, note: '', created_by: actorId, created_at: nowIso(), updated_by: actorId, updated_at: nowIso() };
+    db.sales.push(row);
+    return row;
+  }
+  if (row.base_revenue === undefined || row.base_revenue === null) row.base_revenue = Math.max(0, Number(row.revenue || 0) - loyalty);
+  row.revenue = Number(row.base_revenue || 0) + loyalty;
+  row.updated_by = actorId || row.updated_by;
+  row.updated_at = nowIso();
+  return row;
+}
+
 function upsertSalesRow(employee, saleDate, payload, actorId) {
   const d = dateOnly(saleDate || new Date());
   let row = (db.sales || []).find(sa => Number(sa.user_id) === Number(employee.id) && String(sa.sale_date) === d);
   if (row) {
-    row.revenue = toNumber(payload.revenue, 0);
+    row.base_revenue = toNumber(payload.revenue, 0);
+    row.revenue = row.base_revenue + approvedLoyaltyAmount(employee.id, d);
     row.bill_count = toNumber(payload.bill_count, 0);
     row.item_count = toNumber(payload.item_count, 0);
     row.note = payload.note || '';
     row.updated_by = actorId;
     row.updated_at = nowIso();
   } else {
-    row = { id: nextId('sales'), user_id: employee.id, store_id: employee.store_id, sale_date: d, revenue: toNumber(payload.revenue, 0), bill_count: toNumber(payload.bill_count, 0), item_count: toNumber(payload.item_count, 0), note: payload.note || '', created_by: actorId, created_at: nowIso(), updated_by: actorId, updated_at: nowIso() };
+    row = { id: nextId('sales'), user_id: employee.id, store_id: employee.store_id, sale_date: d, base_revenue: toNumber(payload.revenue, 0), revenue: toNumber(payload.revenue, 0) + approvedLoyaltyAmount(employee.id, d), bill_count: toNumber(payload.bill_count, 0), item_count: toNumber(payload.item_count, 0), note: payload.note || '', created_by: actorId, created_at: nowIso(), updated_by: actorId, updated_at: nowIso() };
     db.sales.push(row);
   }
   return row;
@@ -2706,6 +2739,175 @@ app.get('/api/checklist/assessments/:id', requireAuth, (req, res) => {
   res.json({ assessment: a, items });
 });
 
+
+function ggnvPublicRow(x) {
+  const emp = getUser(Number(x.user_id));
+  const store = getStore(Number(x.store_id));
+  return { ...clone(x), employee_name: x.employee_name || emp?.full_name || '', store_name: store?.name || '' };
+}
+function canSeeGGNV(user, row) {
+  if (user?.role === 'admin' || user?.role === 'office') return true;
+  return userHasStore(user, row.store_id);
+}
+app.get('/api/ggnv', requireAuth, (req, res) => {
+  db.ggnv_claims = db.ggnv_claims || [];
+  const storeId = Number(req.query.store_id || 0);
+  let rows = db.ggnv_claims.filter(x => canSeeGGNV(req.user, x));
+  if (storeId) {
+    if (!(req.user?.role === 'admin' || req.user?.role === 'office') && !userHasStore(req.user, storeId)) return res.status(403).json({ error:'Không có quyền xem GGNV cửa hàng này' });
+    rows = rows.filter(x => Number(x.store_id) === storeId);
+  }
+  rows.sort((a,b) => String(b.sale_date || '').localeCompare(String(a.sale_date || '')) || Number(b.id)-Number(a.id));
+  res.json({ rows: rows.map(ggnvPublicRow) });
+});
+app.post('/api/ggnv', requireAuth, upload.single('evidence'), (req, res) => {
+  const storeId = Number(req.body?.store_id || getPrimaryStoreId(req.user));
+  if (!storeId || !getStore(storeId)) return res.status(400).json({ error:'Cửa hàng không hợp lệ' });
+  if (!(req.user?.role === 'admin' || req.user?.role === 'office') && !userHasStore(req.user, storeId)) return res.status(403).json({ error:'Không có quyền tạo GGNV cửa hàng này' });
+  const employeeName = String(req.body?.employee_name || '').trim();
+  const saleDate = dateOnly(req.body?.sale_date);
+  const orderNumber = String(req.body?.order_number || '').trim();
+  const orderValue = toNumber(req.body?.order_value, 0);
+  const discountRate = toNumber(req.body?.discount_rate, 0);
+  if (!saleDate) return res.status(400).json({ error:'Chọn ngày' });
+  if (!employeeName) return res.status(400).json({ error:'Nhập tên nhân viên' });
+  if (!orderNumber) return res.status(400).json({ error:'Nhập số đơn' });
+  if (!(orderValue > 0)) return res.status(400).json({ error:'Giá trị đơn hàng phải lớn hơn 0' });
+  if (!(discountRate >= 0 && discountRate <= 100)) return res.status(400).json({ error:'Mức giảm phải từ 0 đến 100%' });
+  if (!req.file) return res.status(400).json({ error:'Vui lòng tải hoặc dán ảnh chứng từ' });
+  db.ggnv_claims = db.ggnv_claims || [];
+  const row = { id:nextId('ggnv_claims'), store_id:storeId, user_id:null, employee_name:employeeName, sale_date:saleDate, order_number:orderNumber, order_value:orderValue, discount_rate:discountRate, evidence_path:`/uploads/${req.file.filename}`, created_by:req.user.id, created_at:nowIso(), updated_at:nowIso() };
+  db.ggnv_claims.push(row); saveDb(); res.json({ ok:true, row:ggnvPublicRow(row) });
+});
+
+function billCancelPublicRow(x) {
+  const store = getStore(Number(x.store_id));
+  return { ...clone(x), store_name: store?.name || '' };
+}
+function canSeeBillCancel(user, row) {
+  if (user?.role === 'admin' || user?.role === 'office') return true;
+  return userHasStore(user, row.store_id);
+}
+app.get('/api/bill-cancel', requireAuth, (req, res) => {
+  db.bill_cancel_claims = db.bill_cancel_claims || [];
+  const storeId = Number(req.query.store_id || 0);
+  let rows = db.bill_cancel_claims.filter(x => canSeeBillCancel(req.user, x));
+  if (storeId) {
+    if (!(req.user?.role === 'admin' || req.user?.role === 'office') && !userHasStore(req.user, storeId)) return res.status(403).json({ error:'Không có quyền xem Bill hủy cửa hàng này' });
+    rows = rows.filter(x => Number(x.store_id) === storeId);
+  }
+  rows.sort((a,b) => String(b.sale_date || '').localeCompare(String(a.sale_date || '')) || Number(b.id)-Number(a.id));
+  res.json({ rows: rows.map(billCancelPublicRow) });
+});
+app.post('/api/bill-cancel', requireAuth, (req, res) => {
+  const storeId = Number(req.body?.store_id || getPrimaryStoreId(req.user));
+  if (!storeId || !getStore(storeId)) return res.status(400).json({ error:'Cửa hàng không hợp lệ' });
+  if (!(req.user?.role === 'admin' || req.user?.role === 'office') && !userHasStore(req.user, storeId)) return res.status(403).json({ error:'Không có quyền tạo Bill hủy cửa hàng này' });
+  const saleDate = dateOnly(req.body?.sale_date);
+  const employeeName = String(req.body?.employee_name || '').trim();
+  const invoiceNumber = String(req.body?.invoice_number || '').trim();
+  const reason = String(req.body?.reason || '').trim();
+  const replacementInvoiceNumber = String(req.body?.replacement_invoice_number || '').trim();
+  if (!saleDate) return res.status(400).json({ error:'Chọn ngày' });
+  if (!employeeName) return res.status(400).json({ error:'Nhập tên nhân viên' });
+  if (!invoiceNumber) return res.status(400).json({ error:'Nhập số hóa đơn' });
+  if (!reason) return res.status(400).json({ error:'Nhập lý do hủy bill' });
+  db.bill_cancel_claims = db.bill_cancel_claims || [];
+  const row = { id:nextId('bill_cancel_claims'), store_id:storeId, sale_date:saleDate, employee_name:employeeName, invoice_number:invoiceNumber, reason, replacement_invoice_number:replacementInvoiceNumber, created_by:req.user.id, created_at:nowIso(), updated_at:nowIso() };
+  db.bill_cancel_claims.push(row); saveDb(); res.json({ ok:true, row:billCancelPublicRow(row) });
+});
+
+function canReviewLoyalty(user) { return user?.role === 'admin' || user?.role === 'office'; }
+function loyaltyPublicRow(x) {
+  const emp = getUser(Number(x.user_id));
+  const store = getStore(Number(x.store_id));
+  const reviewer = getUser(Number(x.reviewed_by));
+  return { ...clone(x), employee_name: emp?.full_name || '', store_name: store?.name || '', reviewer_name: reviewer?.full_name || '' };
+}
+function canSeeLoyalty(user, row) {
+  if (canReviewLoyalty(user)) return true;
+  return userHasStore(user, row.store_id);
+}
+
+app.get('/api/loyalty', requireAuth, (req, res) => {
+  db.loyalty_claims = db.loyalty_claims || [];
+  const storeId = Number(req.query.store_id || 0);
+  let rows = db.loyalty_claims.filter(x => canSeeLoyalty(req.user, x));
+  if (storeId) {
+    if (!canReviewLoyalty(req.user) && !userHasStore(req.user, storeId)) return res.status(403).json({ error: 'Không có quyền xem Loyalty cửa hàng này' });
+    rows = rows.filter(x => Number(x.store_id) === storeId);
+  }
+  rows.sort((a,b) => (a.status === 'pending' ? 0 : 1) - (b.status === 'pending' ? 0 : 1) || String(b.sale_date || '').localeCompare(String(a.sale_date || '')) || Number(b.id)-Number(a.id));
+  res.json({ rows: rows.map(loyaltyPublicRow), can_review: canReviewLoyalty(req.user), can_edit: canReviewLoyalty(req.user) });
+});
+
+
+app.get('/api/loyalty/export.xlsx', requireAuth, (req, res) => {
+  if (!canReviewLoyalty(req.user)) return res.status(403).json({ error: 'Chỉ Admin/Văn phòng được tải Excel Loyalty' });
+  const storeId = Number(req.query.store_id || 0);
+  let rows = (db.loyalty_claims || []).filter(x => canSeeLoyalty(req.user, x));
+  if (storeId) rows = rows.filter(x => Number(x.store_id) === storeId);
+  rows.sort((a,b) => (a.status === 'pending' ? 0 : 1) - (b.status === 'pending' ? 0 : 1) || String(b.sale_date || '').localeCompare(String(a.sale_date || '')) || Number(b.id)-Number(a.id));
+  const out = rows.map(x => { const r = loyaltyPublicRow(x); return { trang_thai: r.status === 'approved' ? 'Đã duyệt' : 'Chờ duyệt', ngay: r.sale_date || '', nhan_vien: r.employee_name || '', cua_hang: r.store_name || '', so_hoa_don: r.invoice_number || '', so_tien_giam: Number(r.discount_amount || 0), chung_tu: r.evidence_path || '', nguoi_duyet: r.reviewer_name || '', ngay_duyet: r.reviewed_at || '', ngay_tao: r.created_at || '' }; });
+  const buffer = toExcelBuffer(out, 'Loyalty');
+  res.header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  res.attachment(`loyalty-${storeId ? (getStore(storeId)?.name || storeId) : 'tat-ca-cua-hang'}-${dateOnly(new Date())}.xlsx`);
+  res.send(buffer);
+});
+
+app.post('/api/loyalty', requireAuth, upload.single('evidence'), (req, res) => {
+  const storeId = Number(req.body?.store_id || getPrimaryStoreId(req.user));
+  if (!storeId || !getStore(storeId)) return res.status(400).json({ error: 'Cửa hàng không hợp lệ' });
+  if (!canReviewLoyalty(req.user) && !userHasStore(req.user, storeId)) return res.status(403).json({ error: 'Không có quyền tạo Loyalty cửa hàng này' });
+  const employee = getActiveUser(Number(req.body?.user_id));
+  if (!employee || employee.role !== 'employee' || Number(getPrimaryStoreId(employee)) !== storeId) return res.status(400).json({ error: 'Nhân viên không thuộc cửa hàng đã chọn' });
+  const saleDate = dateOnly(req.body?.sale_date);
+  const invoice = String(req.body?.invoice_number || '').trim();
+  const amount = toNumber(req.body?.discount_amount, 0);
+  if (!invoice) return res.status(400).json({ error: 'Nhập số hóa đơn' });
+  if (!(amount > 0)) return res.status(400).json({ error: 'Số tiền giảm phải lớn hơn 0' });
+  if (!req.file) return res.status(400).json({ error: 'Vui lòng tải ảnh chứng từ' });
+  const evidencePath = `/uploads/${req.file.filename}`;
+  db.loyalty_claims = db.loyalty_claims || [];
+  const row = { id: nextId('loyalty_claims'), store_id: storeId, user_id: employee.id, sale_date: saleDate, invoice_number: invoice, discount_amount: amount, evidence_path: evidencePath, status: 'pending', created_by: req.user.id, created_at: nowIso(), updated_by: req.user.id, updated_at: nowIso(), reviewed_by: null, reviewed_at: null };
+  db.loyalty_claims.push(row);
+  saveDb();
+  res.json({ ok:true, row: loyaltyPublicRow(row) });
+});
+
+app.patch('/api/loyalty/:id', requireAuth, upload.single('evidence'), (req, res) => {
+  if (!canReviewLoyalty(req.user)) return res.status(403).json({ error: 'Chỉ Admin/Văn phòng được sửa đơn Loyalty' });
+  const row = (db.loyalty_claims || []).find(x => Number(x.id) === Number(req.params.id));
+  if (!row) return res.status(404).json({ error: 'Không tìm thấy đơn Loyalty' });
+  const oldUserId = row.user_id, oldDate = row.sale_date;
+  const storeId = Number(req.body?.store_id || row.store_id);
+  const employee = getUser(Number(req.body?.user_id || row.user_id));
+  if (!getStore(storeId) || !employee || employee.role !== 'employee' || Number(getPrimaryStoreId(employee)) !== storeId) return res.status(400).json({ error: 'Cửa hàng/nhân viên không hợp lệ' });
+  const amount = toNumber(req.body?.discount_amount ?? row.discount_amount, 0);
+  if (!(amount > 0)) return res.status(400).json({ error: 'Số tiền giảm phải lớn hơn 0' });
+  const invoice = String(req.body?.invoice_number ?? row.invoice_number).trim();
+  if (!invoice) return res.status(400).json({ error: 'Nhập số hóa đơn' });
+  row.store_id = storeId; row.user_id = employee.id; row.sale_date = dateOnly(req.body?.sale_date || row.sale_date); row.invoice_number = invoice; row.discount_amount = amount;
+  if (req.file) row.evidence_path = `/uploads/${req.file.filename}`;
+  row.updated_by = req.user.id; row.updated_at = nowIso();
+  if (row.status === 'approved') {
+    recomputeSalesRevenueWithLoyalty(oldUserId, oldDate, req.user.id);
+    recomputeSalesRevenueWithLoyalty(row.user_id, row.sale_date, req.user.id);
+  }
+  saveDb();
+  res.json({ ok:true, row: loyaltyPublicRow(row) });
+});
+
+app.post('/api/loyalty/:id/approve', requireAuth, (req, res) => {
+  if (!canReviewLoyalty(req.user)) return res.status(403).json({ error: 'Chỉ Admin/Văn phòng được duyệt Loyalty' });
+  const row = (db.loyalty_claims || []).find(x => Number(x.id) === Number(req.params.id));
+  if (!row) return res.status(404).json({ error: 'Không tìm thấy đơn Loyalty' });
+  row.status = 'approved'; row.reviewed_by = req.user.id; row.reviewed_at = nowIso(); row.updated_by = req.user.id; row.updated_at = nowIso();
+  recomputeSalesRevenueWithLoyalty(row.user_id, row.sale_date, req.user.id);
+  saveDb();
+  res.json({ ok:true, row: loyaltyPublicRow(row) });
+});
+
 app.post('/api/sales', requireAuth, requireAnyPerm('can_manage_total_sales','can_manage_sales'), (req, res) => {
   const { user_id, sale_date, revenue, bill_count, item_count, customer_count, customer_new_count, customer_old_count, note } = req.body || {};
   const employee = getActiveUser(Number(user_id));
@@ -2747,6 +2949,479 @@ function proratedTargetForUser(userId, start, end) {
     return sum + (Number(t) / Math.max(daysInMonthKey(month), 1));
   }, 0);
 }
+
+
+// ==== PRODUCT ANALYTICS / SAPO FILE IMPORT (V4.141) ====
+function stripVietnamese(value) {
+  return String(value ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D');
+}
+function normalizeExcelHeader(value) {
+  return stripVietnamese(value).toLowerCase().trim().replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ');
+}
+function normalizeProductName(value) {
+  return String(value ?? '').trim().replace(/\s+/g, ' ');
+}
+function productNameKey(value) { return stripVietnamese(normalizeProductName(value)).toLowerCase(); }
+function excelRowValue(row, aliases) {
+  const entries = Object.entries(row || {});
+  const normalized = entries.map(([k,v]) => [normalizeExcelHeader(k), v]);
+  const aliasNorm = aliases.map(normalizeExcelHeader);
+  for (const alias of aliasNorm) {
+    const exact = normalized.find(([k]) => k === alias);
+    if (exact) return exact[1];
+  }
+  for (const alias of aliasNorm) {
+    const partial = normalized.find(([k]) => k.includes(alias) || alias.includes(k));
+    if (partial && partial[0].length >= 3) return partial[1];
+  }
+  return undefined;
+}
+function parseExcelDateValue(value) {
+  if (value === null || value === undefined || value === '') return '';
+  if (value instanceof Date && !Number.isNaN(value.getTime())) return value.toISOString().slice(0,10);
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    const d = XLSX.SSF.parse_date_code(value);
+    if (d && d.y && d.m && d.d) return `${d.y}-${String(d.m).padStart(2,'0')}-${String(d.d).padStart(2,'0')}`;
+  }
+  const raw=String(value).trim();
+  let m=raw.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})/);
+  if (m) return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+  m=raw.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})/);
+  if (m) return `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
+  const d=new Date(raw);
+  return Number.isNaN(d.getTime()) ? '' : d.toISOString().slice(0,10);
+}
+function parseMoneyLoose(value) {
+  if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
+  let raw=String(value ?? '').trim().replace(/\s/g,'').replace(/₫|đ|vnd/ig,'').replace(/[^0-9,.-]/g,'');
+  if (!raw) return 0;
+  if (raw.includes(',') && raw.includes('.')) {
+    const lastComma=raw.lastIndexOf(','), lastDot=raw.lastIndexOf('.');
+    if (lastComma > lastDot) raw=raw.replace(/\./g,'').replace(',','.'); else raw=raw.replace(/,/g,'');
+  } else if (raw.includes(',')) {
+    const parts=raw.split(','); raw = parts.length===2 && parts[1].length<=2 ? raw.replace(',','.') : raw.replace(/,/g,'');
+  } else if (/^-?\d{1,3}(\.\d{3})+$/.test(raw)) raw=raw.replace(/\./g,'');
+  const n=Number(raw); return Number.isFinite(n)?n:0;
+}
+function storeFromImportedName(name) {
+  const key=normalizeExcelHeader(name);
+  if (!key) return null;
+  return (db.stores || []).find(st => {
+    const sk=normalizeExcelHeader(st.name);
+    return sk===key || sk.includes(key) || key.includes(sk);
+  }) || null;
+}
+function effectiveProductStoreId(user, requested) {
+  if (isAllStoreRole(user)) {
+    if (String(requested||'').toLowerCase()==='all') return 'all';
+    const n=Number(requested||0); return n && getStore(n) ? n : 'all';
+  }
+  return Number(getPrimaryStoreId(user) || 0);
+}
+function canImportProductFiles(user) { return user?.role === 'admin'; }
+function readExcelRows(filePath) {
+  const wb=XLSX.readFile(filePath,{cellDates:true,raw:false});
+  const rows=[];
+  wb.SheetNames.forEach(sheetName => {
+    const ws=wb.Sheets[sheetName];
+    const part=XLSX.utils.sheet_to_json(ws,{defval:'',raw:true});
+    part.forEach(r=>rows.push(r));
+  });
+  return rows;
+}
+
+function readInventoryDetailRows(filePath) {
+  const wb=XLSX.readFile(filePath,{cellDates:true,raw:false});
+  const out=[];
+  wb.SheetNames.forEach(sheetName=>{
+    const ws=wb.Sheets[sheetName];
+    const matrix=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:true});
+    if(!matrix.length)return;
+    let headerRow=-1;
+    for(let i=0;i<Math.min(matrix.length,30);i++){
+      const line=(matrix[i]||[]).map(v=>normalizeExcelHeader(v));
+      const txt=line.join(' | ');
+      if(txt.includes('san pham') && txt.includes('ma sku') && (txt.includes('so luong nhap')||txt.includes('dau ky'))){headerRow=i;break;}
+    }
+    if(headerRow<0){
+      // fallback for exported files where first header row is already flattened
+      const part=XLSX.utils.sheet_to_json(ws,{defval:'',raw:true});
+      part.forEach(r=>out.push(r));
+      return;
+    }
+    const h1=matrix[headerRow]||[], h2=matrix[headerRow+1]||[];
+    let group='';
+    const headers=h1.map((v,i)=>{
+      const top=String(v??'').trim();
+      const sub=String(h2[i]??'').trim();
+      if(top) group=top;
+      const topNorm=normalizeExcelHeader(top), groupNorm=normalizeExcelHeader(group), subNorm=normalizeExcelHeader(sub);
+      // fixed single columns must not inherit a previous group header
+      const single=['stt','san pham','phien ban','ma sku','chi nhanh'];
+      if(topNorm && single.includes(topNorm)) return top;
+      if(sub && groupNorm && !single.includes(groupNorm)) return `${group} ${sub}`.trim();
+      return top || sub || `Cột ${i+1}`;
+    });
+    const hasSubHeader=(h2||[]).some(v=>['so luong','nhap hang','tra hang ban','chuyen kho','kiem kho','nhap khac','ban hang','tra hang nhap','xuat khac'].includes(normalizeExcelHeader(v)));
+    const start=headerRow+(hasSubHeader?2:1);
+    for(let r=start;r<matrix.length;r++){
+      const arr=matrix[r]||[];
+      if(!arr.some(v=>String(v??'').trim()!==''))continue;
+      const obj={};headers.forEach((h,i)=>obj[h]=arr[i]);
+      out.push(obj);
+    }
+  });
+  return out;
+}
+
+function readLedgerRows(filePath) {
+  const wb=XLSX.readFile(filePath,{cellDates:true,raw:false});
+  const out=[];
+  wb.SheetNames.forEach(sheetName=>{
+    const ws=wb.Sheets[sheetName];
+    const matrix=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:true});
+    if(!matrix.length)return;
+    let headerRow=0;
+    for(let i=0;i<Math.min(matrix.length,20);i++){
+      const txt=(matrix[i]||[]).map(v=>normalizeExcelHeader(v)).join(' | ');
+      if(txt.includes('ngay ghi nhan')&&txt.includes('san pham')){headerRow=i;break;}
+    }
+    const h1=matrix[headerRow]||[], h2=matrix[headerRow+1]||[];
+    const headers=h1.map((v,i)=>{
+      const a=String(v??'').trim(), b=String(h2[i]??'').trim();
+      if(a && b && normalizeExcelHeader(b)!==normalizeExcelHeader(a)) return `${a} ${b}`.trim();
+      return a || b || `Cột ${i+1}`;
+    });
+    const secondLooksHeader=(h2||[]).some(v=>normalizeExcelHeader(v)==='so luong') && (h1||[]).some(v=>['nhap kho','xuat kho','ton kho sau giao dich'].includes(normalizeExcelHeader(v)));
+    const start=headerRow+(secondLooksHeader?2:1);
+    for(let r=start;r<matrix.length;r++){
+      const arr=matrix[r]||[];
+      if(!arr.some(v=>String(v??'').trim()!==''))continue;
+      const obj={}; headers.forEach((h,i)=>obj[h]=arr[i]); out.push(obj);
+    }
+  });
+  return out;
+}
+function ledgerMovementType(desc, transaction='') {
+  const d=normalizeExcelHeader(desc), t=normalizeExcelHeader(transaction);
+  if(d.includes('nhan hang tra lai')||d.includes('tra lai')||d.includes('hoan hang')) return 'return';
+  if(d.includes('xuat kho don hang')||d.includes('ban hang')||t.includes('don hang')) return 'sale';
+  if(d.includes('nhap kho')||d.includes('nhap hang')||d.includes('nhan chuyen')||d.includes('chuyen kho den')||d.includes('nhan hang')) return 'inbound';
+  if(d.includes('xuat kho')||d.includes('chuyen kho')||d.includes('kiem ke')||d.includes('dieu chinh')) return 'outbound';
+  return 'other';
+}
+function ledgerChannel(value){
+  const k=normalizeExcelHeader(value);
+  if(!k)return 'UNKNOWN';
+  return k==='pos'||k.includes('pos')?'POS':'ONLINE';
+}
+function aggregateProductLedgerAnalytics(user, opts={}) {
+  db.product_stock_ledger=db.product_stock_ledger||[];
+  const {start,end,endExclusive}=productAnalyticsRange(opts.start,opts.end);
+  const scope=effectiveProductStoreId(user,opts.store_id);
+  const storeAllowed=id=>scope==='all'?true:Number(id)===Number(scope);
+  const searchKey=normalizeExcelHeader(opts.q||'');
+  const all=(db.product_stock_ledger||[]).filter(r=>r.status!=='deleted'&&storeAllowed(r.store_id)&&r.record_date<=end);
+  const grouped=new Map(), latestSkuStock=new Map();
+  const rowFor=(r)=>{
+    const key=r.product_key||productNameKey(r.product_name);
+    if(!grouped.has(key)) grouped.set(key,{product_key:key,product_name:r.product_name||'',pos_qty:0,online_qty:0,unknown_qty:0,sold_qty:0,return_qty:0,import_qty:0,export_qty:0,non_sale_export_qty:0,revenue:0,value_known:false,stock_qty:0,latest_arrival_date:'',sale_dates:new Set(),stores:new Set()});
+    const x=grouped.get(key); if(!x.product_name&&r.product_name)x.product_name=r.product_name; return x;
+  };
+  all.forEach(r=>{
+    const x=rowFor(r); x.stores.add(Number(r.store_id));
+    const skuKey=`${r.store_id}|${r.sku||r.variant||r.product_key}`;
+    if(r.stock_after!==null&&r.stock_after!==undefined&&r.stock_after!==''){
+      const old=latestSkuStock.get(skuKey);
+      if(!old||String(r.record_date)>String(old.record_date)||String(r.record_date)===String(old.record_date)&&Number(r.seq||0)>Number(old.seq||0)) latestSkuStock.set(skuKey,r);
+    }
+    if(r.movement_type==='inbound'&&Number(r.in_qty||0)>0){
+      if(!x.latest_arrival_date||String(r.record_date)>x.latest_arrival_date)x.latest_arrival_date=String(r.record_date);
+    }
+    if(r.record_date<start||r.record_date>=endExclusive)return;
+    const inq=Number(r.in_qty||0), outq=Number(r.out_qty||0);
+    if(r.movement_type==='return'){x.return_qty+=inq;return;}
+    if(r.movement_type==='inbound'){x.import_qty+=inq;return;}
+    if(outq>0)x.export_qty+=outq;
+    if(r.movement_type==='sale'){
+      const ch=r.channel||'UNKNOWN';
+      if(ch==='POS')x.pos_qty+=outq; else if(ch==='ONLINE')x.online_qty+=outq; else x.unknown_qty+=outq;
+      x.sold_qty+=outq; x.sale_dates.add(r.record_date);
+      if(r.value_known){x.value_known=true;x.revenue+=Number(r.value||0);}
+    } else if(outq>0) x.non_sale_export_qty+=outq;
+  });
+  latestSkuStock.forEach(r=>{const x=rowFor(r);x.stock_qty+=Number(r.stock_after||0);});
+  const periodDays=Math.max(1,Math.floor((new Date(`${end}T00:00:00Z`)-new Date(`${start}T00:00:00Z`))/86400000)+1);
+  let rows=Array.from(grouped.values()).map(x=>{
+    const arrival=x.latest_arrival_date||'';
+    const speedStart=arrival&&arrival>start?arrival:start;
+    const sellingDays=Math.max(1,Math.floor((new Date(`${end}T00:00:00Z`)-new Date(`${speedStart}T00:00:00Z`))/86400000)+1);
+    const posVelocity=Math.round((x.pos_qty/sellingDays)*100)/100, onlineVelocity=Math.round((x.online_qty/sellingDays)*100)/100, unknownVelocity=Math.round((x.unknown_qty/sellingDays)*100)/100;
+    const velocity=Math.round((x.sold_qty/sellingDays)*100)/100;
+    const daysCover=velocity>0?Math.round((x.stock_qty/velocity)*10)/10:null;
+    const sellableQty=velocity>0?Math.min(Math.max(0,x.stock_qty),Math.ceil(velocity*periodDays)):0;
+    const reserveRecommended=velocity>0?Math.ceil(velocity*7):0;
+    const daysSince=arrival?Math.max(0,Math.floor((new Date(`${end}T00:00:00Z`)-new Date(`${arrival}T00:00:00Z`))/86400000)+1):null;
+    const slowScore=(daysSince||0)*Math.max(0,x.stock_qty)/Math.max(1,x.sold_qty);
+    const netSold=Math.max(0,x.sold_qty-x.return_qty);
+    return {product_name:x.product_name,pos_qty:x.pos_qty,online_qty:x.online_qty,unknown_qty:x.unknown_qty,sold_qty:x.sold_qty,net_sold_qty:netSold,return_qty:x.return_qty,import_qty:x.import_qty,export_qty:x.export_qty,non_sale_export_qty:x.non_sale_export_qty,stock_qty:x.stock_qty,revenue:Math.round(x.revenue),value_known:x.value_known,velocity,pos_velocity:posVelocity,online_velocity:onlineVelocity,unknown_velocity:unknownVelocity,selling_days:sellingDays,days_cover:daysCover,sellable_qty:sellableQty,reserve_recommended:reserveRecommended,arrival_date:arrival,days_since_arrival:daysSince,slow_score:Math.round(slowScore*100)/100,active_sale_days:x.sale_dates.size,store_count:x.stores.size};
+  });
+  if(searchKey)rows=rows.filter(r=>normalizeExcelHeader(r.product_name).includes(searchKey));
+  // Zero-value products are excluded from ranking when the ledger contains value/price data.
+  const rankingEligible=r=>!r.value_known||Number(r.revenue||0)>0;
+  const best=rows.filter(r=>r.sold_qty>0&&rankingEligible(r)).slice().sort((a,b)=>b.sold_qty-a.sold_qty||b.velocity-a.velocity).slice(0,15);
+  const stock=rows.filter(r=>r.stock_qty>0&&rankingEligible(r)).slice().sort((a,b)=>b.stock_qty-a.stock_qty||a.velocity-b.velocity);
+  const imports=rows.filter(r=>r.import_qty>0||r.stock_qty>0).slice().sort((a,b)=>b.import_qty-a.import_qty||b.stock_qty-a.stock_qty);
+  const slow=rows.filter(r=>r.stock_qty>0&&r.days_since_arrival!==null&&rankingEligible(r)).slice().sort((a,b)=>b.slow_score-a.slow_score||b.days_since_arrival-a.days_since_arrival||b.stock_qty-a.stock_qty);
+  const speed=rows.filter(r=>rankingEligible(r)).slice().sort((a,b)=>b.velocity-a.velocity||b.sold_qty-a.sold_qty);
+  const totals=rows.reduce((a,r)=>{['pos_qty','online_qty','unknown_qty','sold_qty','return_qty','import_qty','export_qty','stock_qty','sellable_qty','reserve_recommended'].forEach(k=>a[k]+=Number(r[k]||0));return a;},{pos_qty:0,online_qty:0,unknown_qty:0,sold_qty:0,return_qty:0,import_qty:0,export_qty:0,stock_qty:0,sellable_qty:0,reserve_recommended:0});
+  const channelKnown=all.some(r=>r.channel&&r.channel!=='UNKNOWN');
+  const valueKnown=all.some(r=>r.value_known);
+  return {source_mode:'ledger',start,end,store_id:scope,store_name:scope==='all'?'Toàn hệ thống':(getStore(scope)?.name||''),period_days:periodDays,search:opts.q||'',channel_known:channelKnown,value_known:valueKnown,totals,rows:speed,best_sellers:best,top_stock:stock.slice(0,100),top_imports:imports.slice(0,100),slow_movers:slow.slice(0,100)};
+}
+function productAnalyticsRange(rawStart, rawEnd) {
+  const today=dateOnly(new Date());
+  const start=/^\d{4}-\d{2}-\d{2}$/.test(String(rawStart||''))?String(rawStart):`${today.slice(0,7)}-01`;
+  let end=/^\d{4}-\d{2}-\d{2}$/.test(String(rawEnd||''))?String(rawEnd):today;
+  if (end < start) end=start;
+  return {start,end,endExclusive:addDaysUtc(end,1)};
+}
+function aggregateProductAnalytics(user, opts={}) {
+  db.product_sales_imports=db.product_sales_imports||[];
+  db.product_inventory_imports=db.product_inventory_imports||[];
+  const {start,end,endExclusive}=productAnalyticsRange(opts.start,opts.end);
+  const scope=effectiveProductStoreId(user,opts.store_id);
+  const storeAllowed=id => scope==='all' ? true : Number(id)===Number(scope);
+  const searchKey=normalizeExcelHeader(opts.q||'');
+  const allSales=(db.product_sales_imports||[]).filter(r=>r.status!=='deleted' && storeAllowed(r.store_id) && Number(r.revenue||0)>0);
+  const exactPeriodSales=allSales.filter(r=>r.granularity==='period' && r.period_start===start && r.period_end===end);
+  const sales=exactPeriodSales.length ? exactPeriodSales : allSales.filter(r=>r.granularity!=='period' && r.sale_date>=start && r.sale_date<endExclusive);
+
+  const invAll=(db.product_inventory_imports||[]).filter(r=>r.status!=='deleted' && storeAllowed(r.store_id) && String(r.snapshot_date||'')<=end);
+  const exactInv=invAll.filter(r=>r.period_start===start && r.period_end===end);
+  const latestSnapshot=new Map();
+  invAll.forEach(r=>{const k=`${r.store_id}|${r.product_key}`;const old=latestSnapshot.get(k);if(!old||String(r.snapshot_date)>String(old.snapshot_date))latestSnapshot.set(k,r);});
+  const periodInv=exactInv.length ? exactInv : invAll.filter(r=>String(r.snapshot_date)>=start&&String(r.snapshot_date)<endExclusive);
+
+  const grouped=new Map();
+  function getRow(name,key){
+    const k=key||productNameKey(name);
+    if(!grouped.has(k))grouped.set(k,{product_key:k,product_name:name||'',pos_qty:0,online_qty:0,sold_qty:0,revenue:0,pos_revenue:0,online_revenue:0,stock_qty:0,opening_qty:0,import_qty:0,purchase_in_qty:0,sales_return_in_qty:0,transfer_in_qty:0,inventory_in_qty:0,other_in_qty:0,export_qty:0,sale_out_qty:0,purchase_return_out_qty:0,transfer_out_qty:0,inventory_out_qty:0,other_out_qty:0,stores:new Set(),saleDates:new Set(),arrival_date:'',latest_stock_date:'',exclude_top_stock:false});
+    const x=grouped.get(k);if(!x.product_name&&name)x.product_name=name;return x;
+  }
+  sales.forEach(r=>{
+    const x=getRow(r.product_name,r.product_key);const qty=Number(r.quantity||0),rev=Number(r.revenue||0);
+    if(String(r.source)==='POS'){x.pos_qty+=qty;x.pos_revenue+=rev;}else{x.online_qty+=qty;x.online_revenue+=rev;}
+    x.sold_qty+=qty;x.revenue+=rev;x.stores.add(Number(r.store_id));if(r.sale_date)x.saleDates.add(r.sale_date);
+  });
+  latestSnapshot.forEach(r=>{const x=getRow(r.product_name,r.product_key);x.stock_qty+=Number(r.stock_qty||0);x.stores.add(Number(r.store_id));if(r.exclude_top_stock)x.exclude_top_stock=true;if(!x.latest_stock_date||String(r.snapshot_date)>x.latest_stock_date)x.latest_stock_date=String(r.snapshot_date||'');});
+  periodInv.forEach(r=>{
+    const x=getRow(r.product_name,r.product_key);x.stores.add(Number(r.store_id));
+    if(r.exclude_top_stock)x.exclude_top_stock=true;
+    ['opening_qty','import_qty','purchase_in_qty','sales_return_in_qty','transfer_in_qty','inventory_in_qty','other_in_qty','export_qty','sale_out_qty','purchase_return_out_qty','transfer_out_qty','inventory_out_qty','other_out_qty'].forEach(k=>x[k]+=Number(r[k]||0));
+    if(r.arrival_date && (!x.arrival_date||String(r.arrival_date)>x.arrival_date))x.arrival_date=String(r.arrival_date);
+  });
+  // If exact period inventory exists, its closing stock is authoritative for the selected period.
+  if(exactInv.length){
+    const exactStocks=new Map();
+    exactInv.forEach(r=>{const k=`${r.store_id}|${r.product_key}`;exactStocks.set(k,r);});
+    const stockByProduct=new Map();
+    exactStocks.forEach(r=>{const k=r.product_key;stockByProduct.set(k,(stockByProduct.get(k)||0)+Number(r.stock_qty||0));});
+    stockByProduct.forEach((qty,key)=>{const x=getRow('',key);x.stock_qty=qty;});
+  }
+  const periodDays=Math.max(1,Math.floor((new Date(`${end}T00:00:00Z`)-new Date(`${start}T00:00:00Z`))/86400000)+1);
+  let rows=Array.from(grouped.values()).map(x=>{
+    const sellingDays=x.arrival_date&&x.arrival_date>start?Math.max(1,Math.floor((new Date(`${end}T00:00:00Z`)-new Date(`${x.arrival_date}T00:00:00Z`))/86400000)+1):periodDays;
+    const posVelocity=Math.round((x.pos_qty/sellingDays)*100)/100,onlineVelocity=Math.round((x.online_qty/sellingDays)*100)/100,velocity=Math.round((x.sold_qty/sellingDays)*100)/100;
+    const daysCover=velocity>0?Math.round((x.stock_qty/velocity)*10)/10:null;
+    const sellableQty=velocity>0?Math.min(Math.max(0,x.stock_qty),Math.ceil(velocity*periodDays)):0;
+    const reserveRecommended=velocity>0?Math.ceil(velocity*7):0;
+    const daysSince=x.arrival_date?Math.max(0,Math.floor((new Date(`${end}T00:00:00Z`)-new Date(`${x.arrival_date}T00:00:00Z`))/86400000)+1):null;
+    const slowScore=(daysSince||periodDays)*Math.max(0,x.stock_qty)/Math.max(1,x.sold_qty);
+    return {...x,pos_qty:Math.round(x.pos_qty*100)/100,online_qty:Math.round(x.online_qty*100)/100,sold_qty:Math.round(x.sold_qty*100)/100,revenue:Math.round(x.revenue),stock_qty:Math.round(x.stock_qty*100)/100,velocity,pos_velocity:posVelocity,online_velocity:onlineVelocity,selling_days:sellingDays,days_cover:daysCover,sellable_qty:Math.round(sellableQty*100)/100,reserve_recommended:Math.round(reserveRecommended*100)/100,days_since_arrival:daysSince,slow_score:Math.round(slowScore*100)/100};
+  });
+  if(searchKey)rows=rows.filter(r=>normalizeExcelHeader(r.product_name).includes(searchKey));
+  db.product_zero_value_exclusions=db.product_zero_value_exclusions||[];
+  const zeroExcluded=new Set((db.product_zero_value_exclusions||[]).filter(z=>z.status!=='deleted'&&storeAllowed(z.store_id)&&((z.granularity==='period'&&z.period_start===start&&z.period_end===end)||(z.granularity==='daily'&&z.sale_date>=start&&z.sale_date<endExclusive))).map(z=>z.product_key));
+  const eligible=r=>!zeroExcluded.has(r.product_key);
+  const best=rows.filter(r=>eligible(r)&&r.sold_qty>0&&r.revenue>0).slice().sort((a,b)=>b.sold_qty-a.sold_qty||b.revenue-a.revenue).slice(0,15);
+  const stock=rows.filter(r=>eligible(r)&&r.stock_qty>0&&!r.exclude_top_stock).slice().sort((a,b)=>b.stock_qty-a.stock_qty||a.velocity-b.velocity);
+  const imports=rows.filter(r=>eligible(r)&&(r.import_qty>0||r.stock_qty>0)).slice().sort((a,b)=>b.import_qty-a.import_qty||b.stock_qty-a.stock_qty);
+  const slow=rows.filter(r=>eligible(r)&&r.stock_qty>0&&r.revenue>0).slice().sort((a,b)=>b.slow_score-a.slow_score||b.stock_qty-a.stock_qty||a.velocity-b.velocity);
+  const speed=rows.filter(r=>eligible(r)&&(r.revenue>0||r.stock_qty>0||r.import_qty>0)).slice().sort((a,b)=>b.velocity-a.velocity||b.sold_qty-a.sold_qty);
+  const totals=rows.reduce((a,r)=>{['pos_qty','online_qty','sold_qty','import_qty','export_qty','stock_qty','sellable_qty','reserve_recommended'].forEach(k=>a[k]+=Number(r[k]||0));a.revenue+=Number(r.revenue||0);return a;},{pos_qty:0,online_qty:0,sold_qty:0,import_qty:0,export_qty:0,stock_qty:0,sellable_qty:0,reserve_recommended:0,revenue:0});
+  return {source_mode:'sales_inventory',start,end,store_id:scope,store_name:scope==='all'?'Toàn hệ thống':(getStore(scope)?.name||''),period_days:periodDays,search:opts.q||'',totals,rows:speed,best_sellers:best,top_stock:stock.slice(0,100),top_imports:imports.slice(0,100),slow_movers:slow.slice(0,100)};
+}
+
+function weeklyAutoBestSellers(storeId,start,endExclusive) {
+  db.product_sales_imports=db.product_sales_imports||[];
+  const map=new Map();
+  const weekEnd=addDaysUtc(endExclusive,-1);
+  const scoped=(db.product_sales_imports||[]).filter(r=>r.status!=='deleted' && Number(r.store_id)===Number(storeId) && Number(r.revenue||0)>0);
+  const exactPeriod=scoped.filter(r=>r.granularity==='period' && r.period_start===start && r.period_end===weekEnd);
+  const containedPeriods=scoped.filter(r=>r.granularity==='period' && r.period_start>=start && r.period_end<=weekEnd);
+  const sourceRows=exactPeriod.length ? exactPeriod : (containedPeriods.length ? containedPeriods : scoped.filter(r=>r.granularity!=='period' && r.sale_date>=start && r.sale_date<endExclusive));
+  sourceRows.forEach(r=>{const key=r.product_key||productNameKey(r.product_name);const x=map.get(key)||{name:r.product_name,quantity:0,revenue:0};x.quantity+=Number(r.quantity||0);x.revenue+=Number(r.revenue||0);map.set(key,x);});
+  return Array.from(map.values()).filter(x=>x.revenue>0).sort((a,b)=>b.quantity-a.quantity||b.revenue-a.revenue).slice(0,5).map(x=>({name:x.name,sku:'',quantity:Math.round(x.quantity*100)/100,bill_count:0,note:'Tự động từ Báo cáo doanh thu theo sản phẩm'}));
+}
+
+app.get('/api/product-analytics', requireAuth, (req,res)=>{
+  try { res.json(aggregateProductAnalytics(req.user,{store_id:req.query.store_id,start:req.query.start,end:req.query.end,q:req.query.q})); }
+  catch(err){ res.status(400).json({error:err.message||'Không thể tổng hợp hàng hóa'}); }
+});
+
+
+app.post('/api/product-analytics/import-ledger', requireAuth, upload.single('file'), (req,res)=>{
+  if(!canImportProductFiles(req.user))return res.status(403).json({error:'Chỉ Admin được upload Sổ kho Sapo'});
+  if(!req.file)return res.status(400).json({error:'Chưa chọn file Sổ kho'});
+  try{
+    const selected=effectiveProductStoreId(req.user,req.body.store_id);
+    const rawRows=readLedgerRows(req.file.path); const parsed=[]; let skippedName=0,skippedStore=0,skippedDate=0;
+    rawRows.forEach((row,idx)=>{
+      const date=parseExcelDateValue(excelRowValue(row,['Ngày ghi nhận','Ngày','Ngày giao dịch','Thời gian']));if(!date){skippedDate++;return;}
+      const name=normalizeProductName(excelRowValue(row,['Sản phẩm','Tên sản phẩm','Tên hàng hóa','Tên hàng']));if(!name){skippedName++;return;}
+      const branch=String(excelRowValue(row,['Chi nhánh','Tên chi nhánh','Cửa hàng','Kho'])??'').trim();const st=storeFromImportedName(branch);let sid;
+      if(selected==='all'){if(!st){skippedStore++;return;}sid=st.id;}else{if(st&&Number(st.id)!==Number(selected)){skippedStore++;return;}sid=Number(selected);}
+      const desc=String(excelRowValue(row,['Mô tả','Diễn giải','Loại giao dịch'])??'').trim();
+      const transaction=String(excelRowValue(row,['Giao dịch','Mã giao dịch','Chứng từ'])??'').trim();
+      const sku=String(excelRowValue(row,['Mã SKU','SKU','Mã hàng'])??'').trim();const variant=String(excelRowValue(row,['Phiên bản','Biến thể','Size','Màu sắc'])??'').trim();
+      const inQty=Math.abs(parseMoneyLoose(excelRowValue(row,['Nhập kho Số lượng','Nhập kho','Số lượng nhập','SL nhập','Nhập']))||0);
+      const outQty=Math.abs(parseMoneyLoose(excelRowValue(row,['Xuất kho Số lượng','Xuất kho','Số lượng xuất','SL xuất','Xuất']))||0);
+      const stockRaw=excelRowValue(row,['Tồn kho sau giao dịch Số lượng','Tồn kho sau giao dịch','Tồn sau giao dịch','Tồn kho','Tồn']);
+      const stockAfter=stockRaw===''||stockRaw===undefined?null:parseMoneyLoose(stockRaw);
+      const channelRaw=excelRowValue(row,['Tên kênh bán hàng','Kênh bán hàng','Nguồn đơn','Nguồn','Kênh','Channel']);
+      const channel=ledgerChannel(channelRaw);
+      let valueRaw=excelRowValue(row,['Tổng doanh thu','Doanh thu','Giá trị','Thành tiền','Giá bán','Đơn giá','Value','Revenue']);
+      const valueKnown=!(valueRaw===undefined||valueRaw===null||String(valueRaw).trim()==='');
+      const value=valueKnown?parseMoneyLoose(valueRaw):0;
+      parsed.push({store_id:sid,record_date:date,seq:idx+1,transaction,description:desc,movement_type:ledgerMovementType(desc,transaction),product_key:productNameKey(name),product_name:name,variant,sku,in_qty:inQty,out_qty:outQty,stock_after:stockAfter,channel,value_known:valueKnown,value,status:'active'});
+    });
+    db.product_stock_ledger=db.product_stock_ledger||[]; db.product_import_batches=db.product_import_batches||[];
+    const touchedStores=new Set(parsed.map(r=>Number(r.store_id))); const dates=parsed.map(r=>r.record_date).sort(); const minDate=dates[0]||'',maxDate=dates[dates.length-1]||'';
+    // Replace overlapping ledger data for touched stores/date range, avoiding duplicate uploads.
+    if(minDate&&maxDate)db.product_stock_ledger.forEach(r=>{if(r.status!=='deleted'&&touchedStores.has(Number(r.store_id))&&r.record_date>=minDate&&r.record_date<=maxDate){r.status='deleted';r.deleted_at=nowIso();r.deleted_by=req.user.id;}});
+    const batchId=nextId('product_import_batches');parsed.forEach(r=>db.product_stock_ledger.push({id:nextId('product_stock_ledger'),...r,batch_id:batchId,created_at:nowIso(),created_by:req.user.id}));
+    const channelKnown=parsed.filter(r=>r.movement_type==='sale').some(r=>r.channel!=='UNKNOWN');const valueKnown=parsed.filter(r=>r.movement_type==='sale').some(r=>r.value_known);
+    db.product_import_batches.push({id:batchId,type:'ledger',file_name:req.file.originalname||'',period_start:minDate,period_end:maxDate,rows_raw:rawRows.length,rows_valid:parsed.length,skipped_name:skippedName,skipped_store:skippedStore,skipped_date:skippedDate,channel_known:channelKnown,value_known:valueKnown,created_at:nowIso(),created_by:req.user.id});saveDb();
+    const warnings=[];if(!channelKnown)warnings.push('File chưa có cột Kênh/Nguồn đơn nên chưa thể tách POS và Online chính xác.');if(!valueKnown)warnings.push('File chưa có cột Giá trị/Doanh thu nên chưa thể tự loại sản phẩm giá trị 0 khỏi Top.');
+    res.json({ok:true,raw_rows:rawRows.length,valid_rows:parsed.length,period_start:minDate,period_end:maxDate,channel_known:channelKnown,value_known:valueKnown,message:`Đã nhập ${parsed.length} dòng Sổ kho (${minDate||'-'} → ${maxDate||'-'}). ${warnings.join(' ')}`});
+  }catch(err){res.status(400).json({error:err.message||'Không đọc được file Sổ kho Sapo'});}finally{try{fs.unlinkSync(req.file.path)}catch{}}
+});
+
+app.post('/api/product-analytics/import-sales', requireAuth, upload.single('file'), (req,res)=>{
+  if (!canImportProductFiles(req.user)) return res.status(403).json({error:'Chỉ Admin được upload file bán hàng Sapo'});
+  if (!req.file) return res.status(400).json({error:'Chưa chọn file bán hàng'});
+  try {
+    const selected=effectiveProductStoreId(req.user,req.body.store_id);
+    const reportStart=/^\d{4}-\d{2}-\d{2}$/.test(String(req.body.report_start||''))?String(req.body.report_start):'';
+    const reportEnd=/^\d{4}-\d{2}-\d{2}$/.test(String(req.body.report_end||''))?String(req.body.report_end):'';
+    if(!reportStart||!reportEnd||reportEnd<reportStart) return res.status(400).json({error:'Vui lòng chọn đúng Từ ngày / Đến ngày của báo cáo Sapo trước khi upload'});
+    const rawRows=readExcelRows(req.file.path);
+    const hasDateColumn=rawRows.some(row=>!!parseExcelDateValue(excelRowValue(row,['Ngày','Ngày tạo','Ngày bán','Ngày đơn hàng','Thời gian','Created at','Order date','Ngày ghi nhận'])));
+    const granularity=hasDateColumn?'daily':'period';
+    const agg=new Map(); const zeroCandidates=[]; let skippedSource=0,skippedZero=0,skippedName=0,skippedStore=0,skippedDate=0;
+    rawRows.forEach(row=>{
+      const sourceRaw=String(excelRowValue(row,['Tên kênh bán hàng','Nguồn','Nguồn đơn','Kênh bán hàng','Nguồn bán hàng','Source','Kênh'])??'').trim();
+      const source=normalizeExcelHeader(sourceRaw)==='pos'?'POS':'ONLINE';
+      const name=normalizeProductName(excelRowValue(row,['Tên sản phẩm','Sản phẩm','Tên hàng hóa','Tên hàng','Product name','Tên SP']));
+      if (!name){skippedName++;return;}
+      const qty=Math.abs(parseMoneyLoose(excelRowValue(row,['Số lượng thực','Số lượng','SL hàng thực bán','Số lượng bán','SL bán','Quantity','Qty']))||0);
+      let revenue=parseMoneyLoose(excelRowValue(row,['Tổng doanh thu','Doanh thu thuần','Doanh thu','Thành tiền','Giá trị','Tổng tiền','Net sales','Revenue','Giá trị hàng bán']));
+      if (!revenue){const price=parseMoneyLoose(excelRowValue(row,['Giá bán','Đơn giá','Price'])); if(price&&qty) revenue=price*qty;}
+      const parsedDate=parseExcelDateValue(excelRowValue(row,['Ngày','Ngày tạo','Ngày bán','Ngày đơn hàng','Thời gian','Created at','Order date','Ngày ghi nhận']));
+      const d=granularity==='daily'?parsedDate:reportEnd;
+      if(granularity==='daily'&&!d){skippedDate++;return;}
+      const importedStoreName=String(excelRowValue(row,['Tên chi nhánh','Chi nhánh','Cửa hàng','Kho','Location','Branch'])??'').trim();
+      const importedStore=storeFromImportedName(importedStoreName);
+      let sid;
+      if(selected==='all') { if(!importedStore){skippedStore++;return;} sid=importedStore.id; }
+      else { if(importedStore && Number(importedStore.id)!==Number(selected)){skippedStore++;return;} sid=Number(selected); }
+      const key=productNameKey(name);
+      if (!(revenue>0)){skippedZero++;zeroCandidates.push({store_id:sid,product_key:key,product_name:name,granularity,period_start:granularity==='period'?reportStart:'',period_end:granularity==='period'?reportEnd:'',sale_date:granularity==='daily'?d:''});return;}
+      const aggKey=granularity==='period'?`${sid}|${reportStart}|${reportEnd}|${source}|${key}`:`${sid}|${d}|${source}|${key}`;
+      const x=agg.get(aggKey)||{store_id:sid,sale_date:d,source,product_key:key,product_name:name,quantity:0,revenue:0,granularity,period_start:granularity==='period'?reportStart:'',period_end:granularity==='period'?reportEnd:''};
+      x.quantity+=qty; x.revenue+=revenue; agg.set(aggKey,x);
+    });
+    db.product_sales_imports=db.product_sales_imports||[]; db.product_import_batches=db.product_import_batches||[]; db.product_zero_value_exclusions=db.product_zero_value_exclusions||[];
+    const batchId=nextId('product_import_batches');
+    let replaced=0, inserted=0;
+    if(granularity==='period'){
+      const touchedStores=new Set(Array.from(agg.values()).map(x=>Number(x.store_id)));
+      db.product_sales_imports.forEach(r=>{if(r.status!=='deleted'&&r.granularity==='period'&&r.period_start===reportStart&&r.period_end===reportEnd&&touchedStores.has(Number(r.store_id))){r.status='deleted';r.deleted_at=nowIso();r.deleted_by=req.user.id;}});
+    }
+    agg.forEach(x=>{
+      if(granularity==='period'){
+        db.product_sales_imports.push({id:nextId('product_sales_imports'),...x,batch_id:batchId,quantity:Math.round(x.quantity*100)/100,revenue:Math.round(x.revenue),status:'active',created_at:nowIso(),created_by:req.user.id});inserted++;
+      } else {
+        const existing=db.product_sales_imports.find(r=>r.status!=='deleted'&&r.granularity!=='period'&&Number(r.store_id)===Number(x.store_id)&&r.sale_date===x.sale_date&&r.source===x.source&&r.product_key===x.product_key);
+        if(existing){existing.product_name=x.product_name;existing.quantity=Math.round(x.quantity*100)/100;existing.revenue=Math.round(x.revenue);existing.updated_at=nowIso();existing.updated_by=req.user.id;replaced++;}
+        else{db.product_sales_imports.push({id:nextId('product_sales_imports'),...x,batch_id:batchId,quantity:Math.round(x.quantity*100)/100,revenue:Math.round(x.revenue),status:'active',created_at:nowIso(),created_by:req.user.id});inserted++;}
+      }
+    });
+    const touchedStoresForZero=new Set([...Array.from(agg.values()).map(x=>Number(x.store_id)),...zeroCandidates.map(x=>Number(x.store_id))]);
+    db.product_zero_value_exclusions.forEach(z=>{if(z.status!=='deleted'&&touchedStoresForZero.has(Number(z.store_id))&&((granularity==='period'&&z.granularity==='period'&&z.period_start===reportStart&&z.period_end===reportEnd)||(granularity==='daily'&&z.granularity==='daily'&&z.sale_date>=reportStart&&z.sale_date<=reportEnd))){z.status='deleted';z.deleted_at=nowIso();z.deleted_by=req.user.id;}});
+    const positiveKeys=new Set(Array.from(agg.values()).map(x=>`${x.store_id}|${x.product_key}`));
+    const zeroSeen=new Set();
+    zeroCandidates.forEach(z=>{const zk=`${z.store_id}|${z.product_key}`;if(positiveKeys.has(zk)||zeroSeen.has(zk))return;zeroSeen.add(zk);db.product_zero_value_exclusions.push({id:nextId('product_zero_value_exclusions'),...z,batch_id:batchId,status:'active',created_at:nowIso(),created_by:req.user.id});});
+    db.product_import_batches.push({id:batchId,type:'sales',file_name:req.file.originalname||'',period_start:reportStart,period_end:reportEnd,granularity,rows_raw:rawRows.length,rows_valid:agg.size,inserted,replaced,skipped_source:skippedSource,skipped_zero:skippedZero,skipped_name:skippedName,skipped_store:skippedStore,skipped_date:skippedDate,created_at:nowIso(),created_by:req.user.id});
+    saveDb();
+    const note=granularity==='period'?'File Sapo không có cột ngày: dữ liệu được lưu đúng theo kỳ báo cáo đã chọn. Khi xem, hãy chọn đúng kỳ này.':'File có ngày giao dịch: có thể lọc linh hoạt theo ngày.';
+    res.json({ok:true,file:req.file.originalname,raw_rows:rawRows.length,valid_rows:agg.size,inserted,replaced,skipped_source:skippedSource,skipped_zero:skippedZero,skipped_name:skippedName,skipped_store:skippedStore,granularity,period_start:reportStart,period_end:reportEnd,message:`Đã lấy ${agg.size} dòng gộp theo tên sản phẩm. POS được tách riêng; mọi nguồn khác được tính Online. Chỉ tính sản phẩm có giá trị > 0. ${note}`});
+  } catch(err){res.status(400).json({error:err.message||'Không đọc được file Sapo'});} finally {try{fs.unlinkSync(req.file.path)}catch{}}
+});
+
+app.post('/api/product-analytics/import-inventory', requireAuth, upload.single('file'), (req,res)=>{
+  if (!canImportProductFiles(req.user)) return res.status(403).json({error:'Chỉ Admin được upload Báo cáo xuất nhập tồn Sapo'});
+  if (!req.file) return res.status(400).json({error:'Chưa chọn file Xuất nhập tồn'});
+  try {
+    const selected=effectiveProductStoreId(req.user,req.body.store_id);
+    const reportStart=/^\d{4}-\d{2}-\d{2}$/.test(String(req.body.report_start||''))?String(req.body.report_start):'';
+    const reportEnd=/^\d{4}-\d{2}-\d{2}$/.test(String(req.body.report_end||''))?String(req.body.report_end):'';
+    if(!reportStart||!reportEnd||reportEnd<reportStart)return res.status(400).json({error:'Vui lòng chọn đúng Từ ngày / Đến ngày của Báo cáo xuất nhập tồn'});
+    const rawRows=readInventoryDetailRows(req.file.path);const agg=new Map();let skippedName=0,skippedStore=0;
+    rawRows.forEach(row=>{
+      const name=normalizeProductName(excelRowValue(row,['Sản phẩm','Tên sản phẩm','Tên hàng hóa','Tên hàng','Product name']));if(!name){skippedName++;return;}
+      if(normalizeExcelHeader(name).startsWith('tong '))return;
+      const importedStoreName=String(excelRowValue(row,['Chi nhánh','Tên chi nhánh','Cửa hàng','Kho','Location','Branch'])??'').trim();const importedStore=storeFromImportedName(importedStoreName);
+      let sid;if(selected==='all'){if(!importedStore){skippedStore++;return;}sid=importedStore.id;}else{if(importedStore&&Number(importedStore.id)!==Number(selected)){skippedStore++;return;}sid=Number(selected);}
+      const sku=String(excelRowValue(row,['Mã SKU','SKU','Mã hàng','Mã sản phẩm'])??'').trim();
+      const excludeTopStock=sku.toUpperCase().startsWith('TUIDEZUS');
+      const n=(aliases)=>Math.abs(parseMoneyLoose(excelRowValue(row,aliases))||0);
+      const opening=n(['Đầu kỳ Số lượng','Đầu kỳ','Tồn đầu kỳ','Opening stock']);
+      const purchaseIn=n(['Số lượng nhập Nhập hàng','Nhập hàng']);
+      const salesReturnIn=n(['Số lượng nhập Trả hàng bán','Trả hàng bán']);
+      const transferIn=n(['Số lượng nhập Chuyển kho','Nhập chuyển kho','Chuyển kho nhập']);
+      const inventoryIn=n(['Số lượng nhập Kiểm kho','Nhập kiểm kho']);
+      const otherIn=n(['Số lượng nhập Nhập khác','Nhập khác']);
+      let totalIn=n(['Số lượng nhập Tổng SL nhập','Tổng SL nhập','Tổng số lượng nhập','Tổng nhập']);
+      if(!totalIn)totalIn=purchaseIn+salesReturnIn+transferIn+inventoryIn+otherIn;
+      const saleOut=n(['Số lượng xuất Bán hàng','Xuất bán hàng','Bán hàng']);
+      const purchaseReturnOut=n(['Số lượng xuất Trả hàng nhập','Trả hàng nhập']);
+      const transferOut=n(['Số lượng xuất Chuyển kho','Xuất chuyển kho','Chuyển kho xuất']);
+      const inventoryOut=n(['Số lượng xuất Kiểm kho','Xuất kiểm kho']);
+      const otherOut=n(['Số lượng xuất Xuất khác','Xuất khác']);
+      let totalOut=n(['Số lượng xuất Tổng SL xuất','Tổng SL xuất','Tổng số lượng xuất','Tổng xuất']);
+      if(!totalOut)totalOut=saleOut+purchaseReturnOut+transferOut+inventoryOut+otherOut;
+      let closing=n(['Cuối kỳ Số lượng','Tồn kho cuối kỳ Số lượng','Tồn cuối kỳ','Tồn cuối','Closing stock','Tồn kho']);
+      if(!closing && opening+totalIn-totalOut!==0)closing=Math.max(0,opening+totalIn-totalOut);
+      const key=productNameKey(name),k=`${sid}|${reportStart}|${reportEnd}|${key}`;
+      const x=agg.get(k)||{store_id:sid,snapshot_date:reportEnd,period_start:reportStart,period_end:reportEnd,product_key:key,product_name:name,stock_qty:0,opening_qty:0,import_qty:0,purchase_in_qty:0,sales_return_in_qty:0,transfer_in_qty:0,inventory_in_qty:0,other_in_qty:0,export_qty:0,sale_out_qty:0,purchase_return_out_qty:0,transfer_out_qty:0,inventory_out_qty:0,other_out_qty:0,arrival_date:'',exclude_top_stock:false};
+      if(excludeTopStock)x.exclude_top_stock=true;
+      x.opening_qty+=opening;x.purchase_in_qty+=purchaseIn;x.sales_return_in_qty+=salesReturnIn;x.transfer_in_qty+=transferIn;x.inventory_in_qty+=inventoryIn;x.other_in_qty+=otherIn;x.import_qty+=totalIn;x.sale_out_qty+=saleOut;x.purchase_return_out_qty+=purchaseReturnOut;x.transfer_out_qty+=transferOut;x.inventory_out_qty+=inventoryOut;x.other_out_qty+=otherOut;x.export_qty+=totalOut;x.stock_qty+=closing;
+      // XNT is period-level, so arrival date is only safe when there was no opening stock and purchase receipt occurred in this period.
+      if(opening<=0&&purchaseIn>0)x.arrival_date=reportStart;
+      agg.set(k,x);
+    });
+    db.product_inventory_imports=db.product_inventory_imports||[];db.product_import_batches=db.product_import_batches||[];
+    const touchedStores=new Set(Array.from(agg.values()).map(x=>Number(x.store_id)));
+    db.product_inventory_imports.forEach(r=>{if(r.status!=='deleted'&&r.period_start===reportStart&&r.period_end===reportEnd&&touchedStores.has(Number(r.store_id))){r.status='deleted';r.deleted_at=nowIso();r.deleted_by=req.user.id;}});
+    const batchId=nextId('product_import_batches');let inserted=0;
+    agg.forEach(x=>{db.product_inventory_imports.push({id:nextId('product_inventory_imports'),...x,batch_id:batchId,status:'active',created_at:nowIso(),created_by:req.user.id});inserted++;});
+    db.product_import_batches.push({id:batchId,type:'inventory_detail',file_name:req.file.originalname||'',period_start:reportStart,period_end:reportEnd,rows_raw:rawRows.length,rows_valid:agg.size,inserted,skipped_name:skippedName,skipped_store:skippedStore,created_at:nowIso(),created_by:req.user.id});saveDb();
+    res.json({ok:true,raw_rows:rawRows.length,valid_rows:agg.size,inserted,message:`Đã cập nhật ${agg.size} sản phẩm từ Báo cáo Xuất nhập tồn – Mẫu chi tiết. Điều chuyển kho được tách riêng, không tính là bán hàng.`});
+  }catch(err){res.status(400).json({error:err.message||'Không đọc được Báo cáo xuất nhập tồn Sapo'});}finally{try{fs.unlinkSync(req.file.path)}catch{}}
+});
+
 function weeklyReportRow(storeId, weekStart) {
   db.weekly_reports = db.weekly_reports || [];
   return db.weekly_reports.find(r => Number(r.store_id) === Number(storeId) && String(r.week_start) === String(weekStart)) || null;
@@ -2848,7 +3523,8 @@ function buildWeeklyReport(user, rawWeekStart, rawStoreId, rawUserStatus = 'acti
   totals.achievement_percent = totals.target_revenue ? Math.round((totals.revenue / totals.target_revenue) * 10000) / 100 : 0;
   employeeRows.forEach(r => { r.revenue_percent = totals.revenue ? Math.round((r.revenue / totals.revenue) * 10000) / 100 : 0; });
   const feedback = weeklyReportRow(storeId, week_start) || { feedback: '', issues: '', action_plan: '', note: '', top_products: [], promotions: [] };
-  const top_products = normalizeWeeklyProducts(feedback.top_products || []);
+  const autoTopProducts = weeklyAutoBestSellers(storeId, week_start, endExclusive);
+  const top_products = autoTopProducts.length ? autoTopProducts : normalizeWeeklyProducts(feedback.top_products || []);
   const promotions = normalizeWeeklyPromotions(feedback.promotions || []);
   return { store_id: storeId, store_name: store.name, week_start, week_end, totals, days: daysRows, employees: employeeRows, top_products, promotions, feedback: { ...feedback, top_products, promotions } };
 }

@@ -5419,3 +5419,60 @@ body{letter-spacing:-.008em}
   .sales-summary-shell .sales-summary-grid .sales-kpi::before{border-radius:16px 0 0 16px!important}
   .sales-summary-shell .sales-summary-grid .sales-kpi::after{width:82px!important;height:82px!important;right:-14px!important;top:-14px!important}
 }
+
+/* V4.141 Product analytics / Sapo POS import */
+.pa-filter-card{background:linear-gradient(180deg,#f8fafc,#fff);border:1px solid #dfe7ef}
+.pa-periods,.pa-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.pa-filter-grid{align-items:end}
+.pa-kpis{margin:14px 0;gap:12px!important}
+.pa-kpi{border-radius:18px!important;border:1px solid #dfe6ee!important;background:#fff!important;box-shadow:0 8px 20px rgba(15,23,42,.04)!important}
+.pa-kpi:nth-child(1){background:linear-gradient(180deg,#eef7ff,#fff)!important}
+.pa-kpi:nth-child(2){background:linear-gradient(180deg,#f0faf4,#fff)!important}
+.pa-kpi:nth-child(3){background:linear-gradient(180deg,#fff8ec,#fff)!important}
+.pa-kpi:nth-child(4){background:linear-gradient(180deg,#f5f2ff,#fff)!important}
+.pa-kpi .num{color:#111827!important}
+.pa-summary-grid{gap:12px!important}
+.pa-mini{border-radius:18px!important;min-width:0}
+.pa-rank{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:9px;align-items:center;padding:10px 0;border-bottom:1px solid #edf1f5}
+.pa-rank:last-child{border-bottom:0}.pa-rank b{font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pa-rank strong{font-size:12.5px;color:#172033;white-space:nowrap}
+.product-analytics-table table{min-width:980px}
+.product-analytics-table th:nth-child(2),.product-analytics-table td:nth-child(2){min-width:240px;white-space:normal!important}
+.pa-upload-grid .card{border-radius:18px!important;border:1px solid #dfe6ee!important}
+.pa-upload-grid input[type=file]{padding:8px;background:#f8fafc}
+@media(max-width:860px){
+  .pa-periods{display:grid;grid-template-columns:1fr 1fr;gap:7px}.pa-periods .btn{width:100%;font-size:11.5px}
+  .pa-tabs{overflow:auto;flex-wrap:nowrap;padding-bottom:3px}.pa-tabs .btn{min-width:max-content}
+  .pa-kpis{grid-template-columns:1fr 1fr!important}.pa-kpi{padding:12px!important}.pa-kpi .num{font-size:18px!important}
+  .pa-summary-grid{grid-template-columns:1fr!important}.pa-upload-grid{grid-template-columns:1fr!important}
+}
+@media(max-width:520px){.pa-kpis{grid-template-columns:1fr!important}}
+
+/* V4.148 Loyalty approval workflow */
+.loyalty-card{border:1px solid #dbe4ee!important;box-shadow:0 10px 24px rgba(15,23,42,.04)!important}
+.loyalty-card .toolbar h3{margin:0}
+.loyalty-list-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:18px 0 8px}
+.loyalty-list-head h4{margin:0;font-size:14px}
+.loyalty-table-wrap{border:1px solid #e1e7ef;border-radius:15px;overflow:auto}
+.loyalty-table{min-width:920px}
+.loyalty-pending-row{background:#fffaf0}
+.loyalty-approved-row{background:#fff}
+.loyalty-actions{gap:6px;flex-wrap:nowrap}
+.loyalty-edit-overlay{position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,.46);display:grid;place-items:center;padding:18px;overflow:auto}
+.loyalty-edit-modal{width:min(720px,96vw);max-height:92vh;overflow:auto;margin:auto}
+.loyalty-edit-modal h3{margin:0}
+@media(max-width:860px){
+ .loyalty-card{padding:13px!important}
+ .loyalty-card form.grid.four{grid-template-columns:1fr!important}
+ .loyalty-card form.grid.four .field{grid-column:auto!important}
+ .loyalty-list-head{align-items:flex-start;flex-direction:column;gap:3px}
+ .loyalty-table{min-width:760px}
+ .loyalty-edit-modal form.grid.two{grid-template-columns:1fr!important}
+}
+
+
+/* V4.151 Loyalty all stores, Excel, clipboard evidence */
+.loyalty-paste-zone{border:1.5px dashed #b8c6d5;border-radius:14px;background:#f8fafc;min-height:84px;padding:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:4px;cursor:text;outline:none;margin-bottom:8px;transition:.15s ease}
+.loyalty-paste-zone:focus,.loyalty-paste-zone:hover{border-color:#6e91b2;background:#f2f7fb;box-shadow:0 0 0 3px rgba(62,106,143,.08)}
+.loyalty-paste-zone b{font-size:12.5px;color:#24364a}.loyalty-paste-zone span{font-size:11.5px;color:#667085}
+.loyalty-paste-preview{display:flex;align-items:center;gap:8px;margin-top:6px}.loyalty-paste-preview:empty{display:none}.loyalty-paste-preview img{width:54px;height:54px;object-fit:cover;border-radius:10px;border:1px solid #d8e2ec}.loyalty-paste-preview span{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(max-width:860px){.loyalty-paste-zone{min-height:72px}.loyalty-card .grid.four{grid-template-columns:1fr!important}.loyalty-evidence-field{grid-column:1/-1!important}}
