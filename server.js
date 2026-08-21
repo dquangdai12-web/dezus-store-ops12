@@ -2962,6 +2962,10 @@ function normalizeProductName(value) {
   return String(value ?? '').trim().replace(/\s+/g, ' ');
 }
 function productNameKey(value) { return stripVietnamese(normalizeProductName(value)).toLowerCase(); }
+function isAggregateProductName(value) {
+  const n = normalizeExcelHeader(value);
+  return n === 'tong' || n === 'tong cong' || n === 'total' || n === 'grand total' || n.startsWith('tong cong ');
+}
 function excelRowValue(row, aliases) {
   const entries = Object.entries(row || {});
   const normalized = entries.map(([k,v]) => [normalizeExcelHeader(k), v]);
@@ -3022,10 +3026,56 @@ function canImportProductFiles(user) { return user?.role === 'admin'; }
 function readExcelRows(filePath) {
   const wb=XLSX.readFile(filePath,{cellDates:true,raw:false});
   const rows=[];
+  const headerTokens=['san pham','ten san pham','chi nhanh','ten chi nhanh','kenh ban hang','ten kenh ban hang','nguon','so luong','so luong thuc','doanh thu','tong doanh thu','doanh thu thuan'];
+  const headerScore=(line)=>{
+    const cells=(line||[]).map(v=>normalizeExcelHeader(v)).filter(Boolean);
+    let score=0;
+    headerTokens.forEach(t=>{if(cells.some(c=>c===t||c.includes(t)||t.includes(c)))score++;});
+    if(cells.some(c=>c.includes('san pham')))score+=3;
+    if(cells.some(c=>c.includes('chi nhanh')||c==='cua hang'||c==='kho'))score+=2;
+    if(cells.some(c=>c.includes('doanh thu')||c.includes('thanh tien')||c.includes('gia tri')))score+=2;
+    if(cells.some(c=>c.includes('so luong')))score+=2;
+    return score;
+  };
   wb.SheetNames.forEach(sheetName => {
     const ws=wb.Sheets[sheetName];
-    const part=XLSX.utils.sheet_to_json(ws,{defval:'',raw:true});
-    part.forEach(r=>rows.push(r));
+    const matrix=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:true});
+    if(!matrix.length)return;
+    let headerRow=0,best=-1;
+    for(let i=0;i<Math.min(matrix.length,50);i++){
+      const sc=headerScore(matrix[i]);
+      if(sc>best){best=sc;headerRow=i;}
+    }
+    // Sapo exports often place report title/filter rows before the real table header.
+    // If no convincing header is found, keep the old first-row behavior.
+    if(best<5){
+      const part=XLSX.utils.sheet_to_json(ws,{defval:'',raw:true});
+      part.forEach(r=>rows.push(r));
+      return;
+    }
+    const h1=matrix[headerRow]||[];
+    const h2=matrix[headerRow+1]||[];
+    const secondLooksHeader=headerScore(h2)>=4 && h2.filter(v=>String(v??'').trim()!=='').length>=2;
+    let group='';
+    const headers=h1.map((v,i)=>{
+      const top=String(v??'').trim();
+      if(top)group=top;
+      if(secondLooksHeader){
+        const sub=String(h2[i]??'').trim();
+        if(sub){
+          if(top && normalizeExcelHeader(top)!==normalizeExcelHeader(sub))return `${top} ${sub}`.trim();
+          if(!top && group)return `${group} ${sub}`.trim();
+          return sub;
+        }
+      }
+      return top || `Cột ${i+1}`;
+    });
+    const dataStart=headerRow+(secondLooksHeader?2:1);
+    for(let r=dataStart;r<matrix.length;r++){
+      const line=matrix[r]||[];
+      if(!line.some(v=>String(v??'').trim()!==''))continue;
+      const obj={};headers.forEach((h,i)=>{obj[h]=line[i]??'';});rows.push(obj);
+    }
   });
   return rows;
 }
@@ -3240,6 +3290,7 @@ function aggregateProductAnalytics(user, opts={}) {
     const slowScore=(daysSince||periodDays)*Math.max(0,x.stock_qty)/Math.max(1,x.sold_qty);
     return {...x,pos_qty:Math.round(x.pos_qty*100)/100,online_qty:Math.round(x.online_qty*100)/100,sold_qty:Math.round(x.sold_qty*100)/100,revenue:Math.round(x.revenue),stock_qty:Math.round(x.stock_qty*100)/100,velocity,pos_velocity:posVelocity,online_velocity:onlineVelocity,selling_days:sellingDays,days_cover:daysCover,sellable_qty:Math.round(sellableQty*100)/100,reserve_recommended:Math.round(reserveRecommended*100)/100,days_since_arrival:daysSince,slow_score:Math.round(slowScore*100)/100};
   });
+  rows=rows.filter(r=>!isAggregateProductName(r.product_name));
   if(searchKey)rows=rows.filter(r=>normalizeExcelHeader(r.product_name).includes(searchKey));
   db.product_zero_value_exclusions=db.product_zero_value_exclusions||[];
   const zeroExcluded=new Set((db.product_zero_value_exclusions||[]).filter(z=>z.status!=='deleted'&&storeAllowed(z.store_id)&&((z.granularity==='period'&&z.period_start===start&&z.period_end===end)||(z.granularity==='daily'&&z.sale_date>=start&&z.sale_date<endExclusive))).map(z=>z.product_key));
@@ -3261,8 +3312,8 @@ function weeklyAutoBestSellers(storeId,start,endExclusive) {
   const exactPeriod=scoped.filter(r=>r.granularity==='period' && r.period_start===start && r.period_end===weekEnd);
   const containedPeriods=scoped.filter(r=>r.granularity==='period' && r.period_start>=start && r.period_end<=weekEnd);
   const sourceRows=exactPeriod.length ? exactPeriod : (containedPeriods.length ? containedPeriods : scoped.filter(r=>r.granularity!=='period' && r.sale_date>=start && r.sale_date<endExclusive));
-  sourceRows.forEach(r=>{const key=r.product_key||productNameKey(r.product_name);const x=map.get(key)||{name:r.product_name,quantity:0,revenue:0};x.quantity+=Number(r.quantity||0);x.revenue+=Number(r.revenue||0);map.set(key,x);});
-  return Array.from(map.values()).filter(x=>x.revenue>0).sort((a,b)=>b.quantity-a.quantity||b.revenue-a.revenue).slice(0,5).map(x=>({name:x.name,sku:'',quantity:Math.round(x.quantity*100)/100,bill_count:0,note:'Tự động từ Báo cáo doanh thu theo sản phẩm'}));
+  sourceRows.forEach(r=>{if(isAggregateProductName(r.product_name))return;const key=r.product_key||productNameKey(r.product_name);const x=map.get(key)||{name:r.product_name,quantity:0,revenue:0};x.quantity+=Number(r.quantity||0);x.revenue+=Number(r.revenue||0);map.set(key,x);});
+  return Array.from(map.values()).filter(x=>x.revenue>0&&!isAggregateProductName(x.name)).sort((a,b)=>b.quantity-a.quantity||b.revenue-a.revenue).slice(0,5).map(x=>({name:x.name,sku:'',quantity:Math.round(x.quantity*100)/100,bill_count:0,note:'Tự động từ Báo cáo doanh thu theo sản phẩm'}));
 }
 
 app.get('/api/product-analytics', requireAuth, (req,res)=>{
@@ -3321,12 +3372,13 @@ app.post('/api/product-analytics/import-sales', requireAuth, upload.single('file
     const granularity=hasDateColumn?'daily':'period';
     const agg=new Map(); const zeroCandidates=[]; let skippedSource=0,skippedZero=0,skippedName=0,skippedStore=0,skippedDate=0;
     rawRows.forEach(row=>{
-      const sourceRaw=String(excelRowValue(row,['Tên kênh bán hàng','Nguồn','Nguồn đơn','Kênh bán hàng','Nguồn bán hàng','Source','Kênh'])??'').trim();
+      const sourceRaw=String(excelRowValue(row,['Tên kênh bán hàng','Nguồn','Nguồn đơn','Kênh bán hàng','Nguồn bán hàng','Source','Kênh','Kênh bán','Tên kênh'])??'').trim();
       const source=normalizeExcelHeader(sourceRaw)==='pos'?'POS':'ONLINE';
-      const name=normalizeProductName(excelRowValue(row,['Tên sản phẩm','Sản phẩm','Tên hàng hóa','Tên hàng','Product name','Tên SP']));
+      const name=normalizeProductName(excelRowValue(row,['Tên sản phẩm','Sản phẩm','Tên hàng hóa','Tên hàng','Product name','Tên SP','Tên sản phẩm/ dịch vụ','Tên sản phẩm dịch vụ']));
       if (!name){skippedName++;return;}
-      const qty=Math.abs(parseMoneyLoose(excelRowValue(row,['Số lượng thực','Số lượng','SL hàng thực bán','Số lượng bán','SL bán','Quantity','Qty']))||0);
-      let revenue=parseMoneyLoose(excelRowValue(row,['Tổng doanh thu','Doanh thu thuần','Doanh thu','Thành tiền','Giá trị','Tổng tiền','Net sales','Revenue','Giá trị hàng bán']));
+      if (isAggregateProductName(name)) return;
+      const qty=Math.abs(parseMoneyLoose(excelRowValue(row,['Số lượng thực','Số lượng','SL hàng thực bán','Số lượng bán','SL bán','Quantity','Qty','Số SP bán','SL sản phẩm','Số lượng sản phẩm','Số lượng bán thực tế']))||0);
+      let revenue=parseMoneyLoose(excelRowValue(row,['Tổng doanh thu','Doanh thu thuần','Doanh thu','Thành tiền','Giá trị','Tổng tiền','Net sales','Revenue','Giá trị hàng bán','Doanh số','Giá trị đơn hàng']));
       if (!revenue){const price=parseMoneyLoose(excelRowValue(row,['Giá bán','Đơn giá','Price'])); if(price&&qty) revenue=price*qty;}
       const parsedDate=parseExcelDateValue(excelRowValue(row,['Ngày','Ngày tạo','Ngày bán','Ngày đơn hàng','Thời gian','Created at','Order date','Ngày ghi nhận']));
       const d=granularity==='daily'?parsedDate:reportEnd;
@@ -3366,6 +3418,7 @@ app.post('/api/product-analytics/import-sales', requireAuth, upload.single('file
     db.product_import_batches.push({id:batchId,type:'sales',file_name:req.file.originalname||'',period_start:reportStart,period_end:reportEnd,granularity,rows_raw:rawRows.length,rows_valid:agg.size,inserted,replaced,skipped_source:skippedSource,skipped_zero:skippedZero,skipped_name:skippedName,skipped_store:skippedStore,skipped_date:skippedDate,created_at:nowIso(),created_by:req.user.id});
     saveDb();
     const note=granularity==='period'?'File Sapo không có cột ngày: dữ liệu được lưu đúng theo kỳ báo cáo đã chọn. Khi xem, hãy chọn đúng kỳ này.':'File có ngày giao dịch: có thể lọc linh hoạt theo ngày.';
+    if(!agg.size){return res.status(400).json({error:`Không tìm thấy dòng bán hàng hợp lệ trong file. Đã đọc ${rawRows.length} dòng; bỏ ${skippedName} dòng thiếu tên SP, ${skippedStore} dòng không nhận được chi nhánh, ${skippedZero} dòng giá trị = 0. Hãy kiểm tra đúng file Báo cáo doanh thu/OPS theo sản phẩm.`});}
     res.json({ok:true,file:req.file.originalname,raw_rows:rawRows.length,valid_rows:agg.size,inserted,replaced,skipped_source:skippedSource,skipped_zero:skippedZero,skipped_name:skippedName,skipped_store:skippedStore,granularity,period_start:reportStart,period_end:reportEnd,message:`Đã lấy ${agg.size} dòng gộp theo tên sản phẩm. POS được tách riêng; mọi nguồn khác được tính Online. Chỉ tính sản phẩm có giá trị > 0. ${note}`});
   } catch(err){res.status(400).json({error:err.message||'Không đọc được file Sapo'});} finally {try{fs.unlinkSync(req.file.path)}catch{}}
 });
@@ -3381,7 +3434,7 @@ app.post('/api/product-analytics/import-inventory', requireAuth, upload.single('
     const rawRows=readInventoryDetailRows(req.file.path);const agg=new Map();let skippedName=0,skippedStore=0;
     rawRows.forEach(row=>{
       const name=normalizeProductName(excelRowValue(row,['Sản phẩm','Tên sản phẩm','Tên hàng hóa','Tên hàng','Product name']));if(!name){skippedName++;return;}
-      if(normalizeExcelHeader(name).startsWith('tong '))return;
+      if(isAggregateProductName(name))return;
       const importedStoreName=String(excelRowValue(row,['Chi nhánh','Tên chi nhánh','Cửa hàng','Kho','Location','Branch'])??'').trim();const importedStore=storeFromImportedName(importedStoreName);
       let sid;if(selected==='all'){if(!importedStore){skippedStore++;return;}sid=importedStore.id;}else{if(importedStore&&Number(importedStore.id)!==Number(selected)){skippedStore++;return;}sid=Number(selected);}
       const sku=String(excelRowValue(row,['Mã SKU','SKU','Mã hàng','Mã sản phẩm'])??'').trim();
