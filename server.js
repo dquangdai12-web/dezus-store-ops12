@@ -3244,10 +3244,16 @@ function aggregateProductAnalytics(user, opts={}) {
   const storeAllowed=id => scope==='all' ? true : Number(id)===Number(scope);
   const searchKey=normalizeExcelHeader(opts.q||'');
   const allSales=(db.product_sales_imports||[]).filter(r=>r.status!=='deleted' && storeAllowed(r.store_id) && Number(r.revenue||0)>0);
-  const exactPeriodSales=allSales.filter(r=>r.granularity==='period' && r.period_start===start && r.period_end===end);
-  const dailySales=allSales.filter(r=>r.granularity!=='period' && r.sale_date>=start && r.sale_date<endExclusive);
-  // Daily uploads are authoritative for flexible Day/Week/Month views. Old period summaries must not hide newer daily data.
-  const sales=dailySales.length ? dailySales : exactPeriodSales;
+  const exactPeriodSales=allSales.filter(r=>r.granularity==='period' && dateOnly(r.period_start)===start && dateOnly(r.period_end)===end);
+  // A Sapo report exported for one specific day often has no transaction-date column.
+  // It is stored as period_start === period_end. Treat those single-day period files as atomic daily data
+  // so they roll up correctly when the user switches from Day to Week or Month.
+  const trueDailySales=allSales.filter(r=>r.granularity!=='period' && dateOnly(r.sale_date)>=start && dateOnly(r.sale_date)<endExclusive);
+  const singleDayPeriodSales=allSales.filter(r=>r.granularity==='period' && dateOnly(r.period_start)===dateOnly(r.period_end) && dateOnly(r.period_start)>=start && dateOnly(r.period_start)<endExclusive);
+  const atomicSales=[...trueDailySales,...singleDayPeriodSales];
+  // Atomic day data is authoritative for flexible Day/Week/Month views.
+  // Fall back to an exact whole-period upload only when no day-level data exists in the selected range.
+  const sales=atomicSales.length ? atomicSales : exactPeriodSales;
 
   const invAll=(db.product_inventory_imports||[]).filter(r=>r.status!=='deleted' && storeAllowed(r.store_id) && String(r.snapshot_date||'')<=end);
   const exactInv=invAll.filter(r=>r.period_start===start && r.period_end===end);
@@ -3295,7 +3301,15 @@ function aggregateProductAnalytics(user, opts={}) {
   rows=rows.filter(r=>!isAggregateProductName(r.product_name));
   if(searchKey)rows=rows.filter(r=>normalizeExcelHeader(r.product_name).includes(searchKey));
   db.product_zero_value_exclusions=db.product_zero_value_exclusions||[];
-  const zeroExcluded=new Set((db.product_zero_value_exclusions||[]).filter(z=>z.status!=='deleted'&&storeAllowed(z.store_id)&&((z.granularity==='period'&&z.period_start===start&&z.period_end===end)||(z.granularity==='daily'&&z.sale_date>=start&&z.sale_date<endExclusive))).map(z=>z.product_key));
+  const zeroExcluded=new Set((db.product_zero_value_exclusions||[]).filter(z=>{
+    if(z.status==='deleted'||!storeAllowed(z.store_id))return false;
+    if(z.granularity==='daily')return dateOnly(z.sale_date)>=start&&dateOnly(z.sale_date)<endExclusive;
+    if(z.granularity==='period'){
+      const ps=dateOnly(z.period_start),pe=dateOnly(z.period_end);
+      return (ps===start&&pe===end)||(ps===pe&&ps>=start&&ps<endExclusive);
+    }
+    return false;
+  }).map(z=>z.product_key));
   const eligible=r=>!zeroExcluded.has(r.product_key);
   const best=rows.filter(r=>eligible(r)&&r.sold_qty>0&&r.revenue>0).slice().sort((a,b)=>b.sold_qty-a.sold_qty||b.revenue-a.revenue).slice(0,15);
   const stock=rows.filter(r=>eligible(r)&&r.stock_qty>0&&!r.exclude_top_stock).slice().sort((a,b)=>b.stock_qty-a.stock_qty||a.velocity-b.velocity);
