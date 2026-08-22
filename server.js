@@ -3726,6 +3726,7 @@ function buildWeeklyReport(user, rawWeekStart, rawStoreId, rawUserStatus = 'acti
 }
 
 app.post('/api/sales/daily', requireAuth, requireAnyPerm('can_manage_total_sales','can_manage_sales'), (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Chỉ Admin được nhập doanh thu từng ngày' });
   const { store_id, sale_date, customer_count, customer_new_count, customer_old_count, note, entries } = req.body || {};
   const storeId = canSelectAssignedStore(req.user) ? Number(store_id || getPrimaryStoreId(req.user)) : Number(getPrimaryStoreId(req.user));
   const store = getStore(storeId);
@@ -3744,6 +3745,7 @@ app.post('/api/sales/daily', requireAuth, requireAnyPerm('can_manage_total_sales
 });
 
 app.post('/api/sales/targets', requireAuth, requirePerm('can_set_sales_targets'), (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Chỉ Admin được set target đầu tháng' });
   const { user_id, user_ids, target_month, target, target_revenue, target_upt, target_atv, target_cr, note } = req.body || {};
   const ids = Array.from(new Set((Array.isArray(user_ids) ? user_ids : (user_id ? [user_id] : [])).map(v => Number(v)).filter(v => Number.isFinite(v) && v > 0)));
   if (!ids.length) return res.status(400).json({ error: 'Chọn ít nhất 1 nhân viên để nhập target' });
@@ -3779,6 +3781,7 @@ app.post('/api/sales/targets', requireAuth, requirePerm('can_set_sales_targets')
 
 
 app.post('/api/sales/daily-targets', requireAuth, requirePerm('can_set_sales_targets'), (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Chỉ Admin được set target doanh thu theo ngày' });
   const { store_id, target_date, start_date, end_date, target_revenue, note } = req.body || {};
   let { dates } = req.body || {};
   const storeId = canSelectAssignedStore(req.user) ? Number(store_id || getPrimaryStoreId(req.user)) : Number(getPrimaryStoreId(req.user));

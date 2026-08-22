@@ -1,0 +1,8 @@
+DEZUS STORE OPS v4.177
+
+Cập nhật:
+1. Khôi phục các khu nhập liệu ngoài Doanh thu về dạng hiển thị sẵn như trước.
+2. Báo cáo ngày: form hiển thị ngay, nút Lưu báo cáo ngày nằm trực tiếp trong form.
+3. Báo cáo tuần: form feedback tuần hiển thị ngay, nút Lưu báo cáo tuần luôn sẵn khi có quyền nhập.
+4. Riêng mục Doanh thu vẫn giữ luồng đóng/mở: bấm Sửa dữ liệu -> hiện form -> bấm Lưu.
+5. Ba khu Doanh thu (Set target đầu tháng nhiều nhân viên, Set target doanh thu theo ngày - tổng cửa hàng, Doanh thu từng ngày) vẫn chỉ Admin nhìn thấy và thao tác.

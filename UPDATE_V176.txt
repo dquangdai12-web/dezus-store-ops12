@@ -1,0 +1,8 @@
+DEZUS STORE OPS v4.176
+
+Phân quyền doanh thu:
+1. Chỉ Admin thấy Set target đầu tháng nhiều nhân viên.
+2. Chỉ Admin thấy Set target doanh thu theo ngày - tổng cửa hàng.
+3. Chỉ Admin thấy Nhập doanh thu từng ngày.
+4. Manager/Office/Employee vẫn xem các bảng doanh thu theo quyền xem hiện có, nhưng không thấy 3 khu nhập dữ liệu trên.
+5. Backend cũng chặn 3 API ghi dữ liệu này nếu không phải Admin.
