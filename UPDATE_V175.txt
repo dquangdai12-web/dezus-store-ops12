@@ -1,0 +1,7 @@
+DEZUS STORE OPS v4.175
+
+Cập nhật UX nhập dữ liệu:
+1. Báo cáo ngày: mặc định chỉ xem dữ liệu; bấm Nhập dữ liệu mới mở form. Khi mở, nút đổi thành Lưu báo cáo ngày; lưu xong tự thu gọn và trở lại Nhập dữ liệu.
+2. Báo cáo tuần: tương tự, nút Nhập dữ liệu <-> Lưu báo cáo tuần.
+3. Doanh thu: Set target tháng, Set target ngày và Doanh thu từng ngày đều mặc định thu gọn; bấm Nhập dữ liệu mới hiện form và nút đổi thành nút Lưu tương ứng.
+4. Sau khi lưu thành công, form tự đóng và giao diện quay về chế độ xem.
