@@ -1,0 +1,10 @@
+DEZUS STORE OPS v4.178
+
+Cập nhật Báo cáo tuần:
+1. Tiêu đề form luôn là Feedback tuần.
+2. Mặc định không tự hiện ô nhập feedback.
+3. Thêm nút Sửa feedback ở thẻ Feedback tuần.
+4. Bấm Sửa feedback mới mở form.
+5. Bỏ nút Khôi phục dữ liệu đã lưu, thay bằng Hủy sửa trong chế độ chỉnh sửa.
+6. Bỏ nút Lưu báo cáo tuần ở đầu trang.
+7. Nút lưu nằm trong form và đổi thành Lưu feedback.
