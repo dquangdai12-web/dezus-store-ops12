@@ -1,0 +1,4 @@
+DEZUS STORE OPS v4.174
+
+Cập nhật duy nhất:
+Thêm cột Tồn đầu kỳ vào mục Chi tiết bán hàng, đặt trước Bán POS.
