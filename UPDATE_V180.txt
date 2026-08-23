@@ -1,0 +1,7 @@
+DEZUS STORE OPS v4.180
+
+Fix XNT:
+- Nhập trên web = Số lượng nhập - Chuyển kho.
+- Xuất trên web = Số lượng xuất - Chuyển kho.
+- Không còn dùng Tổng SL nhập / Tổng SL xuất cho 2 cột này.
+- Dữ liệu XNT đã upload trước đây cũng được đọc lại theo transfer_in / transfer_out nên không bắt buộc upload lại.

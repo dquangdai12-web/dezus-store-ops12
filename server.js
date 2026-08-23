@@ -3295,7 +3295,21 @@ function aggregateProductAnalytics(user, opts={}) {
   periodInv.forEach(r=>{
     const x=getRow(r.product_name,r.product_key);x.stores.add(Number(r.store_id));
     if(r.exclude_top_stock)x.exclude_top_stock=true;
-    ['opening_qty','import_qty','purchase_in_qty','sales_return_in_qty','transfer_in_qty','inventory_in_qty','other_in_qty','export_qty','sale_out_qty','purchase_return_out_qty','transfer_out_qty','inventory_out_qty','other_out_qty'].forEach(k=>x[k]+=Number(r[k]||0));
+    x.opening_qty+=Number(r.opening_qty||0);
+    x.purchase_in_qty+=Number(r.purchase_in_qty||0);
+    x.sales_return_in_qty+=Number(r.sales_return_in_qty||0);
+    x.transfer_in_qty+=Number(r.transfer_in_qty||0);
+    x.inventory_in_qty+=Number(r.inventory_in_qty||0);
+    x.other_in_qty+=Number(r.other_in_qty||0);
+    x.sale_out_qty+=Number(r.sale_out_qty||0);
+    x.purchase_return_out_qty+=Number(r.purchase_return_out_qty||0);
+    x.transfer_out_qty+=Number(r.transfer_out_qty||0);
+    x.inventory_out_qty+=Number(r.inventory_out_qty||0);
+    x.other_out_qty+=Number(r.other_out_qty||0);
+    // DEZUS logic: "Nhập" / "Xuất" trên dashboard chỉ là điều chuyển kho,
+    // không dùng Tổng SL nhập / Tổng SL xuất vì các tổng này gồm cả giao dịch khác (đặc biệt bán hàng).
+    x.import_qty+=Number(r.transfer_in_qty||0);
+    x.export_qty+=Number(r.transfer_out_qty||0);
     if(r.arrival_date && (!x.arrival_date||String(r.arrival_date)>x.arrival_date))x.arrival_date=String(r.arrival_date);
   });
   // If exact period inventory exists, its closing stock is authoritative for the selected period.
@@ -3603,9 +3617,14 @@ app.post('/api/product-analytics/import-inventory', requireAuth, upload.single('
       const key=productNameKey(name),k=`${sid}|${reportStart}|${reportEnd}|${key}`;
       const x=agg.get(k)||{store_id:sid,snapshot_date:reportEnd,period_start:reportStart,period_end:reportEnd,inventory_period_type:inventoryPeriodType,product_key:key,product_name:name,stock_qty:0,opening_qty:0,import_qty:0,purchase_in_qty:0,sales_return_in_qty:0,transfer_in_qty:0,inventory_in_qty:0,other_in_qty:0,export_qty:0,sale_out_qty:0,purchase_return_out_qty:0,transfer_out_qty:0,inventory_out_qty:0,other_out_qty:0,arrival_date:'',exclude_top_stock:false};
       if(excludeTopStock)x.exclude_top_stock=true;
-      x.opening_qty+=opening;x.purchase_in_qty+=purchaseIn;x.sales_return_in_qty+=salesReturnIn;x.transfer_in_qty+=transferIn;x.inventory_in_qty+=inventoryIn;x.other_in_qty+=otherIn;x.import_qty+=totalIn;x.sale_out_qty+=saleOut;x.purchase_return_out_qty+=purchaseReturnOut;x.transfer_out_qty+=transferOut;x.inventory_out_qty+=inventoryOut;x.other_out_qty+=otherOut;x.export_qty+=totalOut;x.stock_qty+=closing;
+      x.opening_qty+=opening;x.purchase_in_qty+=purchaseIn;x.sales_return_in_qty+=salesReturnIn;x.transfer_in_qty+=transferIn;x.inventory_in_qty+=inventoryIn;x.other_in_qty+=otherIn;
+      // Chỉ lấy điều chuyển kho cho 2 cột Nhập / Xuất hiển thị trên web.
+      x.import_qty+=transferIn;
+      x.sale_out_qty+=saleOut;x.purchase_return_out_qty+=purchaseReturnOut;x.transfer_out_qty+=transferOut;x.inventory_out_qty+=inventoryOut;x.other_out_qty+=otherOut;
+      x.export_qty+=transferOut;
+      x.stock_qty+=closing;
       // XNT is period-level, so arrival date is only safe when there was no opening stock and purchase receipt occurred in this period.
-      if(opening<=0&&purchaseIn>0)x.arrival_date=reportStart;
+      if(opening<=0&&transferIn>0)x.arrival_date=reportStart;
       agg.set(k,x);
     });
     db.product_inventory_imports=db.product_inventory_imports||[];db.product_import_batches=db.product_import_batches||[];
@@ -3614,7 +3633,7 @@ app.post('/api/product-analytics/import-inventory', requireAuth, upload.single('
     const batchId=nextId('product_import_batches');let inserted=0;
     agg.forEach(x=>{db.product_inventory_imports.push({id:nextId('product_inventory_imports'),...x,batch_id:batchId,status:'active',created_at:nowIso(),created_by:req.user.id});inserted++;});
     db.product_import_batches.push({id:batchId,type:'inventory_detail',inventory_period_type:inventoryPeriodType,file_name:req.file.originalname||'',period_start:reportStart,period_end:reportEnd,rows_raw:rawRows.length,rows_valid:agg.size,inserted,skipped_name:skippedName,skipped_store:skippedStore,created_at:nowIso(),created_by:req.user.id});saveDb();
-    res.json({ok:true,raw_rows:rawRows.length,valid_rows:agg.size,inserted,message:`Đã cập nhật ${agg.size} sản phẩm XNT theo ${inventoryPeriodType==='week'?'tuần':'tháng'}. Điều chuyển kho được tách riêng, không tính là bán hàng.`});
+    res.json({ok:true,raw_rows:rawRows.length,valid_rows:agg.size,inserted,message:`Đã cập nhật ${agg.size} sản phẩm XNT theo ${inventoryPeriodType==='week'?'tuần':'tháng'}. Cột Nhập/Xuất trên phân tích chỉ lấy Số lượng nhập - Chuyển kho và Số lượng xuất - Chuyển kho.`});
   }catch(err){res.status(400).json({error:err.message||'Không đọc được Báo cáo xuất nhập tồn Sapo'});}finally{try{fs.unlinkSync(req.file.path)}catch{}}
 });
 
