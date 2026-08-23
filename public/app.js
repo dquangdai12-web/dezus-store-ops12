@@ -53,6 +53,8 @@ const state = {
   productAnalyticsTab: 'summary',
   productAnalyticsSearch: '',
   productAnalyticsSort: {},
+  reportYear: new Date().getFullYear(),
+  reportMonth: new Date().getMonth() + 1,
 };
 
 const app = $('#app');
@@ -1272,6 +1274,19 @@ async function renderWeeklyReport() {
   });
 }
 
+const TASK_CATEGORY_OPTIONS = [
+  ['ops','Vận hành / OPS'],
+  ['sales_cskh','Bán hàng / CSKH'],
+  ['inventory','Hàng hóa'],
+  ['vm','VM / Hình ảnh'],
+  ['reports','Báo cáo / Kiểm soát'],
+  ['people_training','Quản lý nhân sự / Đào tạo'],
+  ['other','Khác']
+];
+function taskCategoryOptions(selected='ops') {
+  return TASK_CATEGORY_OPTIONS.map(([v,l]) => `<option value="${v}" ${String(selected)===v?'selected':''}>${l}</option>`).join('');
+}
+
 async function renderTasks() {
   const data = await api('/api/tasks');
   const tasks = data.tasks;
@@ -1288,8 +1303,9 @@ async function renderTasks() {
   const shiftOptions = shifts.map(sh => `<option value="${sh.id}">${esc(sh.code || sh.name)} • ${esc(sh.start_time || '')}-${esc(sh.end_time || '')}</option>`).join('');
   const taskUserPicker = (id, users, hint = '') => `<div class="task-user-picker" id="${id}" role="group" aria-label="Chọn nhân viên">${users.map(u => `<label class="task-user-option"><input type="checkbox" value="${u.id}"><span class="task-user-dot" aria-hidden="true"></span><span class="task-user-info"><b>${esc(u.full_name)}</b><small>${esc(u.store_name || '')}</small></span></label>`).join('') || '<div class="empty compact">Chưa có nhân viên trong cửa hàng này</div>'}</div>${hint ? `<span class="hint">${hint}</span>` : ''}`;
   const assignForm = can('can_assign_tasks') ? `
-    <div class="card task-create-card"><div class="section-title"><h3>Giao việc mới</h3><span class="badge">Chọn loại trước</span></div>
-      <form id="taskForm" class="task-advanced-form">
+    <div class="card task-create-card task-create-collapsed">
+      <div class="section-title task-create-toolbar"><div><p class="eyebrow">Công việc</p><h3>Giao việc mới</h3></div><button type="button" class="btn task-create-toggle" id="taskCreateToggle">Tạo công việc</button></div>
+      <form id="taskForm" class="task-advanced-form task-create-form" hidden>
         <input type="hidden" name="task_mode" id="taskMode" value="single">
         <div class="task-mode-chooser" role="tablist" aria-label="Chọn cách giao việc">
           <button type="button" class="taskModeBtn active" data-mode="single"><b>⏱</b><span>Thời gian cụ thể</span><small>Giao một lần theo hạn ngày/giờ</small></button>
@@ -1300,8 +1316,8 @@ async function renderTasks() {
         <div class="grid two task-basic-grid">
           <div class="field"><label>Tiêu đề công việc</label><input class="input" name="title" required placeholder="VD: Kiểm tra VM đầu ca"></div>
           <div class="field"><label>Cửa hàng</label><select name="store_id" id="taskStore" ${allowedStores.length <= 1 ? 'disabled' : ''}>${storeOptions}</select></div>
+          <div class="field"><label>Nhóm công việc</label><select name="category" required>${taskCategoryOptions('ops')}</select><span class="hint">Mục Khác khi tính điểm sẽ tự gộp vào Vận hành / OPS.</span></div>
           <div class="field"><label>Mức độ</label><select name="priority"><option value="low">Thấp</option><option value="medium" selected>Trung bình</option><option value="high">Cao</option></select></div>
-          <div class="field"><label>Điểm phạt cố định</label><div class="task-fixed-penalty"><b>Trễ / quá hạn: -5 điểm</b><span>Không hoàn thành: -10 điểm</span></div></div>
         </div>
 
         <div class="task-mode-panel active" data-task-panel="single">
@@ -1337,7 +1353,6 @@ async function renderTasks() {
         </div>
 
         <div class="field" style="margin-top:12px"><label>Mô tả / yêu cầu</label><textarea name="description" placeholder="Nội dung, tiêu chuẩn hoàn thành, chứng từ cần đính kèm..."></textarea></div>
-        <div class="task-submit-row"><button class="btn">Tạo & giao việc</button></div>
       </form>
     </div>` : '';
   const todayKey = new Date().toISOString().slice(0, 10);
@@ -1349,12 +1364,71 @@ async function renderTasks() {
   const mobileSummary = state.user.role === 'admin'
     ? `<div class="task-mobile-summary"><div><b>${tasks.filter(t => ['assigned','overdue'].includes(t.status)).length}</b><span>Chưa xong</span></div><div><b>${todayTasks.length}</b><span>Hôm nay</span></div><div><b>${overdueTasks.length}</b><span>Quá hạn</span></div><div><b>${notCompletedTasks.length}</b><span>Không hoàn thành</span></div></div>`
     : `<div class="task-mobile-summary"><div><b>${tasks.filter(t => ['assigned','overdue'].includes(t.status)).length}</b><span>Chưa xong</span></div><div><b>${todayTasks.length}</b><span>Hôm nay</span></div></div>`;
+  // Bộ lọc tổng hợp công việc: luôn giới hạn trong phạm vi dữ liệu mà API và phân quyền tài khoản cho phép xem.
+  const summaryAllowedStores = selectableStores();
+  if (state.taskSummaryStoreId === undefined) state.taskSummaryStoreId = 'all';
+  if (state.taskSummaryUserId === undefined) state.taskSummaryUserId = 'all';
+  const canSeeMultiStoreTaskSummary = summaryAllowedStores.length > 1;
+  const selectedSummaryStoreId = String(state.taskSummaryStoreId || 'all');
+  const taskSummaryUsers = state.user.role === 'employee'
+    ? [state.user]
+    : employees().filter(u => selectedSummaryStoreId === 'all' || Number(u.store_id) === Number(selectedSummaryStoreId) || (Array.isArray(u.store_ids) && u.store_ids.map(Number).includes(Number(selectedSummaryStoreId))));
+  if (state.user.role === 'employee') state.taskSummaryUserId = String(state.user.id);
+  if (state.taskSummaryUserId !== 'all' && !taskSummaryUsers.some(u => Number(u.id) === Number(state.taskSummaryUserId))) state.taskSummaryUserId = 'all';
+  const selectedSummaryUserId = String(state.taskSummaryUserId || 'all');
+  const summaryTasks = tasks.filter(t => {
+    const storeOk = selectedSummaryStoreId === 'all' || Number(t.store_id) === Number(selectedSummaryStoreId);
+    const userOk = selectedSummaryUserId === 'all' || Number(t.assignee_id) === Number(selectedSummaryUserId);
+    return storeOk && userOk;
+  });
+  const summaryStoreOptions = `${canSeeMultiStoreTaskSummary ? '<option value="all">Tất cả cửa hàng</option>' : ''}${summaryAllowedStores.map(st => `<option value="${st.id}" ${String(st.id)===selectedSummaryStoreId?'selected':''}>${esc(st.name)}</option>`).join('')}`;
+  const summaryUserOptions = `${state.user.role !== 'employee' ? '<option value="all">Tất cả nhân viên</option>' : ''}${taskSummaryUsers.map(u => `<option value="${u.id}" ${String(u.id)===selectedSummaryUserId?'selected':''}>${esc(u.full_name)}${u.store_name ? ` • ${esc(u.store_name)}` : ''}</option>`).join('')}`;
+
+  const summaryCategoryKeys = ['ops','sales_cskh','inventory','vm','reports','people_training','other'];
+  const summaryCategoryLabels = Object.fromEntries(TASK_CATEGORY_OPTIONS);
+  const categorySummaryRows = summaryCategoryKeys.map(key => {
+    const rows = summaryTasks.filter(t => String(t.category || 'ops') === key);
+    const completed = rows.filter(t => ['completed_on_time','completed_late'].includes(String(t.status || ''))).length;
+    const onTime = rows.filter(t => String(t.status || '') === 'completed_on_time').length;
+    const late = rows.filter(t => ['completed_late','overdue'].includes(String(t.status || ''))).length;
+    const failed = rows.filter(t => String(t.status || '') === 'not_completed').length;
+    const open = Math.max(0, rows.length - completed - failed);
+    const percent = rows.length ? Math.round((completed / rows.length) * 100) : 0;
+    return { key, label: summaryCategoryLabels[key] || key, assigned: rows.length, completed, onTime, late, failed, open, percent };
+  }).filter(x => x.assigned > 0 || ['ops','inventory','vm','reports'].includes(x.key));
+  const summaryCompleted = summaryTasks.filter(t => ['completed_on_time','completed_late'].includes(String(t.status || ''))).length;
+  const summaryOpen = summaryTasks.filter(t => ['assigned','overdue'].includes(String(t.status || ''))).length;
+  const summaryFailed = summaryTasks.filter(t => String(t.status || '') === 'not_completed').length;
+  const summaryLate = summaryTasks.filter(t => ['completed_late','overdue'].includes(String(t.status || ''))).length;
+  const summaryPercent = summaryTasks.length ? Math.round((summaryCompleted / summaryTasks.length) * 100) : 0;
+  const categorySummary = `<div class="card task-category-summary-card task-summary-dashboard" style="margin-top:16px">
+    <div class="task-summary-top">
+      <div><p class="eyebrow">Tổng hợp công việc</p><h3>Theo dõi khối lượng & hoàn thành</h3></div>
+      <div class="task-summary-filters">
+        <div class="field"><label>Cửa hàng</label><select class="input" id="taskSummaryStoreFilter" ${summaryAllowedStores.length<=1?'disabled':''}>${summaryStoreOptions}</select></div>
+        <div class="field"><label>Nhân viên</label><select class="input" id="taskSummaryUserFilter" ${state.user.role==='employee'?'disabled':''}>${summaryUserOptions}</select></div>
+      </div>
+    </div>
+    <div class="task-category-summary-grid">${categorySummaryRows.map(x => `<div class="task-category-summary-item cat-${x.key}"><div class="task-category-summary-head"><div><small>Danh mục</small><b>${esc(x.label)}</b></div><span>${x.percent}%</span></div><div class="task-category-summary-stats"><div><strong>${x.assigned}</strong><small>Đã giao</small></div><div><strong>${x.completed}</strong><small>Hoàn thành</small></div><div><strong>${x.open}</strong><small>Đang làm</small></div><div><strong>${x.failed}</strong><small>Không HT</small></div></div><div class="task-category-summary-bar"><i style="width:${Math.min(100,x.percent)}%"></i></div><div class="task-category-summary-foot"><span>Đúng hạn <b>${x.onTime}</b></span><span>Trễ/quá hạn <b>${x.late}</b></span></div></div>`).join('')}</div>
+    <p class="hint task-summary-note">Mục <b>Khác</b> vẫn hiển thị riêng để quản lý task; khi tính điểm hiệu suất sẽ tự gộp vào <b>Vận hành / OPS</b>.</p>
+  </div>`;
   const exceptionDashboard = state.user.role === 'admin'
     ? `<div class="card task-exception-dashboard" style="margin-top:16px"><div class="section-title"><div><p class="eyebrow">Tổng hợp cần xử lý</p><h3>Quá hạn & Không hoàn thành</h3></div><span class="badge danger">${overdueTasks.length + notCompletedTasks.length} mục</span></div><div class="task-exception-tabs"><button type="button" class="btn secondary small taskExceptionTab active" data-filter="overdue">Quá hạn dưới 4 tiếng (${overdueTasks.length})</button><button type="button" class="btn secondary small taskExceptionTab" data-filter="not_completed">Không hoàn thành (${notCompletedTasks.length})</button></div><div id="taskExceptionList" class="grid task-timeline">${(overdueTasks.length ? overdueTasks : notCompletedTasks).map(t => taskCard(t)).join('') || '<div class="empty">Không có công việc cần xử lý</div>'}</div></div>`
     : '';
   const todayBlock = todayTasks.length ? `<div class="card task-today-wrap task-timeline-wrap" style="margin-top:16px"><div class="toolbar"><div><p class="eyebrow">Hạn hôm nay / việc trong ngày</p><h3>${todayTasks.length} công việc cần nhìn ngay hôm nay</h3></div></div>${mobileSummary}<div class="grid task-timeline">${todayTasks.map(t => taskCard(t)).join('')}</div></div>` : mobileSummary;
   const grouped = otherTasks.map(t => taskCard(t)).join('') || '<div class="empty">Không còn công việc khác</div>';
-  shell(`${assignForm}${exceptionDashboard}${todayBlock}<div class="card task-list-wrap task-timeline-wrap" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">Danh sách công việc theo ngày gần nhất</h3>${can('can_export') ? '<button class="btn secondary" data-export="tasks">Tải Excel</button>' : ''}</div><div class="grid task-timeline">${grouped}</div></div>`, 'Công việc', '');
+  shell(`${assignForm}${categorySummary}${exceptionDashboard}${todayBlock}<div class="card task-list-wrap task-timeline-wrap" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">Danh sách công việc theo ngày gần nhất</h3>${can('can_export') ? '<button class="btn secondary" data-export="tasks">Tải Excel</button>' : ''}</div><div class="grid task-timeline">${grouped}</div></div>`, 'Công việc', '');
+  const taskSummaryStoreFilter = $('#taskSummaryStoreFilter');
+  const taskSummaryUserFilter = $('#taskSummaryUserFilter');
+  if (taskSummaryStoreFilter) taskSummaryStoreFilter.addEventListener('change', async () => {
+    state.taskSummaryStoreId = taskSummaryStoreFilter.value || 'all';
+    state.taskSummaryUserId = 'all';
+    await renderTasks();
+  });
+  if (taskSummaryUserFilter) taskSummaryUserFilter.addEventListener('change', async () => {
+    state.taskSummaryUserId = taskSummaryUserFilter.value || 'all';
+    await renderTasks();
+  });
   $$('.taskExceptionTab').forEach(btn => btn.addEventListener('click', () => {
     $$('.taskExceptionTab').forEach(x => x.classList.toggle('active', x === btn));
     const rows = btn.dataset.filter === 'not_completed' ? notCompletedTasks : overdueTasks;
@@ -1376,6 +1450,27 @@ async function renderTasks() {
     $$('.taskModeBtn').forEach(btn => btn.classList.toggle('active', btn.dataset.mode === mode));
     $$('.task-mode-panel').forEach(panel => panel.classList.toggle('active', panel.dataset.taskPanel === mode));
   }
+  const taskCreateToggle = $('#taskCreateToggle');
+  const taskCreateForm = $('#taskForm');
+  const taskCreateCard = taskCreateToggle?.closest('.task-create-card');
+  function setTaskCreateOpen(open) {
+    if (!taskCreateForm || !taskCreateToggle) return;
+    taskCreateForm.hidden = !open;
+    taskCreateCard?.classList.toggle('task-create-collapsed', !open);
+    taskCreateCard?.classList.toggle('task-create-open', open);
+    taskCreateToggle.textContent = open ? 'Lưu công việc' : 'Tạo công việc';
+    taskCreateToggle.classList.toggle('success', open);
+  }
+  taskCreateToggle?.addEventListener('click', () => {
+    if (!taskCreateForm) return;
+    if (taskCreateForm.hidden) {
+      setTaskCreateOpen(true);
+      requestAnimationFrame(() => taskCreateForm.querySelector('input[name="title"]')?.focus());
+    } else {
+      taskCreateForm.requestSubmit();
+    }
+  });
+  setTaskCreateOpen(false);
   $('#taskStore')?.addEventListener('change', e => refreshTaskAssignees(e.target.value));
   $$('.taskModeBtn').forEach(btn => btn.addEventListener('click', () => setTaskMode(btn.dataset.mode)));
   setTaskMode($('#taskMode')?.value || 'single');
@@ -1429,7 +1524,7 @@ function taskCard(t) {
   const priorityLabel = t.priority === 'high' ? 'Cao' : (t.priority === 'low' ? 'Thấp' : 'Trung bình');
   const priorityIcon = t.priority === 'high' ? '!' : (t.priority === 'low' ? '↓' : '•');
   const todayBadges = isToday ? `<span class="badge warning">${dueDay === todayKey ? 'Hạn hôm nay' : 'Việc hôm nay'}</span>` : '';
-  const lateBadge = isNotCompleted ? '<span class="badge danger">Không hoàn thành • quá 4 tiếng • -10 điểm</span>' : (isLate ? '<span class="badge warning">Quá hạn dưới 4 tiếng • -5 điểm</span>' : '');
+  const lateBadge = isNotCompleted ? '<span class="badge danger">Không hoàn thành • tính 0% công việc</span>' : (isLate ? '<span class="badge warning">Trễ / quá hạn • tính 70% công việc</span>' : '');
   const shiftSyncBadge = t.shift_ids && t.shift_ids.length ? '<span class="badge dark">Theo ca</span>' : '';
   const timelineTime = t.due_at ? new Date(t.due_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '--:--';
   return `<article class="card task-card ${isToday ? 'task-card-today' : ''} ${isLate ? 'task-card-late' : ''}">
@@ -1437,7 +1532,7 @@ function taskCard(t) {
     <div class="task-timeline-time"><b>${timelineTime}</b><span>${workDay ? dOnly(workDay) : ''}</span></div>
     <div class="task-card-content">
     <div class="task-card-topline">
-      <div class="task-badge-row">${todayBadges}${lateBadge}${shiftSyncBadge}<span class="task-priority priority-${esc(t.priority || 'medium')}"><b>${priorityIcon}</b> ${priorityLabel}</span></div>
+      <div class="task-badge-row">${todayBadges}${lateBadge}${shiftSyncBadge}<span class="badge">${esc(t.category_name || 'Vận hành / OPS')}</span><span class="task-priority priority-${esc(t.priority || 'medium')}"><b>${priorityIcon}</b> ${priorityLabel}</span></div>
       ${statusBadge(t.status)}
     </div>
     <div class="task-card-main">
@@ -1448,7 +1543,6 @@ function taskCard(t) {
         ${t.task_date ? `<div class="task-info-item"><span>Ngày việc</span><b>${dOnly(t.task_date)}</b></div>` : ''}
         <div class="task-info-item task-due-item"><span>Hạn hoàn thành</span><b>${dt(t.due_at)}</b></div>
         ${t.shift_label ? `<div class="task-info-item"><span>Ca</span><b>${esc(t.shift_label)}</b></div>` : ''}
-        <div class="task-info-item"><span>Điểm trừ</span><b>${Number(t.score_value || 0)} điểm</b></div>
       </div>
       ${t.recurrence_label ? `<div class="task-repeat-note">↻ ${esc(t.recurrence_label)}</div>` : ''}
       ${t.evidence_path ? `<div class="task-evidence"><b>Chứng từ đã nộp</b><div>${renderFiles(t.evidence_path)} ${t.evidence_note ? `• ${esc(t.evidence_note)}` : ''}</div></div>` : ''}
@@ -1480,6 +1574,7 @@ function openTaskEditor(e) {
         <div class="field" style="grid-column:span 2"><label>Nội dung / hướng dẫn</label><textarea name="description" rows="4">${esc(t.description || '')}</textarea></div>
         <div class="field"><label>Hạn hoàn thành</label><input type="datetime-local" name="due_at" value="${esc(dueLocal)}" required></div>
         <div class="field"><label>Mức ưu tiên</label><select name="priority"><option value="low" ${t.priority==='low'?'selected':''}>Thấp</option><option value="medium" ${!t.priority||t.priority==='medium'?'selected':''}>Trung bình</option><option value="high" ${t.priority==='high'?'selected':''}>Cao</option></select></div>
+        <div class="field"><label>Nhóm công việc</label><select name="category">${taskCategoryOptions(t.category || 'ops')}</select><span class="hint">Khác → tự gộp OPS khi tính điểm.</span></div>
         <div class="field"><label>Điểm phạt cố định</label><div class="task-fixed-penalty"><b>Trễ / quá hạn: -5 điểm</b><span>Không hoàn thành: -10 điểm</span></div></div>
         <div class="field"><label>Cửa hàng</label><input value="${esc(t.store_name || '')}" disabled></div>
         <div class="field" style="grid-column:span 2"><label>Người nhận việc</label><div class="task-user-picker">${storeUsers.map(u => `<label class="task-user-option"><input type="checkbox" name="assignee_ids" value="${u.id}" ${selectedIds.has(Number(u.id))?'checked':''}><span class="task-user-dot"></span><span class="task-user-info"><b>${esc(u.full_name)}</b><small>${esc(u.store_name || t.store_name || '')}</small></span></label>`).join('') || '<div class="empty compact">Chưa có nhân sự trong cửa hàng</div>'}</div><span class="hint">Lượt đã hoàn thành được giữ nguyên để bảo toàn minh chứng.</span></div>
@@ -3534,18 +3629,26 @@ async function renderBonuses() {
 }
 
 async function renderReports() {
-  const data = await api('/api/reports/performance');
+  const year = Number(state.reportYear || new Date().getFullYear());
+  const month = Number(state.reportMonth || (new Date().getMonth() + 1));
+  const data = await api(`/api/reports/performance?year=${encodeURIComponent(year)}&month=${encodeURIComponent(month)}`);
   const allowedStores = selectableStores();
   const reportStoreId = state.reportStoreId || (allowedStores[0]?.id || '');
   state.reportStoreId = reportStoreId;
   const rows = data.performance.filter(r => !reportStoreId || allowedStores.length <= 1 || Number(r.store_id) === Number(reportStoreId));
   const storeSummaryRowsFiltered = (data.storeSummary || []).filter(r => !reportStoreId || allowedStores.length <= 1 || Number(r.store_id) === Number(reportStoreId));
-  const perfTable = rows.length ? `<div class="table-wrap"><table><thead><tr><th>Top</th><th>Nhân viên</th><th>Cửa hàng</th><th>Điểm tổng</th><th>Công việc</th><th>Vi phạm</th><th>GUESTS</th><th>% đạt target</th></tr></thead><tbody>${rows.map((r, i) => `<tr><td><span class="badge dark">#${i + 1}</span></td><td><b>${esc(r.full_name)}</b></td><td>${esc(r.store_name || '')}</td><td><b>${r.final_score}/100</b></td><td>${r.task_score}%<br><span class="hint">Đúng hạn ${r.tasks_on_time}/${r.tasks_total}, trễ ${r.tasks_late}, quá hạn ${r.tasks_overdue}, không hoàn thành ${r.tasks_not_completed || 0}</span></td><td>${r.violation_score}%<br><span class="hint">${r.violations_count} lỗi, -${r.violation_deductions} điểm</span></td><td>${r.guests_score}%</td><td>${Number(r.achievement_percent || 0)}%<br><span class="hint">Index ${r.revenue_score}%</span></td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Chưa có dữ liệu tổng hợp</div>';
+  const perfTable = rows.length ? `<div class="table-wrap"><table><thead><tr><th>Top</th><th>Nhân viên</th><th>Cửa hàng</th><th>Điểm tổng</th><th>Công việc / 35</th><th>UPT / 30</th><th>Đào tạo & GUESTS / 20</th><th>Kỷ luật / 15</th><th>Khối lượng</th></tr></thead><tbody>${rows.map((r, i) => `<tr><td><span class="badge dark">#${i + 1}</span></td><td><b>${esc(r.full_name)}</b><br><span class="hint">${r.role==='manager'?'CHT':'NVBH'}</span></td><td>${esc(r.store_name || '')}</td><td><b>${Number(r.final_score || 0).toFixed(2)}/100</b>${Number(r.final_score||0)>100?'<br><span class="badge ok">Vượt 100</span>':''}</td><td><b>${Number(r.task_points_35 || 0).toFixed(2)}/35</b><br><span class="hint">Đúng hạn ${r.tasks_on_time}/${r.tasks_total} • Trễ ${r.tasks_late} • Không HT ${r.tasks_not_completed}</span></td><td><b>${Number(r.upt_points_30 || 0).toFixed(2)}/30</b><br><span class="hint">UPT đạt tháng ${Number(r.upt||0).toFixed(2)} / Target UPT tháng ${Number(r.target_upt||0).toFixed(2)} • ${Number(r.upt_achievement_percent||0).toFixed(1)}% (cap 120%)</span></td><td><b>${Number(r.training_guests_points_20 || 0).toFixed(2)}/20</b><br><span class="hint">GUESTS ${Number(r.guests_score||0)}% • Training quá hạn ${Number(r.training_overdue||0)}</span></td><td><b>${Number(r.discipline_points_15 || 0).toFixed(2)}/15</b><br><span class="hint">${Number(r.violations_count||0)} lỗi • trừ ${Number(r.violation_deductions||0)} điểm kỷ luật</span></td><td><b>${r.tasks_total}/${Number(r.task_standard_total || 0).toFixed(0)} việc</b><br><span class="hint">Chuẩn ${r.worked_shifts || 0} ca × 3 việc/ca</span></td></tr><tr class="performance-breakdown-row"><td></td><td colspan="8"><div class="performance-task-breakdown">${(r.task_breakdown||[]).map(x=>`<span><b>${esc(x.label)}</b> ${Number(x.points||0).toFixed(2)}/${x.max_points}đ • ${x.assigned}/${Number(x.standard_count||0).toFixed(0)} việc</span>`).join('')}</div></td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Chưa có dữ liệu tổng hợp</div>';
   const storeTable = storeSummaryRowsFiltered.length ? `<div class="table-wrap"><table><thead><tr><th>Cửa hàng</th><th>OPS</th><th>VM</th><th>Vi phạm</th></tr></thead><tbody>${storeSummaryRowsFiltered.map(s => `<tr><td><b>${esc(s.store_name)}</b></td><td>${Math.round(s.ops_score || 0)}%</td><td>${Math.round(s.vm_score || 0)}%</td><td>${s.violations}</td></tr>`).join('')}</tbody></table></div>` : '';
   const reportStoreField = allowedStores.length > 1 ? `<div class="field"><label>Cửa hàng</label><select class="input" id="reportStoreFilter">${allowedStores.map(s => `<option value="${s.id}" ${Number(s.id)===Number(reportStoreId)?'selected':''}>${esc(s.name)}</option>`).join('')}</select></div>` : '';
-  shell(`<div class="card"><div class="toolbar"><h3 style="margin-right:auto">Hiệu suất nhân viên</h3>${reportStoreField}${can('can_export') ? '<button class="btn secondary" data-export="performance">Tải Excel</button>' : ''}</div>${perfTable}</div><div class="card" style="margin-top:16px"><h3>Hiệu suất cửa hàng</h3>${storeTable || '<div class="empty">Chưa có điểm OPS/VM</div>'}</div><div class="card" style="margin-top:16px"><h3>Cách tính điểm tổng</h3><p class="hint">Điểm tổng tối đa 100 = 35% hiệu suất công việc + 20% điểm không vi phạm + 25% GUESTS checklist + 20% index doanh thu. Công việc trễ hạn/quá hạn tự bị ghi nhận không hoàn thành đúng hạn và trừ điểm.</p></div>`, 'Tổng hợp điểm', 'Hiệu suất cửa hàng và nhân viên, chuẩn hóa về thang 100 điểm');  $('#reportStoreFilter')?.addEventListener('change', e => { state.reportStoreId = e.target.value; renderReports(); });
+  const currentYear = new Date().getFullYear();
+  const yearOptions = Array.from({length: 5}, (_,i)=>currentYear-i).map(y=>`<option value="${y}" ${y===year?'selected':''}>${y}</option>`).join('');
+  const monthOptions = Array.from({length: 12}, (_,i)=>i+1).map(m=>`<option value="${m}" ${m===month?'selected':''}>Tháng ${m}</option>`).join('');
+  const periodFilters = `<div class="field"><label>Tháng</label><select class="input" id="reportMonthFilter">${monthOptions}</select></div><div class="field"><label>Năm</label><select class="input" id="reportYearFilter">${yearOptions}</select></div>`;
+  shell(`<div class="card"><div class="toolbar"><h3 style="margin-right:auto">Hiệu suất nhân viên</h3>${reportStoreField}${periodFilters}${can('can_export') ? '<button class="btn secondary" data-export="performance">Tải Excel</button>' : ''}</div><div class="performance-weight-note"><b>Hệ số:</b> Công việc 35% • UPT 30% (được vượt tối đa 120% = 36 điểm) • Đào tạo & GUESTS 20% • Kỷ luật 15%<br><span class="hint">UPT: Target lấy từ Target UPT hàng tháng trong Doanh thu; UPT đạt lấy từ kết quả thực tế của đúng tháng đang xem.</span></div>${perfTable}</div><div class="card" style="margin-top:16px"><h3>Khung Công việc 35 điểm</h3><p class="hint"><b>NVBH:</b> OPS 26 việc/12đ • Bán hàng/CSKH 5/2đ • Hàng hóa 22/10đ • VM/Hình ảnh 20/9đ • Báo cáo/Kiểm soát 5/2đ. <b>CHT:</b> OPS 26/12đ • Quản lý nhân sự/Đào tạo 12/6đ • Hàng hóa 18/8đ • VM/Hình ảnh 12/5đ • Báo cáo/Kiểm soát 10/4đ. Chuẩn tự co giãn theo số ca thực tế, 3 việc/ca. Đúng hạn 100%, trễ 70%, không hoàn thành 0%. Việc vượt quota làm đúng không bù điểm; vượt quota trễ/không hoàn thành vẫn kéo điểm xuống. “Khác” gộp OPS.</p></div><div class="card" style="margin-top:16px"><h3>Hiệu suất cửa hàng</h3>${storeTable || '<div class="empty">Chưa có điểm OPS/VM trong kỳ</div>'}</div>`, 'Tổng hợp điểm', `Hiệu suất theo tháng ${month}/${year}`);
+  $('#reportStoreFilter')?.addEventListener('change', e => { state.reportStoreId = e.target.value; renderReports(); });
+  $('#reportMonthFilter')?.addEventListener('change', e => { state.reportMonth = Number(e.target.value); renderReports(); });
+  $('#reportYearFilter')?.addEventListener('change', e => { state.reportYear = Number(e.target.value); renderReports(); });
 }
-
 
 async function renderAdmin() {
   const [data, storeRes] = await Promise.all([api('/api/users?status=all'), api('/api/stores?status=all')]);

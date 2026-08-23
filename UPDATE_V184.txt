@@ -1,0 +1,7 @@
+DEZUS Store Ops v4.184
+- Bỏ 4 KPI lớn ở đầu mục Tổng hợp công việc.
+- Bỏ dòng mô tả phân quyền dưới tiêu đề Tổng hợp.
+- Form Giao việc mới mặc định thu gọn.
+- Nút Tạo công việc mở form và đổi thành Lưu công việc.
+- Sau khi lưu thành công, màn Công việc render lại và form tự thu gọn.
+- Giữ bộ lọc Cửa hàng/Nhân viên và bảng tổng hợp theo danh mục.

@@ -1,0 +1,6 @@
+DEZUS Store Ops v4.186
+- Khóa nguồn tính UPT hiệu suất theo đúng tháng đang chọn.
+- Target UPT lấy trực tiếp từ Target UPT hàng tháng trong module Doanh thu.
+- UPT đạt lấy từ dữ liệu doanh thu thực tế của đúng tháng: Tổng số món / Tổng số bill.
+- Không dùng target UPT ngày hoặc dữ liệu UPT của kỳ khác.
+- Giữ cap UPT 120%: tối đa 36/30 điểm.

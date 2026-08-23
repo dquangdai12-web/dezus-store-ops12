@@ -1,0 +1,10 @@
+DEZUS Store Ops v4.181
+- Thêm nhóm công việc khi tạo/sửa task: OPS, Bán hàng/CSKH, Hàng hóa, VM/Hình ảnh, Báo cáo/Kiểm soát, Quản lý nhân sự/Đào tạo, Khác.
+- Khác tự gộp vào OPS khi tính điểm.
+- Chuẩn 3 việc/ca; chuẩn tháng tự co giãn theo số ca thực tế.
+- NVBH: OPS 26/12đ, Sales-CSKH 5/2đ, Hàng hóa 22/10đ, VM 20/9đ, Báo cáo 5/2đ = 78 việc / 35đ.
+- CHT: OPS 26/12đ, QLNS-Đào tạo 12/6đ, Hàng hóa 18/8đ, VM 12/5đ, Báo cáo 10/4đ = 78 việc / 35đ.
+- Đúng hạn 100%, trễ/quá hạn trong grace 70%, không hoàn thành 0%.
+- OJTI/Training tự gắn nhóm Quản lý nhân sự/Đào tạo; nếu trainer là CHT thì CHT cũng nhận task đào tạo.
+- Khi lịch OJTI được chuyển trạng thái Hoàn thành, task liên kết tự hoàn thành.
+- Màn Tổng hợp điểm hiển thị điểm Công việc /35 và breakdown từng nhóm.

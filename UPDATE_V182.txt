@@ -1,0 +1,6 @@
+DEZUS Store Ops v4.182
+- Chốt logic điểm task theo quota: task vượt quota hoàn thành đúng hạn không bù điểm; task vượt quota trễ bị trừ 0.3 đơn vị, không hoàn thành bị trừ 1 đơn vị.
+- Bỏ hiển thị điểm phạt cố định -5/-10 trên giao việc và thẻ task.
+- Trễ/quá hạn hiển thị tính 70%; không hoàn thành tính 0%.
+- Thêm bảng Tổng hợp công việc đã giao & hoàn thành theo danh mục ngay màn Công việc, mỗi danh mục có màu nền riêng.
+- Mục Khác vẫn tổng hợp riêng trên task nhưng gộp OPS khi tính điểm.

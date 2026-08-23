@@ -443,6 +443,7 @@ function upsertOjtiLinkedTask(row, actor) {
   task.task_date = dueDate;
   task.store_id = storeId;
   task.score_value = Number(row.score_value || 5);
+  task.category = 'people_training';
   task.shift_ids = [];
   task.shift_label = '';
   task.recurrence_batch = null;
@@ -450,7 +451,10 @@ function upsertOjtiLinkedTask(row, actor) {
   task.updated_by = actor.id;
   task.updated_at = nowIso();
   db.task_assignees = (db.task_assignees || []).filter(a => Number(a.task_id) !== Number(task.id));
-  trainees.forEach(uid => db.task_assignees.push({ id: nextId('task_assignees'), task_id: task.id, user_id: uid, completed_at: null, evidence_path: null, evidence_note: '', points_delta: 0 }));
+  const taskUsers = new Set(trainees);
+  const trainerUser = getActiveUser(row.trainer_id);
+  if (trainerUser && trainerUser.role === 'manager' && userHasStore(trainerUser, storeId)) taskUsers.add(Number(trainerUser.id));
+  Array.from(taskUsers).forEach(uid => db.task_assignees.push({ id: nextId('task_assignees'), task_id: task.id, user_id: uid, completed_at: null, evidence_path: null, evidence_note: '', points_delta: 0 }));
   return task.id;
 }
 
@@ -582,6 +586,7 @@ function upsertOjtiTasksFromRecord(row, actor) {
     task.task_date = dateOnly(dueDate);
     task.store_id = storeId;
     task.score_value = Number(row.score_value || 5);
+    task.category = 'people_training';
     task.shift_ids = [];
     task.shift_label = '';
     task.recurrence_batch = null;
@@ -1373,6 +1378,47 @@ function scheduleRowsForUser(user, storeId, dates) {
   }).sort((a, b) => String(a.work_date).localeCompare(String(b.work_date)) || String(a.employee_name).localeCompare(String(b.employee_name), 'vi'));
 }
 
+const TASK_CATEGORIES = {
+  ops: 'Vận hành / OPS',
+  sales_cskh: 'Bán hàng / CSKH',
+  inventory: 'Hàng hóa',
+  vm: 'VM / Hình ảnh',
+  reports: 'Báo cáo / Kiểm soát',
+  people_training: 'Quản lý nhân sự / Đào tạo',
+  other: 'Khác'
+};
+const TASK_WORK_STANDARDS = {
+  employee: {
+    ops: { count: 26, points: 12 },
+    sales_cskh: { count: 5, points: 2 },
+    inventory: { count: 22, points: 10 },
+    vm: { count: 20, points: 9 },
+    reports: { count: 5, points: 2 }
+  },
+  manager: {
+    ops: { count: 26, points: 12 },
+    people_training: { count: 12, points: 6 },
+    inventory: { count: 18, points: 8 },
+    vm: { count: 12, points: 5 },
+    reports: { count: 10, points: 4 }
+  }
+};
+function normalizeTaskCategory(value) {
+  const key = String(value || '').trim();
+  return TASK_CATEGORIES[key] ? key : 'ops';
+}
+function taskScoreCategoryForUser(task, user) {
+  let key = normalizeTaskCategory(task?.category);
+  if (key === 'other') key = 'ops';
+  const standard = TASK_WORK_STANDARDS[user?.role] || TASK_WORK_STANDARDS.employee;
+  // Nhóm Quản lý nhân sự / Đào tạo chỉ tính vào 35 điểm của CHT.
+  if (!standard[key]) return null;
+  return key;
+}
+function taskCategoryLabel(value) {
+  return TASK_CATEGORIES[normalizeTaskCategory(value)] || TASK_CATEGORIES.ops;
+}
+
 const TASK_OVERDUE_GRACE_MS = 4 * 60 * 60 * 1000;
 function taskStatus(row, refNow) {
   const nowMs = refNow ? new Date(refNow).getTime() : Date.now();
@@ -1908,6 +1954,8 @@ function taskRowsForUser(user) {
         ? -TASK_PENALTIES.NOT_COMPLETED
         : (['completed_late', 'overdue'].includes(taskStatus({ ...ta, due_at: t.due_at })) ? -TASK_PENALTIES.LATE : 0),
       ...t,
+      category: normalizeTaskCategory(t.category),
+      category_name: taskCategoryLabel(t.category),
       store_name: s ? s.name : '',
       created_by_name: creator ? creator.full_name : ''
     };
@@ -2041,76 +2089,139 @@ function leaderboardRows(user, period, refDate, storeId = null, options = {}) {
   return { period, start, end, leaderboard: rows.map((r, idx) => ({ ...r, rank: idx + 1, revenue_percent: employeeTotal ? Math.round((r.revenue / employeeTotal) * 10000) / 100 : 0 })) };
 }
 
-function computePerformance(scopeUser) {
+function computePerformance(scopeUser, year = null, month = null) {
   const now = new Date();
+  const selectedYear = Math.max(2000, Math.min(2100, Number(year) || now.getFullYear()));
+  const selectedMonth = Math.max(1, Math.min(12, Number(month) || (now.getMonth() + 1)));
+  const periodDate = new Date(Date.UTC(selectedYear, selectedMonth - 1, 1));
+  const { start, end } = periodRange('month', periodDate);
+  const periodEndForStatus = end;
   let users = db.users.filter(u => u.status === 'active' && ['employee', 'manager'].includes(u.role));
   if (scopeUser.role === 'manager') users = users.filter(u => userHasStore(scopeUser, u.store_id));
   if (scopeUser.role === 'employee') users = users.filter(u => Number(u.id) === Number(scopeUser.id));
-  const { start, end } = periodRange('month', now);
   return users.map(u => {
-    const assignments = db.task_assignees.filter(ta => Number(ta.user_id) === Number(u.id)).map(ta => {
+    const standard = TASK_WORK_STANDARDS[u.role] || TASK_WORK_STANDARDS.employee;
+    const monthAssignments = (db.task_assignees || []).filter(ta => Number(ta.user_id) === Number(u.id)).map(ta => {
       const t = db.tasks.find(x => Number(x.id) === Number(ta.task_id));
-      return t ? { completed_at: ta.completed_at, due_at: t.due_at, resolution_status: ta.resolution_status || '' } : null;
+      if (!t) return null;
+      const workDate = dateOnly(t.task_date || t.due_at || t.created_at || new Date());
+      if (workDate < start || workDate >= end) return null;
+      return { ta, task: t, status: taskStatus({ ...ta, due_at: t.due_at }, periodEndForStatus) };
     }).filter(Boolean);
-    let onTime = 0, late = 0, overdue = 0, notCompleted = 0;
-    assignments.forEach(a => {
-      const status = taskStatus(a, now);
-      if (status === 'not_completed') notCompleted += 1;
-      else if (status === 'completed_on_time') onTime += 1;
-      else if (status === 'completed_late') late += 1;
-      else if (status === 'overdue') overdue += 1;
+
+    const monthSchedules = (db.work_schedules || []).filter(r => Number(r.user_id || r.employee_id) === Number(u.id) && String(r.work_date || '') >= start && String(r.work_date || '') < end);
+    const workedShiftDays = new Set(monthSchedules.map(r => String(r.work_date || '')).filter(Boolean)).size;
+    const isCurrentMonth = selectedYear === now.getFullYear() && selectedMonth === now.getMonth() + 1;
+    const elapsedFallback = isCurrentMonth ? Math.min(26, Math.max(1, Math.ceil((now - new Date(`${start}T00:00:00`)) / 86400000))) : 26;
+    const standardShifts = workedShiftDays || elapsedFallback;
+    const shiftFactor = Math.min(1, standardShifts / 26);
+
+    const breakdown = [];
+    let taskPoints35 = 0;
+    let totalCount = 0, onTime = 0, late = 0, overdue = 0, notCompleted = 0;
+    Object.entries(standard).forEach(([key, cfg]) => {
+      const rows = monthAssignments.filter(x => taskScoreCategoryForUser(x.task, u) === key)
+        .sort((a, b) => new Date(a.task.task_date || a.task.created_at || a.task.due_at || 0) - new Date(b.task.task_date || b.task.created_at || b.task.due_at || 0) || Number(a.ta.id || 0) - Number(b.ta.id || 0));
+      const assigned = rows.length;
+      const expected = Math.max(0.01, Number(cfg.count || 0) * shiftFactor);
+      const quotaSlots = Math.max(1, Math.ceil(expected));
+      const quotaRows = rows.slice(0, quotaSlots);
+      const excessRows = rows.slice(quotaSlots);
+      let earnedUnits = 0;
+      let excessPenaltyUnits = 0;
+      let kOn = 0, kLate = 0, kOpen = 0, kNot = 0;
+      rows.forEach(x => {
+        if (x.status === 'completed_on_time') kOn += 1;
+        else if (x.status === 'completed_late' || x.status === 'overdue') kLate += 1;
+        else if (x.status === 'not_completed') kNot += 1;
+        else kOpen += 1;
+      });
+      quotaRows.forEach(x => {
+        if (x.status === 'completed_on_time') earnedUnits += 1;
+        else if (x.status === 'completed_late' || x.status === 'overdue') earnedUnits += 0.7;
+      });
+      // Việc vượt quota làm đúng không được bù điểm; trễ/không hoàn thành vẫn kéo điểm xuống.
+      excessRows.forEach(x => {
+        if (x.status === 'completed_late' || x.status === 'overdue') excessPenaltyUnits += 0.3;
+        else if (x.status === 'not_completed') excessPenaltyUnits += 1;
+      });
+      const scoreUnits = Math.max(0, earnedUnits - excessPenaltyUnits);
+      const points = Math.max(0, Math.min(Number(cfg.points || 0), Number(cfg.points || 0) * (scoreUnits / expected)));
+      taskPoints35 += points;
+      totalCount += assigned; onTime += kOn; late += kLate; overdue += rows.filter(x => x.status === 'overdue').length; notCompleted += kNot;
+      breakdown.push({
+        key, label: TASK_CATEGORIES[key], standard_count: Math.round(expected * 10) / 10,
+        assigned, on_time: kOn, late: kLate, open: kOpen, not_completed: kNot,
+        earned_units: Math.round(earnedUnits * 10) / 10,
+        excess_count: excessRows.length, excess_penalty_units: Math.round(excessPenaltyUnits * 10) / 10,
+        score_units: Math.round(scoreUnits * 10) / 10,
+        max_points: cfg.points, points: Math.round(points * 100) / 100,
+        coverage_percent: expected ? Math.round((assigned / expected) * 1000) / 10 : 0
+      });
     });
-    const totalTasks = assignments.length;
-    const taskPenalty = (late + overdue) * TASK_PENALTIES.LATE + notCompleted * TASK_PENALTIES.NOT_COMPLETED;
-    const taskScore = totalTasks ? Math.max(0, Math.round((onTime / totalTasks) * 100 - taskPenalty)) : 100;
-    const vRows = db.violations.filter(v => Number(v.user_id) === Number(u.id));
+    taskPoints35 = Math.round(taskPoints35 * 100) / 100;
+    const taskScore = Math.round((taskPoints35 / 35) * 100);
+
+    const vRows = db.violations.filter(v => Number(v.user_id) === Number(u.id) && dateOnly(v.created_at || '') >= start && dateOnly(v.created_at || '') < end);
     const violationDeductions = vRows.reduce((sum, v) => sum + Number(v.points_deducted || 0), 0);
     const violationScore = Math.max(0, 100 - violationDeductions);
-    const gRows = db.assessments.filter(a => a.template_id === 'GUESTS' && Number(a.employee_id) === Number(u.id));
+    const disciplinePoints15 = Math.round((violationScore * 0.15) * 100) / 100;
+
+    const gRows = db.assessments.filter(a => a.template_id === 'GUESTS' && Number(a.employee_id) === Number(u.id) && dateOnly(a.assessed_at || a.created_at || '') >= start && dateOnly(a.assessed_at || a.created_at || '') < end);
     const guestScore = gRows.length ? Math.round(gRows.reduce((sum, a) => sum + Number(a.percent || 0), 0) / gRows.length) : 0;
-    const progress = u.role === 'manager' ? storeSalesProgressForPeriod(u.store_id, start, end) : salesProgressForUserPeriod(u.id, start, end);
-    const revenue = progress.revenue;
-    const target = progress.target;
-    const achievement_percent = target ? Math.round((revenue / target) * 10000) / 100 : 0;
-    const revenueScore = target ? Math.min(100, Math.round(achievement_percent)) : 0;
-    const trainingOverdue = overdueTrainingCountForUser(u.id);
-    const trainingDeduction = trainingOverdue * 10;
-    const finalScore = Math.round(taskScore * 0.35 + violationScore * 0.20 + guestScore * 0.25 + revenueScore * 0.20 - trainingDeduction);
+    const trainingOverdue = (db.product_trainings || []).filter(r => r.status !== 'deleted' && Number(r.is_required || 0) === 1 && r.due_at && dateOnly(r.due_at) >= start && dateOnly(r.due_at) < end && trainingAssignees(r).some(x => Number(x.id) === Number(u.id)) && !trainingProgress(r.id, u.id, r.pass_percent || 90).passed).length;
+    const trainingGuestIndex = Math.max(0, Math.min(100, guestScore - trainingOverdue * 10));
+    const trainingGuestPoints20 = Math.round((trainingGuestIndex * 0.20) * 100) / 100;
+
+    // UPT hiệu suất phải khóa theo đúng tháng đang xem trong mục Doanh thu:
+    // - Target UPT: lấy từ Target UPT hàng tháng (sales_targets) của đúng YYYY-MM.
+    // - UPT đạt: lấy từ doanh thu thực tế của đúng tháng đó (Tổng số món / Tổng số bill).
+    // Không dùng target ngày và không lấy UPT của kỳ khác.
+    const performanceMonthKey = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}`;
+    let upt = 0;
+    let targetUpt = 0;
+    if (u.role === 'manager') {
+      const storeRows = (db.sales || []).filter(sa => Number(sa.store_id) === Number(u.store_id) && monthKey(sa.sale_date) === performanceMonthKey);
+      const storeBills = storeRows.reduce((sum, r) => sum + Number(r.bill_count || 0), 0);
+      const storeItems = storeRows.reduce((sum, r) => sum + Number(r.item_count || 0), 0);
+      upt = storeBills ? Math.round((storeItems / storeBills) * 100) / 100 : 0;
+      targetUpt = Number(aggregateKpiTargetsForStore(u.store_id, [performanceMonthKey]).target_upt || 0);
+    } else {
+      const employeeRows = (db.sales || []).filter(sa => Number(sa.user_id) === Number(u.id) && monthKey(sa.sale_date) === performanceMonthKey);
+      const employeeBills = employeeRows.reduce((sum, r) => sum + Number(r.bill_count || 0), 0);
+      const employeeItems = employeeRows.reduce((sum, r) => sum + Number(r.item_count || 0), 0);
+      upt = employeeBills ? Math.round((employeeItems / employeeBills) * 100) / 100 : 0;
+      targetUpt = Number(monthlyKpiTargetsForUser(u.id, performanceMonthKey).target_upt || 0);
+    }
+    const uptAchievementPercent = targetUpt > 0 ? Math.min(120, Math.max(0, (upt / targetUpt) * 100)) : 0;
+    const uptPoints30 = Math.round((30 * uptAchievementPercent / 100) * 100) / 100; // tối đa 36 điểm = 120% của 30
+
+    const finalScore = Math.round((taskPoints35 + uptPoints30 + trainingGuestPoints20 + disciplinePoints15) * 100) / 100;
     return {
-      user_id: u.id,
-      full_name: u.full_name,
-      store_name: getStore(u.store_id)?.name || '',
-      tasks_total: totalTasks,
-      tasks_on_time: onTime,
-      tasks_late: late,
-      tasks_overdue: overdue,
-      tasks_not_completed: notCompleted,
-      task_penalty: taskPenalty,
-      task_score: taskScore,
-      violations_count: vRows.length,
-      violation_deductions: violationDeductions,
-      violation_score: violationScore,
-      guests_score: guestScore,
-      revenue,
-      target,
-      achievement_percent,
-      revenue_score: revenueScore,
-      training_overdue: trainingOverdue,
-      training_deduction: trainingDeduction,
-      final_score: Math.min(100, Math.max(0, finalScore))
+      user_id: u.id, role: u.role, full_name: u.full_name, store_id: u.store_id,
+      store_name: getStore(u.store_id)?.name || '', period_year: selectedYear, period_month: selectedMonth,
+      worked_shifts: standardShifts,
+      task_standard_total: Math.round(Object.values(standard).reduce((sum, x) => sum + Number(x.count || 0), 0) * shiftFactor * 10) / 10,
+      tasks_total: totalCount, tasks_on_time: onTime, tasks_late: late, tasks_overdue: overdue, tasks_not_completed: notCompleted,
+      task_score: taskScore, task_points_35: taskPoints35, task_breakdown: breakdown,
+      violations_count: vRows.length, violation_deductions: violationDeductions, violation_score: violationScore, discipline_points_15: disciplinePoints15,
+      guests_score: guestScore, training_overdue: trainingOverdue, training_guests_index: trainingGuestIndex, training_guests_points_20: trainingGuestPoints20,
+      upt, target_upt: targetUpt, upt_achievement_percent: Math.round(uptAchievementPercent * 100) / 100, upt_points_30: uptPoints30,
+      upt_source_month: performanceMonthKey, upt_source: 'revenue_monthly',
+      final_score: finalScore
     };
   });
 }
-
-function storeSummaryRows(user) {
+function storeSummaryRows(user, start = null, end = null) {
   let stores = db.stores.filter(s => s.status === 'active');
   if (user.role === 'manager') stores = stores.filter(s => userHasStore(user, s.id));
   if (user.role === 'employee') stores = stores.filter(s => userHasStore(user, s.id));
+  const inPeriod = value => !start || !end || (dateOnly(value || '') >= start && dateOnly(value || '') < end);
   return stores.map(s => {
-    const ops = db.assessments.filter(a => Number(a.store_id) === Number(s.id) && a.template_id === 'OPS');
-    const vm = db.assessments.filter(a => Number(a.store_id) === Number(s.id) && a.template_id === 'VM');
+    const ops = db.assessments.filter(a => Number(a.store_id) === Number(s.id) && a.template_id === 'OPS' && inPeriod(a.assessed_at || a.created_at));
+    const vm = db.assessments.filter(a => Number(a.store_id) === Number(s.id) && a.template_id === 'VM' && inPeriod(a.assessed_at || a.created_at));
     const avg = rows => rows.length ? rows.reduce((sum, a) => sum + Number(a.percent || 0), 0) / rows.length : 0;
-    const violations = db.violations.filter(v => Number(v.store_id) === Number(s.id)).length;
+    const violations = db.violations.filter(v => Number(v.store_id) === Number(s.id) && inPeriod(v.created_at)).length;
     return { store_id: s.id, store_name: s.name, ops_score: avg(ops), vm_score: avg(vm), violations };
   });
 }
@@ -2453,6 +2564,18 @@ app.patch('/api/cdp-ojti/:id', requireAuth, (req, res) => {
   ['title','objective','content','result','note','status_label','priority'].forEach(k => { if (body[k] !== undefined) row[k] = String(body[k] || '').trim(); });
   row.link_task = row.type === 'ojti' && Number(body.link_task || 0) === 1 ? 1 : 0;
   if (row.link_task) row.linked_task_id = upsertOjtiLinkedTask(row, req.user);
+  if (row.link_task && row.linked_task_id && String(row.status_label || '') === 'done') {
+    const linkedTask = db.tasks.find(t => Number(t.id) === Number(row.linked_task_id));
+    const completedAt = nowIso();
+    (db.task_assignees || []).filter(a => Number(a.task_id) === Number(row.linked_task_id)).forEach(a => {
+      if (!a.completed_at) {
+        a.completed_at = completedAt;
+        a.resolution_status = linkedTask && new Date(completedAt).getTime() > new Date(linkedTask.due_at).getTime() ? 'completed_late' : 'completed_on_time';
+        a.points_delta = a.resolution_status === 'completed_late' ? -TASK_PENALTIES.LATE : 0;
+        a.evidence_note = a.evidence_note || 'Tự hoàn thành khi lịch đào tạo được xác nhận Hoàn thành.';
+      }
+    });
+  }
   row.updated_by = req.user.id;
   row.updated_at = nowIso();
   saveDb();
@@ -2472,7 +2595,7 @@ app.delete('/api/cdp-ojti/:id', requireAuth, (req, res) => {
 });
 
 app.post('/api/tasks', requireAuth, requirePerm('can_assign_tasks'), (req, res) => {
-  const { title, description, due_at, priority, store_id, assignee_ids, score_value, start_date, end_date, due_time, repeat_every_days, repeat_mode, weekdays, shift_ids } = req.body || {};
+  const { title, description, due_at, priority, store_id, assignee_ids, score_value, start_date, end_date, due_time, repeat_every_days, repeat_mode, weekdays, shift_ids, category } = req.body || {};
   const manualAssignees = Array.isArray(assignee_ids) ? assignee_ids.map(Number).filter(Boolean) : [];
   const selectedShiftIds = Array.isArray(shift_ids) ? shift_ids.map(Number).filter(Boolean) : [];
   const selectedWeekdays = normalizeWeekdays(weekdays);
@@ -2513,6 +2636,7 @@ app.post('/api/tasks', requireAuth, requirePerm('can_assign_tasks'), (req, res) 
       title,
       description: [description || '', extraDesc.join(' ')].filter(Boolean).join('\n'),
       priority: priority || 'medium',
+      category: normalizeTaskCategory(category),
       due_at: dueAt,
       task_date: workDate,
       shift_ids: selectedShiftIds,
@@ -2569,6 +2693,7 @@ app.patch('/api/tasks/:taskId', requireAuth, requirePerm('can_edit_tasks'), (req
   task.due_at = dueAt;
   task.task_date = dateOnly(dueAt);
   task.priority = ['low','medium','high'].includes(String(body.priority)) ? String(body.priority) : 'medium';
+  task.category = normalizeTaskCategory(body.category || task.category);
   task.score_value = TASK_PENALTIES.LATE;
   task.updated_by = req.user.id;
   task.updated_at = nowIso();
@@ -4908,8 +5033,12 @@ app.post('/api/bonuses', requireAuth, requirePerm('can_manage_bonuses'), (req, r
 
 app.get('/api/reports/performance', requireAuth, (req, res) => {
   if (req.user.role !== 'employee' && Number(req.user.permissions.can_view_reports) !== 1) return res.status(403).json({ error: 'Không có quyền xem tổng hợp' });
-  const performance = computePerformance(req.user).sort((a, b) => b.final_score - a.final_score);
-  res.json({ performance, storeSummary: storeSummaryRows(req.user) });
+  const now = new Date();
+  const year = Math.max(2000, Math.min(2100, Number(req.query.year) || now.getFullYear()));
+  const month = Math.max(1, Math.min(12, Number(req.query.month) || (now.getMonth() + 1)));
+  const { start, end } = periodRange('month', new Date(Date.UTC(year, month - 1, 1)));
+  const performance = computePerformance(req.user, year, month).sort((a, b) => b.final_score - a.final_score);
+  res.json({ performance, storeSummary: storeSummaryRows(req.user, start, end), year, month });
 });
 
 app.get('/api/export/:type.xlsx', requireAuth, requirePerm('can_export'), (req, res) => {

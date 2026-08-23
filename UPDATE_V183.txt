@@ -1,0 +1,6 @@
+DEZUS Store Ops v4.183
+- Thêm bộ lọc Tổng hợp công việc theo Cửa hàng và Nhân viên.
+- Bộ lọc chỉ hiển thị dữ liệu trong phạm vi cửa hàng/tài khoản được phân quyền.
+- Nhân viên chỉ xem chính mình; quản lý xem nhân sự thuộc cửa hàng được phân quyền; admin/office theo phạm vi hệ thống.
+- Làm mới giao diện Tổng hợp công việc: KPI tổng, tỷ lệ hoàn thành, đang làm/quá hạn, không hoàn thành và card danh mục có nền màu.
+- Giữ logic v4.182: task vượt quota hoàn thành không bù điểm; task vượt quota trễ/không hoàn thành vẫn kéo điểm.

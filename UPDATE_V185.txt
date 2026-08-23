@@ -1,0 +1,6 @@
+V4.185
+- Điểm tổng đổi hệ số: Công việc 35% + UPT 30% + Đào tạo & GUESTS 20% + Kỷ luật 15%.
+- UPT được vượt tối đa 120% hệ số: 30 điểm có thể đạt tối đa 36 điểm. Tổng điểm có thể vượt 100 khi UPT vượt target.
+- Tổng hợp điểm thêm lọc Cửa hàng / Tháng / Năm theo phân quyền tài khoản.
+- Dữ liệu task, vi phạm, GUESTS và hiệu suất cửa hàng được lọc theo tháng/năm chọn.
+- Hiển thị trực tiếp điểm từng cấu phần trong bảng tổng hợp.
