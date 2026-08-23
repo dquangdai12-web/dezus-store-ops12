@@ -1,0 +1,5 @@
+DEZUS Store Ops v4.192
+- Công việc mặc định chỉ hiện task đang mở/chưa quá hạn.
+- Task quá hạn chỉ nằm trong Tổng hợp cần xử lý, không lặp ở Công việc cần làm.
+- completed_late chỉ nằm trong Việc đã hoàn thành, không lặp ở Tổng hợp cần xử lý.
+- Giữ nguyên giao diện, logic và tối ưu mobile của v4.191.

@@ -1357,13 +1357,22 @@ async function renderTasks() {
     </div>` : '';
   const todayKey = new Date().toISOString().slice(0, 10);
   const taskDayKey = (t) => String(t.task_date || (t.due_at || '').slice(0, 10) || '');
-  const todayTasks = tasks.filter(t => taskDayKey(t) === todayKey || String(t.due_at || '').slice(0, 10) === todayKey);
-  const otherTasks = tasks.filter(t => !todayTasks.some(x => Number(x.assignment_id) === Number(t.assignment_id)));
-  const overdueTasks = tasks.filter(t => t.status === 'overdue' || t.status === 'completed_late');
-  const notCompletedTasks = tasks.filter(t => t.status === 'not_completed');
+  // Timeline công việc theo ngày:
+  // - Mặc định chỉ hiện công việc của ĐÚNG ngày hôm nay.
+  // - Các ngày khác (ngày mai, ngày trước, cả việc không hoàn thành) được ẩn và gom theo từng ngày.
+  // - Việc đã hoàn thành vẫn nằm riêng trong "Xem việc đã hoàn thành" như trước.
+  const timelineTasks = tasks.filter(t => ['assigned','overdue','not_completed'].includes(String(t.status || '')));
+  const activeTasks = tasks.filter(t => ['assigned','overdue'].includes(String(t.status || '')));
+  const completedTasks = tasks.filter(t => ['completed_on_time','completed_late'].includes(String(t.status || '')));
+  const todayTasks = timelineTasks.filter(t => taskDayKey(t) === todayKey || String(t.due_at || '').slice(0, 10) === todayKey);
+  const otherTasks = timelineTasks.filter(t => !todayTasks.some(x => Number(x.assignment_id) === Number(t.assignment_id)));
+  // "Tổng hợp cần xử lý" giữ đúng logic bản cũ: Việc trễ + Không hoàn thành.
+  // Việc trễ gồm cả đang quá hạn và đã hoàn thành trễ.
+  const overdueTasks = tasks.filter(t => ['overdue','completed_late'].includes(String(t.status || '')));
+  const notCompletedTasks = tasks.filter(t => String(t.status || '') === 'not_completed');
   const mobileSummary = state.user.role === 'admin'
-    ? `<div class="task-mobile-summary"><div><b>${tasks.filter(t => ['assigned','overdue'].includes(t.status)).length}</b><span>Chưa xong</span></div><div><b>${todayTasks.length}</b><span>Hôm nay</span></div><div><b>${overdueTasks.length}</b><span>Quá hạn</span></div><div><b>${notCompletedTasks.length}</b><span>Không hoàn thành</span></div></div>`
-    : `<div class="task-mobile-summary"><div><b>${tasks.filter(t => ['assigned','overdue'].includes(t.status)).length}</b><span>Chưa xong</span></div><div><b>${todayTasks.length}</b><span>Hôm nay</span></div></div>`;
+    ? `<div class="task-mobile-summary"><div><b>${activeTasks.length}</b><span>Chưa xong</span></div><div><b>${todayTasks.length}</b><span>Hôm nay</span></div><div><b>${overdueTasks.length}</b><span>Quá hạn</span></div><div><b>${notCompletedTasks.length}</b><span>Không hoàn thành</span></div></div>`
+    : `<div class="task-mobile-summary"><div><b>${activeTasks.length}</b><span>Chưa xong</span></div><div><b>${todayTasks.length}</b><span>Hôm nay</span></div></div>`;
   // Bộ lọc tổng hợp công việc: luôn giới hạn trong phạm vi dữ liệu mà API và phân quyền tài khoản cho phép xem.
   const summaryAllowedStores = selectableStores();
   if (state.taskSummaryStoreId === undefined) state.taskSummaryStoreId = 'all';
@@ -1413,11 +1422,26 @@ async function renderTasks() {
     <p class="hint task-summary-note">Mục <b>Khác</b> vẫn hiển thị riêng để quản lý task; khi tính điểm hiệu suất sẽ tự gộp vào <b>Vận hành / OPS</b>.</p>
   </div>`;
   const exceptionDashboard = state.user.role === 'admin'
-    ? `<div class="card task-exception-dashboard" style="margin-top:16px"><div class="section-title"><div><p class="eyebrow">Tổng hợp cần xử lý</p><h3>Quá hạn & Không hoàn thành</h3></div><span class="badge danger">${overdueTasks.length + notCompletedTasks.length} mục</span></div><div class="task-exception-tabs"><button type="button" class="btn secondary small taskExceptionTab active" data-filter="overdue">Quá hạn dưới 4 tiếng (${overdueTasks.length})</button><button type="button" class="btn secondary small taskExceptionTab" data-filter="not_completed">Không hoàn thành (${notCompletedTasks.length})</button></div><div id="taskExceptionList" class="grid task-timeline">${(overdueTasks.length ? overdueTasks : notCompletedTasks).map(t => taskCard(t)).join('') || '<div class="empty">Không có công việc cần xử lý</div>'}</div></div>`
+    ? `<div class="card task-exception-dashboard task-exception-collapsed" style="margin-top:16px"><div class="section-title task-exception-head"><div><p class="eyebrow">Tổng hợp cần xử lý</p><h3>Việc trễ & Không hoàn thành</h3></div><div class="task-exception-actions"><span class="badge danger">${overdueTasks.length + notCompletedTasks.length} mục</span><button type="button" class="btn secondary small" id="taskExceptionToggle">Xem chi tiết</button></div></div><div id="taskExceptionBody" hidden><div class="task-exception-tabs"><button type="button" class="btn secondary small taskExceptionTab active" data-filter="overdue">Việc trễ (${overdueTasks.length})</button><button type="button" class="btn secondary small taskExceptionTab" data-filter="not_completed">Không hoàn thành (${notCompletedTasks.length})</button></div><div id="taskExceptionList" class="grid task-timeline">${(overdueTasks.length ? overdueTasks : notCompletedTasks).map(t => taskCard(t)).join('') || '<div class="empty">Không có công việc cần xử lý</div>'}</div></div></div>`
     : '';
-  const todayBlock = todayTasks.length ? `<div class="card task-today-wrap task-timeline-wrap" style="margin-top:16px"><div class="toolbar"><div><p class="eyebrow">Hạn hôm nay / việc trong ngày</p><h3>${todayTasks.length} công việc cần nhìn ngay hôm nay</h3></div></div>${mobileSummary}<div class="grid task-timeline">${todayTasks.map(t => taskCard(t)).join('')}</div></div>` : mobileSummary;
-  const grouped = otherTasks.map(t => taskCard(t)).join('') || '<div class="empty">Không còn công việc khác</div>';
-  shell(`${assignForm}${categorySummary}${exceptionDashboard}${todayBlock}<div class="card task-list-wrap task-timeline-wrap" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">Danh sách công việc theo ngày gần nhất</h3>${can('can_export') ? '<button class="btn secondary" data-export="tasks">Tải Excel</button>' : ''}</div><div class="grid task-timeline">${grouped}</div></div>`, 'Công việc', '');
+
+  const todayBlock = `<div class="card task-today-wrap task-timeline-wrap" style="margin-top:16px"><div class="toolbar"><div><p class="eyebrow">Công việc hôm nay</p><h3>${todayTasks.length} công việc ngày ${dOnly(todayKey)}</h3></div>${can('can_export') ? '<button class="btn secondary" data-export="tasks">Tải Excel</button>' : ''}</div>${mobileSummary}<div class="grid task-timeline">${todayTasks.map(t => taskCard(t)).join('') || '<div class="empty">Hôm nay chưa có công việc</div>'}</div></div>`;
+
+  const otherDayMap = new Map();
+  otherTasks.forEach(t => {
+    const day = taskDayKey(t) || 'no_date';
+    if (!otherDayMap.has(day)) otherDayMap.set(day, []);
+    otherDayMap.get(day).push(t);
+  });
+  const otherDayKeys = Array.from(otherDayMap.keys()).sort((a,b) => {
+    if (a === 'no_date') return 1;
+    if (b === 'no_date') return -1;
+    return String(a).localeCompare(String(b));
+  });
+  const otherDaysBlock = otherDayKeys.length ? `<details class="card task-other-days-wrap task-timeline-wrap" style="margin-top:16px"><summary class="task-other-days-summary"><div><p class="eyebrow">Công việc ngày khác</p><h3>${otherTasks.length} công việc đang ẩn</h3></div><span class="badge">Xem theo ngày</span></summary><div class="task-other-days-body">${otherDayKeys.map(day => { const rows = otherDayMap.get(day) || []; return `<details class="task-day-group"><summary><span>${day === 'no_date' ? 'Chưa xác định ngày' : dOnly(day)}</span><b>${rows.length} việc</b></summary><div class="grid task-timeline">${rows.map(t => taskCard(t)).join('')}</div></details>`; }).join('')}</div></details>` : '';
+
+  const completedBlock = completedTasks.length ? `<div class="card task-completed-wrap task-timeline-wrap" style="margin-top:16px"><div class="task-completed-head"><div><p class="eyebrow">Lịch sử công việc</p><h3>${completedTasks.length} việc đã hoàn thành</h3></div><button type="button" class="btn secondary" id="completedTasksToggle">Xem việc đã hoàn thành</button></div><div id="completedTasksBody" hidden><div class="grid task-timeline">${completedTasks.map(t => taskCard(t)).join('')}</div></div></div>` : '';
+  shell(`${assignForm}${categorySummary}${exceptionDashboard}${todayBlock}${otherDaysBlock}${completedBlock}`, 'Công việc', '');
   const taskSummaryStoreFilter = $('#taskSummaryStoreFilter');
   const taskSummaryUserFilter = $('#taskSummaryUserFilter');
   if (taskSummaryStoreFilter) taskSummaryStoreFilter.addEventListener('change', async () => {
@@ -1428,6 +1452,24 @@ async function renderTasks() {
   if (taskSummaryUserFilter) taskSummaryUserFilter.addEventListener('change', async () => {
     state.taskSummaryUserId = taskSummaryUserFilter.value || 'all';
     await renderTasks();
+  });
+  const taskExceptionToggle = $('#taskExceptionToggle');
+  const taskExceptionBody = $('#taskExceptionBody');
+  taskExceptionToggle?.addEventListener('click', () => {
+    if (!taskExceptionBody) return;
+    const willOpen = taskExceptionBody.hidden;
+    taskExceptionBody.hidden = !willOpen;
+    taskExceptionToggle.textContent = willOpen ? 'Ẩn chi tiết' : 'Xem chi tiết';
+    taskExceptionToggle.closest('.task-exception-dashboard')?.classList.toggle('task-exception-collapsed', !willOpen);
+  });
+  const completedTasksToggle = $('#completedTasksToggle');
+  const completedTasksBody = $('#completedTasksBody');
+  completedTasksToggle?.addEventListener('click', () => {
+    if (!completedTasksBody) return;
+    const willOpen = completedTasksBody.hidden;
+    completedTasksBody.hidden = !willOpen;
+    completedTasksToggle.textContent = willOpen ? 'Ẩn việc đã hoàn thành' : 'Xem việc đã hoàn thành';
+    completedTasksToggle.closest('.task-completed-wrap')?.classList.toggle('task-completed-open', willOpen);
   });
   $$('.taskExceptionTab').forEach(btn => btn.addEventListener('click', () => {
     $$('.taskExceptionTab').forEach(x => x.classList.toggle('active', x === btn));

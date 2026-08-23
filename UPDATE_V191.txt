@@ -1,0 +1,6 @@
+DEZUS Store Ops v4.191
+- Tổng hợp cần xử lý đóng mặc định; nhấn "Xem chi tiết" mới mở.
+- Màn Công việc chỉ hiển thị mặc định các việc còn cần làm (assigned/overdue).
+- Việc đã hoàn thành được gom riêng; nhấn "Xem việc đã hoàn thành" mới mở.
+- Mobile: tối ưu riêng toàn bộ bố cục trong mục Công việc để form, filter, task card và nút không tràn khung điện thoại.
+- Không thay đổi logic chấm điểm, dữ liệu, quyền hay giao diện desktop ngoài phần đóng/mở nói trên.
