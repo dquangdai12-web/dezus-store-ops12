@@ -68,19 +68,43 @@ function evidenceMimeType(filePath) {
   return 'application/octet-stream';
 }
 
+function evidenceExtensionFromMime(mime) {
+  const map = {
+    'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp', 'image/gif': '.gif', 'image/bmp': '.bmp', 'image/avif': '.avif',
+    'application/pdf': '.pdf',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': '.xlsx',
+    'application/vnd.ms-excel': '.xls',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
+    'application/msword': '.doc',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation': '.pptx',
+    'application/vnd.ms-powerpoint': '.ppt',
+    'text/csv': '.csv'
+  };
+  return map[String(mime || '').toLowerCase()] || '';
+}
+
+function evidenceDownloadName(filename, mime) {
+  const clean = path.basename(String(filename || '')).replace(/[\r\n"]/g, '');
+  if (path.extname(clean)) return clean;
+  const ext = evidenceExtensionFromMime(mime);
+  return ext ? `${clean}${ext}` : clean;
+}
+
 app.get('/evidence-view/:filename', (req, res) => {
   const filename = path.basename(String(req.params.filename || ''));
   if (!filename || filename !== String(req.params.filename || '')) return res.status(400).send('File không hợp lệ');
   const filePath = path.join(UPLOAD_DIR, filename);
   if (!fs.existsSync(filePath)) return res.status(404).send('Không tìm thấy chứng từ');
   const mime = evidenceMimeType(filePath);
+  const downloadName = evidenceDownloadName(filename, mime);
   res.setHeader('Content-Type', mime);
   res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Cache-Control', 'private, max-age=300');
   if (/^(image\/|application\/pdf)/i.test(mime)) {
-    res.setHeader('Content-Disposition', `inline; filename="${filename.replace(/"/g, '')}"`);
+    res.setHeader('Content-Disposition', `inline; filename="${downloadName}"`);
     return res.sendFile(filePath);
   }
-  return res.download(filePath, filename);
+  return res.download(filePath, downloadName);
 });
 
 app.use('/uploads', express.static(UPLOAD_DIR));
@@ -2940,7 +2964,7 @@ app.post('/api/ggnv', requireAuth, upload.single('evidence'), (req, res) => {
   if (!(discountRate >= 0 && discountRate <= 100)) return res.status(400).json({ error:'Mức giảm phải từ 0 đến 100%' });
   if (!req.file) return res.status(400).json({ error:'Vui lòng tải hoặc dán ảnh chứng từ' });
   db.ggnv_claims = db.ggnv_claims || [];
-  const row = { id:nextId('ggnv_claims'), store_id:storeId, user_id:null, employee_name:employeeName, sale_date:saleDate, order_number:orderNumber, order_value:orderValue, discount_rate:discountRate, evidence_path:`/uploads/${req.file.filename}`, created_by:req.user.id, created_at:nowIso(), updated_at:nowIso() };
+  const row = { id:nextId('ggnv_claims'), store_id:storeId, user_id:null, employee_name:employeeName, sale_date:saleDate, order_number:orderNumber, order_value:orderValue, discount_rate:discountRate, evidence_path:saveUploadedFile(req.file), created_by:req.user.id, created_at:nowIso(), updated_at:nowIso() };
   db.ggnv_claims.push(row); saveDb(); res.json({ ok:true, row:ggnvPublicRow(row) });
 });
 
@@ -3031,7 +3055,7 @@ app.post('/api/loyalty', requireAuth, upload.single('evidence'), (req, res) => {
   if (!invoice) return res.status(400).json({ error: 'Nhập số hóa đơn' });
   if (!(amount > 0)) return res.status(400).json({ error: 'Số tiền giảm phải lớn hơn 0' });
   if (!req.file) return res.status(400).json({ error: 'Vui lòng tải ảnh chứng từ' });
-  const evidencePath = `/uploads/${req.file.filename}`;
+  const evidencePath = saveUploadedFile(req.file);
   db.loyalty_claims = db.loyalty_claims || [];
   const row = { id: nextId('loyalty_claims'), store_id: storeId, user_id: employee.id, sale_date: saleDate, invoice_number: invoice, discount_amount: amount, evidence_path: evidencePath, status: 'pending', created_by: req.user.id, created_at: nowIso(), updated_by: req.user.id, updated_at: nowIso(), reviewed_by: null, reviewed_at: null };
   db.loyalty_claims.push(row);
@@ -3052,7 +3076,7 @@ app.patch('/api/loyalty/:id', requireAuth, upload.single('evidence'), (req, res)
   const invoice = String(req.body?.invoice_number ?? row.invoice_number).trim();
   if (!invoice) return res.status(400).json({ error: 'Nhập số hóa đơn' });
   row.store_id = storeId; row.user_id = employee.id; row.sale_date = dateOnly(req.body?.sale_date || row.sale_date); row.invoice_number = invoice; row.discount_amount = amount;
-  if (req.file) row.evidence_path = `/uploads/${req.file.filename}`;
+  if (req.file) row.evidence_path = saveUploadedFile(req.file);
   row.updated_by = req.user.id; row.updated_at = nowIso();
   if (row.status === 'approved') {
     recomputeSalesRevenueWithLoyalty(oldUserId, oldDate, req.user.id);
