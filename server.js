@@ -711,6 +711,14 @@ function saveUploadedFiles(files) {
   const saved = (files || []).map(file => saveUploadedFile(file)).filter(Boolean);
   return saved.length ? JSON.stringify(saved) : null;
 }
+function removeLocalEvidenceFile(storedPath) {
+  const raw = String(storedPath || '').trim();
+  if (!raw.startsWith('/uploads/')) return;
+  const filename = path.basename(raw);
+  if (!filename) return;
+  const fullPath = path.join(UPLOAD_DIR, filename);
+  try { if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath); } catch (_err) {}
+}
 
 // V4.58 - Cho phép dùng link Google Drive/URL thay vì upload file nặng, giúp tiết kiệm dung lượng Disk.
 function normalizeExternalUrl(value) {
@@ -2967,6 +2975,17 @@ app.post('/api/ggnv', requireAuth, upload.single('evidence'), (req, res) => {
   const row = { id:nextId('ggnv_claims'), store_id:storeId, user_id:null, employee_name:employeeName, sale_date:saleDate, order_number:orderNumber, order_value:orderValue, discount_rate:discountRate, evidence_path:saveUploadedFile(req.file), created_by:req.user.id, created_at:nowIso(), updated_at:nowIso() };
   db.ggnv_claims.push(row); saveDb(); res.json({ ok:true, row:ggnvPublicRow(row) });
 });
+app.delete('/api/ggnv/:id', requireAuth, (req, res) => {
+  if (!(req.user?.role === 'admin' || req.user?.role === 'office')) return res.status(403).json({ error:'Chỉ Admin/Văn phòng được xóa đơn GGNV' });
+  db.ggnv_claims = db.ggnv_claims || [];
+  const idx = db.ggnv_claims.findIndex(x => Number(x.id) === Number(req.params.id));
+  if (idx < 0) return res.status(404).json({ error:'Không tìm thấy đơn GGNV' });
+  const row = db.ggnv_claims[idx];
+  db.ggnv_claims.splice(idx, 1);
+  removeLocalEvidenceFile(row.evidence_path);
+  saveDb();
+  res.json({ ok:true, deleted_id:Number(req.params.id) });
+});
 
 function billCancelPublicRow(x) {
   const store = getStore(Number(x.store_id));
@@ -3094,6 +3113,18 @@ app.post('/api/loyalty/:id/approve', requireAuth, (req, res) => {
   recomputeSalesRevenueWithLoyalty(row.user_id, row.sale_date, req.user.id);
   saveDb();
   res.json({ ok:true, row: loyaltyPublicRow(row) });
+});
+app.delete('/api/loyalty/:id', requireAuth, (req, res) => {
+  if (!canReviewLoyalty(req.user)) return res.status(403).json({ error: 'Chỉ Admin/Văn phòng được xóa đơn Loyalty' });
+  db.loyalty_claims = db.loyalty_claims || [];
+  const idx = db.loyalty_claims.findIndex(x => Number(x.id) === Number(req.params.id));
+  if (idx < 0) return res.status(404).json({ error: 'Không tìm thấy đơn Loyalty' });
+  const row = db.loyalty_claims[idx];
+  db.loyalty_claims.splice(idx, 1);
+  if (row.status === 'approved') recomputeSalesRevenueWithLoyalty(row.user_id, row.sale_date, req.user.id);
+  removeLocalEvidenceFile(row.evidence_path);
+  saveDb();
+  res.json({ ok:true, deleted_id:Number(req.params.id) });
 });
 
 app.post('/api/sales', requireAuth, requireAnyPerm('can_manage_total_sales','can_manage_sales'), (req, res) => {

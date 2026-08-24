@@ -1,0 +1,6 @@
+DEZUS Store Ops v4.197
+- Thêm nút Xóa đơn tại Loyalty và GGNV.
+- Chỉ Admin/Văn phòng được xóa.
+- Có xác nhận trước khi xóa.
+- Nếu xóa Loyalty đã duyệt, hệ thống tự tính lại doanh thu để loại phần Loyalty đã cộng.
+- File chứng từ local của đơn bị xóa được dọn khỏi uploads.
