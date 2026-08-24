@@ -398,6 +398,16 @@ function applyScheduleSelectTone(sel) {
   sel.classList.add(`tone-${shiftTone(code)}`);
 }
 
+function evidenceViewUrl(file) {
+  const raw = String(file || '').trim();
+  if (!raw || /^https?:\/\//i.test(raw)) return raw;
+  if (/^\/uploads\//i.test(raw)) {
+    const name = raw.split('/').pop() || '';
+    return `/evidence-view/${encodeURIComponent(name)}`;
+  }
+  return raw;
+}
+
 function renderFiles(value) {
   if (!value) return '';
   let files = [];
@@ -406,10 +416,22 @@ function renderFiles(value) {
   } catch (_err) {
     files = [value];
   }
-  return files.filter(Boolean).map((file, index) => {
-    const label = /^https?:\/\//i.test(String(file || '')) ? `Link Drive ${index + 1}` : `File ${index + 1}`;
-    return `<a class="filelink" href="${esc(file)}" target="_blank" rel="noopener">${label}</a>`;
-  }).join(' • ');
+  return `<div class="evidence-file-list">${files.filter(Boolean).map((file, index) => {
+    const raw = String(file || '').trim();
+    const external = /^https?:\/\//i.test(raw);
+    const viewUrl = evidenceViewUrl(raw);
+    const cleanPath = raw.split('?')[0].split('#')[0];
+    const ext = (cleanPath.match(/\.([a-z0-9]{2,8})$/i)?.[1] || '').toLowerCase();
+    const isImage = ['jpg','jpeg','png','webp','gif','bmp','avif'].includes(ext);
+    const isPdf = ext === 'pdf';
+    if (external) {
+      return `<a class="filelink evidence-file-btn external" href="${esc(raw)}" target="_blank" rel="noopener"><span>↗</span> Link Drive ${index + 1}</a>`;
+    }
+    if (isImage) {
+      return `<a class="evidence-image-link" href="${esc(viewUrl)}" target="_blank" rel="noopener"><img class="evidence-thumb" src="${esc(viewUrl)}" alt="Chứng từ ${index + 1}" loading="lazy"><span>Xem ảnh ${index + 1}</span></a>`;
+    }
+    return `<a class="filelink evidence-file-btn ${isPdf ? 'pdf' : 'file'}" href="${esc(viewUrl)}" target="_blank" rel="noopener"><span>${isPdf ? 'PDF' : 'FILE'}</span> ${isPdf ? `Xem PDF ${index + 1}` : `Xem chứng từ ${index + 1}`}</a>`;
+  }).join('')}</div>`;
 }
 
 function fmt2(v) {
@@ -714,7 +736,8 @@ function shell(content, title = 'Tổng Quan', subtitle = 'Vận hành cửa hà
   const openGroup = groups.find(g => g.key === state.navOpenGroup) || groups.find(g => g.key === activeGroup) || groups[0];
   const mobileOpenGroup = mobileGroups.find(g => g.key === state.navOpenGroup && availableGroupItems(g, items).length) || mobileGroups.find(g => g.key === mobileActiveGroup && availableGroupItems(g, items).length) || mobileGroups[0];
   const mobileTitle = mobileOpenGroup?.label || title;
-  const mobileSubnav = mobileOpenGroup ? `<div class="mobile-subnav mobile-menu-list">${availableGroupItems(mobileOpenGroup, items).map(([id,label,,groupKey]) => `<button class="mobile-subitem group-${groupKey || mobileOpenGroup.key} route-${id} ${state.route === id ? 'active' : ''}" data-route="${id}"><span class="mobile-subitem-icon">${mobileIconFor(id)}</span><span class="mobile-subitem-label">${label}</span><span class="mobile-subitem-arrow">›</span></button>`).join('')}</div>` : '';
+  const mobileOpenItems = mobileOpenGroup ? availableGroupItems(mobileOpenGroup, items) : [];
+  const mobileSubnav = mobileOpenGroup && mobileOpenItems.length > 1 ? `<div class="mobile-subnav mobile-menu-list">${mobileOpenItems.map(([id,label,,groupKey]) => `<button class="mobile-subitem group-${groupKey || mobileOpenGroup.key} route-${id} ${state.route === id ? 'active' : ''}" data-route="${id}"><span class="mobile-subitem-icon">${mobileIconFor(id)}</span><span class="mobile-subitem-label">${label}</span><span class="mobile-subitem-arrow">›</span></button>`).join('')}</div>` : '';
   app.innerHTML = `
     <div class="app-shell">
       <aside class="sidebar">
@@ -737,11 +760,11 @@ function shell(content, title = 'Tổng Quan', subtitle = 'Vận hành cửa hà
           <div class="page-title"><h2>${esc(title)}</h2></div>
           <div class="row mobile-top"><button class="btn secondary" id="logoutBtn3">Đăng xuất</button></div>
         </div>
-        <div class="mobile-page-title"><h2>${esc(mobileTitle)}</h2></div>
+        <div class="mobile-page-title"><h2>${esc(mobileTitle)}</h2><button class="mobile-page-logout" id="logoutBtnMobile" type="button" aria-label="Đăng xuất">Đăng xuất</button></div>
         <div class="mobile-cats">${mobileCats}</div>
-        ${mobileSubnav}
         ${content}
       </main>
+      ${mobileSubnav}
       <nav class="mobile-bottom-nav">${mobileBottom}</nav>
     </div>`;
   $$('[data-route]').forEach(btn => btn.onclick = () => { state.route = btn.dataset.route; localStorage.setItem('dezus_ops_route', state.route); render(); });
@@ -760,6 +783,7 @@ function shell(content, title = 'Tổng Quan', subtitle = 'Vận hành cửa hà
   $('#logoutBtn')?.addEventListener('click', logout);
   $('#logoutBtn2')?.addEventListener('click', logout);
   $('#logoutBtn3')?.addEventListener('click', logout);
+  $('#logoutBtnMobile')?.addEventListener('click', logout);
   $$('[data-export]').forEach(btn => btn.addEventListener('click', () => downloadExport(btn.dataset.export)));
   setupNumberFormat(app);
 }

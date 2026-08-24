@@ -44,6 +44,45 @@ const upload = multer({
 });
 
 app.use(express.json({ limit: '6mb' }));
+function evidenceMimeType(filePath) {
+  const ext = path.extname(filePath || '').toLowerCase();
+  const byExt = {
+    '.jpg':'image/jpeg','.jpeg':'image/jpeg','.png':'image/png','.webp':'image/webp','.gif':'image/gif','.bmp':'image/bmp','.avif':'image/avif',
+    '.pdf':'application/pdf','.xlsx':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','.xls':'application/vnd.ms-excel',
+    '.docx':'application/vnd.openxmlformats-officedocument.wordprocessingml.document','.doc':'application/msword',
+    '.pptx':'application/vnd.openxmlformats-officedocument.presentationml.presentation','.ppt':'application/vnd.ms-powerpoint','.csv':'text/csv'
+  };
+  if (byExt[ext]) return byExt[ext];
+  try {
+    const fd = fs.openSync(filePath, 'r');
+    const buf = Buffer.alloc(16);
+    const read = fs.readSync(fd, buf, 0, buf.length, 0);
+    fs.closeSync(fd);
+    const b = buf.subarray(0, read);
+    if (b.length >= 3 && b[0] === 0xFF && b[1] === 0xD8 && b[2] === 0xFF) return 'image/jpeg';
+    if (b.length >= 8 && b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4E && b[3] === 0x47) return 'image/png';
+    if (b.length >= 12 && b.toString('ascii', 0, 4) === 'RIFF' && b.toString('ascii', 8, 12) === 'WEBP') return 'image/webp';
+    if (b.length >= 6 && (b.toString('ascii', 0, 6) === 'GIF87a' || b.toString('ascii', 0, 6) === 'GIF89a')) return 'image/gif';
+    if (b.length >= 4 && b.toString('ascii', 0, 4) === '%PDF') return 'application/pdf';
+  } catch (_err) {}
+  return 'application/octet-stream';
+}
+
+app.get('/evidence-view/:filename', (req, res) => {
+  const filename = path.basename(String(req.params.filename || ''));
+  if (!filename || filename !== String(req.params.filename || '')) return res.status(400).send('File không hợp lệ');
+  const filePath = path.join(UPLOAD_DIR, filename);
+  if (!fs.existsSync(filePath)) return res.status(404).send('Không tìm thấy chứng từ');
+  const mime = evidenceMimeType(filePath);
+  res.setHeader('Content-Type', mime);
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  if (/^(image\/|application\/pdf)/i.test(mime)) {
+    res.setHeader('Content-Disposition', `inline; filename="${filename.replace(/"/g, '')}"`);
+    return res.sendFile(filePath);
+  }
+  return res.download(filePath, filename);
+});
+
 app.use('/uploads', express.static(UPLOAD_DIR));
 app.use(express.static(path.join(ROOT, 'public'), {
   setHeaders: (res, filePath) => {

@@ -1,0 +1,5 @@
+V4.194
+- Fix xem chứng từ vi phạm/trừ điểm: nhận đúng ảnh/PDF kể cả file cũ không có đuôi mở rộng.
+- File ảnh hiển thị thumbnail; PDF/file khác có nút xem/tải rõ ràng.
+- Thêm nút Đăng xuất trên header mobile.
+- Không thay đổi logic nghiệp vụ/phân quyền.
