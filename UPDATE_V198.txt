@@ -1,0 +1,8 @@
+DEZUS Store Ops v4.198
+
+Fix quản lý nhiều cửa hàng:
+- Báo cáo ngày: quản lý được gán 2+ cửa hàng đổi Cửa hàng sẽ tải đúng dữ liệu của cửa hàng vừa chọn.
+- Lưu báo cáo ngày: ghi đúng store_id đang chọn thay vì luôn rơi về cửa hàng chính.
+- Báo cáo tuần: đổi Cửa hàng sẽ tải đúng tuần/doanh thu/nhân viên/feedback của cửa hàng vừa chọn.
+- Lưu feedback tuần: ghi đúng cửa hàng đang chọn.
+- Giữ kiểm tra phân quyền: chỉ được xem/nhập các cửa hàng tài khoản thực sự được gán.

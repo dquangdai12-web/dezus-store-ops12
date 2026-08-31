@@ -3885,7 +3885,7 @@ function buildWeeklyReport(user, rawWeekStart, rawStoreId, rawUserStatus = 'acti
   const week_start = weekStartOf(rawWeekStart || new Date());
   const week_end = addDaysUtc(week_start, 6);
   const endExclusive = addDaysUtc(week_start, 7);
-  const storeId = isAllStoreRole(user) ? Number(rawStoreId || getPrimaryStoreId(user) || db.stores[0]?.id) : Number(getPrimaryStoreId(user));
+  const storeId = canSelectAssignedStore(user) ? Number(rawStoreId || getPrimaryStoreId(user) || db.stores[0]?.id) : Number(getPrimaryStoreId(user));
   const store = getStore(storeId);
   if (!store) throw new Error('Cửa hàng không hợp lệ');
   if (user.role !== 'admin' && Number(user.permissions.can_view_weekly_report) !== 1 && Number(user.permissions.can_manage_weekly_report) !== 1) throw new Error('Không có quyền xem báo cáo tuần');
@@ -4234,7 +4234,7 @@ function normalizeDailyFeedbackItems(value) {
 }
 function buildDailyReport(user, rawDate, rawStoreId) {
   const reportDate = dateOnly(rawDate || new Date());
-  const storeId = isAllStoreRole(user) ? Number(rawStoreId || getPrimaryStoreId(user) || db.stores[0]?.id) : Number(getPrimaryStoreId(user));
+  const storeId = canSelectAssignedStore(user) ? Number(rawStoreId || getPrimaryStoreId(user) || db.stores[0]?.id) : Number(getPrimaryStoreId(user));
   const store = getStore(storeId);
   if (!store) throw new Error('Cửa hàng không hợp lệ');
   if (user.role !== 'admin' && !userHasStore(user, storeId)) throw new Error('Không có quyền xem báo cáo ngày cửa hàng này');
@@ -4355,7 +4355,7 @@ app.get('/api/daily-report', requireAuth, (req, res) => {
 
 app.post('/api/daily-report', requireAuth, requireAnyPerm('can_manage_daily_report','can_manage_sales'), (req, res) => {
   const { store_id, report_date, customer_count, customer_new_count, customer_old_count, customer_new_morning, customer_old_morning, customer_new_afternoon, customer_old_afternoon, store_note, store_situation_morning, store_situation_evening, sales_entries, missing_size_items, product_feedback_items } = req.body || {};
-  const storeId = isAllStoreRole(req.user) ? Number(store_id || getPrimaryStoreId(req.user)) : Number(getPrimaryStoreId(req.user));
+  const storeId = canSelectAssignedStore(req.user) ? Number(store_id || getPrimaryStoreId(req.user)) : Number(getPrimaryStoreId(req.user));
   const store = getStore(storeId);
   if (!store) return res.status(400).json({ error: 'Cửa hàng không hợp lệ' });
   if (req.user.role !== 'admin' && !userHasStore(req.user, storeId)) return res.status(403).json({ error: 'Không có quyền nhập báo cáo ngày cửa hàng này' });
@@ -4489,7 +4489,7 @@ app.get('/api/weekly-report', requireAuth, (req, res) => {
 
 app.post('/api/weekly-report', requireAuth, (req, res) => {
   const { store_id, week_start, feedback, issues, action_plan, note, top_products, promotions } = req.body || {};
-  const storeId = isAllStoreRole(req.user) ? Number(store_id || getPrimaryStoreId(req.user)) : Number(getPrimaryStoreId(req.user));
+  const storeId = canSelectAssignedStore(req.user) ? Number(store_id || getPrimaryStoreId(req.user)) : Number(getPrimaryStoreId(req.user));
   const store = getStore(storeId);
   if (!store) return res.status(400).json({ error: 'Cửa hàng không hợp lệ' });
   if (req.user.role !== 'admin' && (Number(req.user.permissions.can_manage_weekly_report) !== 1 || !userHasStore(req.user, storeId))) return res.status(403).json({ error: 'Không có quyền nhập báo cáo tuần' });
