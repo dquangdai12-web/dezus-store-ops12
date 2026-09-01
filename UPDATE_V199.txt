@@ -1,0 +1,7 @@
+DEZUS Store Ops v4.199
+- Tổng quan thêm kỳ Tháng / Quý / Năm.
+- Mặc định Tháng hiện tại.
+- Top doanh thu/target, task, vi phạm và điểm tổng hợp trên Tổng quan đổi theo kỳ được chọn.
+- Quý cộng dữ liệu 3 tháng; Năm cộng dữ liệu cả năm.
+- Điểm Tổng hợp ở Quý/Năm hiển thị trung bình điểm tháng trong kỳ.
+- Giữ nguyên các phần khác của v4.198.

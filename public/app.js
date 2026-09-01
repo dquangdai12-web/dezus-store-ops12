@@ -43,6 +43,10 @@ const state = {
   navOpenGroup: localStorage.getItem('dezus_ops_nav_group') || 'overview',
   adminEditUserId: null,
   overviewRevenueExpanded: false,
+  overviewPeriod: localStorage.getItem('dezus_ops_overview_period') || 'month',
+  overviewMonth: localStorage.getItem('dezus_ops_overview_month') || currentMonthLocal(),
+  overviewQuarter: Number(localStorage.getItem('dezus_ops_overview_quarter')) || (Math.floor(new Date().getMonth()/3)+1),
+  overviewYear: Number(localStorage.getItem('dezus_ops_overview_year')) || new Date().getFullYear(),
   productAnalyticsPeriod: 'month',
   productAnalyticsMonth: currentMonthLocal(),
   productAnalyticsWeekStart: mondayOf(isoDateLocal(new Date())),
@@ -944,52 +948,167 @@ function overviewLeaderboardCards(rows) {
   return `${podium}${detail}${mobileToggle}`;
 }
 
+function overviewPeriodContext() {
+  const now = new Date();
+  const period = ['month','quarter','year'].includes(state.overviewPeriod) ? state.overviewPeriod : 'month';
+  let year = Number(state.overviewYear || now.getFullYear());
+  let month = 1;
+  let quarter = Math.max(1, Math.min(4, Number(state.overviewQuarter || (Math.floor(now.getMonth()/3)+1))));
+  if (period === 'month') {
+    const m = /^\d{4}-\d{2}$/.test(String(state.overviewMonth || '')) ? String(state.overviewMonth) : currentMonthLocal();
+    const parts = m.split('-');
+    year = Number(parts[0]);
+    month = Number(parts[1]);
+    const start = `${m}-01`;
+    const endDate = new Date(Date.UTC(year, month, 1));
+    const end = endDate.toISOString().slice(0,10);
+    return { period, year, month, quarter: Math.floor((month-1)/3)+1, refDate:start, start, end, label:`Tháng ${String(month).padStart(2,'0')}/${year}`, months:[m] };
+  }
+  if (period === 'quarter') {
+    month = (quarter - 1) * 3 + 1;
+    const start = `${year}-${String(month).padStart(2,'0')}-01`;
+    const endDate = new Date(Date.UTC(year, month + 2, 1));
+    const end = endDate.toISOString().slice(0,10);
+    const months = [0,1,2].map(i => `${year}-${String(month+i).padStart(2,'0')}`);
+    return { period, year, month, quarter, refDate:start, start, end, label:`Quý ${quarter}/${year}`, months };
+  }
+  const start = `${year}-01-01`;
+  const end = `${year+1}-01-01`;
+  const months = Array.from({length:12},(_,i)=>`${year}-${String(i+1).padStart(2,'0')}`);
+  return { period, year, month:1, quarter:1, refDate:start, start, end, label:`Năm ${year}`, months };
+}
+
+function overviewDateKey(value) {
+  if (!value) return '';
+  const s = String(value);
+  const m = s.match(/^\d{4}-\d{2}-\d{2}/);
+  if (m) return m[0];
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? '' : d.toISOString().slice(0,10);
+}
+
+function overviewInPeriod(value, ctx) {
+  const d = overviewDateKey(value);
+  return !!d && d >= ctx.start && d < ctx.end;
+}
+
+function overviewYearsOptions(selected) {
+  const nowYear = new Date().getFullYear();
+  const years = [];
+  for (let y = nowYear + 1; y >= nowYear - 5; y--) years.push(y);
+  if (!years.includes(Number(selected))) years.push(Number(selected));
+  return years.sort((a,b)=>b-a).map(y => `<option value="${y}" ${Number(y)===Number(selected)?'selected':''}>${y}</option>`).join('');
+}
+
+function overviewPeriodPicker(ctx) {
+  const tabs = `<div class="pillbar overview-period-tabs">
+    <button type="button" class="overviewPeriodBtn ${ctx.period==='month'?'active':''}" data-period="month">Tháng</button>
+    <button type="button" class="overviewPeriodBtn ${ctx.period==='quarter'?'active':''}" data-period="quarter">Quý</button>
+    <button type="button" class="overviewPeriodBtn ${ctx.period==='year'?'active':''}" data-period="year">Năm</button>
+  </div>`;
+  let picker = '';
+  if (ctx.period === 'month') {
+    picker = `<div class="field overview-period-field"><label>Tháng</label><input class="input" id="overviewMonthFilter" type="month" value="${esc(state.overviewMonth || currentMonthLocal())}"></div>`;
+  } else if (ctx.period === 'quarter') {
+    picker = `<div class="field overview-period-field"><label>Quý</label><select class="input" id="overviewQuarterFilter">${[1,2,3,4].map(q=>`<option value="${q}" ${q===ctx.quarter?'selected':''}>Quý ${q}</option>`).join('')}</select></div><div class="field overview-period-field"><label>Năm</label><select class="input" id="overviewYearFilter">${overviewYearsOptions(ctx.year)}</select></div>`;
+  } else {
+    picker = `<div class="field overview-period-field"><label>Năm</label><select class="input" id="overviewYearFilter">${overviewYearsOptions(ctx.year)}</select></div>`;
+  }
+  return `<section class="card overview-period-card"><div class="overview-period-head"><div><h3>Tổng quan ${ctx.period==='month'?'tháng':ctx.period==='quarter'?'quý':'năm'}</h3><p class="hint">Dữ liệu đang hiển thị theo <b>${esc(ctx.label)}</b></p></div>${tabs}</div><div class="overview-period-controls">${picker}</div></section>`;
+}
+
+async function overviewPerformanceForPeriod(ctx) {
+  if (!(state.user.role !== 'employee' || can('can_view_reports'))) return null;
+  const monthNums = ctx.months.map(m => Number(m.split('-')[1]));
+  const year = ctx.year;
+  const results = await Promise.all(monthNums.map(m => api(`/api/reports/performance?year=${year}&month=${m}`).catch(() => ({ performance: [] }))));
+  const rows = results.map(r => (r.performance || []).find(p => Number(p.user_id) === Number(state.user.id))).filter(Boolean);
+  if (!rows.length) return null;
+  const avg = rows.reduce((s,r)=>s+Number(r.final_score||0),0)/rows.length;
+  return { final_score: Math.round(avg*100)/100, months_count: rows.length };
+}
+
 async function renderDashboard() {
-  const [tasksData, violationsData, leaderboardData, reportData] = await Promise.all([
+  const ctx = overviewPeriodContext();
+  const [tasksData, violationsData, leaderboardData, myPerf] = await Promise.all([
     api('/api/tasks'),
     api('/api/violations'),
-    api('/api/sales/leaderboard?period=month&scope=overview_percent'),
-    (state.user.role !== 'employee' || can('can_view_reports')) ? api('/api/reports/performance').catch(() => ({ performance: [], storeSummary: [] })) : Promise.resolve({ performance: [], storeSummary: [] }),
+    api(`/api/sales/leaderboard?period=${encodeURIComponent(ctx.period)}&date=${encodeURIComponent(ctx.refDate)}&scope=overview_percent`),
+    overviewPerformanceForPeriod(ctx),
   ]);
-  const tasks = tasksData.tasks;
+  const allTasks = tasksData.tasks || [];
+  const tasks = allTasks.filter(t => overviewInPeriod(t.task_date || t.due_at || t.created_at, ctx));
+  const violations = (violationsData.violations || []).filter(v => overviewInPeriod(v.created_at || v.violation_date, ctx));
   const open = tasks.filter(t => t.status === 'assigned').length;
   const late = tasks.filter(t => ['overdue','completed_late','not_completed'].includes(t.status)).length;
   const done = tasks.filter(t => t.status === 'completed_on_time').length;
   const total = Math.max(tasks.length, 1);
   const onTimeRate = Math.round((done / total) * 100);
-  const myPerf = reportData.performance.find(p => Number(p.user_id) === Number(state.user.id)) || reportData.performance[0] || {};
-  const top = leaderboardData.leaderboard.slice(0, 5);
+  const top = (leaderboardData.leaderboard || []).slice(0, 5);
   const today = new Date().toLocaleDateString('vi-VN', { weekday:'long', day:'2-digit', month:'2-digit', year:'numeric' });
   const leaderboardRows = leaderboardData.leaderboard || [];
+  const periodText = ctx.period === 'month' ? 'tháng' : ctx.period === 'quarter' ? 'quý' : 'năm';
+  const scoreLabel = ctx.period === 'month' ? 'Điểm tổng hợp' : 'Điểm TB tháng';
   shell(`
-    <section class="card hero-card">
+    ${overviewPeriodPicker(ctx)}
+    <section class="card hero-card" style="margin-top:14px">
       <div>
         <span class="badge dark">${esc(today)}</span>
         <h3>Xin chào, ${esc(state.user.full_name)}</h3>
+        <p class="hint">Đang xem ${esc(ctx.label)}</p>
       </div>
       <div class="hero-score">
-        <span>Điểm tổng hợp</span>
-        <b>${myPerf.final_score ?? '-'}</b>
+        <span>${scoreLabel}</span>
+        <b>${myPerf?.final_score ?? '-'}</b>
         <small>/100</small>
       </div>
     </section>
     <section class="grid four dash-kpis">
-      <div class="card kpi dashboard-kpi kpi-open"><div class="label">Việc đang mở</div><div class="num">${open}</div><div class="hint">Cần xử lý trong hạn</div></div>
+      <div class="card kpi dashboard-kpi kpi-open"><div class="label">Việc đang mở</div><div class="num">${open}</div><div class="hint">Trong ${esc(ctx.label)}</div></div>
       <div class="card kpi dashboard-kpi kpi-done"><div class="label">Đúng hạn</div><div class="num ok-text">${done}</div><div class="hint">Tỷ lệ đúng hạn ${onTimeRate}%</div></div>
-      <div class="card kpi dashboard-kpi kpi-late"><div class="label">Trễ / quá hạn</div><div class="num danger-text">${late}</div><div class="hint">Tự ghi nhận trừ điểm</div></div>
-      <div class="card kpi top-month-kpi"><div class="top-month-head"><div><div class="label">Top tháng</div><div class="num top-month-name">${top[0] ? esc(top[0].full_name) : '-'}</div><div class="hint top-month-store">${top[0] ? esc(top[0].store_name || '') : 'Chưa có dữ liệu'}</div></div><div class="top-month-cup" aria-hidden="true">🏆</div></div></div>
+      <div class="card kpi dashboard-kpi kpi-late"><div class="label">Trễ / quá hạn</div><div class="num danger-text">${late}</div><div class="hint">Theo kỳ đang xem</div></div>
+      <div class="card kpi top-month-kpi"><div class="top-month-head"><div><div class="label">Top ${periodText}</div><div class="num top-month-name">${top[0] ? esc(top[0].full_name) : '-'}</div><div class="hint top-month-store">${top[0] ? esc(top[0].store_name || '') : 'Chưa có dữ liệu'}</div></div><div class="top-month-cup" aria-hidden="true">🏆</div></div></div>
     </section>
     <section class="card overview-leaderboard-card overview-section-stack overview-leaderboard-full" style="margin-top:17px">
-      <div class="section-title"><h3>Top % đạt target doanh thu tháng này</h3><span class="badge">Toàn bộ thành viên</span></div>
+      <div class="section-title"><h3>Top % đạt target doanh thu ${periodText}</h3><span class="badge">${esc(ctx.label)}</span></div>
       ${overviewLeaderboardCards(leaderboardRows)}
     </section>
     <section class="card overview-violations-card overview-section-stack" style="margin-top:17px">
-      <div class="section-title"><h3>Vi phạm gần đây</h3><span class="badge danger">Kiểm soát</span></div>
-      ${violationsData.violations.slice(0, 6).map(v => `<div class="activity-item"><div><b>${esc(v.employee_name)}</b><span>${esc(v.store_name || '')} • ${dt(v.created_at)}</span><p>${esc(v.description || '')}</p></div><span class="badge danger">-${v.points_deducted}</span></div>`).join('') || '<div class="empty">Chưa có vi phạm</div>'}
+      <div class="section-title"><h3>Vi phạm trong ${periodText}</h3><span class="badge danger">${violations.length} lỗi</span></div>
+      ${violations.slice(0, 8).map(v => `<div class="activity-item"><div><b>${esc(v.employee_name)}</b><span>${esc(v.store_name || '')} • ${dt(v.created_at)}</span><p>${esc(v.description || '')}</p></div><span class="badge danger">-${v.points_deducted}</span></div>`).join('') || '<div class="empty">Không có vi phạm trong kỳ này</div>'}
     </section>
   `, 'Tổng Quan', '');
   $('#toggleOverviewRevenueBtn')?.addEventListener('click', () => {
     state.overviewRevenueExpanded = !state.overviewRevenueExpanded;
+    renderDashboard();
+  });
+  $$('.overviewPeriodBtn').forEach(btn => btn.addEventListener('click', () => {
+    state.overviewPeriod = btn.dataset.period || 'month';
+    localStorage.setItem('dezus_ops_overview_period', state.overviewPeriod);
+    state.overviewRevenueExpanded = false;
+    renderDashboard();
+  }));
+  $('#overviewMonthFilter')?.addEventListener('change', e => {
+    state.overviewMonth = e.target.value || currentMonthLocal();
+    const [y,m] = state.overviewMonth.split('-').map(Number);
+    state.overviewYear = y;
+    state.overviewQuarter = Math.floor((m-1)/3)+1;
+    localStorage.setItem('dezus_ops_overview_month', state.overviewMonth);
+    localStorage.setItem('dezus_ops_overview_year', String(state.overviewYear));
+    localStorage.setItem('dezus_ops_overview_quarter', String(state.overviewQuarter));
+    state.overviewRevenueExpanded = false;
+    renderDashboard();
+  });
+  $('#overviewQuarterFilter')?.addEventListener('change', e => {
+    state.overviewQuarter = Number(e.target.value || 1);
+    localStorage.setItem('dezus_ops_overview_quarter', String(state.overviewQuarter));
+    state.overviewRevenueExpanded = false;
+    renderDashboard();
+  });
+  $('#overviewYearFilter')?.addEventListener('change', e => {
+    state.overviewYear = Number(e.target.value || new Date().getFullYear());
+    localStorage.setItem('dezus_ops_overview_year', String(state.overviewYear));
+    state.overviewRevenueExpanded = false;
     renderDashboard();
   });
 }
