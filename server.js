@@ -2264,8 +2264,8 @@ function computePerformance(scopeUser, year = null, month = null) {
       upt = employeeBills ? Math.round((employeeItems / employeeBills) * 100) / 100 : 0;
       targetUpt = Number(monthlyKpiTargetsForUser(u.id, performanceMonthKey).target_upt || 0);
     }
-    const uptAchievementPercent = targetUpt > 0 ? Math.min(120, Math.max(0, (upt / targetUpt) * 100)) : 0;
-    const uptPoints30 = Math.round((30 * uptAchievementPercent / 100) * 100) / 100; // tối đa 36 điểm = 120% của 30
+    const uptAchievementPercent = targetUpt > 0 ? Math.min(130, Math.max(0, (upt / targetUpt) * 100)) : 0;
+    const uptPoints30 = Math.round((30 * uptAchievementPercent / 100) * 100) / 100; // tối đa 39 điểm = 130% của 30
 
     const finalScore = Math.round((taskPoints35 + uptPoints30 + trainingGuestPoints20 + disciplinePoints15) * 100) / 100;
     return {

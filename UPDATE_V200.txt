@@ -1,0 +1,5 @@
+V4.200
+- Điều chỉnh mức vượt UPT tối đa từ 120% lên 130%.
+- UPT chiếm 30 điểm, tối đa có thể đạt 39 điểm (130% của 30).
+- Target UPT vẫn lấy từ Target UPT hàng tháng trong mục Doanh thu và UPT đạt vẫn lấy từ đúng tháng đang xem.
+- Cập nhật đồng bộ công thức backend và hiển thị Tổng hợp điểm.
