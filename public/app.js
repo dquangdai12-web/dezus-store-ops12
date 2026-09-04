@@ -1432,7 +1432,11 @@ function taskCategoryOptions(selected='ops') {
 
 async function renderTasks() {
   const data = await api('/api/tasks');
-  const tasks = data.tasks;
+  const currentTaskMonth = currentMonthLocal();
+  const taskMonthKey = (t) => String(t.task_date || (t.due_at || '').slice(0, 10) || (t.created_at || '').slice(0, 10) || '').slice(0, 7);
+  // Mục Công việc chỉ hiển thị dữ liệu của tháng hiện tại.
+  // Ưu tiên ngày công việc, sau đó hạn hoàn thành; created_at chỉ là fallback cho dữ liệu cũ thiếu ngày.
+  const tasks = (data.tasks || []).filter(t => taskMonthKey(t) === currentTaskMonth);
   state.taskRows = tasks;
   let shiftData = { shifts: [] };
   if (can('can_assign_tasks')) {

@@ -1,0 +1,6 @@
+DEZUS Store Ops v4.201
+
+- Mục Công việc chỉ hiển thị task thuộc tháng hiện tại.
+- Lọc theo task_date; nếu thiếu dùng due_at, dữ liệu cũ thiếu ngày mới fallback created_at.
+- Tổng hợp công việc, Tổng hợp cần xử lý, Công việc hôm nay/ngày khác và Việc đã hoàn thành đều dùng cùng phạm vi tháng hiện tại.
+- Không thay đổi logic tính điểm, phân quyền hay dữ liệu gốc.
