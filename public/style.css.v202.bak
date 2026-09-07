@@ -5946,25 +5946,3 @@ section.card>.toolbar+p.hint{display:none!important}
   .overview-period-field{min-width:0!important;width:100%!important}
   .overview-period-controls .overview-period-field:only-child{grid-column:1/-1}
 }
-
-/* ===== V4.203 Điều chuyển nhân sự ===== */
-.transfer-admin-card{border:1px solid rgba(22,135,247,.14)!important;background:linear-gradient(180deg,#fff,#fbfdff)!important}
-.transfer-rule-box{display:grid;gap:5px;padding:12px 14px;margin:12px 0 14px;border-radius:14px;background:#eef7ff;border:1px solid #d7ebff;color:#36536d}
-.transfer-rule-box b{color:#0b5fa8;font-size:13px}.transfer-rule-box span{font-size:12px;line-height:1.5}
-.transfer-form{align-items:end}.transfer-form .field{margin:0}
-#transferEndDateField{opacity:.55}#transferEndDateField.transfer-end-active{opacity:1}
-.transfer-section-head{display:flex;align-items:end;justify-content:space-between;gap:12px;margin:18px 0 10px;padding-top:14px;border-top:1px solid var(--line-soft)}
-.transfer-section-head h3{margin:0 0 3px;font-size:15px}.transfer-section-head p{margin:0;color:var(--muted);font-size:12px}
-.transfer-month-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-.transfer-summary-item{display:grid;grid-template-columns:1fr auto;gap:5px 12px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:#fff}
-.transfer-summary-item div{min-width:0}.transfer-summary-item b{display:block;font-size:13px}.transfer-summary-item span{display:block;margin-top:3px;color:var(--muted);font-size:11.5px}.transfer-summary-item strong{font-size:14px;color:#0b67c2;text-align:right}.transfer-summary-item small{grid-column:1/-1;color:var(--muted);font-size:11px}
-@media(max-width:699px){
-  .transfer-rule-box{padding:11px 12px;border-radius:13px}
-  .transfer-form{grid-template-columns:1fr!important}
-  .transfer-form > *{grid-column:auto!important}
-  .transfer-section-head{align-items:stretch;flex-direction:column}
-  .transfer-section-head .field,.transfer-section-head .btn{width:100%!important}
-  .transfer-month-summary{grid-template-columns:1fr}
-  .transfer-summary-item{padding:11px 12px}
-}
-.schedule-not-eligible{background:#f6f7f9!important;text-align:center!important;color:#94a3b8}

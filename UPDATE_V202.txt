@@ -1,0 +1,26 @@
+DEZUS STORE OPS v4.202 - NHÂN SỰ LUÂN CHUYỂN NHIỀU CỬA HÀNG
+
+1. Điểm tháng đi theo nhân viên
+- Công việc, đào tạo/GUESTS, kỷ luật và UPT được tổng hợp theo nhân viên trong cả tháng.
+- Không reset điểm khi nhân viên chuyển cửa hàng giữa tháng.
+
+2. Công việc
+- Task vẫn giữ đúng store_id nơi phát sinh.
+- Chuẩn khối lượng lấy theo tổng số ca thực tế trong tháng, 3 việc/ca.
+
+3. UPT
+- UPT đạt = tổng số món / tổng số bill của nhân viên trên tất cả cửa hàng phát sinh trong tháng.
+- Nếu nhân viên có ca thực tế tại từ 2 cửa hàng trở lên:
+  Target UPT = bình quân Target UPT từng cửa hàng theo số ca thực tế.
+- Nếu chỉ làm 1 cửa hàng hoặc chưa đủ dữ liệu phân ca: giữ Target UPT tháng của nhân viên như trước.
+- Cap UPT giữ 130%.
+
+4. Tổng hợp điểm
+- Hiển thị các cửa hàng nhân viên đã làm trong tháng.
+- Hiển thị số ca từng cửa hàng và cách tính Target UPT bình quân.
+- Lọc theo cửa hàng vẫn tìm được nhân viên có phát sinh tại cửa hàng đó trong tháng.
+
+5. Báo cáo / lịch / doanh thu
+- Báo cáo cửa hàng vẫn lấy đúng dữ liệu nơi phát sinh.
+- Nhân viên có lịch hoặc dữ liệu lịch sử ở cửa hàng vẫn xuất hiện khi xem kỳ đó, kể cả sau khi chuyển cửa hàng.
+- Khi nhập doanh thu/báo cáo ngày cho nhân viên được phân quyền nhiều cửa hàng hoặc có lịch làm tại cửa hàng đó, doanh thu được lưu đúng cửa hàng đang nhập.

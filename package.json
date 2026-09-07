@@ -1,7 +1,7 @@
 {
   "name": "dezus-store-ops-v4-141-product-analytics",
-  "version": "4.164.0",
-  "description": "Dezus Store Ops - Phân tích hàng hóa theo tên sản phẩm từ file Sapo POS, bestseller, tốc độ bán, nhập và tồn.",
+  "version": "4.203.0",
+  "description": "Dezus Store Ops v4.203 - Điều chuyển nhân sự theo ngày hiệu lực, giữ lịch sử LLV/doanh thu/task theo cửa hàng.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

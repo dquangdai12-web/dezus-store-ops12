@@ -1,0 +1,12 @@
+DEZUS STORE OPS v4.203 - ĐIỀU CHUYỂN NHÂN SỰ
+
+- Admin > Danh sách tài khoản có nút “Điều chuyển” cho NVBH.
+- Hỗ trợ Điều chuyển chính thức hoặc Hỗ trợ tạm thời, có ngày hiệu lực/ngày kết thúc/ghi chú.
+- Quyền cửa hàng của NVBH tự thay đổi theo ngày hiệu lực; lịch sử cửa hàng cũ không bị xóa.
+- CHT cửa hàng cũ vẫn xem dữ liệu lịch sử trước ngày chuyển; sau ngày chuyển không giao task mới cho nhân viên đó.
+- CHT cửa hàng mới thấy nhân viên từ ngày hiệu lực và có thể xếp LLV/giao task.
+- LLV kiểm tra quyền theo từng ngày; tuần/tháng giao nhau ngày điều chuyển vẫn giữ đúng nhân sự.
+- Doanh thu ngày dùng nhân sự hợp lệ theo LLV/lịch sử điều chuyển của đúng ngày, không chỉ cửa hàng hiện tại.
+- Admin xem ngay LLV, số task, doanh thu, Bill/Món, UPT của nhân viên theo từng cửa hàng trong tháng.
+- Có lịch sử điều chuyển và xuất Excel “Điều chuyển nhân sự”.
+- Tổng hợp điểm/UPT nhiều cửa hàng của v4.202 được giữ nguyên.
