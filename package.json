@@ -1,7 +1,7 @@
 {
   "name": "dezus-store-ops-v4-141-product-analytics",
-  "version": "4.204.0",
-  "description": "Dezus Store Ops v4.204 - Fix target nhân viên luân chuyển: target theo nhân viên + tháng + cửa hàng, doanh thu/target đúng cửa hàng.",
+  "version": "4.205.0",
+  "description": "Dezus Store Ops v4.205 - Admin xóa dữ liệu phân việc hàng loạt theo vùng hoặc toàn bộ, hỗ trợ trạng thái trễ/không hoàn thành.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

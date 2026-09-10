@@ -1543,42 +1543,6 @@ async function renderTasks() {
   const summaryStoreOptions = `${canSeeMultiStoreTaskSummary ? '<option value="all">Tất cả cửa hàng</option>' : ''}${summaryAllowedStores.map(st => `<option value="${st.id}" ${String(st.id)===selectedSummaryStoreId?'selected':''}>${esc(st.name)}</option>`).join('')}`;
   const summaryUserOptions = `${state.user.role !== 'employee' ? '<option value="all">Tất cả nhân viên</option>' : ''}${taskSummaryUsers.map(u => `<option value="${u.id}" ${String(u.id)===selectedSummaryUserId?'selected':''}>${esc(u.full_name)}${u.store_name ? ` • ${esc(u.store_name)}` : ''}</option>`).join('')}`;
 
-  const taskMonthParts = currentTaskMonth.split('-').map(Number);
-  const taskMonthEnd = isoDateLocal(new Date(taskMonthParts[0], taskMonthParts[1], 0));
-  const bulkStoreOptions = `<option value="all">Tất cả cửa hàng</option>${(state.boot?.stores || []).map(st => `<option value="${st.id}">${esc(st.name)}</option>`).join('')}`;
-  const bulkUserOptions = `<option value="all">Tất cả nhân viên</option>${employees().map(u => `<option value="${u.id}">${esc(u.full_name)}${u.store_name ? ` • ${esc(u.store_name)}` : ''}</option>`).join('')}`;
-  const bulkCategoryOptions = `<option value="all">Tất cả nhóm công việc</option>${TASK_CATEGORY_OPTIONS.map(([v,l]) => `<option value="${v}">${esc(l)}</option>`).join('')}`;
-  const adminBulkDeletePanel = state.user.role === 'admin' ? `
-    <div class="card task-bulk-delete-card task-bulk-delete-collapsed" style="margin-top:16px">
-      <div class="section-title task-bulk-delete-head">
-        <div><p class="eyebrow">Admin</p><h3>Xóa dữ liệu phân việc</h3><p class="hint">Dùng khi giao nhầm nhiều công việc. Có thể lọc theo cửa hàng, ngày, nhân viên, nhóm và trạng thái.</p></div>
-        <button type="button" class="btn secondary" id="taskBulkDeleteToggle">Mở công cụ xóa</button>
-      </div>
-      <div id="taskBulkDeleteBody" hidden>
-        <div class="task-bulk-delete-warning"><b>Chỉ Admin được thao tác.</b><span>Xóa dữ liệu sẽ ảnh hưởng trực tiếp đến khối lượng và điểm công việc. Hãy kiểm tra số lượng trước khi xác nhận.</span></div>
-        <div class="grid three task-bulk-delete-grid">
-          <div class="field"><label>Cửa hàng</label><select id="taskBulkStore">${bulkStoreOptions}</select></div>
-          <div class="field"><label>Từ ngày</label><input id="taskBulkFrom" type="date" value="${currentTaskMonth}-01"></div>
-          <div class="field"><label>Đến ngày</label><input id="taskBulkTo" type="date" value="${taskMonthEnd}"></div>
-          <div class="field"><label>Nhân viên</label><select id="taskBulkUser">${bulkUserOptions}</select></div>
-          <div class="field"><label>Nhóm công việc</label><select id="taskBulkCategory">${bulkCategoryOptions}</select></div>
-          <div class="field task-bulk-status-field"><label>Trạng thái cần xóa</label><div class="task-bulk-statuses">
-            <label><input type="checkbox" name="taskBulkStatus" value="assigned" checked><span>Đang mở</span></label>
-            <label><input type="checkbox" name="taskBulkStatus" value="overdue" checked><span>Quá hạn</span></label>
-            <label><input type="checkbox" name="taskBulkStatus" value="not_completed" checked><span>Không hoàn thành</span></label>
-            <label><input type="checkbox" name="taskBulkStatus" value="completed_on_time" checked><span>Hoàn thành đúng hạn</span></label>
-            <label><input type="checkbox" name="taskBulkStatus" value="completed_late" checked><span>Hoàn thành trễ</span></label>
-          </div></div>
-        </div>
-        <div class="task-bulk-delete-result" id="taskBulkDeleteResult"><span>Chưa kiểm tra dữ liệu.</span></div>
-        <div class="task-bulk-delete-actions">
-          <button type="button" class="btn secondary" id="taskBulkPreviewBtn">Kiểm tra dữ liệu</button>
-          <button type="button" class="btn danger" id="taskBulkDeleteFilteredBtn">Xóa vùng đã chọn</button>
-          <button type="button" class="btn danger task-delete-all-btn" id="taskDeleteAllBtn">Xóa toàn bộ dữ liệu phân việc</button>
-        </div>
-      </div>
-    </div>` : '';
-
   const summaryCategoryKeys = ['ops','sales_cskh','inventory','vm','reports','people_training','other'];
   const summaryCategoryLabels = Object.fromEntries(TASK_CATEGORY_OPTIONS);
   const categorySummaryRows = summaryCategoryKeys.map(key => {
@@ -1627,19 +1591,7 @@ async function renderTasks() {
   const otherDaysBlock = otherDayKeys.length ? `<details class="card task-other-days-wrap task-timeline-wrap" style="margin-top:16px"><summary class="task-other-days-summary"><div><p class="eyebrow">Công việc ngày khác</p><h3>${otherTasks.length} công việc đang ẩn</h3></div><span class="badge">Xem theo ngày</span></summary><div class="task-other-days-body">${otherDayKeys.map(day => { const rows = otherDayMap.get(day) || []; return `<details class="task-day-group"><summary><span>${day === 'no_date' ? 'Chưa xác định ngày' : dOnly(day)}</span><b>${rows.length} việc</b></summary><div class="grid task-timeline">${rows.map(t => taskCard(t)).join('')}</div></details>`; }).join('')}</div></details>` : '';
 
   const completedBlock = completedTasks.length ? `<div class="card task-completed-wrap task-timeline-wrap" style="margin-top:16px"><div class="task-completed-head"><div><p class="eyebrow">Lịch sử công việc</p><h3>${completedTasks.length} việc đã hoàn thành</h3></div><button type="button" class="btn secondary" id="completedTasksToggle">Xem việc đã hoàn thành</button></div><div id="completedTasksBody" hidden><div class="grid task-timeline">${completedTasks.map(t => taskCard(t)).join('')}</div></div></div>` : '';
-  shell(`${assignForm}${adminBulkDeletePanel}${categorySummary}${exceptionDashboard}${todayBlock}${otherDaysBlock}${completedBlock}`, 'Công việc', '');
-  const taskBulkDeleteToggle = $('#taskBulkDeleteToggle');
-  const taskBulkDeleteBody = $('#taskBulkDeleteBody');
-  taskBulkDeleteToggle?.addEventListener('click', () => {
-    if (!taskBulkDeleteBody) return;
-    const willOpen = taskBulkDeleteBody.hidden;
-    taskBulkDeleteBody.hidden = !willOpen;
-    taskBulkDeleteToggle.textContent = willOpen ? 'Đóng công cụ xóa' : 'Mở công cụ xóa';
-    taskBulkDeleteToggle.closest('.task-bulk-delete-card')?.classList.toggle('task-bulk-delete-collapsed', !willOpen);
-  });
-  $('#taskBulkPreviewBtn')?.addEventListener('click', previewTaskBulkDelete);
-  $('#taskBulkDeleteFilteredBtn')?.addEventListener('click', deleteTaskBulkFiltered);
-  $('#taskDeleteAllBtn')?.addEventListener('click', deleteAllTaskData);
+  shell(`${assignForm}${categorySummary}${exceptionDashboard}${todayBlock}${otherDaysBlock}${completedBlock}`, 'Công việc', '');
   const taskSummaryStoreFilter = $('#taskSummaryStoreFilter');
   const taskSummaryUserFilter = $('#taskSummaryUserFilter');
   if (taskSummaryStoreFilter) taskSummaryStoreFilter.addEventListener('change', async () => {
@@ -1735,102 +1687,6 @@ async function renderTasks() {
   $$('.completeForm').forEach(f => f.addEventListener('submit', submitCompleteTask));
   $$('.editTaskBtn').forEach(btn => btn.addEventListener('click', openTaskEditor));
   $$('.deleteTaskBtn').forEach(btn => btn.addEventListener('click', deleteTask));
-}
-
-function taskBulkDeletePayload(dryRun = false) {
-  const statuses = $$('input[name="taskBulkStatus"]:checked').map(x => x.value);
-  return {
-    mode: 'filtered',
-    store_id: $('#taskBulkStore')?.value || 'all',
-    user_id: $('#taskBulkUser')?.value || 'all',
-    category: $('#taskBulkCategory')?.value || 'all',
-    from_date: $('#taskBulkFrom')?.value || '',
-    to_date: $('#taskBulkTo')?.value || '',
-    statuses,
-    dry_run: dryRun ? 1 : 0
-  };
-}
-
-function setTaskBulkResult(message, tone = '') {
-  const box = $('#taskBulkDeleteResult');
-  if (!box) return;
-  box.className = `task-bulk-delete-result${tone ? ` ${tone}` : ''}`;
-  box.innerHTML = message;
-}
-
-async function previewTaskBulkDelete() {
-  const payload = taskBulkDeletePayload(true);
-  if (!payload.statuses.length) return toast('Vui lòng chọn ít nhất một trạng thái cần xóa', 'danger');
-  const btn = $('#taskBulkPreviewBtn');
-  if (btn) { btn.disabled = true; btn.textContent = 'Đang kiểm tra...'; }
-  try {
-    const res = await api('/api/tasks/bulk-delete', { method:'POST', body:JSON.stringify(payload) });
-    const count = Number(res.matched_assignments || 0);
-    setTaskBulkResult(count
-      ? `<b>${count} dòng phân việc</b> phù hợp • ảnh hưởng <b>${Number(res.affected_tasks || 0)} công việc</b> • ${Number(res.removable_tasks || 0)} công việc sẽ được xóa hoàn toàn nếu không còn người nhận khác.`
-      : '<b>Không có dữ liệu phù hợp</b> với vùng đang chọn.', count ? 'warning' : 'ok');
-  } catch (err) {
-    setTaskBulkResult(esc(err.message), 'danger');
-    toast(err.message, 'danger');
-  } finally {
-    if (btn) { btn.disabled = false; btn.textContent = 'Kiểm tra dữ liệu'; }
-  }
-}
-
-async function deleteTaskBulkFiltered() {
-  const payload = taskBulkDeletePayload(true);
-  if (!payload.statuses.length) return toast('Vui lòng chọn ít nhất một trạng thái cần xóa', 'danger');
-  const btn = $('#taskBulkDeleteFilteredBtn');
-  if (btn) btn.disabled = true;
-  try {
-    const preview = await api('/api/tasks/bulk-delete', { method:'POST', body:JSON.stringify(payload) });
-    const count = Number(preview.matched_assignments || 0);
-    if (!count) {
-      setTaskBulkResult('<b>Không có dữ liệu phù hợp</b> với vùng đang chọn.', 'ok');
-      return toast('Không có dữ liệu để xóa');
-    }
-    const affected = Number(preview.affected_tasks || 0);
-    const ok = confirm(`Bạn sắp xóa ${count} dòng phân việc thuộc ${affected} công việc theo vùng đã chọn. Bao gồm cả trạng thái trễ/không hoàn thành nếu đang được tick.
-
-Thao tác này không thể hoàn tác. Tiếp tục?`);
-    if (!ok) return;
-    const confirmText = prompt('Nhập XOA để xác nhận xóa vùng dữ liệu đã chọn:');
-    if (String(confirmText || '').trim().toUpperCase() !== 'XOA') return toast('Đã hủy thao tác xóa');
-    const finalPayload = { ...payload, dry_run: 0 };
-    const res = await api('/api/tasks/bulk-delete', { method:'POST', body:JSON.stringify(finalPayload) });
-    toast(`Đã xóa ${Number(res.deleted_assignments || 0)} dòng phân việc`);
-    await renderTasks();
-  } catch (err) {
-    toast(err.message, 'danger');
-  } finally {
-    if (btn && document.body.contains(btn)) btn.disabled = false;
-  }
-}
-
-async function deleteAllTaskData() {
-  if (state.user?.role !== 'admin') return toast('Chỉ Admin được xóa toàn bộ dữ liệu', 'danger');
-  const btn = $('#taskDeleteAllBtn');
-  if (btn) btn.disabled = true;
-  try {
-    const preview = await api('/api/tasks/bulk-delete', { method:'POST', body:JSON.stringify({ mode:'all', dry_run:1 }) });
-    const count = Number(preview.matched_assignments || 0);
-    const taskCount = Number(preview.affected_tasks || 0);
-    if (!taskCount && !count) return toast('Hiện không có dữ liệu phân việc để xóa');
-    if (!confirm(`CẢNH BÁO: Bạn đang chọn XÓA TOÀN BỘ dữ liệu phân việc của tất cả cửa hàng và tất cả thời gian.
-
-${taskCount} công việc • ${count} dòng phân việc sẽ bị xóa.
-
-Không thể hoàn tác.`)) return;
-    const confirmText = prompt('Để xóa toàn bộ, nhập chính xác: XOA TOAN BO');
-    if (String(confirmText || '').trim().toUpperCase() !== 'XOA TOAN BO') return toast('Đã hủy thao tác xóa toàn bộ');
-    const res = await api('/api/tasks/bulk-delete', { method:'POST', body:JSON.stringify({ mode:'all', dry_run:0 }) });
-    toast(`Đã xóa toàn bộ: ${Number(res.deleted_tasks || 0)} công việc`);
-    await renderTasks();
-  } catch (err) {
-    toast(err.message, 'danger');
-  } finally {
-    if (btn && document.body.contains(btn)) btn.disabled = false;
-  }
 }
 
 async function deleteTask(e) {

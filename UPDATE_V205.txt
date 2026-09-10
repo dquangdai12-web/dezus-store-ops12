@@ -1,0 +1,19 @@
+DEZUS STORE OPS v4.205 - ADMIN XÓA DỮ LIỆU PHÂN VIỆC HÀNG LOẠT
+
+1. Chỉ Admin có quyền xóa hàng loạt.
+2. Thêm công cụ Xóa dữ liệu phân việc trong mục Công việc.
+3. Có 2 chế độ:
+   - Xóa theo vùng dữ liệu.
+   - Xóa toàn bộ dữ liệu phân việc của tất cả cửa hàng / tất cả thời gian.
+4. Xóa theo vùng có thể lọc:
+   - Cửa hàng.
+   - Khoảng ngày từ / đến.
+   - Nhân viên.
+   - Nhóm công việc.
+   - Trạng thái: Đang mở, Quá hạn, Không hoàn thành, Hoàn thành đúng hạn, Hoàn thành trễ.
+5. Có bước Kiểm tra dữ liệu trước khi xóa, hiển thị số dòng phân việc và số công việc bị ảnh hưởng.
+6. Xóa theo vùng yêu cầu xác nhận + nhập XOA.
+7. Xóa toàn bộ yêu cầu xác nhận riêng + nhập XOA TOAN BO.
+8. Khi lọc theo trạng thái ở công việc có nhiều người nhận, chỉ xóa đúng các lượt phân việc khớp bộ lọc; công việc chỉ bị xóa hoàn toàn khi không còn người nhận.
+9. Dọn chứng từ upload của lượt phân việc bị xóa và làm sạch liên kết OJTI nếu task/liên kết tương ứng đã bị xóa.
+10. Lưu nhật ký kỹ thuật task_delete_logs: người xóa, thời gian, bộ lọc và số lượng đã xóa.

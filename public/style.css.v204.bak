@@ -5968,34 +5968,3 @@ section.card>.toolbar+p.hint{display:none!important}
   .transfer-summary-item{padding:11px 12px}
 }
 .schedule-not-eligible{background:#f6f7f9!important;text-align:center!important;color:#94a3b8}
-
-/* V4.205 - Admin bulk delete for task assignment data */
-.task-bulk-delete-card{border:1px solid rgba(185,28,28,.18);background:linear-gradient(180deg,#fff,#fffafa);box-shadow:0 10px 28px rgba(127,29,29,.05)}
-.task-bulk-delete-head{align-items:center;margin:0}
-.task-bulk-delete-head h3{margin:2px 0 3px}
-.task-bulk-delete-head .hint{margin:0;max-width:760px}
-.task-bulk-delete-card[hidden],.task-bulk-delete-card [hidden]{display:none!important}
-.task-bulk-delete-card.task-bulk-delete-collapsed{padding-bottom:14px}
-.task-bulk-delete-warning{display:flex;gap:8px;align-items:flex-start;margin:14px 0;padding:11px 12px;border-radius:12px;background:#fff1f2;border:1px solid #fecdd3;color:#881337;font-size:12px}
-.task-bulk-delete-warning b{white-space:nowrap}.task-bulk-delete-warning span{color:#9f1239}
-.task-bulk-delete-grid{margin-top:2px;align-items:start}
-.task-bulk-status-field{grid-column:span 1}
-.task-bulk-statuses{display:flex;flex-wrap:wrap;gap:7px;padding-top:2px}
-.task-bulk-statuses label{display:inline-flex;align-items:center;gap:6px;min-height:34px;padding:6px 9px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;font-size:11px;font-weight:700;color:#475569;cursor:pointer}
-.task-bulk-statuses input{width:15px;height:15px;margin:0;accent-color:#111827}
-.task-bulk-delete-result{margin:13px 0 0;padding:11px 12px;border-radius:11px;border:1px dashed #cbd5e1;background:#f8fafc;color:#475569;font-size:12px}
-.task-bulk-delete-result.warning{background:#fff7ed;border-color:#fdba74;color:#9a3412}.task-bulk-delete-result.ok{background:#f0fdf4;border-color:#86efac;color:#166534}.task-bulk-delete-result.danger{background:#fff1f2;border-color:#fda4af;color:#9f1239}
-.task-bulk-delete-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
-.task-delete-all-btn{margin-left:auto}
-@media(max-width:760px){
-  .task-bulk-delete-card{padding:11px!important;border-radius:15px!important}
-  .task-bulk-delete-head{display:grid!important;grid-template-columns:1fr!important;gap:9px!important;align-items:stretch!important}
-  .task-bulk-delete-head .btn{width:100%!important;min-height:40px!important}
-  .task-bulk-delete-warning{display:block;margin:10px 0;font-size:11px}.task-bulk-delete-warning b{display:block;margin-bottom:3px}
-  .task-bulk-delete-grid{grid-template-columns:1fr!important;gap:8px!important}
-  .task-bulk-status-field{grid-column:auto!important}
-  .task-bulk-statuses{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-  .task-bulk-statuses label{min-width:0;padding:6px 8px;font-size:10.5px}
-  .task-bulk-delete-actions{display:grid;grid-template-columns:1fr;gap:7px}
-  .task-bulk-delete-actions .btn{width:100%!important;margin:0!important;min-height:41px!important;white-space:normal}
-}

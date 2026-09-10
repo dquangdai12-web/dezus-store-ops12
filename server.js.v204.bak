@@ -273,9 +273,9 @@ function defaultDb() {
   const permissions = users.map(u => ({ user_id: u.id, ...ROLE_DEFAULTS[u.role] }));
   return {
     version: 2,
-    nextIds: { stores: 6, users: 7, tasks: 1, task_assignees: 1, violations: 1, violation_catalog_custom: 1, assessments: 1, assessment_items: 1, sales: 1, sales_targets: 1, sales_daily_targets: 1, sales_store_days: 1, bonuses: 1, documents: 1, shifts: 6, work_schedules: 1, orders: 1, online_orders: 1, product_feedback: 1, product_collections: 1, product_collection_items: 1, product_trainings: 1, product_training_attempts: 1, product_training_reads: 1, weekly_reports: 1, daily_reports: 1, cdp_ojti: 1, product_sales_imports: 1, product_inventory_imports: 1, product_import_batches: 1, loyalty_claims: 1, ggnv_claims: 1, bill_cancel_claims: 1, user_transfers: 1, task_delete_logs: 1 },
+    nextIds: { stores: 6, users: 7, tasks: 1, task_assignees: 1, violations: 1, violation_catalog_custom: 1, assessments: 1, assessment_items: 1, sales: 1, sales_targets: 1, sales_daily_targets: 1, sales_store_days: 1, bonuses: 1, documents: 1, shifts: 6, work_schedules: 1, orders: 1, online_orders: 1, product_feedback: 1, product_collections: 1, product_collection_items: 1, product_trainings: 1, product_training_attempts: 1, product_training_reads: 1, weekly_reports: 1, daily_reports: 1, cdp_ojti: 1, product_sales_imports: 1, product_inventory_imports: 1, product_import_batches: 1, loyalty_claims: 1, ggnv_claims: 1, bill_cancel_claims: 1, user_transfers: 1 },
     stores, users, permissions, shifts,
-    tasks: [], task_assignees: [], violations: [], violation_catalog_custom: [], assessments: [], assessment_items: [], sales: [], sales_targets: [], sales_daily_targets: [], sales_store_days: [], bonuses: [], documents: [], orders: [], online_orders: [], product_feedback: [], product_collections: [], product_collection_items: [], product_trainings: [], product_training_attempts: [], product_training_reads: [], weekly_reports: [], daily_reports: [], cdp_ojti: [], product_sales_imports: [], product_inventory_imports: [], product_import_batches: [], loyalty_claims: [], ggnv_claims: [], bill_cancel_claims: [], work_schedules: [], user_transfers: [], task_delete_logs: []
+    tasks: [], task_assignees: [], violations: [], violation_catalog_custom: [], assessments: [], assessment_items: [], sales: [], sales_targets: [], sales_daily_targets: [], sales_store_days: [], bonuses: [], documents: [], orders: [], online_orders: [], product_feedback: [], product_collections: [], product_collection_items: [], product_trainings: [], product_training_attempts: [], product_training_reads: [], weekly_reports: [], daily_reports: [], cdp_ojti: [], product_sales_imports: [], product_inventory_imports: [], product_import_batches: [], loyalty_claims: [], ggnv_claims: [], bill_cancel_claims: [], work_schedules: [], user_transfers: []
   };
 }
 
@@ -328,8 +328,7 @@ function loadDb() {
       bill_cancel_claims: parsed.bill_cancel_claims || [],
       shifts: parsed.shifts || base.shifts,
       work_schedules: parsed.work_schedules || [],
-      user_transfers: parsed.user_transfers || [],
-      task_delete_logs: parsed.task_delete_logs || []
+      user_transfers: parsed.user_transfers || []
     };
   } catch (err) {
     const backup = DB_PATH + `.broken-${Date.now()}.bak`;
@@ -778,41 +777,6 @@ function removeLocalEvidenceFile(storedPath) {
   if (!filename) return;
   const fullPath = path.join(UPLOAD_DIR, filename);
   try { if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath); } catch (_err) {}
-}
-function removeStoredEvidenceFiles(storedValue) {
-  if (!storedValue) return;
-  let items = [];
-  if (Array.isArray(storedValue)) items = storedValue;
-  else {
-    try {
-      const parsed = JSON.parse(String(storedValue));
-      items = Array.isArray(parsed) ? parsed : [parsed];
-    } catch (_err) {
-      items = [storedValue];
-    }
-  }
-  items.filter(Boolean).forEach(item => removeLocalEvidenceFile(item));
-}
-function clearDeletedTaskReferences(taskIds = [], assignmentIds = []) {
-  const taskSet = new Set((taskIds || []).map(Number));
-  const assignmentSet = new Set((assignmentIds || []).map(Number));
-  if (!taskSet.size && !assignmentSet.size) return;
-  db.cdp_ojti = db.cdp_ojti || [];
-  db.cdp_ojti.forEach(row => {
-    if (!row || row.status === 'deleted') return;
-    if (taskSet.has(Number(row.linked_task_id || 0))) row.linked_task_id = null;
-    if (row.linked_task_ids && typeof row.linked_task_ids === 'object' && !Array.isArray(row.linked_task_ids)) {
-      Object.keys(row.linked_task_ids).forEach(key => {
-        if (taskSet.has(Number(row.linked_task_ids[key] || 0))) delete row.linked_task_ids[key];
-      });
-      if (!row.linked_task_id) row.linked_task_id = Object.values(row.linked_task_ids).map(Number).find(Boolean) || null;
-    }
-    if (Array.isArray(row.item_values)) {
-      row.item_values.forEach(item => {
-        if (assignmentSet.has(Number(item?.task_assignment_id || 0))) item.task_assignment_id = null;
-      });
-    }
-  });
 }
 
 // V4.58 - Cho phép dùng link Google Drive/URL thay vì upload file nặng, giúp tiết kiệm dung lượng Disk.
@@ -3061,103 +3025,6 @@ app.post('/api/tasks', requireAuth, requirePerm('can_assign_tasks'), (req, res) 
   res.json({ ok: true, created_tasks: createdTasks, created_assignments: createdAssignments });
 });
 
-function resolveTaskBulkSelection(payload = {}) {
-  db.tasks = db.tasks || [];
-  db.task_assignees = db.task_assignees || [];
-  const mode = String(payload.mode || 'filtered') === 'all' ? 'all' : 'filtered';
-  if (mode === 'all') {
-    return {
-      mode,
-      assignment_ids: db.task_assignees.map(x => Number(x.id)),
-      affected_task_ids: db.tasks.map(x => Number(x.id)),
-      removable_task_ids: db.tasks.map(x => Number(x.id)),
-      filters: { mode: 'all' }
-    };
-  }
-
-  const storeId = Number(payload.store_id || 0) || 0;
-  const userId = Number(payload.user_id || 0) || 0;
-  const rawCategory = String(payload.category || '').trim();
-  const category = rawCategory && rawCategory !== 'all' ? normalizeTaskCategory(rawCategory) : '';
-  const fromDate = /^\d{4}-\d{2}-\d{2}$/.test(String(payload.from_date || '')) ? String(payload.from_date) : '';
-  const toDate = /^\d{4}-\d{2}-\d{2}$/.test(String(payload.to_date || '')) ? String(payload.to_date) : '';
-  const allowedStatuses = new Set(['assigned','overdue','not_completed','completed_on_time','completed_late']);
-  const statuses = new Set((Array.isArray(payload.statuses) ? payload.statuses : []).map(String).filter(x => allowedStatuses.has(x)));
-  if (fromDate && toDate && fromDate > toDate) throw new Error('Khoảng ngày xóa không hợp lệ');
-  if (!statuses.size) throw new Error('Vui lòng chọn ít nhất một trạng thái công việc cần xóa');
-
-  const assignmentIds = [];
-  const affectedTaskIds = new Set();
-  db.task_assignees.forEach(ta => {
-    const t = db.tasks.find(x => Number(x.id) === Number(ta.task_id));
-    if (!t) return;
-    const workDate = taskWorkDate(t);
-    if (storeId && Number(t.store_id) !== storeId) return;
-    if (userId && Number(ta.user_id) !== userId) return;
-    if (category && normalizeTaskCategory(t.category) !== category) return;
-    if (fromDate && workDate < fromDate) return;
-    if (toDate && workDate > toDate) return;
-    const status = taskStatus({ ...ta, due_at: t.due_at });
-    if (!statuses.has(status)) return;
-    assignmentIds.push(Number(ta.id));
-    affectedTaskIds.add(Number(t.id));
-  });
-
-  const assignmentSet = new Set(assignmentIds);
-  const removableTaskIds = Array.from(affectedTaskIds).filter(taskId => {
-    const rows = db.task_assignees.filter(a => Number(a.task_id) === Number(taskId));
-    return rows.length > 0 && rows.every(a => assignmentSet.has(Number(a.id)));
-  });
-  return {
-    mode,
-    assignment_ids: assignmentIds,
-    affected_task_ids: Array.from(affectedTaskIds),
-    removable_task_ids: removableTaskIds,
-    filters: { store_id: storeId || null, user_id: userId || null, category: category || 'all', from_date: fromDate || null, to_date: toDate || null, statuses: Array.from(statuses) }
-  };
-}
-
-app.post('/api/tasks/bulk-delete', requireAuth, (req, res) => {
-  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Chỉ Admin được quyền xóa dữ liệu phân việc hàng loạt' });
-  let selection;
-  try { selection = resolveTaskBulkSelection(req.body || {}); }
-  catch (err) { return res.status(400).json({ error: err.message || 'Bộ lọc xóa không hợp lệ' }); }
-  const dryRun = Number(req.body?.dry_run || 0) === 1 || req.body?.dry_run === true;
-  const matchedAssignments = selection.assignment_ids.length;
-  const affectedTasks = selection.affected_task_ids.length;
-  const removableTasks = selection.removable_task_ids.length;
-  if (dryRun) return res.json({ ok: true, dry_run: true, matched_assignments: matchedAssignments, affected_tasks: affectedTasks, removable_tasks: removableTasks, filters: selection.filters });
-  if (!matchedAssignments && selection.mode !== 'all') return res.status(400).json({ error: 'Không có dữ liệu công việc phù hợp với vùng đã chọn' });
-
-  const assignmentSet = new Set(selection.assignment_ids.map(Number));
-  const forcedTaskSet = new Set(selection.mode === 'all' ? selection.affected_task_ids.map(Number) : []);
-  (db.task_assignees || []).filter(a => assignmentSet.has(Number(a.id))).forEach(a => removeStoredEvidenceFiles(a.evidence_path));
-  db.task_assignees = (db.task_assignees || []).filter(a => !assignmentSet.has(Number(a.id)));
-
-  const orphanTaskIds = new Set(selection.removable_task_ids.map(Number));
-  if (selection.mode === 'all') selection.affected_task_ids.forEach(id => orphanTaskIds.add(Number(id)));
-  else selection.affected_task_ids.forEach(taskId => {
-    if (!(db.task_assignees || []).some(a => Number(a.task_id) === Number(taskId))) orphanTaskIds.add(Number(taskId));
-  });
-  const deletedTaskIds = Array.from(orphanTaskIds);
-  db.tasks = (db.tasks || []).filter(t => !orphanTaskIds.has(Number(t.id)) && !forcedTaskSet.has(Number(t.id)));
-  clearDeletedTaskReferences(deletedTaskIds, selection.assignment_ids);
-
-  db.task_delete_logs = db.task_delete_logs || [];
-  db.task_delete_logs.push({
-    id: nextId('task_delete_logs'),
-    mode: selection.mode,
-    filters: selection.filters,
-    deleted_assignments: matchedAssignments,
-    affected_tasks: affectedTasks,
-    deleted_tasks: deletedTaskIds.length,
-    deleted_by: req.user.id,
-    deleted_at: nowIso()
-  });
-  saveDb();
-  res.json({ ok: true, deleted_assignments: matchedAssignments, affected_tasks: affectedTasks, deleted_tasks: deletedTaskIds.length });
-});
-
 app.patch('/api/tasks/:taskId', requireAuth, requirePerm('can_edit_tasks'), (req, res) => {
   const taskId = Number(req.params.taskId);
   const task = db.tasks.find(x => Number(x.id) === taskId);
@@ -3203,14 +3070,8 @@ app.delete('/api/tasks/:taskId', requireAuth, (req, res) => {
   const taskId = Number(req.params.taskId);
   const task = db.tasks.find(x => Number(x.id) === taskId);
   if (!task) return res.status(404).json({ error: 'Không tìm thấy công việc' });
-  const assignmentRows = (db.task_assignees || []).filter(x => Number(x.task_id) === taskId);
-  assignmentRows.forEach(row => removeStoredEvidenceFiles(row.evidence_path));
-  const assignmentIds = assignmentRows.map(row => Number(row.id));
-  db.task_assignees = (db.task_assignees || []).filter(x => Number(x.task_id) !== taskId);
-  db.tasks = (db.tasks || []).filter(x => Number(x.id) !== taskId);
-  clearDeletedTaskReferences([taskId], assignmentIds);
-  db.task_delete_logs = db.task_delete_logs || [];
-  db.task_delete_logs.push({ id: nextId('task_delete_logs'), mode: 'single', filters: { task_id: taskId }, deleted_assignments: assignmentIds.length, affected_tasks: 1, deleted_tasks: 1, deleted_by: req.user.id, deleted_at: nowIso() });
+  db.task_assignees = db.task_assignees.filter(x => Number(x.task_id) !== taskId);
+  db.tasks = db.tasks.filter(x => Number(x.id) !== taskId);
   saveDb();
   res.json({ ok: true, deleted_task_id: taskId });
 });
