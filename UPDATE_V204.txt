@@ -1,0 +1,24 @@
+DEZUS STORE OPS v4.204 - FIX TARGET NHÂN VIÊN LUÂN CHUYỂN
+
+1. Set Target tại cửa hàng mới
+- Form Set target có Cửa hàng áp dụng Target.
+- Danh sách nhân viên được lấy theo cửa hàng + tháng target, có tính lịch sử điều chuyển/ngày hiệu lực.
+- Nhân viên chuyển giữa tháng xuất hiện ở cả cửa hàng cũ và cửa hàng mới nếu có thời gian làm tại đó trong tháng.
+
+2. Không ghi đè target cửa hàng cũ
+- Target lưu theo khóa logic: Nhân viên + Tháng + Cửa hàng.
+- Cùng một tháng, NV có thể có target riêng ở 2 cửa hàng.
+- Target cá nhân toàn tháng = tổng target doanh thu các cửa hàng.
+
+3. UPT khi luân chuyển
+- Target UPT theo từng cửa hàng ưu tiên target riêng của chính NV tại cửa hàng đó.
+- Điểm UPT tháng vẫn bình quân theo số ca thực tế giữa các cửa hàng và cap 130%.
+
+4. Doanh thu / báo cáo
+- Khi lọc doanh thu theo cửa hàng: chỉ lấy doanh thu của NV tại cửa hàng đó và so với target tại đúng cửa hàng đó.
+- Báo cáo tuần dùng target tuần quy đổi từ target của đúng cửa hàng, không cộng nhầm target cửa hàng còn lại.
+- Tổng quan cá nhân/toàn kỳ không lọc cửa hàng vẫn cộng target và doanh thu của NV trên tất cả cửa hàng phát sinh.
+
+5. Tương thích dữ liệu cũ
+- Target cũ vẫn được giữ nguyên.
+- Khi set target tại cửa hàng mới, hệ thống tạo dòng target mới cho cửa hàng mới thay vì chuyển/ghi đè dòng cũ.

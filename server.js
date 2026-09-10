@@ -1580,28 +1580,38 @@ function periodRange(period, ref) {
   return { start: dateOnly(start), end: dateOnly(end) };
 }
 
-function monthlyTargetRowForUser(userId, month) {
+function monthlyTargetRowsForUser(userId, month, storeId = null) {
   db.sales_targets = db.sales_targets || [];
   return db.sales_targets
-    .filter(t => Number(t.user_id) === Number(userId) && String(t.target_month) === String(month))
-    .sort((a, b) => new Date(b.updated_at || b.created_at || 0) - new Date(a.updated_at || a.created_at || 0))[0] || null;
+    .filter(t => Number(t.user_id) === Number(userId) && String(t.target_month) === String(month) && (!storeId || Number(t.store_id) === Number(storeId)))
+    .sort((a, b) => new Date(b.updated_at || b.created_at || 0) - new Date(a.updated_at || a.created_at || 0));
 }
 
-function monthlyTargetForUser(userId, month) {
-  const row = monthlyTargetRowForUser(userId, month);
-  if (row) return Number(row.target_revenue ?? row.target ?? 0);
+function monthlyTargetRowForUser(userId, month, storeId = null) {
+  return monthlyTargetRowsForUser(userId, month, storeId)[0] || null;
+}
+
+function monthlyTargetForUser(userId, month, storeId = null) {
+  const rows = monthlyTargetRowsForUser(userId, month, storeId);
+  // V4.204: một NV có thể có target ở nhiều cửa hàng trong cùng tháng khi luân chuyển.
+  // Target cá nhân toàn tháng = tổng target các cửa hàng; target khi lọc cửa hàng = target tại cửa hàng đó.
+  if (rows.length) return rows.reduce((sum, row) => sum + Number(row.target_revenue ?? row.target ?? 0), 0);
   // Legacy fallback: old versions stored target on sales rows. Use max target in that month, not sum.
-  const legacyRows = (db.sales || []).filter(sa => Number(sa.user_id) === Number(userId) && monthKey(sa.sale_date) === month);
+  const legacyRows = (db.sales || []).filter(sa => Number(sa.user_id) === Number(userId) && monthKey(sa.sale_date) === month && (!storeId || Number(sa.store_id) === Number(storeId)));
   return Math.max(0, ...legacyRows.map(r => Number(r.target || r.target_value || 0)));
 }
 
-function monthlyKpiTargetsForUser(userId, month) {
-  const row = monthlyTargetRowForUser(userId, month);
+function monthlyKpiTargetsForUser(userId, month, storeId = null) {
+  const rows = monthlyTargetRowsForUser(userId, month, storeId);
+  const avg = key => {
+    const vals = rows.map(r => Number(r[key] || 0)).filter(v => v > 0);
+    return vals.length ? Math.round((vals.reduce((sum, v) => sum + v, 0) / vals.length) * 100) / 100 : 0;
+  };
   return {
-    target_revenue: row ? Number(row.target_revenue ?? row.target ?? 0) : monthlyTargetForUser(userId, month),
-    target_upt: row ? Number(row.target_upt || 0) : 0,
-    target_atv: row ? Number(row.target_atv || 0) : 0,
-    target_cr: row ? Number(row.target_cr || 0) : 0,
+    target_revenue: rows.length ? rows.reduce((sum, row) => sum + Number(row.target_revenue ?? row.target ?? 0), 0) : monthlyTargetForUser(userId, month, storeId),
+    target_upt: avg('target_upt'),
+    target_atv: avg('target_atv'),
+    target_cr: avg('target_cr'),
   };
 }
 
@@ -1626,8 +1636,8 @@ function storeDailyTarget(storeId, saleDate) {
   };
 }
 
-function aggregateKpiTargetsForUser(userId, months) {
-  const rows = months.map(month => monthlyKpiTargetsForUser(userId, month));
+function aggregateKpiTargetsForUser(userId, months, storeId = null) {
+  const rows = months.map(month => monthlyKpiTargetsForUser(userId, month, storeId));
   const avg = key => {
     const vals = rows.map(r => Number(r[key] || 0)).filter(v => v > 0);
     return vals.length ? Math.round((vals.reduce((s, v) => s + v, 0) / vals.length) * 100) / 100 : 0;
@@ -1702,13 +1712,13 @@ function salesRowsForUserPeriod(userId, start, end) {
   return (db.sales || []).filter(sa => Number(sa.user_id) === Number(userId) && dateVal(sa.sale_date) >= start && dateVal(sa.sale_date) < end);
 }
 
-function salesProgressForUserPeriod(userId, start, end) {
+function salesProgressForUserPeriod(userId, start, end, storeId = null) {
   const months = monthKeysBetween(start, end);
-  const rows = salesRowsForUserPeriod(userId, start, end);
+  const rows = salesRowsForUserPeriod(userId, start, end).filter(r => !storeId || Number(r.store_id) === Number(storeId));
   const revenue = rows.reduce((sum, r) => sum + Number(r.revenue || 0), 0);
   const bill_count = rows.reduce((sum, r) => sum + Number(r.bill_count || 0), 0);
   const item_count = rows.reduce((sum, r) => sum + Number(r.item_count || 0), 0);
-  const targets = aggregateKpiTargetsForUser(userId, months);
+  const targets = aggregateKpiTargetsForUser(userId, months, storeId);
   const target = targets.target;
   const last_update = rows.reduce((latest, r) => {
     const val = r.updated_at || r.created_at || r.sale_date || null;
@@ -2235,7 +2245,7 @@ function leaderboardRows(user, period, refDate, storeId = null, options = {}) {
     people = canViewStoreScope ? people.filter(u => userHasStore(user, getPrimaryStoreId(u))) : people.filter(u => Number(u.id) === Number(user.id));
   }
   const rows = people.map(u => {
-    const progress = salesProgressForUserPeriod(u.id, start, end);
+    const progress = salesProgressForUserPeriod(u.id, start, end, requestedStoreId);
     const guestsRows = db.assessments.filter(a => a.template_id === 'GUESTS' && Number(a.employee_id) === Number(u.id) && dateVal(a.assessed_at) >= start && dateVal(a.assessed_at) < end);
     const guests_percent = guestsRows.length ? guestsRows.reduce((sum, a) => sum + Number(a.percent || 0), 0) / guestsRows.length : 0;
     const achievement_percent = progress.target ? Math.round((progress.revenue / progress.target) * 10000) / 100 : 0;
@@ -2279,7 +2289,8 @@ function monthlyWorkStoreBreakdownForUser(userId, monthKeyValue) {
     const revenue = storeSales.reduce((sum, r) => sum + Number(r.revenue || 0), 0);
     const billCount = storeSales.reduce((sum, r) => sum + Number(r.bill_count || 0), 0);
     const itemCount = storeSales.reduce((sum, r) => sum + Number(r.item_count || 0), 0);
-    const storeTargetUpt = Number(aggregateKpiTargetsForStore(storeId, [monthKeyValue]).target_upt || 0);
+    const personalStoreTargetUpt = Number(monthlyKpiTargetsForUser(userId, monthKeyValue, storeId).target_upt || 0);
+    const storeTargetUpt = personalStoreTargetUpt || Number(aggregateKpiTargetsForStore(storeId, [monthKeyValue]).target_upt || 0);
     return {
       store_id: storeId,
       store_name: getStore(storeId)?.name || '',
@@ -3443,10 +3454,10 @@ function datesBetween(start, end) {
   while (d < end) { out.push(d); d = addDaysUtc(d, 1); }
   return out;
 }
-function proratedTargetForUser(userId, start, end) {
+function proratedTargetForUser(userId, start, end, storeId = null) {
   return datesBetween(start, end).reduce((sum, d) => {
     const month = d.slice(0, 7);
-    const t = monthlyKpiTargetsForUser(userId, month).target_revenue || 0;
+    const t = monthlyKpiTargetsForUser(userId, month, storeId).target_revenue || 0;
     return sum + (Number(t) / Math.max(daysInMonthKey(month), 1));
   }, 0);
 }
@@ -4216,7 +4227,7 @@ function buildWeeklyReport(user, rawWeekStart, rawStoreId, rawUserStatus = 'acti
     const revenue = rows.reduce((s, r) => s + Number(r.revenue || 0), 0);
     const bill_count = rows.reduce((s, r) => s + Number(r.bill_count || 0), 0);
     const item_count = rows.reduce((s, r) => s + Number(r.item_count || 0), 0);
-    const target = Math.round(proratedTargetForUser(u.id, week_start, endExclusive));
+    const target = Math.round(proratedTargetForUser(u.id, week_start, endExclusive, storeId));
     return { user_id: u.id, full_name: u.full_name, user_status: u.status || 'active', store_id: getPrimaryStoreId(u), store_name: store.name, revenue, target, achievement_percent: target ? Math.round((revenue / target) * 10000) / 100 : 0, revenue_percent: 0, bill_count, item_count, upt: bill_count ? Math.round((item_count / bill_count) * 100) / 100 : 0, atv: bill_count ? Math.round(revenue / bill_count) : 0, asp: item_count ? Math.round(revenue / item_count) : 0 };
   }).sort((a, b) => b.revenue - a.revenue);
   const totals = daysRows.reduce((acc, r) => {
@@ -4230,7 +4241,7 @@ function buildWeeklyReport(user, rawWeekStart, rawStoreId, rawUserStatus = 'acti
     return acc;
   }, { revenue: 0, bill_count: 0, item_count: 0, customer_count: 0, customer_new_count: 0, customer_old_count: 0, target_revenue: 0 });
   const staffForTarget = salesStaffForStore(storeId, { status: 'all', start: week_start, end: endExclusive });
-  const proratedStoreTarget = Math.round(staffForTarget.reduce((sum, u) => sum + proratedTargetForUser(u.id, week_start, endExclusive), 0));
+  const proratedStoreTarget = Math.round(staffForTarget.reduce((sum, u) => sum + proratedTargetForUser(u.id, week_start, endExclusive, storeId), 0));
   if (!totals.target_revenue) totals.target_revenue = proratedStoreTarget;
   totals.upt = totals.bill_count ? Math.round((totals.item_count / totals.bill_count) * 100) / 100 : 0;
   totals.atv = totals.bill_count ? Math.round(totals.revenue / totals.bill_count) : 0;
@@ -4266,19 +4277,32 @@ app.post('/api/sales/daily', requireAuth, requireAnyPerm('can_manage_total_sales
 
 app.post('/api/sales/targets', requireAuth, requirePerm('can_set_sales_targets'), (req, res) => {
   if (req.user.role !== 'admin') return res.status(403).json({ error: 'Chỉ Admin được set target đầu tháng' });
-  const { user_id, user_ids, target_month, target, target_revenue, target_upt, target_atv, target_cr, note } = req.body || {};
+  const { user_id, user_ids, store_id, target_month, target, target_revenue, target_upt, target_atv, target_cr, note } = req.body || {};
   const ids = Array.from(new Set((Array.isArray(user_ids) ? user_ids : (user_id ? [user_id] : [])).map(v => Number(v)).filter(v => Number.isFinite(v) && v > 0)));
   if (!ids.length) return res.status(400).json({ error: 'Chọn ít nhất 1 nhân viên để nhập target' });
   if (!/^\d{4}-\d{2}$/.test(String(target_month || ''))) return res.status(400).json({ error: 'Tháng target không hợp lệ' });
+  const targetStart = `${target_month}-01`;
+  const targetNext = new Date(`${targetStart}T00:00:00Z`);
+  targetNext.setUTCMonth(targetNext.getUTCMonth() + 1);
+  const targetEnd = targetNext.toISOString().slice(0, 10);
+  const requestedStoreId = Number(store_id || 0);
+  if (requestedStoreId && !getStore(requestedStoreId)) return res.status(400).json({ error: 'Cửa hàng áp dụng target không hợp lệ' });
   db.sales_targets = db.sales_targets || [];
   const revenueTarget = toNumber(target_revenue ?? target, 0);
   const saved = [];
   for (const id of ids) {
     const employee = getActiveUser(Number(id));
     if (!employee || employee.role !== 'employee') return res.status(400).json({ error: 'Chỉ nhập target cá nhân cho nhân viên bán hàng' });
-    const employeeStoreId = getPrimaryStoreId(employee);
+    // V4.204: target gắn với cửa hàng được chọn, không ép về cửa hàng chính hiện tại.
+    const employeeStoreId = requestedStoreId || effectivePermanentStoreId(employee, `${target_month}-15`) || getPrimaryStoreId(employee);
+    if (!employeeStoreId || !getStore(employeeStoreId)) return res.status(400).json({ error: `Không xác định được cửa hàng target của ${employee.full_name}` });
+    const hasPeriodAssignment = userAssignedToStoreDuringPeriod(employee, employeeStoreId, targetStart, targetEnd) ||
+      (db.work_schedules || []).some(r => r.status !== 'deleted' && Number(r.user_id || r.employee_id) === Number(employee.id) && Number(r.store_id) === Number(employeeStoreId) && String(r.work_date || '') >= targetStart && String(r.work_date || '') < targetEnd) ||
+      (db.sales || []).some(r => Number(r.user_id) === Number(employee.id) && Number(r.store_id) === Number(employeeStoreId) && dateVal(r.sale_date) >= targetStart && dateVal(r.sale_date) < targetEnd);
+    if (!hasPeriodAssignment) return res.status(400).json({ error: `${employee.full_name} chưa được phân công/điều chuyển tới ${getStore(employeeStoreId)?.name || 'cửa hàng này'} trong ${target_month}` });
     if (req.user.role !== 'admin' && !userHasStore(req.user, employeeStoreId)) return res.status(403).json({ error: `Không có quyền nhập target cho ${employee.full_name}` });
-    let row = db.sales_targets.find(t => Number(t.user_id) === Number(employee.id) && String(t.target_month) === String(target_month));
+    // Một nhân viên có thể có 2 target ở 2 cửa hàng trong cùng tháng khi điều chuyển.
+    let row = db.sales_targets.find(t => Number(t.user_id) === Number(employee.id) && String(t.target_month) === String(target_month) && Number(t.store_id) === Number(employeeStoreId));
     if (row) {
       row.target = revenueTarget;
       row.target_revenue = revenueTarget;
@@ -4296,7 +4320,7 @@ app.post('/api/sales/targets', requireAuth, requirePerm('can_set_sales_targets')
     saved.push(row);
   }
   saveDb();
-  res.json({ ok: true, count: saved.length, ids: saved.map(r => r.id) });
+  res.json({ ok: true, count: saved.length, ids: saved.map(r => r.id), store_id: requestedStoreId || saved[0]?.store_id || null });
 });
 
 
@@ -4370,6 +4394,15 @@ app.get('/api/store-staff', requireAuth, (req, res) => {
   const store = getStore(storeId);
   if (!store) return res.status(400).json({ error: 'Cửa hàng không hợp lệ' });
   if (!isAllStoreRole(req.user) && !userHasStore(req.user, storeId)) return res.status(403).json({ error: 'Không có quyền xem nhân sự cửa hàng này' });
+  const month = /^\d{4}-\d{2}$/.test(String(req.query.month || '')) ? String(req.query.month) : '';
+  if (month) {
+    const start = `${month}-01`;
+    const next = new Date(`${start}T00:00:00Z`);
+    next.setUTCMonth(next.getUTCMonth() + 1);
+    const end = next.toISOString().slice(0, 10);
+    const employees = salesStaffForStore(storeId, { status: 'active', start, end }).map(publicUser);
+    return res.json({ store_id: storeId, store_name: store.name, month, start, end, employees });
+  }
   const d = dateOnly(req.query.date || new Date());
   const employees = (db.users || []).filter(u => u.status === 'active' && u.role === 'employee' && (
     userCanWorkAtStoreOnDate(u, storeId, d) ||
