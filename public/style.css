@@ -5999,3 +5999,34 @@ section.card>.toolbar+p.hint{display:none!important}
   .task-bulk-delete-actions{display:grid;grid-template-columns:1fr;gap:7px}
   .task-bulk-delete-actions .btn{width:100%!important;margin:0!important;min-height:41px!important;white-space:normal}
 }
+
+
+/* V4.206 - Thùng rác / khôi phục dữ liệu phân việc */
+.task-trash-card{border:1px solid rgba(22,101,52,.16);background:linear-gradient(180deg,#fff,#fbfefc);box-shadow:0 10px 28px rgba(22,101,52,.04)}
+.task-trash-head{align-items:center;margin:0}
+.task-trash-head h3{margin:2px 0 3px}
+.task-trash-head .hint{margin:0;max-width:780px}
+.task-trash-card.task-trash-collapsed{padding-bottom:14px}
+.task-trash-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:14px 0 10px;padding:10px 12px;border-radius:12px;background:#f8fafc;border:1px solid #e2e8f0}
+.task-trash-list{display:grid;gap:8px}
+.task-trash-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:center;padding:12px;border:1px solid #e2e8f0;border-radius:13px;background:#fff}
+.task-trash-main{min-width:0}.task-trash-main>b{font-size:13px}
+.task-trash-meta{display:flex;gap:7px;flex-wrap:wrap;margin-top:6px}
+.task-trash-meta span{font-size:11px;padding:4px 7px;border-radius:999px;background:#f1f5f9;color:#475569}
+.task-trash-actions{min-width:150px;display:flex;justify-content:flex-end}
+@media(max-width:720px){
+  .task-trash-card{padding:11px!important;border-radius:15px!important}
+  .task-trash-head{display:grid!important;grid-template-columns:1fr!important;gap:9px!important}
+  .task-trash-head .btn{width:100%!important;min-height:40px!important}
+  .task-trash-toolbar{display:grid;grid-template-columns:1fr;gap:8px}
+  .task-trash-toolbar .btn{width:100%!important}
+  .task-trash-row{grid-template-columns:1fr;gap:10px}
+  .task-trash-actions{min-width:0;justify-content:stretch}
+  .task-trash-actions .row,.task-trash-actions .btn{width:100%!important}
+}
+
+/* v4.207 - Giao việc theo ca: người nhận tự động từ Lịch làm việc */
+.task-shift-auto-box{display:flex;flex-direction:column;gap:5px;padding:12px 14px;border:1px dashed var(--line,#d8d8d8);border-radius:12px;background:rgba(0,0,0,.025);min-height:74px;justify-content:center}
+.task-shift-auto-box b{font-size:13px}
+.task-shift-auto-box span{font-size:12px;line-height:1.45;opacity:.72}
+@media(max-width:760px){.task-shift-auto-box{padding:10px 12px;min-height:auto}}

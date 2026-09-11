@@ -347,6 +347,23 @@ function saveDb() {
   fs.renameSync(tmp, DB_PATH);
 }
 
+
+function backupDbBeforeTaskDelete() {
+  try {
+    if (!fs.existsSync(DB_PATH)) return null;
+    const dir = path.join(DATA_DIR, 'backups');
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const out = path.join(dir, `task-delete-auto-${stamp}.json`);
+    fs.copyFileSync(DB_PATH, out);
+    return out;
+  } catch (err) {
+    console.error('Không thể tạo backup trước khi xóa công việc:', err.message);
+    return null;
+  }
+}
+
+
 function nextId(name) {
   const id = Number(db.nextIds[name] || 1);
   db.nextIds[name] = id + 1;
@@ -814,6 +831,140 @@ function clearDeletedTaskReferences(taskIds = [], assignmentIds = []) {
     }
   });
 }
+
+
+function captureTaskDeleteReferenceSnapshot(taskIds = [], assignmentIds = []) {
+  const taskSet = new Set((taskIds || []).map(Number));
+  const assignmentSet = new Set((assignmentIds || []).map(Number));
+  if (!taskSet.size && !assignmentSet.size) return [];
+  return (db.cdp_ojti || []).map(row => {
+    if (!row || row.status === 'deleted') return null;
+    const snap = { id: Number(row.id), linked_task_id: null, linked_task_ids: {}, item_assignments: [] };
+    if (taskSet.has(Number(row.linked_task_id || 0))) snap.linked_task_id = Number(row.linked_task_id);
+    if (row.linked_task_ids && typeof row.linked_task_ids === 'object' && !Array.isArray(row.linked_task_ids)) {
+      Object.entries(row.linked_task_ids).forEach(([key, value]) => {
+        if (taskSet.has(Number(value || 0))) snap.linked_task_ids[key] = Number(value);
+      });
+    }
+    if (Array.isArray(row.item_values)) {
+      row.item_values.forEach((item, index) => {
+        if (assignmentSet.has(Number(item?.task_assignment_id || 0))) {
+          snap.item_assignments.push({ index, code: String(item?.code || ''), task_assignment_id: Number(item.task_assignment_id) });
+        }
+      });
+    }
+    return (snap.linked_task_id || Object.keys(snap.linked_task_ids).length || snap.item_assignments.length) ? snap : null;
+  }).filter(Boolean);
+}
+
+function restoreTaskDeleteReferences(refSnapshots = []) {
+  (refSnapshots || []).forEach(snap => {
+    const row = (db.cdp_ojti || []).find(x => Number(x.id) === Number(snap.id));
+    if (!row || row.status === 'deleted') return;
+    if (snap.linked_task_id) row.linked_task_id = Number(snap.linked_task_id);
+    if (snap.linked_task_ids && typeof snap.linked_task_ids === 'object') {
+      row.linked_task_ids = (row.linked_task_ids && typeof row.linked_task_ids === 'object' && !Array.isArray(row.linked_task_ids)) ? row.linked_task_ids : {};
+      Object.entries(snap.linked_task_ids).forEach(([key, value]) => { row.linked_task_ids[key] = Number(value); });
+    }
+    if (Array.isArray(row.item_values)) {
+      (snap.item_assignments || []).forEach(itemSnap => {
+        let item = itemSnap.code ? row.item_values.find(x => String(x?.code || '') === String(itemSnap.code)) : null;
+        if (!item && Number.isInteger(Number(itemSnap.index))) item = row.item_values[Number(itemSnap.index)];
+        if (item) item.task_assignment_id = Number(itemSnap.task_assignment_id);
+      });
+    }
+    row.updated_at = nowIso();
+  });
+}
+
+function taskDeleteSnapshotForSelection(selection) {
+  const assignmentSet = new Set((selection.assignment_ids || []).map(Number));
+  const deletedTaskSet = new Set((selection.mode === 'all' ? selection.affected_task_ids : selection.removable_task_ids || []).map(Number));
+  const taskRows = (db.tasks || []).filter(t => deletedTaskSet.has(Number(t.id)));
+  const assignmentRows = (db.task_assignees || []).filter(a => assignmentSet.has(Number(a.id)));
+  return {
+    version: 1,
+    tasks: clone(taskRows),
+    task_assignees: clone(assignmentRows),
+    cdp_refs: captureTaskDeleteReferenceSnapshot(Array.from(deletedTaskSet), Array.from(assignmentSet))
+  };
+}
+
+function taskDeleteSnapshotForSingle(taskId) {
+  const task = (db.tasks || []).find(t => Number(t.id) === Number(taskId));
+  const assignmentRows = (db.task_assignees || []).filter(a => Number(a.task_id) === Number(taskId));
+  const assignmentIds = assignmentRows.map(a => Number(a.id));
+  return {
+    version: 1,
+    tasks: task ? [clone(task)] : [],
+    task_assignees: clone(assignmentRows),
+    cdp_refs: captureTaskDeleteReferenceSnapshot([taskId], assignmentIds)
+  };
+}
+
+function taskDeleteLogPublicRow(log) {
+  const actor = getUser(log.deleted_by);
+  const restorer = getUser(log.restored_by);
+  const purger = getUser(log.purged_by);
+  const snapshot = log && log.snapshot;
+  const hasSnapshot = !!(snapshot && Array.isArray(snapshot.task_assignees));
+  return {
+    id: Number(log.id),
+    mode: String(log.mode || 'filtered'),
+    filters: log.filters || {},
+    deleted_assignments: Number(log.deleted_assignments || 0),
+    affected_tasks: Number(log.affected_tasks || 0),
+    deleted_tasks: Number(log.deleted_tasks || 0),
+    deleted_by: Number(log.deleted_by || 0) || null,
+    deleted_by_name: actor?.full_name || '',
+    deleted_at: log.deleted_at || null,
+    restored_at: log.restored_at || null,
+    restored_by_name: restorer?.full_name || '',
+    purged_at: log.purged_at || null,
+    purged_by_name: purger?.full_name || '',
+    restorable: hasSnapshot && !log.restored_at && !log.purged_at,
+    legacy: !hasSnapshot
+  };
+}
+
+function restoreTaskDeleteSnapshot(log, actor) {
+  const snapshot = log?.snapshot;
+  if (!snapshot || !Array.isArray(snapshot.task_assignees)) throw new Error('Lần xóa này chưa có dữ liệu Thùng rác để khôi phục');
+  if (log.restored_at) throw new Error('Lần xóa này đã được khôi phục');
+  if (log.purged_at) throw new Error('Dữ liệu này đã bị xóa vĩnh viễn khỏi Thùng rác');
+
+  const taskRows = Array.isArray(snapshot.tasks) ? snapshot.tasks : [];
+  const assignmentRows = Array.isArray(snapshot.task_assignees) ? snapshot.task_assignees : [];
+  const existingTaskIds = new Set((db.tasks || []).map(x => Number(x.id)));
+  const existingAssignmentIds = new Set((db.task_assignees || []).map(x => Number(x.id)));
+  const taskConflicts = taskRows.filter(x => existingTaskIds.has(Number(x.id)));
+  const assignmentConflicts = assignmentRows.filter(x => existingAssignmentIds.has(Number(x.id)));
+  if (taskConflicts.length || assignmentConflicts.length) {
+    throw new Error('Không thể khôi phục vì một phần ID công việc đã tồn tại trở lại. Hãy liên hệ Admin kỹ thuật để đối soát.');
+  }
+
+  db.tasks = db.tasks || [];
+  db.task_assignees = db.task_assignees || [];
+  taskRows.forEach(row => db.tasks.push(clone(row)));
+  assignmentRows.forEach(row => db.task_assignees.push(clone(row)));
+  restoreTaskDeleteReferences(snapshot.cdp_refs || []);
+  log.restored_at = nowIso();
+  log.restored_by = actor.id;
+  saveDb();
+  return { restored_tasks: taskRows.length, restored_assignments: assignmentRows.length };
+}
+
+function purgeTaskDeleteSnapshot(log, actor) {
+  const snapshot = log?.snapshot;
+  if (!snapshot || !Array.isArray(snapshot.task_assignees)) throw new Error('Không có dữ liệu Thùng rác để xóa vĩnh viễn');
+  if (log.restored_at) throw new Error('Dữ liệu này đã được khôi phục, không thể xóa từ Thùng rác');
+  (snapshot.task_assignees || []).forEach(row => removeStoredEvidenceFiles(row.evidence_path));
+  log.snapshot = null;
+  log.purged_at = nowIso();
+  log.purged_by = actor.id;
+  saveDb();
+}
+
 
 // V4.58 - Cho phép dùng link Google Drive/URL thay vì upload file nặng, giúp tiết kiệm dung lượng Disk.
 function normalizeExternalUrl(value) {
@@ -2996,14 +3147,15 @@ app.delete('/api/cdp-ojti/:id', requireAuth, (req, res) => {
 
 app.post('/api/tasks', requireAuth, requirePerm('can_assign_tasks'), (req, res) => {
   const { title, description, due_at, priority, store_id, assignee_ids, score_value, start_date, end_date, due_time, repeat_every_days, repeat_mode, weekdays, shift_ids, category } = req.body || {};
-  const manualAssignees = Array.isArray(assignee_ids) ? assignee_ids.map(Number).filter(Boolean) : [];
   const selectedShiftIds = Array.isArray(shift_ids) ? shift_ids.map(Number).filter(Boolean) : [];
+  // v4.207: Nếu giao theo ca, người nhận chỉ lấy từ Lịch làm việc. Không nhận thêm nhân viên thủ công.
+  const manualAssignees = selectedShiftIds.length ? [] : (Array.isArray(assignee_ids) ? assignee_ids.map(Number).filter(Boolean) : []);
   const selectedWeekdays = normalizeWeekdays(weekdays);
   const modeLabel = String(repeat_mode || '').trim();
   const useMultiDate = !!(start_date && end_date);
   if (!title) return res.status(400).json({ error: 'Thiếu tiêu đề công việc' });
   if (!useMultiDate && !due_at) return res.status(400).json({ error: 'Vui lòng nhập hạn hoàn thành hoặc chọn khoảng ngày giao việc' });
-  if (!manualAssignees.length && !selectedShiftIds.length) return res.status(400).json({ error: 'Vui lòng chọn nhân viên hoặc chọn ca giao việc' });
+  if (!manualAssignees.length && !selectedShiftIds.length) return res.status(400).json({ error: 'Vui lòng chọn ca giao việc hoặc chọn nhân viên ở chế độ giao thủ công' });
   const storeId = canSelectAssignedStore(req.user) ? Number(store_id || getPrimaryStoreId(req.user)) : Number(getPrimaryStoreId(req.user));
   if (!storeId || !canAccessStore(req, storeId)) return res.status(403).json({ error: 'Không có quyền giao việc cửa hàng này' });
   if (useMultiDate && modeLabel === 'weekly2' && selectedWeekdays.length !== 2) return res.status(400).json({ error: 'Vui lòng chọn đúng 2 thứ trong tuần' });
@@ -3056,7 +3208,7 @@ app.post('/api/tasks', requireAuth, requirePerm('can_assign_tasks'), (req, res) 
     });
     createdTasks += 1;
   });
-  if (!createdAssignments) return res.status(400).json({ error: 'Không có nhân viên hợp lệ trong ngày/ca đã chọn. Hãy kiểm tra lịch làm việc hoặc chọn nhân viên thủ công.' });
+  if (!createdAssignments) return res.status(400).json({ error: selectedShiftIds.length ? 'Không tìm thấy người được xếp trong Lịch làm việc của cửa hàng/ngày/ca đã chọn. Hãy kiểm tra LLV trước khi giao việc.' : 'Không có nhân viên hợp lệ để giao việc.' });
   saveDb();
   res.json({ ok: true, created_tasks: createdTasks, created_assignments: createdAssignments });
 });
@@ -3129,9 +3281,11 @@ app.post('/api/tasks/bulk-delete', requireAuth, (req, res) => {
   if (dryRun) return res.json({ ok: true, dry_run: true, matched_assignments: matchedAssignments, affected_tasks: affectedTasks, removable_tasks: removableTasks, filters: selection.filters });
   if (!matchedAssignments && selection.mode !== 'all') return res.status(400).json({ error: 'Không có dữ liệu công việc phù hợp với vùng đã chọn' });
 
+  backupDbBeforeTaskDelete();
+  const snapshot = taskDeleteSnapshotForSelection(selection);
   const assignmentSet = new Set(selection.assignment_ids.map(Number));
   const forcedTaskSet = new Set(selection.mode === 'all' ? selection.affected_task_ids.map(Number) : []);
-  (db.task_assignees || []).filter(a => assignmentSet.has(Number(a.id))).forEach(a => removeStoredEvidenceFiles(a.evidence_path));
+  // V4.206: chỉ chuyển dữ liệu vào Thùng rác, không xóa file chứng từ ngay.
   db.task_assignees = (db.task_assignees || []).filter(a => !assignmentSet.has(Number(a.id)));
 
   const orphanTaskIds = new Set(selection.removable_task_ids.map(Number));
@@ -3152,7 +3306,12 @@ app.post('/api/tasks/bulk-delete', requireAuth, (req, res) => {
     affected_tasks: affectedTasks,
     deleted_tasks: deletedTaskIds.length,
     deleted_by: req.user.id,
-    deleted_at: nowIso()
+    deleted_at: nowIso(),
+    snapshot,
+    restored_at: null,
+    restored_by: null,
+    purged_at: null,
+    purged_by: null
   });
   saveDb();
   res.json({ ok: true, deleted_assignments: matchedAssignments, affected_tasks: affectedTasks, deleted_tasks: deletedTaskIds.length });
@@ -3198,21 +3357,70 @@ app.patch('/api/tasks/:taskId', requireAuth, requirePerm('can_edit_tasks'), (req
   res.json({ ok: true, task_id: taskId });
 });
 
+
+app.get('/api/tasks/delete-logs', requireAuth, (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Chỉ Admin được xem Thùng rác công việc' });
+  const rows = (db.task_delete_logs || []).slice().sort((a,b) => String(b.deleted_at || '').localeCompare(String(a.deleted_at || ''))).slice(0, 100).map(taskDeleteLogPublicRow);
+  res.json({ rows });
+});
+
+app.post('/api/tasks/delete-logs/:id/restore', requireAuth, (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Chỉ Admin được khôi phục dữ liệu công việc' });
+  const id = Number(req.params.id);
+  const log = (db.task_delete_logs || []).find(x => Number(x.id) === id);
+  if (!log) return res.status(404).json({ error: 'Không tìm thấy lần xóa trong Thùng rác' });
+  try {
+    const result = restoreTaskDeleteSnapshot(log, req.user);
+    res.json({ ok: true, ...result });
+  } catch (err) {
+    res.status(409).json({ error: err.message || 'Không thể khôi phục dữ liệu' });
+  }
+});
+
+app.delete('/api/tasks/delete-logs/:id', requireAuth, (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Chỉ Admin được xóa vĩnh viễn dữ liệu Thùng rác' });
+  const id = Number(req.params.id);
+  const log = (db.task_delete_logs || []).find(x => Number(x.id) === id);
+  if (!log) return res.status(404).json({ error: 'Không tìm thấy lần xóa trong Thùng rác' });
+  try {
+    purgeTaskDeleteSnapshot(log, req.user);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(409).json({ error: err.message || 'Không thể xóa vĩnh viễn dữ liệu' });
+  }
+});
+
 app.delete('/api/tasks/:taskId', requireAuth, (req, res) => {
   if (req.user.role !== 'admin') return res.status(403).json({ error: 'Chỉ Admin được quyền xóa công việc' });
   const taskId = Number(req.params.taskId);
   const task = db.tasks.find(x => Number(x.id) === taskId);
   if (!task) return res.status(404).json({ error: 'Không tìm thấy công việc' });
+  backupDbBeforeTaskDelete();
+  const snapshot = taskDeleteSnapshotForSingle(taskId);
   const assignmentRows = (db.task_assignees || []).filter(x => Number(x.task_id) === taskId);
-  assignmentRows.forEach(row => removeStoredEvidenceFiles(row.evidence_path));
   const assignmentIds = assignmentRows.map(row => Number(row.id));
+  // V4.206: giữ chứng từ trong Thùng rác cho đến khi Admin xóa vĩnh viễn.
   db.task_assignees = (db.task_assignees || []).filter(x => Number(x.task_id) !== taskId);
   db.tasks = (db.tasks || []).filter(x => Number(x.id) !== taskId);
   clearDeletedTaskReferences([taskId], assignmentIds);
   db.task_delete_logs = db.task_delete_logs || [];
-  db.task_delete_logs.push({ id: nextId('task_delete_logs'), mode: 'single', filters: { task_id: taskId }, deleted_assignments: assignmentIds.length, affected_tasks: 1, deleted_tasks: 1, deleted_by: req.user.id, deleted_at: nowIso() });
+  db.task_delete_logs.push({
+    id: nextId('task_delete_logs'),
+    mode: 'single',
+    filters: { task_id: taskId },
+    deleted_assignments: assignmentIds.length,
+    affected_tasks: 1,
+    deleted_tasks: 1,
+    deleted_by: req.user.id,
+    deleted_at: nowIso(),
+    snapshot,
+    restored_at: null,
+    restored_by: null,
+    purged_at: null,
+    purged_by: null
+  });
   saveDb();
-  res.json({ ok: true, deleted_task_id: taskId });
+  res.json({ ok: true, deleted_task_id: taskId, trash_id: db.task_delete_logs[db.task_delete_logs.length - 1].id });
 });
 
 app.post('/api/tasks/:assignmentId/complete', requireAuth, upload.array('evidence', 10), (req, res) => {

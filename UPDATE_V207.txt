@@ -1,0 +1,9 @@
+DEZUS STORE OPS v4.207 - PHÂN VIỆC THEO CA TỰ LẤY LLV
+
+- Mặc định khi mở Tạo công việc là chế độ Theo ca làm.
+- Giao theo ca không còn chọn nhân viên thủ công.
+- Chỉ chọn Cửa hàng + khoảng ngày + ca; hệ thống tự lấy người nhận từ Lịch làm việc đúng cửa hàng/ngày/ca.
+- Nếu LLV tương lai thay đổi, logic đồng bộ việc theo ca tiếp tục chuyển việc sang đúng người mới.
+- Khi sửa một việc theo ca, phần người nhận chỉ hiển thị thông tin tự động theo LLV, không cho tick nhân viên thủ công.
+- Nếu ngày/ca chưa có người trong LLV, hệ thống báo rõ để xếp lịch trước.
+- Chế độ Thời gian cụ thể và Việc lặp lại vẫn giữ cách chọn nhân viên thủ công như cũ.

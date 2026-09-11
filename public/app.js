@@ -1456,11 +1456,11 @@ async function renderTasks() {
     <div class="card task-create-card task-create-collapsed">
       <div class="section-title task-create-toolbar"><div><p class="eyebrow">Công việc</p><h3>Giao việc mới</h3></div><button type="button" class="btn task-create-toggle" id="taskCreateToggle">Tạo công việc</button></div>
       <form id="taskForm" class="task-advanced-form task-create-form" hidden>
-        <input type="hidden" name="task_mode" id="taskMode" value="single">
+        <input type="hidden" name="task_mode" id="taskMode" value="shift">
         <div class="task-mode-chooser" role="tablist" aria-label="Chọn cách giao việc">
-          <button type="button" class="taskModeBtn active" data-mode="single"><b>⏱</b><span>Thời gian cụ thể</span><small>Giao một lần theo hạn ngày/giờ</small></button>
+          <button type="button" class="taskModeBtn" data-mode="single"><b>⏱</b><span>Thời gian cụ thể</span><small>Giao một lần theo hạn ngày/giờ</small></button>
           <button type="button" class="taskModeBtn" data-mode="multi"><b>🔁</b><span>Việc lặp lại</span><small>Tự tạo việc theo nhiều ngày</small></button>
-          <button type="button" class="taskModeBtn" data-mode="shift"><b>🗓</b><span>Theo ca làm</span><small>Lấy nhân viên theo ca đã xếp</small></button>
+          <button type="button" class="taskModeBtn active" data-mode="shift"><b>🗓</b><span>Theo ca làm</span><small>Tự lấy người theo Lịch làm việc</small></button>
         </div>
 
         <div class="grid two task-basic-grid">
@@ -1470,7 +1470,7 @@ async function renderTasks() {
           <div class="field"><label>Mức độ</label><select name="priority"><option value="low">Thấp</option><option value="medium" selected>Trung bình</option><option value="high">Cao</option></select></div>
         </div>
 
-        <div class="task-mode-panel active" data-task-panel="single">
+        <div class="task-mode-panel" data-task-panel="single">
           <div class="grid two">
             <div class="field"><label>Hạn hoàn thành cụ thể</label><input class="input" name="due_at" type="datetime-local"><span class="hint">Dùng cho việc giao 1 lần.</span></div>
             <div class="field"><label>Nhân viên nhận việc</label>${taskUserPicker('assigneeSelect', usersInStore(storeId), 'Tick tròn để chọn 1 hoặc nhiều nhân viên.')}</div>
@@ -1489,7 +1489,7 @@ async function renderTasks() {
           </div>
         </div>
 
-        <div class="task-mode-panel" data-task-panel="shift">
+        <div class="task-mode-panel active" data-task-panel="shift">
           <div class="grid three">
             <div class="field"><label>Từ ngày</label><input class="input" name="shift_start_date" type="date"></div>
             <div class="field"><label>Đến ngày</label><input class="input" name="shift_end_date" type="date"></div>
@@ -1497,8 +1497,8 @@ async function renderTasks() {
             <div class="field"><label>Kiểu giao cố định</label><select name="shift_repeat_mode" class="taskRepeatMode"><option value="daily">Hàng ngày trong khoảng ngày</option><option value="weekly2">2 ngày / tuần</option><option value="weekly3">3 ngày / tuần</option><option value="custom_weekdays">Tự chọn thứ trong tuần</option><option value="every_n_days">Lặp mỗi N ngày</option></select><span class="hint">Khoảng ngày là thời gian áp dụng; chọn thứ để hệ thống tự tạo đúng ngày.</span></div>
             <div class="field taskEveryNDaysField"><label>N ngày/lần</label><select name="shift_repeat_every_days"><option value="1">1 ngày/lần</option><option value="2">2 ngày/lần</option><option value="3">3 ngày/lần</option><option value="7">7 ngày/lần</option></select></div>
             <div class="field taskWeekdayField"><label>Chọn thứ giao việc</label><div class="task-weekday-picker" id="shiftWeekdays"><label><input type="checkbox" value="1"><span>T2</span></label><label><input type="checkbox" value="2"><span>T3</span></label><label><input type="checkbox" value="3"><span>T4</span></label><label><input type="checkbox" value="4"><span>T5</span></label><label><input type="checkbox" value="5"><span>T6</span></label><label><input type="checkbox" value="6"><span>T7</span></label><label><input type="checkbox" value="0"><span>CN</span></label></div><span class="hint taskWeekdayHint">Chỉ tạo việc vào các thứ được chọn và lấy nhân viên đúng ca ngày đó.</span></div>
-            <div class="field"><label>Chọn ca</label><select name="shift_ids" id="taskShiftSelect" multiple size="5">${shiftOptions}</select><span class="hint">Hệ thống tự lấy nhân viên đã được phân lịch ca đó. Nếu đổi ca trong tương lai, công việc theo ca sẽ tự chuyển sang đúng người mới; ngày quá khứ giữ nguyên.</span></div>
-            <div class="field"><label>Thêm nhân viên thủ công nếu cần</label>${taskUserPicker('shiftAssigneeSelect', usersInStore(storeId), 'Có thể để trống nếu chỉ giao theo ca.')}</div>
+            <div class="field"><label>Chọn ca</label><select name="shift_ids" id="taskShiftSelect" multiple size="5">${shiftOptions}</select><span class="hint">Chỉ cần chọn ca. Hệ thống tự lấy toàn bộ người đã được xếp đúng cửa hàng + ngày + ca trong Lịch làm việc.</span></div>
+            <div class="field task-shift-auto-assignee"><label>Người nhận việc</label><div class="task-shift-auto-box"><b>Tự động theo Lịch làm việc</b><span>Không cần chọn nhân viên. Khi LLV của ngày tương lai đổi ca/người, công việc theo ca sẽ tự đồng bộ sang đúng người.</span></div></div>
           </div>
         </div>
 
@@ -1579,6 +1579,18 @@ async function renderTasks() {
       </div>
     </div>` : '';
 
+  const adminTaskTrashPanel = state.user.role === 'admin' ? `
+    <div class="card task-trash-card task-trash-collapsed" style="margin-top:16px">
+      <div class="section-title task-trash-head">
+        <div><p class="eyebrow">Admin</p><h3>Thùng rác / Khôi phục công việc</h3><p class="hint">Các lần xóa từ v4.206 được lưu lại đầy đủ để có thể khôi phục. Chứng từ cũng được giữ cho đến khi xóa vĩnh viễn.</p></div>
+        <button type="button" class="btn secondary" id="taskTrashToggle">Xem Thùng rác</button>
+      </div>
+      <div id="taskTrashBody" hidden>
+        <div class="task-trash-toolbar"><span class="hint">Khôi phục sẽ trả lại đúng công việc, người nhận, trạng thái và liên kết OJTI/CDP tại thời điểm xóa.</span><button type="button" class="btn secondary small" id="taskTrashRefreshBtn">Tải lại</button></div>
+        <div id="taskTrashList"><div class="empty compact">Đang chờ tải dữ liệu...</div></div>
+      </div>
+    </div>` : '';
+
   const summaryCategoryKeys = ['ops','sales_cskh','inventory','vm','reports','people_training','other'];
   const summaryCategoryLabels = Object.fromEntries(TASK_CATEGORY_OPTIONS);
   const categorySummaryRows = summaryCategoryKeys.map(key => {
@@ -1627,7 +1639,7 @@ async function renderTasks() {
   const otherDaysBlock = otherDayKeys.length ? `<details class="card task-other-days-wrap task-timeline-wrap" style="margin-top:16px"><summary class="task-other-days-summary"><div><p class="eyebrow">Công việc ngày khác</p><h3>${otherTasks.length} công việc đang ẩn</h3></div><span class="badge">Xem theo ngày</span></summary><div class="task-other-days-body">${otherDayKeys.map(day => { const rows = otherDayMap.get(day) || []; return `<details class="task-day-group"><summary><span>${day === 'no_date' ? 'Chưa xác định ngày' : dOnly(day)}</span><b>${rows.length} việc</b></summary><div class="grid task-timeline">${rows.map(t => taskCard(t)).join('')}</div></details>`; }).join('')}</div></details>` : '';
 
   const completedBlock = completedTasks.length ? `<div class="card task-completed-wrap task-timeline-wrap" style="margin-top:16px"><div class="task-completed-head"><div><p class="eyebrow">Lịch sử công việc</p><h3>${completedTasks.length} việc đã hoàn thành</h3></div><button type="button" class="btn secondary" id="completedTasksToggle">Xem việc đã hoàn thành</button></div><div id="completedTasksBody" hidden><div class="grid task-timeline">${completedTasks.map(t => taskCard(t)).join('')}</div></div></div>` : '';
-  shell(`${assignForm}${adminBulkDeletePanel}${categorySummary}${exceptionDashboard}${todayBlock}${otherDaysBlock}${completedBlock}`, 'Công việc', '');
+  shell(`${assignForm}${adminBulkDeletePanel}${adminTaskTrashPanel}${categorySummary}${exceptionDashboard}${todayBlock}${otherDaysBlock}${completedBlock}`, 'Công việc', '');
   const taskBulkDeleteToggle = $('#taskBulkDeleteToggle');
   const taskBulkDeleteBody = $('#taskBulkDeleteBody');
   taskBulkDeleteToggle?.addEventListener('click', () => {
@@ -1640,6 +1652,17 @@ async function renderTasks() {
   $('#taskBulkPreviewBtn')?.addEventListener('click', previewTaskBulkDelete);
   $('#taskBulkDeleteFilteredBtn')?.addEventListener('click', deleteTaskBulkFiltered);
   $('#taskDeleteAllBtn')?.addEventListener('click', deleteAllTaskData);
+  const taskTrashToggle = $('#taskTrashToggle');
+  const taskTrashBody = $('#taskTrashBody');
+  taskTrashToggle?.addEventListener('click', async () => {
+    if (!taskTrashBody) return;
+    const willOpen = taskTrashBody.hidden;
+    taskTrashBody.hidden = !willOpen;
+    taskTrashToggle.textContent = willOpen ? 'Ẩn Thùng rác' : 'Xem Thùng rác';
+    taskTrashToggle.closest('.task-trash-card')?.classList.toggle('task-trash-collapsed', !willOpen);
+    if (willOpen) await loadTaskTrash();
+  });
+  $('#taskTrashRefreshBtn')?.addEventListener('click', loadTaskTrash);
   const taskSummaryStoreFilter = $('#taskSummaryStoreFilter');
   const taskSummaryUserFilter = $('#taskSummaryUserFilter');
   if (taskSummaryStoreFilter) taskSummaryStoreFilter.addEventListener('change', async () => {
@@ -1681,7 +1704,7 @@ async function renderTasks() {
   function refreshTaskAssignees(storeValue) {
     const users = usersInStore(storeValue);
     const renderOptions = () => users.map(u => `<label class="task-user-option"><input type="checkbox" value="${u.id}"><span class="task-user-dot" aria-hidden="true"></span><span class="task-user-info"><b>${esc(u.full_name)}</b><small>${esc(u.store_name || '')}</small></span></label>`).join('') || '<div class="empty compact">Chưa có nhân viên trong cửa hàng này</div>';
-    ['assigneeSelect', 'multiAssigneeSelect', 'shiftAssigneeSelect'].forEach(id => { const el = $('#' + id); if (el) el.innerHTML = renderOptions(); });
+    ['assigneeSelect', 'multiAssigneeSelect'].forEach(id => { const el = $('#' + id); if (el) el.innerHTML = renderOptions(); });
   }
   function setTaskMode(mode) {
     const input = $('#taskMode');
@@ -1713,7 +1736,7 @@ async function renderTasks() {
   setTaskCreateOpen(false);
   $('#taskStore')?.addEventListener('change', e => refreshTaskAssignees(e.target.value));
   $$('.taskModeBtn').forEach(btn => btn.addEventListener('click', () => setTaskMode(btn.dataset.mode)));
-  setTaskMode($('#taskMode')?.value || 'single');
+  setTaskMode($('#taskMode')?.value || 'shift');
   function selectedWeekdaysFrom(id) {
     const box = $('#' + id);
     return box ? $$('input[type="checkbox"]:checked', box).map(o => Number(o.value)).filter(v => Number.isFinite(v)) : [];
@@ -1735,6 +1758,101 @@ async function renderTasks() {
   $$('.completeForm').forEach(f => f.addEventListener('submit', submitCompleteTask));
   $$('.editTaskBtn').forEach(btn => btn.addEventListener('click', openTaskEditor));
   $$('.deleteTaskBtn').forEach(btn => btn.addEventListener('click', deleteTask));
+}
+
+
+function taskDeleteModeLabel(mode) {
+  if (mode === 'all') return 'Xóa toàn bộ';
+  if (mode === 'single') return 'Xóa 1 công việc';
+  return 'Xóa theo vùng';
+}
+
+function taskDeleteFilterSummary(row) {
+  const f = row?.filters || {};
+  if (row?.mode === 'all') return 'Tất cả cửa hàng • tất cả thời gian';
+  if (row?.mode === 'single') return `Task #${Number(f.task_id || 0)}`;
+  const parts = [];
+  if (f.store_id) {
+    const st = (state.stores || []).find(x => Number(x.id) === Number(f.store_id));
+    parts.push(st?.name || `CH #${f.store_id}`);
+  } else parts.push('Tất cả CH');
+  if (f.from_date || f.to_date) parts.push(`${f.from_date || '...'} → ${f.to_date || '...'}`);
+  if (f.user_id) {
+    const u = (state.users || []).find(x => Number(x.id) === Number(f.user_id));
+    parts.push(u?.full_name || `NV #${f.user_id}`);
+  }
+  return parts.join(' • ');
+}
+
+async function loadTaskTrash() {
+  const box = $('#taskTrashList');
+  if (!box || state.user?.role !== 'admin') return;
+  box.innerHTML = '<div class="empty compact">Đang tải Thùng rác...</div>';
+  try {
+    const data = await api('/api/tasks/delete-logs');
+    const rows = data.rows || [];
+    if (!rows.length) {
+      box.innerHTML = '<div class="empty compact">Chưa có lịch sử xóa công việc.</div>';
+      return;
+    }
+    box.innerHTML = `<div class="task-trash-list">${rows.map(row => {
+      const when = row.deleted_at ? dt(row.deleted_at) : '-';
+      const restored = row.restored_at ? `<span class="badge ok">Đã khôi phục ${dt(row.restored_at)}</span>` : '';
+      const purged = row.purged_at ? `<span class="badge danger">Đã xóa vĩnh viễn</span>` : '';
+      const legacy = row.legacy ? `<span class="badge warning">Bản xóa cũ • chưa có snapshot</span>` : '';
+      const actions = row.restorable
+        ? `<div class="row wrap"><button type="button" class="btn small ok taskTrashRestoreBtn" data-id="${row.id}">Khôi phục</button><button type="button" class="btn small danger taskTrashPurgeBtn" data-id="${row.id}">Xóa vĩnh viễn</button></div>`
+        : (row.legacy && !row.restored_at && !row.purged_at ? `<span class="hint">Nếu đây là lần vừa xóa ở v4.205, cần file backup dữ liệu trước thời điểm xóa để phục hồi.</span>` : '');
+      return `<div class="task-trash-row">
+        <div class="task-trash-main">
+          <div class="row wrap"><b>${esc(taskDeleteModeLabel(row.mode))}</b>${restored}${purged}${legacy}</div>
+          <div class="hint">${esc(taskDeleteFilterSummary(row))}</div>
+          <div class="task-trash-meta"><span>${Number(row.deleted_tasks || 0)} công việc</span><span>${Number(row.deleted_assignments || 0)} lượt phân việc</span><span>${esc(row.deleted_by_name || 'Admin')} • ${esc(when)}</span></div>
+        </div>
+        <div class="task-trash-actions">${actions}</div>
+      </div>`;
+    }).join('')}</div>`;
+    $$('.taskTrashRestoreBtn', box).forEach(btn => btn.addEventListener('click', restoreTaskTrashBatch));
+    $$('.taskTrashPurgeBtn', box).forEach(btn => btn.addEventListener('click', purgeTaskTrashBatch));
+  } catch (err) {
+    box.innerHTML = `<div class="empty compact danger">${esc(err.message)}</div>`;
+  }
+}
+
+async function restoreTaskTrashBatch(e) {
+  const btn = e.currentTarget;
+  const id = Number(btn.dataset.id || 0);
+  if (!id) return;
+  if (!confirm('Khôi phục toàn bộ dữ liệu của lần xóa này? Công việc, người nhận và trạng thái cũ sẽ xuất hiện trở lại.')) return;
+  btn.disabled = true;
+  try {
+    const res = await api(`/api/tasks/delete-logs/${id}/restore`, { method:'POST', body:'{}' });
+    toast(`Đã khôi phục ${Number(res.restored_assignments || 0)} lượt phân việc`);
+    await renderTasks();
+    const toggle = $('#taskTrashToggle');
+    if (toggle) toggle.click();
+  } catch (err) {
+    btn.disabled = false;
+    toast(err.message, 'danger');
+  }
+}
+
+async function purgeTaskTrashBatch(e) {
+  const btn = e.currentTarget;
+  const id = Number(btn.dataset.id || 0);
+  if (!id) return;
+  if (!confirm('Xóa VĨNH VIỄN dữ liệu này khỏi Thùng rác? Sau bước này sẽ không thể khôi phục và chứng từ liên quan cũng bị xóa.')) return;
+  const text = prompt('Nhập XOA VINH VIEN để xác nhận:');
+  if (String(text || '').trim().toUpperCase() !== 'XOA VINH VIEN') return toast('Đã hủy xóa vĩnh viễn');
+  btn.disabled = true;
+  try {
+    await api(`/api/tasks/delete-logs/${id}`, { method:'DELETE' });
+    toast('Đã xóa vĩnh viễn dữ liệu khỏi Thùng rác');
+    await loadTaskTrash();
+  } catch (err) {
+    btn.disabled = false;
+    toast(err.message, 'danger');
+  }
 }
 
 function taskBulkDeletePayload(dryRun = false) {
@@ -1792,7 +1910,7 @@ async function deleteTaskBulkFiltered() {
     const affected = Number(preview.affected_tasks || 0);
     const ok = confirm(`Bạn sắp xóa ${count} dòng phân việc thuộc ${affected} công việc theo vùng đã chọn. Bao gồm cả trạng thái trễ/không hoàn thành nếu đang được tick.
 
-Thao tác này không thể hoàn tác. Tiếp tục?`);
+Dữ liệu sẽ được chuyển vào Thùng rác và Admin có thể khôi phục lại. Tiếp tục?`);
     if (!ok) return;
     const confirmText = prompt('Nhập XOA để xác nhận xóa vùng dữ liệu đã chọn:');
     if (String(confirmText || '').trim().toUpperCase() !== 'XOA') return toast('Đã hủy thao tác xóa');
@@ -1820,7 +1938,7 @@ async function deleteAllTaskData() {
 
 ${taskCount} công việc • ${count} dòng phân việc sẽ bị xóa.
 
-Không thể hoàn tác.`)) return;
+Dữ liệu sẽ được chuyển vào Thùng rác và có thể khôi phục.`)) return;
     const confirmText = prompt('Để xóa toàn bộ, nhập chính xác: XOA TOAN BO');
     if (String(confirmText || '').trim().toUpperCase() !== 'XOA TOAN BO') return toast('Đã hủy thao tác xóa toàn bộ');
     const res = await api('/api/tasks/bulk-delete', { method:'POST', body:JSON.stringify({ mode:'all', dry_run:0 }) });
@@ -1836,7 +1954,7 @@ Không thể hoàn tác.`)) return;
 async function deleteTask(e) {
   const btn = e.currentTarget;
   const title = btn.dataset.taskTitle || 'công việc này';
-  if (!confirm(`Xóa toàn bộ công việc \"${title}\" và tất cả người được giao? Thao tác này không thể hoàn tác.`)) return;
+  if (!confirm(`Xóa toàn bộ công việc \"${title}\" và tất cả người được giao? Dữ liệu sẽ được chuyển vào Thùng rác và Admin có thể khôi phục.`)) return;
   btn.disabled = true;
   try {
     await api(`/api/tasks/${btn.dataset.taskId}`, { method: 'DELETE' });
@@ -1900,11 +2018,12 @@ function openTaskEditor(e) {
   if (!t) return toast('Không tìm thấy công việc', 'danger');
   const storeUsers = (state.boot?.users || []).filter(u => Number(u.active ?? 1) === 1 && u.role !== 'admin' && Number(u.store_id) === Number(t.store_id));
   const selectedIds = new Set(rows.map(x => Number(x.assignee_id)));
+  const isShiftTask = String(t.assignment_mode || '') === 'shift' || (Array.isArray(t.shift_ids) && t.shift_ids.length > 0);
   const dueLocal = String(t.due_at || '').slice(0, 16);
   const overlay = document.createElement('div');
   overlay.className = 'task-edit-overlay';
   overlay.innerHTML = `<div class="task-edit-modal card"><div class="toolbar"><div><p class="eyebrow">Chỉnh sửa công việc</p><h3>${esc(t.title)}</h3></div><button type="button" class="btn secondary small taskEditClose">Đóng</button></div>
-    <form id="taskEditForm" data-id="${t.id}" class="task-advanced-form">
+    <form id="taskEditForm" data-id="${t.id}" data-assignment-mode="${isShiftTask ? 'shift' : 'manual'}" class="task-advanced-form">
       <div class="grid two">
         <div class="field" style="grid-column:span 2"><label>Tiêu đề</label><input name="title" value="${esc(t.title)}" required></div>
         <div class="field" style="grid-column:span 2"><label>Nội dung / hướng dẫn</label><textarea name="description" rows="4">${esc(t.description || '')}</textarea></div>
@@ -1913,7 +2032,7 @@ function openTaskEditor(e) {
         <div class="field"><label>Nhóm công việc</label><select name="category">${taskCategoryOptions(t.category || 'ops')}</select><span class="hint">Khác → tự gộp OPS khi tính điểm.</span></div>
         <div class="field"><label>Điểm phạt cố định</label><div class="task-fixed-penalty"><b>Trễ / quá hạn: -5 điểm</b><span>Không hoàn thành: -10 điểm</span></div></div>
         <div class="field"><label>Cửa hàng</label><input value="${esc(t.store_name || '')}" disabled></div>
-        <div class="field" style="grid-column:span 2"><label>Người nhận việc</label><div class="task-user-picker">${storeUsers.map(u => `<label class="task-user-option"><input type="checkbox" name="assignee_ids" value="${u.id}" ${selectedIds.has(Number(u.id))?'checked':''}><span class="task-user-dot"></span><span class="task-user-info"><b>${esc(u.full_name)}</b><small>${esc(u.store_name || t.store_name || '')}</small></span></label>`).join('') || '<div class="empty compact">Chưa có nhân sự trong cửa hàng</div>'}</div><span class="hint">Lượt đã hoàn thành được giữ nguyên để bảo toàn minh chứng.</span></div>
+        ${isShiftTask ? `<div class="field" style="grid-column:span 2"><label>Người nhận việc</label><div class="task-shift-auto-box"><b>Tự động theo ca: ${esc(t.shift_label || 'ca đã chọn')}</b><span>Danh sách người nhận lấy từ Lịch làm việc của đúng ngày/ca. Muốn đổi người nhận, hãy chỉnh LLV; hệ thống sẽ tự đồng bộ các việc theo ca trong tương lai.</span></div></div>` : `<div class="field" style="grid-column:span 2"><label>Người nhận việc</label><div class="task-user-picker">${storeUsers.map(u => `<label class="task-user-option"><input type="checkbox" name="assignee_ids" value="${u.id}" ${selectedIds.has(Number(u.id))?'checked':''}><span class="task-user-dot"></span><span class="task-user-info"><b>${esc(u.full_name)}</b><small>${esc(u.store_name || t.store_name || '')}</small></span></label>`).join('') || '<div class="empty compact">Chưa có nhân sự trong cửa hàng</div>'}</div><span class="hint">Lượt đã hoàn thành được giữ nguyên để bảo toàn minh chứng.</span></div>`}
       </div>
       <div class="task-submit-row"><button class="btn">Lưu thay đổi</button></div>
     </form></div>`;
@@ -1928,8 +2047,13 @@ async function saveTaskEdit(e) {
   const form = e.currentTarget;
   const button = form.querySelector('button[type="submit"]');
   const payload = Object.fromEntries(new FormData(form));
-  payload.assignee_ids = [...form.querySelectorAll('input[name="assignee_ids"]:checked')].map(x => Number(x.value));
-  if (!payload.assignee_ids.length) return toast('Vui lòng chọn ít nhất một người nhận việc', 'danger');
+  const isShiftTask = form.dataset.assignmentMode === 'shift';
+  if (isShiftTask) {
+    delete payload.assignee_ids;
+  } else {
+    payload.assignee_ids = [...form.querySelectorAll('input[name="assignee_ids"]:checked')].map(x => Number(x.value));
+    if (!payload.assignee_ids.length) return toast('Vui lòng chọn ít nhất một người nhận việc', 'danger');
+  }
   button.disabled = true; button.textContent = 'Đang lưu...';
   try {
     await api(`/api/tasks/${form.dataset.id}`, { method:'PATCH', body:JSON.stringify(payload) });
@@ -1971,8 +2095,10 @@ async function submitTask(e) {
     payload.weekdays = ['weekly2','weekly3','custom_weekdays'].includes(payload.repeat_mode) ? selectedWeekdaysFrom('multiWeekdays') : [];
     delete payload.due_at;
   } else if (mode === 'shift') {
-    payload.assignee_ids = selectedFrom('shiftAssigneeSelect');
+    // Giao theo ca: không chọn nhân viên thủ công. Người nhận được lấy 100% từ Lịch làm việc.
+    payload.assignee_ids = [];
     payload.shift_ids = selectedFrom('taskShiftSelect');
+    if (!payload.shift_ids.length) return toast('Vui lòng chọn ít nhất một ca làm việc', 'danger');
     payload.start_date = payload.shift_start_date;
     payload.end_date = payload.shift_end_date;
     payload.due_time = payload.shift_due_time || '22:00';
