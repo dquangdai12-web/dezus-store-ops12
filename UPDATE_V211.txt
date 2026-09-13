@@ -1,0 +1,10 @@
+DEZUS STORE OPS v4.211 - SET TARGET NGÀY THEO THỨ
+
+- Base: v4.209 để giữ nguyên Lịch làm việc (không áp thay đổi phân ca theo thứ của v4.210).
+- Chỉ thay đổi mục Doanh thu > Set target doanh thu theo ngày hàng tháng.
+- Thêm nút T2, T3, T4, T5, T6, T7, CN.
+- Bấm T3 sẽ chọn toàn bộ các ngày Thứ 3 trong tháng đang xem.
+- Có thể bấm nhiều thứ cùng lúc (ví dụ T2 + T3 + T5).
+- Bấm lại một thứ khi toàn bộ ngày của thứ đó đang được chọn sẽ bỏ chọn toàn bộ các ngày đó.
+- Vẫn giữ chọn trực tiếp trên lịch, Chọn cả tháng, T2-T6, T7 & CN, chọn khoảng ngày.
+- LLV giữ nguyên logic/giao diện của v4.209.

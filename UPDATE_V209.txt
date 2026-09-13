@@ -1,0 +1,9 @@
+DEZUS STORE OPS v4.209 - CHỌN NHIỀU NGÀY KHI SET TARGET DOANH THU NGÀY
+
+- Thay thao tác chọn 1 ngày + bấm “Thêm ngày” lặp lại bằng lịch chọn nhiều ngày trực tiếp.
+- Có thể bấm nhiều ngày rời nhau ngay trên lịch tháng.
+- Có nút chọn nhanh: Cả tháng, T2-T6, T7 & CN, Hôm nay, Xóa chọn.
+- Có chọn nhanh theo khoảng Từ ngày -> Đến ngày để thêm nhiều ngày liên tiếp một lần.
+- Hiển thị số lượng ngày đã chọn và danh sách ngày để bỏ riêng từng ngày nếu cần.
+- Backend giữ nguyên API nhiều ngày hiện có; không ảnh hưởng target/doanh thu cũ.
+- Tối ưu responsive trên mobile.

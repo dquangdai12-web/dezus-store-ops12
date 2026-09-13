@@ -1,0 +1,12 @@
+DEZUS STORE OPS v4.206 - THÙNG RÁC / KHÔI PHỤC PHÂN VIỆC
+
+- Admin có khu vực “Thùng rác / Khôi phục công việc” trong mục Công việc.
+- Từ v4.206, mọi thao tác xóa 1 việc, xóa theo vùng hoặc xóa toàn bộ sẽ lưu snapshot đầy đủ trước khi loại khỏi danh sách.
+- Khôi phục trả lại công việc, người nhận, trạng thái hoàn thành/trễ/không hoàn thành và liên kết OJTI/CDP.
+- File chứng từ không bị xóa khi chuyển vào Thùng rác.
+- Chỉ khi Admin chọn “Xóa vĩnh viễn” thì chứng từ trong snapshot mới bị dọn khỏi uploads.
+- Có lịch sử người xóa, thời gian xóa, kiểu xóa và số lượng dữ liệu.
+- Các log xóa cũ từ v4.205 trở về trước không có snapshot nên web sẽ đánh dấu “Bản xóa cũ • chưa có snapshot”.
+  Muốn phục hồi lần xóa cũ cần file backup store_ops.json trước thời điểm xóa.
+
+- Trước mỗi thao tác xóa thật, server tự tạo thêm một bản backup JSON trong data/backups/task-delete-auto-*.json.

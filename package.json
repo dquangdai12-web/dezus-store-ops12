@@ -1,7 +1,7 @@
 {
   "name": "dezus-store-ops-v4-141-product-analytics",
-  "version": "4.205.0",
-  "description": "Dezus Store Ops v4.205 - Admin xóa dữ liệu phân việc hàng loạt theo vùng hoặc toàn bộ, hỗ trợ trạng thái trễ/không hoàn thành.",
+  "version": "4.208.0",
+  "description": "Dezus Store Ops v4.208 - Rà soát và tối ưu luân chuyển nhân sự: LLV theo đúng cửa hàng/ngày, doanh thu/target, đơn online và các nghiệp vụ liên quan.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

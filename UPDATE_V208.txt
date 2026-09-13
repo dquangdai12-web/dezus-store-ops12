@@ -1,0 +1,33 @@
+DEZUS STORE OPS v4.208 - RÀ SOÁT LUÂN CHUYỂN NHÂN SỰ
+
+1. Lịch làm việc (LLV)
+- Nhân viên chỉ xuất hiện ở đúng cửa hàng và đúng ngày còn làm tại cửa hàng đó.
+- Tuần sau ngày điều chuyển chính thức: nếu không còn làm tại cửa hàng cũ thì nhân viên biến mất khỏi bảng tuần, không còn dòng OFF/— kéo dài.
+- Lịch tương lai ở cửa hàng cũ đã tạo trước khi có lệnh điều chuyển được coi là lịch cũ và tự ẩn từ ngày hiệu lực.
+- Nếu hủy lệnh điều chuyển, lịch sử cũ không bị xóa vật lý.
+- Phân việc theo ca tiếp tục lấy người từ LLV hợp lệ. Khi tạo điều chuyển mới, các task theo ca tương lai ở cửa hàng cũ được đồng bộ lại.
+
+2. Doanh thu & Target
+- Doanh thu được khóa theo Nhân viên + Ngày + Cửa hàng, không ghi đè khi một người phát sinh ở 2 cửa hàng.
+- Danh sách nhân viên nhập doanh thu theo đúng cửa hàng/ngày; danh sách set target theo đúng cửa hàng/tháng có điều chuyển.
+- Báo cáo tuần không kéo nhân viên sang các tuần họ đã hết làm tại cửa hàng chỉ vì vẫn có target tháng.
+- Target tuần trong tuần điều chuyển được phân bổ theo đúng số ngày nhân viên thuộc/làm tại từng cửa hàng.
+- Báo cáo tuần trả đúng store_id của cửa hàng đang xem.
+
+3. Đơn online / Order
+- Đơn online giữ đúng cửa hàng phát sinh và nhân viên đóng đơn theo ngày hóa đơn.
+- Khi đổi ngày hóa đơn, danh sách NV đóng đơn tải lại theo đúng LLV/điều chuyển ngày đó.
+- Tổng hợp NV đóng đơn tách riêng theo từng cửa hàng, không gộp nhầm một NV giữa 2 cửa hàng.
+- Quyền đọc lịch sử đơn/order dùng ngày phát sinh để tránh mất lịch sử sau điều chuyển.
+
+4. Loyalty / Checklist / Vi phạm / Thưởng / Training
+- Loyalty cộng/trừ doanh thu đúng cửa hàng của giao dịch.
+- Checklist chọn nhân viên theo cửa hàng + ngày chấm; đổi ngày sẽ tải lại đúng người.
+- Vi phạm lưu đúng cửa hàng đang chọn tại ngày ghi nhận.
+- Thưởng lưu theo cửa hàng + ngày; tổng hợp thưởng tách theo cửa hàng, không gộp sai sau luân chuyển.
+- Đào tạo sản phẩm dùng cửa hàng theo thời điểm/đối tượng thay vì store_id cũ cố định.
+
+5. Tương thích
+- Giữ nguyên dữ liệu lịch sử. Không xóa doanh thu, đơn hàng, task hoặc LLV cũ.
+- UPT vẫn cap 130%; điểm tháng vẫn đi theo nhân viên, dữ liệu cửa hàng đi theo nơi phát sinh.
+- Giữ nguyên giao diện chính; chỉ sửa logic luân chuyển và các bộ lọc liên quan.

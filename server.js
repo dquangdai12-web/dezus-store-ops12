@@ -347,6 +347,23 @@ function saveDb() {
   fs.renameSync(tmp, DB_PATH);
 }
 
+
+function backupDbBeforeTaskDelete() {
+  try {
+    if (!fs.existsSync(DB_PATH)) return null;
+    const dir = path.join(DATA_DIR, 'backups');
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const out = path.join(dir, `task-delete-auto-${stamp}.json`);
+    fs.copyFileSync(DB_PATH, out);
+    return out;
+  } catch (err) {
+    console.error('Không thể tạo backup trước khi xóa công việc:', err.message);
+    return null;
+  }
+}
+
+
 function nextId(name) {
   const id = Number(db.nextIds[name] || 1);
   db.nextIds[name] = id + 1;
@@ -478,6 +495,23 @@ function publicUser(row) {
     inactive_at: u.inactive_at || u.deleted_at || null,
     inactive_by: u.inactive_by || u.deleted_by || null,
     permissions: getPermissions(u.id, u.role)
+  };
+}
+function publicUserForStore(row, storeId, atDate = null) {
+  const out = publicUser(row);
+  if (!out) return null;
+  const sid = Number(storeId || 0) || null;
+  if (!sid) return out;
+  const currentStoreId = out.store_id;
+  const currentStoreName = out.store_name;
+  return {
+    ...out,
+    store_id: sid,
+    store_name: getStore(sid)?.name || '',
+    current_store_id: currentStoreId,
+    current_store_name: currentStoreName || '',
+    is_transfer_context: Number(currentStoreId || 0) !== sid,
+    eligible_on_date: atDate ? userCanWorkAtStoreOnDate(row, sid, atDate) : undefined
   };
 }
 function canAccessStore(req, storeId) { return userHasStore(req.user, storeId); }
@@ -815,6 +849,140 @@ function clearDeletedTaskReferences(taskIds = [], assignmentIds = []) {
   });
 }
 
+
+function captureTaskDeleteReferenceSnapshot(taskIds = [], assignmentIds = []) {
+  const taskSet = new Set((taskIds || []).map(Number));
+  const assignmentSet = new Set((assignmentIds || []).map(Number));
+  if (!taskSet.size && !assignmentSet.size) return [];
+  return (db.cdp_ojti || []).map(row => {
+    if (!row || row.status === 'deleted') return null;
+    const snap = { id: Number(row.id), linked_task_id: null, linked_task_ids: {}, item_assignments: [] };
+    if (taskSet.has(Number(row.linked_task_id || 0))) snap.linked_task_id = Number(row.linked_task_id);
+    if (row.linked_task_ids && typeof row.linked_task_ids === 'object' && !Array.isArray(row.linked_task_ids)) {
+      Object.entries(row.linked_task_ids).forEach(([key, value]) => {
+        if (taskSet.has(Number(value || 0))) snap.linked_task_ids[key] = Number(value);
+      });
+    }
+    if (Array.isArray(row.item_values)) {
+      row.item_values.forEach((item, index) => {
+        if (assignmentSet.has(Number(item?.task_assignment_id || 0))) {
+          snap.item_assignments.push({ index, code: String(item?.code || ''), task_assignment_id: Number(item.task_assignment_id) });
+        }
+      });
+    }
+    return (snap.linked_task_id || Object.keys(snap.linked_task_ids).length || snap.item_assignments.length) ? snap : null;
+  }).filter(Boolean);
+}
+
+function restoreTaskDeleteReferences(refSnapshots = []) {
+  (refSnapshots || []).forEach(snap => {
+    const row = (db.cdp_ojti || []).find(x => Number(x.id) === Number(snap.id));
+    if (!row || row.status === 'deleted') return;
+    if (snap.linked_task_id) row.linked_task_id = Number(snap.linked_task_id);
+    if (snap.linked_task_ids && typeof snap.linked_task_ids === 'object') {
+      row.linked_task_ids = (row.linked_task_ids && typeof row.linked_task_ids === 'object' && !Array.isArray(row.linked_task_ids)) ? row.linked_task_ids : {};
+      Object.entries(snap.linked_task_ids).forEach(([key, value]) => { row.linked_task_ids[key] = Number(value); });
+    }
+    if (Array.isArray(row.item_values)) {
+      (snap.item_assignments || []).forEach(itemSnap => {
+        let item = itemSnap.code ? row.item_values.find(x => String(x?.code || '') === String(itemSnap.code)) : null;
+        if (!item && Number.isInteger(Number(itemSnap.index))) item = row.item_values[Number(itemSnap.index)];
+        if (item) item.task_assignment_id = Number(itemSnap.task_assignment_id);
+      });
+    }
+    row.updated_at = nowIso();
+  });
+}
+
+function taskDeleteSnapshotForSelection(selection) {
+  const assignmentSet = new Set((selection.assignment_ids || []).map(Number));
+  const deletedTaskSet = new Set((selection.mode === 'all' ? selection.affected_task_ids : selection.removable_task_ids || []).map(Number));
+  const taskRows = (db.tasks || []).filter(t => deletedTaskSet.has(Number(t.id)));
+  const assignmentRows = (db.task_assignees || []).filter(a => assignmentSet.has(Number(a.id)));
+  return {
+    version: 1,
+    tasks: clone(taskRows),
+    task_assignees: clone(assignmentRows),
+    cdp_refs: captureTaskDeleteReferenceSnapshot(Array.from(deletedTaskSet), Array.from(assignmentSet))
+  };
+}
+
+function taskDeleteSnapshotForSingle(taskId) {
+  const task = (db.tasks || []).find(t => Number(t.id) === Number(taskId));
+  const assignmentRows = (db.task_assignees || []).filter(a => Number(a.task_id) === Number(taskId));
+  const assignmentIds = assignmentRows.map(a => Number(a.id));
+  return {
+    version: 1,
+    tasks: task ? [clone(task)] : [],
+    task_assignees: clone(assignmentRows),
+    cdp_refs: captureTaskDeleteReferenceSnapshot([taskId], assignmentIds)
+  };
+}
+
+function taskDeleteLogPublicRow(log) {
+  const actor = getUser(log.deleted_by);
+  const restorer = getUser(log.restored_by);
+  const purger = getUser(log.purged_by);
+  const snapshot = log && log.snapshot;
+  const hasSnapshot = !!(snapshot && Array.isArray(snapshot.task_assignees));
+  return {
+    id: Number(log.id),
+    mode: String(log.mode || 'filtered'),
+    filters: log.filters || {},
+    deleted_assignments: Number(log.deleted_assignments || 0),
+    affected_tasks: Number(log.affected_tasks || 0),
+    deleted_tasks: Number(log.deleted_tasks || 0),
+    deleted_by: Number(log.deleted_by || 0) || null,
+    deleted_by_name: actor?.full_name || '',
+    deleted_at: log.deleted_at || null,
+    restored_at: log.restored_at || null,
+    restored_by_name: restorer?.full_name || '',
+    purged_at: log.purged_at || null,
+    purged_by_name: purger?.full_name || '',
+    restorable: hasSnapshot && !log.restored_at && !log.purged_at,
+    legacy: !hasSnapshot
+  };
+}
+
+function restoreTaskDeleteSnapshot(log, actor) {
+  const snapshot = log?.snapshot;
+  if (!snapshot || !Array.isArray(snapshot.task_assignees)) throw new Error('Lần xóa này chưa có dữ liệu Thùng rác để khôi phục');
+  if (log.restored_at) throw new Error('Lần xóa này đã được khôi phục');
+  if (log.purged_at) throw new Error('Dữ liệu này đã bị xóa vĩnh viễn khỏi Thùng rác');
+
+  const taskRows = Array.isArray(snapshot.tasks) ? snapshot.tasks : [];
+  const assignmentRows = Array.isArray(snapshot.task_assignees) ? snapshot.task_assignees : [];
+  const existingTaskIds = new Set((db.tasks || []).map(x => Number(x.id)));
+  const existingAssignmentIds = new Set((db.task_assignees || []).map(x => Number(x.id)));
+  const taskConflicts = taskRows.filter(x => existingTaskIds.has(Number(x.id)));
+  const assignmentConflicts = assignmentRows.filter(x => existingAssignmentIds.has(Number(x.id)));
+  if (taskConflicts.length || assignmentConflicts.length) {
+    throw new Error('Không thể khôi phục vì một phần ID công việc đã tồn tại trở lại. Hãy liên hệ Admin kỹ thuật để đối soát.');
+  }
+
+  db.tasks = db.tasks || [];
+  db.task_assignees = db.task_assignees || [];
+  taskRows.forEach(row => db.tasks.push(clone(row)));
+  assignmentRows.forEach(row => db.task_assignees.push(clone(row)));
+  restoreTaskDeleteReferences(snapshot.cdp_refs || []);
+  log.restored_at = nowIso();
+  log.restored_by = actor.id;
+  saveDb();
+  return { restored_tasks: taskRows.length, restored_assignments: assignmentRows.length };
+}
+
+function purgeTaskDeleteSnapshot(log, actor) {
+  const snapshot = log?.snapshot;
+  if (!snapshot || !Array.isArray(snapshot.task_assignees)) throw new Error('Không có dữ liệu Thùng rác để xóa vĩnh viễn');
+  if (log.restored_at) throw new Error('Dữ liệu này đã được khôi phục, không thể xóa từ Thùng rác');
+  (snapshot.task_assignees || []).forEach(row => removeStoredEvidenceFiles(row.evidence_path));
+  log.snapshot = null;
+  log.purged_at = nowIso();
+  log.purged_by = actor.id;
+  saveDb();
+}
+
+
 // V4.58 - Cho phép dùng link Google Drive/URL thay vì upload file nặng, giúp tiết kiệm dung lượng Disk.
 function normalizeExternalUrl(value) {
   const raw = String(value || '').trim();
@@ -972,7 +1140,7 @@ function orderRowsForUser(user, storeId = null) {
   if (storeId) rows = rows.filter(o => Number(o.store_id) === Number(storeId));
   if (user.role !== 'admin') {
     if (!Number(user.permissions.can_view_orders) && !Number(user.permissions.can_manage_orders)) return [];
-    if (user.store_id) rows = rows.filter(o => userHasStore(user, o.store_id));
+    if (user.store_id) rows = rows.filter(o => userHasStore(user, o.store_id, o.order_date || new Date()));
   }
   return rows.map(o => {
     const store = getStore(o.store_id);
@@ -1057,7 +1225,7 @@ function onlineOrderRowsForUser(user, storeId = null, month = null) {
   if (month) rows = rows.filter(o => String(o.order_date || '').slice(0, 7) === String(month).slice(0, 7));
   if (user.role !== 'admin') {
     if (!Number(user.permissions.can_view_online_orders) && !Number(user.permissions.can_manage_online_orders)) return [];
-    rows = rows.filter(o => userHasStore(user, o.store_id));
+    rows = rows.filter(o => userHasStore(user, o.store_id, o.order_date || new Date()));
   }
   return rows.map(o => ({
     ...o,
@@ -1072,7 +1240,7 @@ function onlineOrderSummary(rows) {
   rows.forEach(r => {
     const val = Number(r.order_value || 0);
     const benefit = Number(r.benefit_revenue || 0);
-    const empKey = String(r.packer_id || '');
+    const empKey = `${String(r.packer_id || '')}||${String(r.store_id || '')}`;
     const emp = employeeMap.get(empKey) || { user_id: r.packer_id, full_name: r.packer_name || '', store_id: r.store_id, store_name: r.store_name || '', order_count: 0, order_value: 0, benefit_revenue: 0 };
     emp.order_count += 1;
     emp.order_value += val;
@@ -1457,7 +1625,8 @@ function markTrainingLearned(row, user) {
   db.product_training_reads = db.product_training_reads || [];
   let record = trainingLearnRecord(row.id, user.id);
   if (!record) {
-    record = { id: nextId('product_training_reads'), training_id: row.id, user_id: user.id, store_id: user.store_id || row.store_id || null, status: 'active', created_at: nowIso() };
+    const learnedDate = dateOnly(new Date());
+    record = { id: nextId('product_training_reads'), training_id: row.id, user_id: user.id, store_id: row.store_id || preferredStoreForUserOnDate(user, learnedDate) || getPrimaryStoreId(user) || null, status: 'active', created_at: nowIso() };
     db.product_training_reads.push(record);
   }
   record.learned_at = record.learned_at || nowIso();
@@ -1475,7 +1644,10 @@ function trainingProgress(trainingId, userId, passPercent = 90) {
 
 function trainingAssignees(row) {
   if (!row || Number(row.is_required || 0) !== 1) return [];
-  return db.users.filter(u => u.status === 'active' && ['employee','manager'].includes(u.role) && (!row.store_id || Number(u.store_id) === Number(row.store_id)));
+  const refDate = dateOnly(row.due_at || row.arrival_date || row.created_at || new Date());
+  return db.users.filter(u => u.status === 'active' && ['employee','manager'].includes(u.role) && (
+    !row.store_id || userCanWorkAtStoreOnDate(u, Number(row.store_id), refDate)
+  ));
 }
 
 function overdueTrainingCountForUser(userId) {
@@ -1497,7 +1669,7 @@ function productTrainingRowsForUser(user, storeId = null) {
     const updater = getUser(r.updated_by);
     const questions = trainingQuestions(r, false);
     const progress = (user.role === 'employee' || user.role === 'manager' || (!Number(user.permissions.can_manage_product_training) && Number(user.permissions.can_view_product_training))) ? trainingProgress(r.id, user.id, r.pass_percent || 90) : null;
-    const assignees = (user.role === 'admin' || Number(user.permissions.can_manage_product_training) === 1) ? trainingAssignees(r).map(u => ({ user_id: u.id, full_name: u.full_name, store_name: getStore(u.store_id)?.name || '', ...trainingProgress(r.id, u.id, r.pass_percent || 90) })) : [];
+    const assignees = (user.role === 'admin' || Number(user.permissions.can_manage_product_training) === 1) ? trainingAssignees(r).map(u => ({ user_id: u.id, full_name: u.full_name, store_name: getStore(r.store_id || preferredStoreForUserOnDate(u, r.due_at || r.arrival_date || r.created_at || new Date()))?.name || '', ...trainingProgress(r.id, u.id, r.pass_percent || 90) })) : [];
     return { ...r, quiz_questions: undefined, quiz_question_count: questions.length, pass_percent: Number(r.pass_percent || 90), is_required: Number(r.is_required || 0), due_at: r.due_at || '', store_name: store ? store.name : 'Toàn hệ thống', created_by_name: creator ? creator.full_name : '', updated_by_name: updater ? updater.full_name : '', progress, assignees };
   }).sort((a, b) => String(a.arrival_date || '9999-12-31').localeCompare(String(b.arrival_date || '9999-12-31')) || Number(b.id) - Number(a.id));
 }
@@ -1534,7 +1706,7 @@ function canManageSchedule(user, storeId) {
 }
 function scheduleRowsForUser(user, storeId, dates) {
   db.work_schedules = db.work_schedules || [];
-  let rows = db.work_schedules.filter(x => Number(x.store_id) === Number(storeId) && dates.includes(String(x.work_date)) && x.status !== 'deleted');
+  let rows = db.work_schedules.filter(x => Number(x.store_id) === Number(storeId) && dates.includes(String(x.work_date)) && x.status !== 'deleted' && scheduleRowValidForTransfer(x));
   return rows.map(x => {
     const emp = getUser(x.user_id);
     const shift = (db.shifts || []).find(s => Number(s.id) === Number(x.shift_id));
@@ -1783,27 +1955,28 @@ function salesStaffForStore(storeId, opts = {}) {
   const sid = Number(storeId);
   const start = options.start ? dateVal(options.start) : null;
   const end = options.end ? dateVal(options.end) : null;
-  const monthSet = start && end ? new Set(monthKeysBetween(start, end).map(String)) : new Set();
   const idsWithData = new Set();
   if (start && end) {
     (db.sales || []).forEach(r => {
       if (Number(r.store_id) === sid && dateVal(r.sale_date) >= start && dateVal(r.sale_date) < end) idsWithData.add(Number(r.user_id));
     });
-    (db.sales_targets || []).forEach(r => {
-      if (Number(r.store_id) === sid && monthSet.has(String(r.target_month))) idsWithData.add(Number(r.user_id));
-    });
+    // Target tháng không tự kéo nhân viên vào mọi tuần của tháng.
+    // Nhân viên chỉ xuất hiện trong kỳ nếu thực sự được phân công hoặc có phát sinh tại cửa hàng trong đúng kỳ đó.
     (db.assessments || []).forEach(r => {
       if (Number(r.store_id) === sid && r.template_id === 'GUESTS' && dateVal(r.assessed_at) >= start && dateVal(r.assessed_at) < end) idsWithData.add(Number(r.employee_id));
     });
     (db.work_schedules || []).forEach(r => {
-      if (r.status !== 'deleted' && Number(r.store_id) === sid && String(r.work_date || '') >= start && String(r.work_date || '') < end) idsWithData.add(Number(r.user_id || r.employee_id));
+      if (r.status !== 'deleted' && scheduleRowValidForTransfer(r) && Number(r.store_id) === sid && String(r.work_date || '') >= start && String(r.work_date || '') < end) idsWithData.add(Number(r.user_id || r.employee_id));
     });
   }
-  // Nhân sự có thể luân chuyển cửa hàng trong kỳ. Khi xem báo cáo một cửa hàng,
-  // vẫn giữ người đã phát sinh dữ liệu tại cửa hàng đó dù cửa hàng chính hiện tại đã đổi.
-  let rows = (db.users || []).filter(u => u.status !== 'deleted' && u.role === 'employee' && (
-    Number(getPrimaryStoreId(u)) === sid || getUserStoreIds(u).includes(sid) || idsWithData.has(Number(u.id)) || (start && end && userAssignedToStoreDuringPeriod(u, sid, start, end))
-  ));
+  // Nhân sự có thể luân chuyển cửa hàng trong kỳ. Khi có khoảng thời gian cụ thể,
+  // chỉ đưa nhân viên vào cửa hàng nếu thực sự được phân công/làm/phát sinh dữ liệu trong kỳ đó.
+  // Không dùng cửa hàng hiện tại để kéo ngược nhân viên vào các tháng/tuần trước ngày điều chuyển.
+  let rows = (db.users || []).filter(u => {
+    if (u.status === 'deleted' || u.role !== 'employee') return false;
+    if (start && end) return idsWithData.has(Number(u.id)) || userAssignedToStoreDuringPeriod(u, sid, start, end);
+    return Number(getPrimaryStoreId(u)) === sid || getUserStoreIds(u).includes(sid);
+  });
   if (statusMode === 'active') rows = rows.filter(u => u.status === 'active');
   if (statusMode === 'inactive') rows = rows.filter(u => u.status !== 'active');
   if (start && end) {
@@ -1904,22 +2077,23 @@ function upsertStoreSalesDay(storeId, saleDate, customerCount, note, actorId, cu
   return row;
 }
 
-function approvedLoyaltyAmount(userId, saleDate) {
+function approvedLoyaltyAmount(userId, saleDate, storeId = null) {
   const d = dateOnly(saleDate || new Date());
   return (db.loyalty_claims || [])
-    .filter(x => x.status === 'approved' && Number(x.user_id) === Number(userId) && String(x.sale_date) === d)
+    .filter(x => x.status === 'approved' && Number(x.user_id) === Number(userId) && String(x.sale_date) === d && (!storeId || Number(x.store_id) === Number(storeId)))
     .reduce((sum, x) => sum + Number(x.discount_amount || 0), 0);
 }
 
-function recomputeSalesRevenueWithLoyalty(userId, saleDate, actorId = null) {
+function recomputeSalesRevenueWithLoyalty(userId, saleDate, actorId = null, storeId = null) {
   const employee = getUser(Number(userId));
   if (!employee) return null;
   const d = dateOnly(saleDate || new Date());
-  let row = (db.sales || []).find(sa => Number(sa.user_id) === Number(userId) && String(sa.sale_date) === d);
-  const loyalty = approvedLoyaltyAmount(userId, d);
+  const sid = Number(storeId || preferredStoreForUserOnDate(employee, d) || 0) || null;
+  let row = (db.sales || []).find(sa => Number(sa.user_id) === Number(userId) && String(sa.sale_date) === d && (!sid || Number(sa.store_id) === sid));
+  const loyalty = approvedLoyaltyAmount(userId, d, sid);
   if (!row && loyalty <= 0) return null;
   if (!row) {
-    row = { id: nextId('sales'), user_id: employee.id, store_id: preferredStoreForUserOnDate(employee, d), sale_date: d, base_revenue: 0, revenue: loyalty, bill_count: 0, item_count: 0, note: '', created_by: actorId, created_at: nowIso(), updated_by: actorId, updated_at: nowIso() };
+    row = { id: nextId('sales'), user_id: employee.id, store_id: sid, sale_date: d, base_revenue: 0, revenue: loyalty, bill_count: 0, item_count: 0, note: '', created_by: actorId, created_at: nowIso(), updated_by: actorId, updated_at: nowIso() };
     db.sales.push(row);
     return row;
   }
@@ -1930,9 +2104,33 @@ function recomputeSalesRevenueWithLoyalty(userId, saleDate, actorId = null) {
   return row;
 }
 
+function scheduleRowValidForTransfer(row) {
+  if (!row || row.status === 'deleted') return false;
+  const user = getUser(Number(row.user_id || row.employee_id));
+  if (!user) return false;
+  const d = dateOnly(row.work_date || new Date());
+  const sid = Number(row.store_id || 0);
+  // Cửa hàng đúng theo điều chuyển/phân quyền tại ngày đó luôn hợp lệ.
+  if (userAssignedToStoreOnDate(user, sid, d)) return true;
+  if (!user.transfer_managed || user.role !== 'employee') return true;
+  // Nếu lịch ở cửa hàng cũ đã được tạo trước lúc Admin tạo lệnh điều chuyển chính thức,
+  // coi đó là lịch cũ và ẩn từ ngày hiệu lực. Lịch được tạo lại sau điều chuyển vẫn được giữ
+  // để hỗ trợ trường hợp Admin chủ động xếp hỗ trợ ngoài cửa hàng chính.
+  const conflicts = userTransferRows(user.id).filter(t =>
+    String(t.transfer_type || 'permanent') === 'permanent' &&
+    Number(t.from_store_id || 0) === sid &&
+    String(t.effective_date || '') && String(t.effective_date) <= d
+  );
+  if (!conflicts.length) return true;
+  const latest = conflicts[conflicts.length - 1];
+  const scheduleCreated = String(row.created_at || row.updated_at || '');
+  const transferCreated = String(latest.created_at || '');
+  return Boolean(scheduleCreated && transferCreated && scheduleCreated >= transferCreated);
+}
+
 function userWorkedAtStoreOnDate(userId, storeId, workDate) {
   const d = dateOnly(workDate || new Date());
-  return (db.work_schedules || []).some(r => r.status !== 'deleted' && Number(r.user_id || r.employee_id) === Number(userId) && Number(r.store_id) === Number(storeId) && String(r.work_date || '') === d);
+  return (db.work_schedules || []).some(r => r.status !== 'deleted' && Number(r.user_id || r.employee_id) === Number(userId) && Number(r.store_id) === Number(storeId) && String(r.work_date || '') === d && scheduleRowValidForTransfer(r));
 }
 function userCanWorkAtStoreOnDate(user, storeId, workDate) {
   if (!user || !storeId) return false;
@@ -1942,7 +2140,7 @@ function userCanWorkAtStoreOnDate(user, storeId, workDate) {
 function preferredStoreForUserOnDate(user, workDate) {
   if (!user) return null;
   const d = dateOnly(workDate || new Date());
-  const scheduled = (db.work_schedules || []).filter(r => r.status !== 'deleted' && Number(r.user_id || r.employee_id) === Number(user.id) && String(r.work_date || '') === d);
+  const scheduled = (db.work_schedules || []).filter(r => r.status !== 'deleted' && Number(r.user_id || r.employee_id) === Number(user.id) && String(r.work_date || '') === d && scheduleRowValidForTransfer(r));
   if (scheduled.length === 1) return Number(scheduled[0].store_id || 0) || null;
   const assigned = effectiveStoreIdsForUserOnDate(user, d);
   return Number(assigned[0] || getPrimaryStoreId(user) || 0) || null;
@@ -1951,18 +2149,18 @@ function preferredStoreForUserOnDate(user, workDate) {
 function upsertSalesRow(employee, saleDate, payload, actorId, storeIdOverride = null) {
   const d = dateOnly(saleDate || new Date());
   const saleStoreId = Number(storeIdOverride || preferredStoreForUserOnDate(employee, d) || getPrimaryStoreId(employee) || employee.store_id || 0) || null;
-  let row = (db.sales || []).find(sa => Number(sa.user_id) === Number(employee.id) && String(sa.sale_date) === d);
+  // Một nhân viên có thể hỗ trợ/luân chuyển nhiều cửa hàng. Không để doanh thu cửa hàng mới ghi đè dòng cửa hàng cũ cùng ngày.
+  let row = (db.sales || []).find(sa => Number(sa.user_id) === Number(employee.id) && String(sa.sale_date) === d && Number(sa.store_id || 0) === Number(saleStoreId || 0));
   if (row) {
-    if (saleStoreId) row.store_id = saleStoreId; // giữ đúng cửa hàng phát sinh của ngày bán
     row.base_revenue = toNumber(payload.revenue, 0);
-    row.revenue = row.base_revenue + approvedLoyaltyAmount(employee.id, d);
+    row.revenue = row.base_revenue + approvedLoyaltyAmount(employee.id, d, saleStoreId);
     row.bill_count = toNumber(payload.bill_count, 0);
     row.item_count = toNumber(payload.item_count, 0);
     row.note = payload.note || '';
     row.updated_by = actorId;
     row.updated_at = nowIso();
   } else {
-    row = { id: nextId('sales'), user_id: employee.id, store_id: saleStoreId || getPrimaryStoreId(employee), sale_date: d, base_revenue: toNumber(payload.revenue, 0), revenue: toNumber(payload.revenue, 0) + approvedLoyaltyAmount(employee.id, d), bill_count: toNumber(payload.bill_count, 0), item_count: toNumber(payload.item_count, 0), note: payload.note || '', created_by: actorId, created_at: nowIso(), updated_by: actorId, updated_at: nowIso() };
+    row = { id: nextId('sales'), user_id: employee.id, store_id: saleStoreId || getPrimaryStoreId(employee), sale_date: d, base_revenue: toNumber(payload.revenue, 0), revenue: toNumber(payload.revenue, 0) + approvedLoyaltyAmount(employee.id, d, saleStoreId), bill_count: toNumber(payload.bill_count, 0), item_count: toNumber(payload.item_count, 0), note: payload.note || '', created_by: actorId, created_at: nowIso(), updated_by: actorId, updated_at: nowIso() };
     db.sales.push(row);
   }
   return row;
@@ -2082,7 +2280,7 @@ function scheduledUsersByShift(storeId, workDate, shiftIds = []) {
   const set = new Set((shiftIds || []).map(Number).filter(Boolean));
   if (!set.size) return [];
   return (db.work_schedules || [])
-    .filter(x => x.status !== 'deleted' && Number(x.store_id) === Number(storeId) && String(x.work_date) === String(workDate) && set.has(Number(x.shift_id)))
+    .filter(x => x.status !== 'deleted' && Number(x.store_id) === Number(storeId) && String(x.work_date) === String(workDate) && set.has(Number(x.shift_id)) && scheduleRowValidForTransfer(x))
     .map(x => Number(x.user_id));
 }
 
@@ -2215,7 +2413,7 @@ function bonusSummaryForUser(user) {
   const rows = bonusRowsForUser(user);
   const map = new Map();
   rows.forEach(b => {
-    const key = String(b.user_id);
+    const key = `${String(b.user_id)}||${String(b.store_id || '')}`;
     const row = map.get(key) || {
       user_id: b.user_id,
       employee_name: b.employee_name,
@@ -2299,7 +2497,7 @@ function monthlyWorkStoreBreakdownForUser(userId, monthKeyValue) {
   d.setUTCMonth(d.getUTCMonth() + 1);
   const end = d.toISOString().slice(0, 10);
   const scheduleRows = (db.work_schedules || []).filter(r =>
-    r.status !== 'deleted' &&
+    r.status !== 'deleted' && scheduleRowValidForTransfer(r) &&
     Number(r.user_id || r.employee_id) === Number(userId) &&
     String(r.work_date || '') >= start && String(r.work_date || '') < end
   );
@@ -2378,7 +2576,7 @@ function computePerformance(scopeUser, year = null, month = null) {
     users = users.filter(u => managerStoreIds.some(storeId =>
       userHasStore(u, storeId) || userAssignedToStoreDuringPeriod(u, storeId, start, end) ||
       (db.sales || []).some(r => Number(r.user_id) === Number(u.id) && Number(r.store_id) === storeId && dateVal(r.sale_date) >= start && dateVal(r.sale_date) < end) ||
-      (db.work_schedules || []).some(r => r.status !== 'deleted' && Number(r.user_id || r.employee_id) === Number(u.id) && Number(r.store_id) === storeId && String(r.work_date || '') >= start && String(r.work_date || '') < end)
+      (db.work_schedules || []).some(r => r.status !== 'deleted' && scheduleRowValidForTransfer(r) && Number(r.user_id || r.employee_id) === Number(u.id) && Number(r.store_id) === storeId && String(r.work_date || '') >= start && String(r.work_date || '') < end)
     ));
   }
   if (scopeUser.role === 'employee') users = users.filter(u => Number(u.id) === Number(scopeUser.id));
@@ -2640,12 +2838,19 @@ app.post('/api/user-transfers', requireAuth, requirePerm('can_manage_users'), (r
   };
   db.user_transfers.push(row);
   user.transfer_managed = true;
+  let transferScheduleSync = { changed_tasks: 0, added_assignments: 0, removed_assignments: 0 };
+  if (type === 'permanent') {
+    const staleDates = Array.from(new Set((db.work_schedules || [])
+      .filter(x => x.status !== 'deleted' && Number(x.user_id || x.employee_id) === Number(user.id) && Number(x.store_id) === fromStoreId && String(x.work_date || '') >= eff && !scheduleRowValidForTransfer(x))
+      .map(x => String(x.work_date || '')).filter(Boolean)));
+    transferScheduleSync = syncFutureShiftTasksForSchedule(fromStoreId, staleDates, req.user.id);
+  }
   if (type === 'permanent' && eff <= dateOnly(new Date())) {
     user.store_id = Number(toStore.id);
     user.store_ids = [Number(toStore.id)];
   }
   saveDb();
-  res.json({ ok: true, transfer: transferView(row), user: publicUser(user) });
+  res.json({ ok: true, transfer: transferView(row), user: publicUser(user), schedule_sync: transferScheduleSync });
 });
 
 app.delete('/api/user-transfers/:id', requireAuth, requirePerm('can_manage_users'), (req, res) => {
@@ -2996,14 +3201,15 @@ app.delete('/api/cdp-ojti/:id', requireAuth, (req, res) => {
 
 app.post('/api/tasks', requireAuth, requirePerm('can_assign_tasks'), (req, res) => {
   const { title, description, due_at, priority, store_id, assignee_ids, score_value, start_date, end_date, due_time, repeat_every_days, repeat_mode, weekdays, shift_ids, category } = req.body || {};
-  const manualAssignees = Array.isArray(assignee_ids) ? assignee_ids.map(Number).filter(Boolean) : [];
   const selectedShiftIds = Array.isArray(shift_ids) ? shift_ids.map(Number).filter(Boolean) : [];
+  // v4.207: Nếu giao theo ca, người nhận chỉ lấy từ Lịch làm việc. Không nhận thêm nhân viên thủ công.
+  const manualAssignees = selectedShiftIds.length ? [] : (Array.isArray(assignee_ids) ? assignee_ids.map(Number).filter(Boolean) : []);
   const selectedWeekdays = normalizeWeekdays(weekdays);
   const modeLabel = String(repeat_mode || '').trim();
   const useMultiDate = !!(start_date && end_date);
   if (!title) return res.status(400).json({ error: 'Thiếu tiêu đề công việc' });
   if (!useMultiDate && !due_at) return res.status(400).json({ error: 'Vui lòng nhập hạn hoàn thành hoặc chọn khoảng ngày giao việc' });
-  if (!manualAssignees.length && !selectedShiftIds.length) return res.status(400).json({ error: 'Vui lòng chọn nhân viên hoặc chọn ca giao việc' });
+  if (!manualAssignees.length && !selectedShiftIds.length) return res.status(400).json({ error: 'Vui lòng chọn ca giao việc hoặc chọn nhân viên ở chế độ giao thủ công' });
   const storeId = canSelectAssignedStore(req.user) ? Number(store_id || getPrimaryStoreId(req.user)) : Number(getPrimaryStoreId(req.user));
   if (!storeId || !canAccessStore(req, storeId)) return res.status(403).json({ error: 'Không có quyền giao việc cửa hàng này' });
   if (useMultiDate && modeLabel === 'weekly2' && selectedWeekdays.length !== 2) return res.status(400).json({ error: 'Vui lòng chọn đúng 2 thứ trong tuần' });
@@ -3056,7 +3262,7 @@ app.post('/api/tasks', requireAuth, requirePerm('can_assign_tasks'), (req, res) 
     });
     createdTasks += 1;
   });
-  if (!createdAssignments) return res.status(400).json({ error: 'Không có nhân viên hợp lệ trong ngày/ca đã chọn. Hãy kiểm tra lịch làm việc hoặc chọn nhân viên thủ công.' });
+  if (!createdAssignments) return res.status(400).json({ error: selectedShiftIds.length ? 'Không tìm thấy người được xếp trong Lịch làm việc của cửa hàng/ngày/ca đã chọn. Hãy kiểm tra LLV trước khi giao việc.' : 'Không có nhân viên hợp lệ để giao việc.' });
   saveDb();
   res.json({ ok: true, created_tasks: createdTasks, created_assignments: createdAssignments });
 });
@@ -3129,9 +3335,11 @@ app.post('/api/tasks/bulk-delete', requireAuth, (req, res) => {
   if (dryRun) return res.json({ ok: true, dry_run: true, matched_assignments: matchedAssignments, affected_tasks: affectedTasks, removable_tasks: removableTasks, filters: selection.filters });
   if (!matchedAssignments && selection.mode !== 'all') return res.status(400).json({ error: 'Không có dữ liệu công việc phù hợp với vùng đã chọn' });
 
+  backupDbBeforeTaskDelete();
+  const snapshot = taskDeleteSnapshotForSelection(selection);
   const assignmentSet = new Set(selection.assignment_ids.map(Number));
   const forcedTaskSet = new Set(selection.mode === 'all' ? selection.affected_task_ids.map(Number) : []);
-  (db.task_assignees || []).filter(a => assignmentSet.has(Number(a.id))).forEach(a => removeStoredEvidenceFiles(a.evidence_path));
+  // V4.206: chỉ chuyển dữ liệu vào Thùng rác, không xóa file chứng từ ngay.
   db.task_assignees = (db.task_assignees || []).filter(a => !assignmentSet.has(Number(a.id)));
 
   const orphanTaskIds = new Set(selection.removable_task_ids.map(Number));
@@ -3152,7 +3360,12 @@ app.post('/api/tasks/bulk-delete', requireAuth, (req, res) => {
     affected_tasks: affectedTasks,
     deleted_tasks: deletedTaskIds.length,
     deleted_by: req.user.id,
-    deleted_at: nowIso()
+    deleted_at: nowIso(),
+    snapshot,
+    restored_at: null,
+    restored_by: null,
+    purged_at: null,
+    purged_by: null
   });
   saveDb();
   res.json({ ok: true, deleted_assignments: matchedAssignments, affected_tasks: affectedTasks, deleted_tasks: deletedTaskIds.length });
@@ -3198,21 +3411,70 @@ app.patch('/api/tasks/:taskId', requireAuth, requirePerm('can_edit_tasks'), (req
   res.json({ ok: true, task_id: taskId });
 });
 
+
+app.get('/api/tasks/delete-logs', requireAuth, (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Chỉ Admin được xem Thùng rác công việc' });
+  const rows = (db.task_delete_logs || []).slice().sort((a,b) => String(b.deleted_at || '').localeCompare(String(a.deleted_at || ''))).slice(0, 100).map(taskDeleteLogPublicRow);
+  res.json({ rows });
+});
+
+app.post('/api/tasks/delete-logs/:id/restore', requireAuth, (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Chỉ Admin được khôi phục dữ liệu công việc' });
+  const id = Number(req.params.id);
+  const log = (db.task_delete_logs || []).find(x => Number(x.id) === id);
+  if (!log) return res.status(404).json({ error: 'Không tìm thấy lần xóa trong Thùng rác' });
+  try {
+    const result = restoreTaskDeleteSnapshot(log, req.user);
+    res.json({ ok: true, ...result });
+  } catch (err) {
+    res.status(409).json({ error: err.message || 'Không thể khôi phục dữ liệu' });
+  }
+});
+
+app.delete('/api/tasks/delete-logs/:id', requireAuth, (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Chỉ Admin được xóa vĩnh viễn dữ liệu Thùng rác' });
+  const id = Number(req.params.id);
+  const log = (db.task_delete_logs || []).find(x => Number(x.id) === id);
+  if (!log) return res.status(404).json({ error: 'Không tìm thấy lần xóa trong Thùng rác' });
+  try {
+    purgeTaskDeleteSnapshot(log, req.user);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(409).json({ error: err.message || 'Không thể xóa vĩnh viễn dữ liệu' });
+  }
+});
+
 app.delete('/api/tasks/:taskId', requireAuth, (req, res) => {
   if (req.user.role !== 'admin') return res.status(403).json({ error: 'Chỉ Admin được quyền xóa công việc' });
   const taskId = Number(req.params.taskId);
   const task = db.tasks.find(x => Number(x.id) === taskId);
   if (!task) return res.status(404).json({ error: 'Không tìm thấy công việc' });
+  backupDbBeforeTaskDelete();
+  const snapshot = taskDeleteSnapshotForSingle(taskId);
   const assignmentRows = (db.task_assignees || []).filter(x => Number(x.task_id) === taskId);
-  assignmentRows.forEach(row => removeStoredEvidenceFiles(row.evidence_path));
   const assignmentIds = assignmentRows.map(row => Number(row.id));
+  // V4.206: giữ chứng từ trong Thùng rác cho đến khi Admin xóa vĩnh viễn.
   db.task_assignees = (db.task_assignees || []).filter(x => Number(x.task_id) !== taskId);
   db.tasks = (db.tasks || []).filter(x => Number(x.id) !== taskId);
   clearDeletedTaskReferences([taskId], assignmentIds);
   db.task_delete_logs = db.task_delete_logs || [];
-  db.task_delete_logs.push({ id: nextId('task_delete_logs'), mode: 'single', filters: { task_id: taskId }, deleted_assignments: assignmentIds.length, affected_tasks: 1, deleted_tasks: 1, deleted_by: req.user.id, deleted_at: nowIso() });
+  db.task_delete_logs.push({
+    id: nextId('task_delete_logs'),
+    mode: 'single',
+    filters: { task_id: taskId },
+    deleted_assignments: assignmentIds.length,
+    affected_tasks: 1,
+    deleted_tasks: 1,
+    deleted_by: req.user.id,
+    deleted_at: nowIso(),
+    snapshot,
+    restored_at: null,
+    restored_by: null,
+    purged_at: null,
+    purged_by: null
+  });
   saveDb();
-  res.json({ ok: true, deleted_task_id: taskId });
+  res.json({ ok: true, deleted_task_id: taskId, trash_id: db.task_delete_logs[db.task_delete_logs.length - 1].id });
 });
 
 app.post('/api/tasks/:assignmentId/complete', requireAuth, upload.array('evidence', 10), (req, res) => {
@@ -3292,17 +3554,20 @@ app.delete('/api/violations/:id', requireAuth, (req, res) => {
 });
 
 app.post('/api/violations', requireAuth, requirePerm('can_manage_violations'), upload.array('evidence', 10), (req, res) => {
-  const { user_id, violation_code, violation_level, description } = req.body || {};
+  const { user_id, store_id, violation_code, violation_level, description } = req.body || {};
   const target = getActiveUser(Number(user_id));
   if (!target) return res.status(400).json({ error: 'Nhân viên không hợp lệ' });
-  if (req.user.role !== 'admin' && !userHasStore(req.user, target.store_id)) return res.status(403).json({ error: 'Không có quyền ghi nhận vi phạm nhân viên này' });
+  const violationDate = dateOnly(new Date());
+  const targetStoreId = Number(store_id || preferredStoreForUserOnDate(target, violationDate) || getPrimaryStoreId(target) || 0);
+  if (!targetStoreId || !userCanWorkAtStoreOnDate(target, targetStoreId, violationDate)) return res.status(400).json({ error: 'Nhân viên không làm tại cửa hàng đã chọn trong ngày ghi nhận' });
+  if (req.user.role !== 'admin' && !userHasStore(req.user, targetStoreId)) return res.status(403).json({ error: 'Không có quyền ghi nhận vi phạm nhân viên này' });
   const catalog = violationCatalogItem(violation_code);
   if (!catalog) return res.status(400).json({ error: 'Vui lòng chọn đúng danh mục vi phạm trong SOP chế tài' });
   const levelKey = VIOLATION_LEVELS[violation_level] ? violation_level : catalog.level;
   const level = VIOLATION_LEVELS[levelKey];
   const id = nextId('violations');
   db.violations.push({
-    id, user_id: target.id, store_id: target.store_id,
+    id, user_id: target.id, store_id: targetStoreId,
     violation_code: catalog.code, violation_group: catalog.group, violation_type: catalog.name,
     violation_level: levelKey, level_label: level.label, points_deducted: level.points,
     description: description || '',
@@ -3319,17 +3584,19 @@ app.post('/api/checklist/assessments', requireAuth, requirePerm('can_grade_check
   const { template_id, store_id, employee_id, assessed_at, general_note, scores } = req.body || {};
   const template = loadChecklists().find(t => t.id === template_id);
   if (!template) return res.status(400).json({ error: 'Checklist không hợp lệ' });
-  let storeId = Number(store_id || req.user.store_id);
+  const assessedDate = dateOnly(assessed_at || new Date());
+  let storeId = Number(store_id || getPrimaryStoreId(req.user) || 0);
   let empId = employee_id ? Number(employee_id) : null;
   if (template.target_type === 'employee') {
     const emp = getActiveUser(empId);
-    if (!emp || !emp.store_id) return res.status(400).json({ error: 'Đại sứ kinh doanh không hợp lệ' });
-    if (req.user.role !== 'admin' && !userHasStore(req.user, emp.store_id)) return res.status(403).json({ error: 'Không có quyền chấm nhân viên này' });
-    storeId = Number(emp.store_id);
+    if (!emp || emp.role !== 'employee') return res.status(400).json({ error: 'Đại sứ kinh doanh không hợp lệ' });
+    if (!storeId) storeId = Number(preferredStoreForUserOnDate(emp, assessedDate) || 0);
+    if (!storeId || !userCanWorkAtStoreOnDate(emp, storeId, assessedDate)) return res.status(400).json({ error: 'Nhân viên không làm tại cửa hàng đã chọn trong ngày chấm' });
+    if (req.user.role !== 'admin' && !userHasStore(req.user, storeId)) return res.status(403).json({ error: 'Không có quyền chấm nhân viên này' });
   } else {
     empId = null;
   }
-  if (!storeId || !canAccessStore(req, storeId)) return res.status(403).json({ error: 'Không có quyền chấm cửa hàng này' });
+  if (!storeId || (req.user.role !== 'admin' && !userHasStore(req.user, storeId))) return res.status(403).json({ error: 'Không có quyền chấm cửa hàng này' });
   const scoreMap = scores || {};
   let total = 0;
   template.items.forEach(item => {
@@ -3499,8 +3766,8 @@ app.post('/api/loyalty', requireAuth, upload.single('evidence'), (req, res) => {
   if (!storeId || !getStore(storeId)) return res.status(400).json({ error: 'Cửa hàng không hợp lệ' });
   if (!canReviewLoyalty(req.user) && !userHasStore(req.user, storeId)) return res.status(403).json({ error: 'Không có quyền tạo Loyalty cửa hàng này' });
   const employee = getActiveUser(Number(req.body?.user_id));
-  if (!employee || employee.role !== 'employee' || Number(getPrimaryStoreId(employee)) !== storeId) return res.status(400).json({ error: 'Nhân viên không thuộc cửa hàng đã chọn' });
   const saleDate = dateOnly(req.body?.sale_date);
+  if (!employee || employee.role !== 'employee' || !userCanWorkAtStoreOnDate(employee, storeId, saleDate)) return res.status(400).json({ error: 'Nhân viên không làm tại cửa hàng đã chọn trong ngày giao dịch' });
   const invoice = String(req.body?.invoice_number || '').trim();
   const amount = toNumber(req.body?.discount_amount, 0);
   if (!invoice) return res.status(400).json({ error: 'Nhập số hóa đơn' });
@@ -3518,20 +3785,21 @@ app.patch('/api/loyalty/:id', requireAuth, upload.single('evidence'), (req, res)
   if (!canReviewLoyalty(req.user)) return res.status(403).json({ error: 'Chỉ Admin/Văn phòng được sửa đơn Loyalty' });
   const row = (db.loyalty_claims || []).find(x => Number(x.id) === Number(req.params.id));
   if (!row) return res.status(404).json({ error: 'Không tìm thấy đơn Loyalty' });
-  const oldUserId = row.user_id, oldDate = row.sale_date;
+  const oldUserId = row.user_id, oldDate = row.sale_date, oldStoreId = row.store_id;
   const storeId = Number(req.body?.store_id || row.store_id);
   const employee = getUser(Number(req.body?.user_id || row.user_id));
-  if (!getStore(storeId) || !employee || employee.role !== 'employee' || Number(getPrimaryStoreId(employee)) !== storeId) return res.status(400).json({ error: 'Cửa hàng/nhân viên không hợp lệ' });
+  const nextSaleDate = dateOnly(req.body?.sale_date || row.sale_date);
+  if (!getStore(storeId) || !employee || employee.role !== 'employee' || !userCanWorkAtStoreOnDate(employee, storeId, nextSaleDate)) return res.status(400).json({ error: 'Cửa hàng/nhân viên không hợp lệ tại ngày giao dịch' });
   const amount = toNumber(req.body?.discount_amount ?? row.discount_amount, 0);
   if (!(amount > 0)) return res.status(400).json({ error: 'Số tiền giảm phải lớn hơn 0' });
   const invoice = String(req.body?.invoice_number ?? row.invoice_number).trim();
   if (!invoice) return res.status(400).json({ error: 'Nhập số hóa đơn' });
-  row.store_id = storeId; row.user_id = employee.id; row.sale_date = dateOnly(req.body?.sale_date || row.sale_date); row.invoice_number = invoice; row.discount_amount = amount;
+  row.store_id = storeId; row.user_id = employee.id; row.sale_date = nextSaleDate; row.invoice_number = invoice; row.discount_amount = amount;
   if (req.file) row.evidence_path = saveUploadedFile(req.file);
   row.updated_by = req.user.id; row.updated_at = nowIso();
   if (row.status === 'approved') {
-    recomputeSalesRevenueWithLoyalty(oldUserId, oldDate, req.user.id);
-    recomputeSalesRevenueWithLoyalty(row.user_id, row.sale_date, req.user.id);
+    recomputeSalesRevenueWithLoyalty(oldUserId, oldDate, req.user.id, oldStoreId);
+    recomputeSalesRevenueWithLoyalty(row.user_id, row.sale_date, req.user.id, row.store_id);
   }
   saveDb();
   res.json({ ok:true, row: loyaltyPublicRow(row) });
@@ -3542,7 +3810,7 @@ app.post('/api/loyalty/:id/approve', requireAuth, (req, res) => {
   const row = (db.loyalty_claims || []).find(x => Number(x.id) === Number(req.params.id));
   if (!row) return res.status(404).json({ error: 'Không tìm thấy đơn Loyalty' });
   row.status = 'approved'; row.reviewed_by = req.user.id; row.reviewed_at = nowIso(); row.updated_by = req.user.id; row.updated_at = nowIso();
-  recomputeSalesRevenueWithLoyalty(row.user_id, row.sale_date, req.user.id);
+  recomputeSalesRevenueWithLoyalty(row.user_id, row.sale_date, req.user.id, row.store_id);
   saveDb();
   res.json({ ok:true, row: loyaltyPublicRow(row) });
 });
@@ -3553,19 +3821,22 @@ app.delete('/api/loyalty/:id', requireAuth, (req, res) => {
   if (idx < 0) return res.status(404).json({ error: 'Không tìm thấy đơn Loyalty' });
   const row = db.loyalty_claims[idx];
   db.loyalty_claims.splice(idx, 1);
-  if (row.status === 'approved') recomputeSalesRevenueWithLoyalty(row.user_id, row.sale_date, req.user.id);
+  if (row.status === 'approved') recomputeSalesRevenueWithLoyalty(row.user_id, row.sale_date, req.user.id, row.store_id);
   removeLocalEvidenceFile(row.evidence_path);
   saveDb();
   res.json({ ok:true, deleted_id:Number(req.params.id) });
 });
 
 app.post('/api/sales', requireAuth, requireAnyPerm('can_manage_total_sales','can_manage_sales'), (req, res) => {
-  const { user_id, sale_date, revenue, bill_count, item_count, customer_count, customer_new_count, customer_old_count, note } = req.body || {};
+  const { user_id, store_id, sale_date, revenue, bill_count, item_count, customer_count, customer_new_count, customer_old_count, note } = req.body || {};
   const employee = getActiveUser(Number(user_id));
   if (!employee || employee.role !== 'employee') return res.status(400).json({ error: 'Chỉ nhập doanh thu cho nhân viên bán hàng' });
-  if (req.user.role !== 'admin' && !userHasStore(req.user, employee.store_id)) return res.status(403).json({ error: 'Không có quyền nhập doanh thu nhân viên này' });
-  const row = upsertSalesRow(employee, sale_date, { revenue, bill_count, item_count, note }, req.user.id);
-  if (customer_count !== undefined && customer_count !== null && customer_count !== '') upsertStoreSalesDay(employee.store_id, sale_date, customer_count, '', req.user.id, customer_new_count, customer_old_count);
+  const d = dateOnly(sale_date || new Date());
+  const saleStoreId = Number(store_id || preferredStoreForUserOnDate(employee, d) || 0);
+  if (!saleStoreId || !getStore(saleStoreId) || !userCanWorkAtStoreOnDate(employee, saleStoreId, d)) return res.status(400).json({ error: 'Nhân viên không làm tại cửa hàng này trong ngày đã chọn' });
+  if (req.user.role !== 'admin' && !userHasStore(req.user, saleStoreId)) return res.status(403).json({ error: 'Không có quyền nhập doanh thu cửa hàng này' });
+  const row = upsertSalesRow(employee, d, { revenue, bill_count, item_count, note }, req.user.id, saleStoreId);
+  if (customer_count !== undefined && customer_count !== null && customer_count !== '') upsertStoreSalesDay(saleStoreId, d, customer_count, '', req.user.id, customer_new_count, customer_old_count);
   saveDb();
   res.json({ ok: true, id: row.id });
 });
@@ -3594,11 +3865,37 @@ function datesBetween(start, end) {
   return out;
 }
 function proratedTargetForUser(userId, start, end, storeId = null) {
-  return datesBetween(start, end).reduce((sum, d) => {
+  const user = getUser(userId);
+  const requestedDates = datesBetween(start, end);
+  if (!storeId || !user) {
+    return requestedDates.reduce((sum, d) => {
+      const month = d.slice(0, 7);
+      const t = monthlyKpiTargetsForUser(userId, month, storeId).target_revenue || 0;
+      return sum + (Number(t) / Math.max(daysInMonthKey(month), 1));
+    }, 0);
+  }
+  // Target đã được set riêng theo Nhân viên + Tháng + Cửa hàng.
+  // Khi điều chuyển giữa tháng, phân bổ toàn bộ target của cửa hàng đó trên đúng số ngày
+  // nhân viên thuộc/làm tại cửa hàng đó, để tuần chuyển cửa hàng không bị tính target của cả 7 ngày.
+  const byMonth = new Map();
+  requestedDates.forEach(d => {
     const month = d.slice(0, 7);
-    const t = monthlyKpiTargetsForUser(userId, month, storeId).target_revenue || 0;
-    return sum + (Number(t) / Math.max(daysInMonthKey(month), 1));
-  }, 0);
+    if (!byMonth.has(month)) byMonth.set(month, []);
+    byMonth.get(month).push(d);
+  });
+  let total = 0;
+  byMonth.forEach((dates, month) => {
+    const target = Number(monthlyKpiTargetsForUser(userId, month, storeId).target_revenue || 0);
+    if (!target) return;
+    const monthStart = `${month}-01`;
+    const next = new Date(`${monthStart}T00:00:00Z`); next.setUTCMonth(next.getUTCMonth() + 1);
+    const monthEnd = next.toISOString().slice(0, 10);
+    const eligibleMonthDates = datesBetween(monthStart, monthEnd).filter(d => userCanWorkAtStoreOnDate(user, storeId, d));
+    const eligibleRequested = dates.filter(d => userCanWorkAtStoreOnDate(user, storeId, d));
+    const denominator = eligibleMonthDates.length || daysInMonthKey(month) || 1;
+    total += target * (eligibleRequested.length / denominator);
+  });
+  return total;
 }
 
 
@@ -4367,7 +4664,7 @@ function buildWeeklyReport(user, rawWeekStart, rawStoreId, rawUserStatus = 'acti
     const bill_count = rows.reduce((s, r) => s + Number(r.bill_count || 0), 0);
     const item_count = rows.reduce((s, r) => s + Number(r.item_count || 0), 0);
     const target = Math.round(proratedTargetForUser(u.id, week_start, endExclusive, storeId));
-    return { user_id: u.id, full_name: u.full_name, user_status: u.status || 'active', store_id: getPrimaryStoreId(u), store_name: store.name, revenue, target, achievement_percent: target ? Math.round((revenue / target) * 10000) / 100 : 0, revenue_percent: 0, bill_count, item_count, upt: bill_count ? Math.round((item_count / bill_count) * 100) / 100 : 0, atv: bill_count ? Math.round(revenue / bill_count) : 0, asp: item_count ? Math.round(revenue / item_count) : 0 };
+    return { user_id: u.id, full_name: u.full_name, user_status: u.status || 'active', store_id: storeId, store_name: store.name, revenue, target, achievement_percent: target ? Math.round((revenue / target) * 10000) / 100 : 0, revenue_percent: 0, bill_count, item_count, upt: bill_count ? Math.round((item_count / bill_count) * 100) / 100 : 0, atv: bill_count ? Math.round(revenue / bill_count) : 0, asp: item_count ? Math.round(revenue / item_count) : 0 };
   }).sort((a, b) => b.revenue - a.revenue);
   const totals = daysRows.reduce((acc, r) => {
     acc.revenue += Number(r.revenue || 0);
@@ -4436,7 +4733,7 @@ app.post('/api/sales/targets', requireAuth, requirePerm('can_set_sales_targets')
     const employeeStoreId = requestedStoreId || effectivePermanentStoreId(employee, `${target_month}-15`) || getPrimaryStoreId(employee);
     if (!employeeStoreId || !getStore(employeeStoreId)) return res.status(400).json({ error: `Không xác định được cửa hàng target của ${employee.full_name}` });
     const hasPeriodAssignment = userAssignedToStoreDuringPeriod(employee, employeeStoreId, targetStart, targetEnd) ||
-      (db.work_schedules || []).some(r => r.status !== 'deleted' && Number(r.user_id || r.employee_id) === Number(employee.id) && Number(r.store_id) === Number(employeeStoreId) && String(r.work_date || '') >= targetStart && String(r.work_date || '') < targetEnd) ||
+      (db.work_schedules || []).some(r => r.status !== 'deleted' && scheduleRowValidForTransfer(r) && Number(r.user_id || r.employee_id) === Number(employee.id) && Number(r.store_id) === Number(employeeStoreId) && String(r.work_date || '') >= targetStart && String(r.work_date || '') < targetEnd) ||
       (db.sales || []).some(r => Number(r.user_id) === Number(employee.id) && Number(r.store_id) === Number(employeeStoreId) && dateVal(r.sale_date) >= targetStart && dateVal(r.sale_date) < targetEnd);
     if (!hasPeriodAssignment) return res.status(400).json({ error: `${employee.full_name} chưa được phân công/điều chuyển tới ${getStore(employeeStoreId)?.name || 'cửa hàng này'} trong ${target_month}` });
     if (req.user.role !== 'admin' && !userHasStore(req.user, employeeStoreId)) return res.status(403).json({ error: `Không có quyền nhập target cho ${employee.full_name}` });
@@ -4539,14 +4836,14 @@ app.get('/api/store-staff', requireAuth, (req, res) => {
     const next = new Date(`${start}T00:00:00Z`);
     next.setUTCMonth(next.getUTCMonth() + 1);
     const end = next.toISOString().slice(0, 10);
-    const employees = salesStaffForStore(storeId, { status: 'active', start, end }).map(publicUser);
+    const employees = salesStaffForStore(storeId, { status: 'active', start, end }).map(u => publicUserForStore(u, storeId));
     return res.json({ store_id: storeId, store_name: store.name, month, start, end, employees });
   }
   const d = dateOnly(req.query.date || new Date());
   const employees = (db.users || []).filter(u => u.status === 'active' && u.role === 'employee' && (
     userCanWorkAtStoreOnDate(u, storeId, d) ||
     (db.sales || []).some(r => Number(r.user_id) === Number(u.id) && Number(r.store_id) === storeId && String(r.sale_date || '') === d)
-  )).sort((a,b)=>a.full_name.localeCompare(b.full_name,'vi')).map(publicUser);
+  )).sort((a,b)=>a.full_name.localeCompare(b.full_name,'vi')).map(u => publicUserForStore(u, storeId, d));
   res.json({ store_id: storeId, store_name: store.name, date: d, employees });
 });
 
@@ -5049,7 +5346,7 @@ app.get('/api/schedules', requireAuth, (req, res) => {
   if (!canViewSchedule(req.user, storeId)) return res.status(403).json({ error: 'Không có quyền xem lịch làm việc' });
   const week_start = scheduleWeekStart(req.query.week_start || new Date());
   const dates = scheduleWeekDates(week_start);
-  const scheduledUserIds = new Set((db.work_schedules || []).filter(x => x.status !== 'deleted' && Number(x.store_id) === Number(storeId) && dates.includes(String(x.work_date || ''))).map(x => Number(x.user_id || x.employee_id)));
+  const scheduledUserIds = new Set((db.work_schedules || []).filter(x => x.status !== 'deleted' && scheduleRowValidForTransfer(x) && Number(x.store_id) === Number(storeId) && dates.includes(String(x.work_date || ''))).map(x => Number(x.user_id || x.employee_id)));
   let employees = db.users.filter(u => u.status !== 'deleted' && u.role !== 'admin' && u.role !== 'office' && (dates.some(d => userAssignedToStoreOnDate(u, storeId, d)) || scheduledUserIds.has(Number(u.id))));
   employees = employees.sort((a, b) => (a.status === 'active' ? 0 : 1) - (b.status === 'active' ? 0 : 1) || a.role.localeCompare(b.role) || a.full_name.localeCompare(b.full_name, 'vi')).map(u => ({ ...publicUser(u), eligible_dates: dates.filter(d => userCanWorkAtStoreOnDate(u, storeId, d)) }));
   res.json({ store_id: store.id, store_name: store.name, week_start, dates, shifts: activeShifts(), employees, schedules: scheduleRowsForUser(req.user, storeId, dates), can_manage: canManageSchedule(req.user, storeId) });
@@ -5098,7 +5395,7 @@ app.post('/api/schedules/bulk', requireAuth, requirePerm('can_manage_schedule'),
 
 
 app.get('/api/orders', requireAuth, (req, res) => {
-  const storeId = isAllStoreRole(req.user) ? (req.query.store_id ? Number(req.query.store_id) : null) : (getPrimaryStoreId(req.user) ? Number(getPrimaryStoreId(req.user)) : (req.query.store_id ? Number(req.query.store_id) : null));
+  const storeId = (isAllStoreRole(req.user) || canSelectAssignedStore(req.user)) ? (req.query.store_id ? Number(req.query.store_id) : (isAllStoreRole(req.user) ? null : Number(getPrimaryStoreId(req.user) || 0))) : (getPrimaryStoreId(req.user) ? Number(getPrimaryStoreId(req.user)) : (req.query.store_id ? Number(req.query.store_id) : null));
   if (storeId && !canViewOrderScope(req.user, storeId)) return res.status(403).json({ error: 'Không có quyền xem order cửa hàng này' });
   res.json({ orders: orderRowsForUser(req.user, storeId) });
 });
@@ -5180,10 +5477,20 @@ app.delete('/api/orders/:id', requireAuth, requirePerm('can_manage_orders'), (re
 
 app.get('/api/online-orders', requireAuth, (req, res) => {
   const month = /^\d{4}-\d{2}$/.test(String(req.query.month || '')) ? String(req.query.month).slice(0, 7) : dateOnly(new Date()).slice(0, 7);
-  const storeId = isAllStoreRole(req.user) ? (req.query.store_id ? Number(req.query.store_id) : null) : Number(getPrimaryStoreId(req.user) || 0);
+  const selectable = isAllStoreRole(req.user) || canSelectAssignedStore(req.user);
+  const storeId = selectable ? (req.query.store_id ? Number(req.query.store_id) : (isAllStoreRole(req.user) ? null : Number(getPrimaryStoreId(req.user) || 0))) : Number(getPrimaryStoreId(req.user) || 0);
   if (storeId && !canViewOnlineOrderScope(req.user, storeId)) return res.status(403).json({ error: 'Không có quyền xem đơn online cửa hàng này' });
   const rows = onlineOrderRowsForUser(req.user, storeId, month);
-  res.json({ month, orders: rows, summary: onlineOrderSummary(rows) });
+  let staff = [];
+  if (storeId) {
+    const start = `${month}-01`;
+    const next = new Date(`${start}T00:00:00Z`); next.setUTCMonth(next.getUTCMonth() + 1);
+    const end = next.toISOString().slice(0, 10);
+    const ids = new Set(rows.map(r => Number(r.packer_id)).filter(Boolean));
+    salesStaffForStore(storeId, { status: 'active', start, end }).forEach(u => ids.add(Number(u.id)));
+    staff = Array.from(ids).map(id => getUser(id)).filter(u => u && u.role === 'employee' && u.status !== 'deleted').sort((a,b)=>a.full_name.localeCompare(b.full_name,'vi')).map(u => publicUserForStore(u, storeId));
+  }
+  res.json({ month, store_id: storeId, orders: rows, summary: onlineOrderSummary(rows), staff });
 });
 
 app.post('/api/online-orders', requireAuth, requirePerm('can_manage_online_orders'), (req, res) => {
@@ -5193,14 +5500,14 @@ app.post('/api/online-orders', requireAuth, requirePerm('can_manage_online_order
   const store = getStore(storeId);
   if (!store) return res.status(400).json({ error: 'Cửa hàng không hợp lệ' });
   if (!canManageOnlineOrderScope(req.user, storeId)) return res.status(403).json({ error: 'Không có quyền nhập đơn online cửa hàng này' });
+  const d = dateOnly(order_date || new Date());
   const packer = getActiveUser(Number(packer_id));
-  if (!packer || Number(packer.store_id) !== Number(storeId) || packer.role === 'admin') return res.status(400).json({ error: 'Nhân viên đóng đơn không hợp lệ' });
+  if (!packer || packer.role !== 'employee' || !userCanWorkAtStoreOnDate(packer, storeId, d)) return res.status(400).json({ error: 'Nhân viên đóng đơn không làm tại cửa hàng này trong ngày hóa đơn' });
   const invoice = String(invoice_no || '').trim();
   if (!invoice) return res.status(400).json({ error: 'Chưa nhập số hóa đơn' });
   const value = Math.max(0, toNumber(order_value, 0));
   if (!value) return res.status(400).json({ error: 'Giá trị đơn phải lớn hơn 0' });
   db.online_orders = db.online_orders || [];
-  const d = dateOnly(order_date || new Date());
   let row = db.online_orders.find(o => o.status !== 'deleted' && Number(o.store_id) === Number(storeId) && String(o.invoice_no || '').toLowerCase() === invoice.toLowerCase());
   if (row) {
     row.order_date = d;
@@ -5223,14 +5530,14 @@ app.patch('/api/online-orders/:id', requireAuth, requirePerm('can_manage_online_
   if (!row || row.status === 'deleted') return res.status(404).json({ error: 'Không tìm thấy đơn online' });
   if (!canManageOnlineOrderScope(req.user, row.store_id)) return res.status(403).json({ error: 'Không có quyền sửa đơn online này' });
   const { order_date, invoice_no, order_value, packer_id, note } = req.body || {};
-  if (order_date) row.order_date = dateOnly(order_date);
+  const nextOrderDate = order_date ? dateOnly(order_date) : dateOnly(row.order_date || new Date());
+  const nextPackerId = packer_id !== undefined ? Number(packer_id) : Number(row.packer_id);
+  const nextPacker = getActiveUser(nextPackerId);
+  if (!nextPacker || nextPacker.role !== 'employee' || !userCanWorkAtStoreOnDate(nextPacker, row.store_id, nextOrderDate)) return res.status(400).json({ error: 'Nhân viên đóng đơn không làm tại cửa hàng này trong ngày hóa đơn' });
+  row.order_date = nextOrderDate;
   if (invoice_no !== undefined) row.invoice_no = String(invoice_no || '').trim();
   if (order_value !== undefined) { const value = Math.max(0, toNumber(order_value, 0)); row.order_value = value; row.benefit_revenue = Math.round(value * 0.3); }
-  if (packer_id !== undefined) {
-    const packer = getActiveUser(Number(packer_id));
-    if (!packer || Number(packer.store_id) !== Number(row.store_id) || packer.role === 'admin') return res.status(400).json({ error: 'Nhân viên đóng đơn không hợp lệ' });
-    row.packer_id = Number(packer.id);
-  }
+  row.packer_id = Number(nextPacker.id);
   if (note !== undefined) row.note = String(note || '');
   row.updated_by = req.user.id;
   row.updated_at = nowIso();
@@ -5505,7 +5812,7 @@ app.post('/api/product-trainings/:id/submit', requireAuth, (req, res) => {
   const passed = scorePercent >= passPercent ? 1 : 0;
   const id = nextId('product_training_attempts');
   db.product_training_attempts = db.product_training_attempts || [];
-  db.product_training_attempts.push({ id, training_id: row.id, user_id: req.user.id, store_id: req.user.store_id || row.store_id || null, answers, correct_count: correct, total_questions: questions.length, score_percent: scorePercent, pass_percent: passPercent, passed, created_at: nowIso(), status: 'active' });
+  db.product_training_attempts.push({ id, training_id: row.id, user_id: req.user.id, store_id: row.store_id || preferredStoreForUserOnDate(req.user, new Date()) || getPrimaryStoreId(req.user) || null, answers, correct_count: correct, total_questions: questions.length, score_percent: scorePercent, pass_percent: passPercent, passed, created_at: nowIso(), status: 'active' });
   saveDb();
   res.json({ ok: true, score_percent: scorePercent, correct_count: correct, total_questions: questions.length, passed: !!passed, pass_percent: passPercent });
 });
@@ -5583,12 +5890,15 @@ app.get('/api/bonuses', requireAuth, (req, res) => {
 });
 
 app.post('/api/bonuses', requireAuth, requirePerm('can_manage_bonuses'), (req, res) => {
-  const { user_id, bonus_date, bonus_type, amount, note } = req.body || {};
+  const { user_id, store_id, bonus_date, bonus_type, amount, note } = req.body || {};
   const target = getActiveUser(Number(user_id));
-  if (!target) return res.status(400).json({ error: 'Nhân viên không hợp lệ' });
-  if (req.user.role !== 'admin' && !userHasStore(req.user, target.store_id)) return res.status(403).json({ error: 'Không có quyền nhập thưởng nhân viên này' });
+  if (!target || target.role !== 'employee') return res.status(400).json({ error: 'Nhân viên không hợp lệ' });
+  const d = dateOnly(bonus_date || new Date());
+  const targetStoreId = Number(store_id || preferredStoreForUserOnDate(target, d) || getPrimaryStoreId(target) || 0);
+  if (!targetStoreId || !userCanWorkAtStoreOnDate(target, targetStoreId, d)) return res.status(400).json({ error: 'Nhân viên không làm tại cửa hàng đã chọn trong ngày ghi nhận thưởng' });
+  if (req.user.role !== 'admin' && !userHasStore(req.user, targetStoreId)) return res.status(403).json({ error: 'Không có quyền nhập thưởng nhân viên này' });
   const id = nextId('bonuses');
-  db.bonuses.push({ id, user_id: target.id, store_id: target.store_id, bonus_date: bonus_date || dateOnly(new Date()), bonus_type: bonus_type || 'Thưởng khác', amount: toNumber(amount, 0), note: note || '', created_by: req.user.id, created_at: nowIso() });
+  db.bonuses.push({ id, user_id: target.id, store_id: targetStoreId, bonus_date: d, bonus_type: bonus_type || 'Thưởng khác', amount: toNumber(amount, 0), note: note || '', created_by: req.user.id, created_at: nowIso() });
   saveDb();
   res.json({ ok: true, id });
 });
@@ -5627,7 +5937,7 @@ app.get('/api/export/:type.xlsx', requireAuth, requirePerm('can_export'), (req, 
   } else if (type === 'shifts') {
     rows = activeShifts().map(s => ({ id: s.id, code: s.code, name: s.name, start_time: s.start_time, end_time: s.end_time, note: s.note || '', updated_at: s.updated_at || s.created_at || '' }));
   } else if (type === 'work_schedules') {
-    rows = (db.work_schedules || []).filter(x => x.status !== 'deleted').map(x => ({ id: x.id, work_date: x.work_date, store_id: x.store_id, store_name: getStore(x.store_id)?.name || '', employee_name: getUser(x.user_id)?.full_name || '', role: getUser(x.user_id)?.role || '', shift_code: (db.shifts || []).find(s => Number(s.id) === Number(x.shift_id))?.code || '', shift_name: (db.shifts || []).find(s => Number(s.id) === Number(x.shift_id))?.name || '', start_time: (db.shifts || []).find(s => Number(s.id) === Number(x.shift_id))?.start_time || '', end_time: (db.shifts || []).find(s => Number(s.id) === Number(x.shift_id))?.end_time || '', note: x.note || '', updated_at: x.updated_at || x.created_at || '' }));
+    rows = (db.work_schedules || []).filter(x => x.status !== 'deleted' && scheduleRowValidForTransfer(x)).map(x => ({ id: x.id, work_date: x.work_date, store_id: x.store_id, store_name: getStore(x.store_id)?.name || '', employee_name: getUser(x.user_id)?.full_name || '', role: getUser(x.user_id)?.role || '', shift_code: (db.shifts || []).find(s => Number(s.id) === Number(x.shift_id))?.code || '', shift_name: (db.shifts || []).find(s => Number(s.id) === Number(x.shift_id))?.name || '', start_time: (db.shifts || []).find(s => Number(s.id) === Number(x.shift_id))?.start_time || '', end_time: (db.shifts || []).find(s => Number(s.id) === Number(x.shift_id))?.end_time || '', note: x.note || '', updated_at: x.updated_at || x.created_at || '' }));
     if (req.user.role === 'manager') rows = rows.filter(r => userHasStore(req.user, r.store_id));
     if (req.user.role === 'employee') rows = rows.filter(r => r.employee_name === req.user.full_name);
     rows = rows.sort((a, b) => String(b.work_date).localeCompare(String(a.work_date)) || String(a.store_name).localeCompare(String(b.store_name), 'vi'));

@@ -1456,11 +1456,11 @@ async function renderTasks() {
     <div class="card task-create-card task-create-collapsed">
       <div class="section-title task-create-toolbar"><div><p class="eyebrow">Công việc</p><h3>Giao việc mới</h3></div><button type="button" class="btn task-create-toggle" id="taskCreateToggle">Tạo công việc</button></div>
       <form id="taskForm" class="task-advanced-form task-create-form" hidden>
-        <input type="hidden" name="task_mode" id="taskMode" value="single">
+        <input type="hidden" name="task_mode" id="taskMode" value="shift">
         <div class="task-mode-chooser" role="tablist" aria-label="Chọn cách giao việc">
-          <button type="button" class="taskModeBtn active" data-mode="single"><b>⏱</b><span>Thời gian cụ thể</span><small>Giao một lần theo hạn ngày/giờ</small></button>
+          <button type="button" class="taskModeBtn" data-mode="single"><b>⏱</b><span>Thời gian cụ thể</span><small>Giao một lần theo hạn ngày/giờ</small></button>
           <button type="button" class="taskModeBtn" data-mode="multi"><b>🔁</b><span>Việc lặp lại</span><small>Tự tạo việc theo nhiều ngày</small></button>
-          <button type="button" class="taskModeBtn" data-mode="shift"><b>🗓</b><span>Theo ca làm</span><small>Lấy nhân viên theo ca đã xếp</small></button>
+          <button type="button" class="taskModeBtn active" data-mode="shift"><b>🗓</b><span>Theo ca làm</span><small>Tự lấy người theo Lịch làm việc</small></button>
         </div>
 
         <div class="grid two task-basic-grid">
@@ -1470,7 +1470,7 @@ async function renderTasks() {
           <div class="field"><label>Mức độ</label><select name="priority"><option value="low">Thấp</option><option value="medium" selected>Trung bình</option><option value="high">Cao</option></select></div>
         </div>
 
-        <div class="task-mode-panel active" data-task-panel="single">
+        <div class="task-mode-panel" data-task-panel="single">
           <div class="grid two">
             <div class="field"><label>Hạn hoàn thành cụ thể</label><input class="input" name="due_at" type="datetime-local"><span class="hint">Dùng cho việc giao 1 lần.</span></div>
             <div class="field"><label>Nhân viên nhận việc</label>${taskUserPicker('assigneeSelect', usersInStore(storeId), 'Tick tròn để chọn 1 hoặc nhiều nhân viên.')}</div>
@@ -1489,7 +1489,7 @@ async function renderTasks() {
           </div>
         </div>
 
-        <div class="task-mode-panel" data-task-panel="shift">
+        <div class="task-mode-panel active" data-task-panel="shift">
           <div class="grid three">
             <div class="field"><label>Từ ngày</label><input class="input" name="shift_start_date" type="date"></div>
             <div class="field"><label>Đến ngày</label><input class="input" name="shift_end_date" type="date"></div>
@@ -1497,8 +1497,8 @@ async function renderTasks() {
             <div class="field"><label>Kiểu giao cố định</label><select name="shift_repeat_mode" class="taskRepeatMode"><option value="daily">Hàng ngày trong khoảng ngày</option><option value="weekly2">2 ngày / tuần</option><option value="weekly3">3 ngày / tuần</option><option value="custom_weekdays">Tự chọn thứ trong tuần</option><option value="every_n_days">Lặp mỗi N ngày</option></select><span class="hint">Khoảng ngày là thời gian áp dụng; chọn thứ để hệ thống tự tạo đúng ngày.</span></div>
             <div class="field taskEveryNDaysField"><label>N ngày/lần</label><select name="shift_repeat_every_days"><option value="1">1 ngày/lần</option><option value="2">2 ngày/lần</option><option value="3">3 ngày/lần</option><option value="7">7 ngày/lần</option></select></div>
             <div class="field taskWeekdayField"><label>Chọn thứ giao việc</label><div class="task-weekday-picker" id="shiftWeekdays"><label><input type="checkbox" value="1"><span>T2</span></label><label><input type="checkbox" value="2"><span>T3</span></label><label><input type="checkbox" value="3"><span>T4</span></label><label><input type="checkbox" value="4"><span>T5</span></label><label><input type="checkbox" value="5"><span>T6</span></label><label><input type="checkbox" value="6"><span>T7</span></label><label><input type="checkbox" value="0"><span>CN</span></label></div><span class="hint taskWeekdayHint">Chỉ tạo việc vào các thứ được chọn và lấy nhân viên đúng ca ngày đó.</span></div>
-            <div class="field"><label>Chọn ca</label><select name="shift_ids" id="taskShiftSelect" multiple size="5">${shiftOptions}</select><span class="hint">Hệ thống tự lấy nhân viên đã được phân lịch ca đó. Nếu đổi ca trong tương lai, công việc theo ca sẽ tự chuyển sang đúng người mới; ngày quá khứ giữ nguyên.</span></div>
-            <div class="field"><label>Thêm nhân viên thủ công nếu cần</label>${taskUserPicker('shiftAssigneeSelect', usersInStore(storeId), 'Có thể để trống nếu chỉ giao theo ca.')}</div>
+            <div class="field"><label>Chọn ca</label><select name="shift_ids" id="taskShiftSelect" multiple size="5">${shiftOptions}</select><span class="hint">Chỉ cần chọn ca. Hệ thống tự lấy toàn bộ người đã được xếp đúng cửa hàng + ngày + ca trong Lịch làm việc.</span></div>
+            <div class="field task-shift-auto-assignee"><label>Người nhận việc</label><div class="task-shift-auto-box"><b>Tự động theo Lịch làm việc</b><span>Không cần chọn nhân viên. Khi LLV của ngày tương lai đổi ca/người, công việc theo ca sẽ tự đồng bộ sang đúng người.</span></div></div>
           </div>
         </div>
 
@@ -1579,6 +1579,18 @@ async function renderTasks() {
       </div>
     </div>` : '';
 
+  const adminTaskTrashPanel = state.user.role === 'admin' ? `
+    <div class="card task-trash-card task-trash-collapsed" style="margin-top:16px">
+      <div class="section-title task-trash-head">
+        <div><p class="eyebrow">Admin</p><h3>Thùng rác / Khôi phục công việc</h3><p class="hint">Các lần xóa từ v4.206 được lưu lại đầy đủ để có thể khôi phục. Chứng từ cũng được giữ cho đến khi xóa vĩnh viễn.</p></div>
+        <button type="button" class="btn secondary" id="taskTrashToggle">Xem Thùng rác</button>
+      </div>
+      <div id="taskTrashBody" hidden>
+        <div class="task-trash-toolbar"><span class="hint">Khôi phục sẽ trả lại đúng công việc, người nhận, trạng thái và liên kết OJTI/CDP tại thời điểm xóa.</span><button type="button" class="btn secondary small" id="taskTrashRefreshBtn">Tải lại</button></div>
+        <div id="taskTrashList"><div class="empty compact">Đang chờ tải dữ liệu...</div></div>
+      </div>
+    </div>` : '';
+
   const summaryCategoryKeys = ['ops','sales_cskh','inventory','vm','reports','people_training','other'];
   const summaryCategoryLabels = Object.fromEntries(TASK_CATEGORY_OPTIONS);
   const categorySummaryRows = summaryCategoryKeys.map(key => {
@@ -1627,7 +1639,7 @@ async function renderTasks() {
   const otherDaysBlock = otherDayKeys.length ? `<details class="card task-other-days-wrap task-timeline-wrap" style="margin-top:16px"><summary class="task-other-days-summary"><div><p class="eyebrow">Công việc ngày khác</p><h3>${otherTasks.length} công việc đang ẩn</h3></div><span class="badge">Xem theo ngày</span></summary><div class="task-other-days-body">${otherDayKeys.map(day => { const rows = otherDayMap.get(day) || []; return `<details class="task-day-group"><summary><span>${day === 'no_date' ? 'Chưa xác định ngày' : dOnly(day)}</span><b>${rows.length} việc</b></summary><div class="grid task-timeline">${rows.map(t => taskCard(t)).join('')}</div></details>`; }).join('')}</div></details>` : '';
 
   const completedBlock = completedTasks.length ? `<div class="card task-completed-wrap task-timeline-wrap" style="margin-top:16px"><div class="task-completed-head"><div><p class="eyebrow">Lịch sử công việc</p><h3>${completedTasks.length} việc đã hoàn thành</h3></div><button type="button" class="btn secondary" id="completedTasksToggle">Xem việc đã hoàn thành</button></div><div id="completedTasksBody" hidden><div class="grid task-timeline">${completedTasks.map(t => taskCard(t)).join('')}</div></div></div>` : '';
-  shell(`${assignForm}${adminBulkDeletePanel}${categorySummary}${exceptionDashboard}${todayBlock}${otherDaysBlock}${completedBlock}`, 'Công việc', '');
+  shell(`${assignForm}${adminBulkDeletePanel}${adminTaskTrashPanel}${categorySummary}${exceptionDashboard}${todayBlock}${otherDaysBlock}${completedBlock}`, 'Công việc', '');
   const taskBulkDeleteToggle = $('#taskBulkDeleteToggle');
   const taskBulkDeleteBody = $('#taskBulkDeleteBody');
   taskBulkDeleteToggle?.addEventListener('click', () => {
@@ -1640,6 +1652,17 @@ async function renderTasks() {
   $('#taskBulkPreviewBtn')?.addEventListener('click', previewTaskBulkDelete);
   $('#taskBulkDeleteFilteredBtn')?.addEventListener('click', deleteTaskBulkFiltered);
   $('#taskDeleteAllBtn')?.addEventListener('click', deleteAllTaskData);
+  const taskTrashToggle = $('#taskTrashToggle');
+  const taskTrashBody = $('#taskTrashBody');
+  taskTrashToggle?.addEventListener('click', async () => {
+    if (!taskTrashBody) return;
+    const willOpen = taskTrashBody.hidden;
+    taskTrashBody.hidden = !willOpen;
+    taskTrashToggle.textContent = willOpen ? 'Ẩn Thùng rác' : 'Xem Thùng rác';
+    taskTrashToggle.closest('.task-trash-card')?.classList.toggle('task-trash-collapsed', !willOpen);
+    if (willOpen) await loadTaskTrash();
+  });
+  $('#taskTrashRefreshBtn')?.addEventListener('click', loadTaskTrash);
   const taskSummaryStoreFilter = $('#taskSummaryStoreFilter');
   const taskSummaryUserFilter = $('#taskSummaryUserFilter');
   if (taskSummaryStoreFilter) taskSummaryStoreFilter.addEventListener('change', async () => {
@@ -1681,7 +1704,7 @@ async function renderTasks() {
   function refreshTaskAssignees(storeValue) {
     const users = usersInStore(storeValue);
     const renderOptions = () => users.map(u => `<label class="task-user-option"><input type="checkbox" value="${u.id}"><span class="task-user-dot" aria-hidden="true"></span><span class="task-user-info"><b>${esc(u.full_name)}</b><small>${esc(u.store_name || '')}</small></span></label>`).join('') || '<div class="empty compact">Chưa có nhân viên trong cửa hàng này</div>';
-    ['assigneeSelect', 'multiAssigneeSelect', 'shiftAssigneeSelect'].forEach(id => { const el = $('#' + id); if (el) el.innerHTML = renderOptions(); });
+    ['assigneeSelect', 'multiAssigneeSelect'].forEach(id => { const el = $('#' + id); if (el) el.innerHTML = renderOptions(); });
   }
   function setTaskMode(mode) {
     const input = $('#taskMode');
@@ -1713,7 +1736,7 @@ async function renderTasks() {
   setTaskCreateOpen(false);
   $('#taskStore')?.addEventListener('change', e => refreshTaskAssignees(e.target.value));
   $$('.taskModeBtn').forEach(btn => btn.addEventListener('click', () => setTaskMode(btn.dataset.mode)));
-  setTaskMode($('#taskMode')?.value || 'single');
+  setTaskMode($('#taskMode')?.value || 'shift');
   function selectedWeekdaysFrom(id) {
     const box = $('#' + id);
     return box ? $$('input[type="checkbox"]:checked', box).map(o => Number(o.value)).filter(v => Number.isFinite(v)) : [];
@@ -1735,6 +1758,101 @@ async function renderTasks() {
   $$('.completeForm').forEach(f => f.addEventListener('submit', submitCompleteTask));
   $$('.editTaskBtn').forEach(btn => btn.addEventListener('click', openTaskEditor));
   $$('.deleteTaskBtn').forEach(btn => btn.addEventListener('click', deleteTask));
+}
+
+
+function taskDeleteModeLabel(mode) {
+  if (mode === 'all') return 'Xóa toàn bộ';
+  if (mode === 'single') return 'Xóa 1 công việc';
+  return 'Xóa theo vùng';
+}
+
+function taskDeleteFilterSummary(row) {
+  const f = row?.filters || {};
+  if (row?.mode === 'all') return 'Tất cả cửa hàng • tất cả thời gian';
+  if (row?.mode === 'single') return `Task #${Number(f.task_id || 0)}`;
+  const parts = [];
+  if (f.store_id) {
+    const st = (state.stores || []).find(x => Number(x.id) === Number(f.store_id));
+    parts.push(st?.name || `CH #${f.store_id}`);
+  } else parts.push('Tất cả CH');
+  if (f.from_date || f.to_date) parts.push(`${f.from_date || '...'} → ${f.to_date || '...'}`);
+  if (f.user_id) {
+    const u = (state.users || []).find(x => Number(x.id) === Number(f.user_id));
+    parts.push(u?.full_name || `NV #${f.user_id}`);
+  }
+  return parts.join(' • ');
+}
+
+async function loadTaskTrash() {
+  const box = $('#taskTrashList');
+  if (!box || state.user?.role !== 'admin') return;
+  box.innerHTML = '<div class="empty compact">Đang tải Thùng rác...</div>';
+  try {
+    const data = await api('/api/tasks/delete-logs');
+    const rows = data.rows || [];
+    if (!rows.length) {
+      box.innerHTML = '<div class="empty compact">Chưa có lịch sử xóa công việc.</div>';
+      return;
+    }
+    box.innerHTML = `<div class="task-trash-list">${rows.map(row => {
+      const when = row.deleted_at ? dt(row.deleted_at) : '-';
+      const restored = row.restored_at ? `<span class="badge ok">Đã khôi phục ${dt(row.restored_at)}</span>` : '';
+      const purged = row.purged_at ? `<span class="badge danger">Đã xóa vĩnh viễn</span>` : '';
+      const legacy = row.legacy ? `<span class="badge warning">Bản xóa cũ • chưa có snapshot</span>` : '';
+      const actions = row.restorable
+        ? `<div class="row wrap"><button type="button" class="btn small ok taskTrashRestoreBtn" data-id="${row.id}">Khôi phục</button><button type="button" class="btn small danger taskTrashPurgeBtn" data-id="${row.id}">Xóa vĩnh viễn</button></div>`
+        : (row.legacy && !row.restored_at && !row.purged_at ? `<span class="hint">Nếu đây là lần vừa xóa ở v4.205, cần file backup dữ liệu trước thời điểm xóa để phục hồi.</span>` : '');
+      return `<div class="task-trash-row">
+        <div class="task-trash-main">
+          <div class="row wrap"><b>${esc(taskDeleteModeLabel(row.mode))}</b>${restored}${purged}${legacy}</div>
+          <div class="hint">${esc(taskDeleteFilterSummary(row))}</div>
+          <div class="task-trash-meta"><span>${Number(row.deleted_tasks || 0)} công việc</span><span>${Number(row.deleted_assignments || 0)} lượt phân việc</span><span>${esc(row.deleted_by_name || 'Admin')} • ${esc(when)}</span></div>
+        </div>
+        <div class="task-trash-actions">${actions}</div>
+      </div>`;
+    }).join('')}</div>`;
+    $$('.taskTrashRestoreBtn', box).forEach(btn => btn.addEventListener('click', restoreTaskTrashBatch));
+    $$('.taskTrashPurgeBtn', box).forEach(btn => btn.addEventListener('click', purgeTaskTrashBatch));
+  } catch (err) {
+    box.innerHTML = `<div class="empty compact danger">${esc(err.message)}</div>`;
+  }
+}
+
+async function restoreTaskTrashBatch(e) {
+  const btn = e.currentTarget;
+  const id = Number(btn.dataset.id || 0);
+  if (!id) return;
+  if (!confirm('Khôi phục toàn bộ dữ liệu của lần xóa này? Công việc, người nhận và trạng thái cũ sẽ xuất hiện trở lại.')) return;
+  btn.disabled = true;
+  try {
+    const res = await api(`/api/tasks/delete-logs/${id}/restore`, { method:'POST', body:'{}' });
+    toast(`Đã khôi phục ${Number(res.restored_assignments || 0)} lượt phân việc`);
+    await renderTasks();
+    const toggle = $('#taskTrashToggle');
+    if (toggle) toggle.click();
+  } catch (err) {
+    btn.disabled = false;
+    toast(err.message, 'danger');
+  }
+}
+
+async function purgeTaskTrashBatch(e) {
+  const btn = e.currentTarget;
+  const id = Number(btn.dataset.id || 0);
+  if (!id) return;
+  if (!confirm('Xóa VĨNH VIỄN dữ liệu này khỏi Thùng rác? Sau bước này sẽ không thể khôi phục và chứng từ liên quan cũng bị xóa.')) return;
+  const text = prompt('Nhập XOA VINH VIEN để xác nhận:');
+  if (String(text || '').trim().toUpperCase() !== 'XOA VINH VIEN') return toast('Đã hủy xóa vĩnh viễn');
+  btn.disabled = true;
+  try {
+    await api(`/api/tasks/delete-logs/${id}`, { method:'DELETE' });
+    toast('Đã xóa vĩnh viễn dữ liệu khỏi Thùng rác');
+    await loadTaskTrash();
+  } catch (err) {
+    btn.disabled = false;
+    toast(err.message, 'danger');
+  }
 }
 
 function taskBulkDeletePayload(dryRun = false) {
@@ -1792,7 +1910,7 @@ async function deleteTaskBulkFiltered() {
     const affected = Number(preview.affected_tasks || 0);
     const ok = confirm(`Bạn sắp xóa ${count} dòng phân việc thuộc ${affected} công việc theo vùng đã chọn. Bao gồm cả trạng thái trễ/không hoàn thành nếu đang được tick.
 
-Thao tác này không thể hoàn tác. Tiếp tục?`);
+Dữ liệu sẽ được chuyển vào Thùng rác và Admin có thể khôi phục lại. Tiếp tục?`);
     if (!ok) return;
     const confirmText = prompt('Nhập XOA để xác nhận xóa vùng dữ liệu đã chọn:');
     if (String(confirmText || '').trim().toUpperCase() !== 'XOA') return toast('Đã hủy thao tác xóa');
@@ -1820,7 +1938,7 @@ async function deleteAllTaskData() {
 
 ${taskCount} công việc • ${count} dòng phân việc sẽ bị xóa.
 
-Không thể hoàn tác.`)) return;
+Dữ liệu sẽ được chuyển vào Thùng rác và có thể khôi phục.`)) return;
     const confirmText = prompt('Để xóa toàn bộ, nhập chính xác: XOA TOAN BO');
     if (String(confirmText || '').trim().toUpperCase() !== 'XOA TOAN BO') return toast('Đã hủy thao tác xóa toàn bộ');
     const res = await api('/api/tasks/bulk-delete', { method:'POST', body:JSON.stringify({ mode:'all', dry_run:0 }) });
@@ -1836,7 +1954,7 @@ Không thể hoàn tác.`)) return;
 async function deleteTask(e) {
   const btn = e.currentTarget;
   const title = btn.dataset.taskTitle || 'công việc này';
-  if (!confirm(`Xóa toàn bộ công việc \"${title}\" và tất cả người được giao? Thao tác này không thể hoàn tác.`)) return;
+  if (!confirm(`Xóa toàn bộ công việc \"${title}\" và tất cả người được giao? Dữ liệu sẽ được chuyển vào Thùng rác và Admin có thể khôi phục.`)) return;
   btn.disabled = true;
   try {
     await api(`/api/tasks/${btn.dataset.taskId}`, { method: 'DELETE' });
@@ -1900,11 +2018,12 @@ function openTaskEditor(e) {
   if (!t) return toast('Không tìm thấy công việc', 'danger');
   const storeUsers = (state.boot?.users || []).filter(u => Number(u.active ?? 1) === 1 && u.role !== 'admin' && Number(u.store_id) === Number(t.store_id));
   const selectedIds = new Set(rows.map(x => Number(x.assignee_id)));
+  const isShiftTask = String(t.assignment_mode || '') === 'shift' || (Array.isArray(t.shift_ids) && t.shift_ids.length > 0);
   const dueLocal = String(t.due_at || '').slice(0, 16);
   const overlay = document.createElement('div');
   overlay.className = 'task-edit-overlay';
   overlay.innerHTML = `<div class="task-edit-modal card"><div class="toolbar"><div><p class="eyebrow">Chỉnh sửa công việc</p><h3>${esc(t.title)}</h3></div><button type="button" class="btn secondary small taskEditClose">Đóng</button></div>
-    <form id="taskEditForm" data-id="${t.id}" class="task-advanced-form">
+    <form id="taskEditForm" data-id="${t.id}" data-assignment-mode="${isShiftTask ? 'shift' : 'manual'}" class="task-advanced-form">
       <div class="grid two">
         <div class="field" style="grid-column:span 2"><label>Tiêu đề</label><input name="title" value="${esc(t.title)}" required></div>
         <div class="field" style="grid-column:span 2"><label>Nội dung / hướng dẫn</label><textarea name="description" rows="4">${esc(t.description || '')}</textarea></div>
@@ -1913,7 +2032,7 @@ function openTaskEditor(e) {
         <div class="field"><label>Nhóm công việc</label><select name="category">${taskCategoryOptions(t.category || 'ops')}</select><span class="hint">Khác → tự gộp OPS khi tính điểm.</span></div>
         <div class="field"><label>Điểm phạt cố định</label><div class="task-fixed-penalty"><b>Trễ / quá hạn: -5 điểm</b><span>Không hoàn thành: -10 điểm</span></div></div>
         <div class="field"><label>Cửa hàng</label><input value="${esc(t.store_name || '')}" disabled></div>
-        <div class="field" style="grid-column:span 2"><label>Người nhận việc</label><div class="task-user-picker">${storeUsers.map(u => `<label class="task-user-option"><input type="checkbox" name="assignee_ids" value="${u.id}" ${selectedIds.has(Number(u.id))?'checked':''}><span class="task-user-dot"></span><span class="task-user-info"><b>${esc(u.full_name)}</b><small>${esc(u.store_name || t.store_name || '')}</small></span></label>`).join('') || '<div class="empty compact">Chưa có nhân sự trong cửa hàng</div>'}</div><span class="hint">Lượt đã hoàn thành được giữ nguyên để bảo toàn minh chứng.</span></div>
+        ${isShiftTask ? `<div class="field" style="grid-column:span 2"><label>Người nhận việc</label><div class="task-shift-auto-box"><b>Tự động theo ca: ${esc(t.shift_label || 'ca đã chọn')}</b><span>Danh sách người nhận lấy từ Lịch làm việc của đúng ngày/ca. Muốn đổi người nhận, hãy chỉnh LLV; hệ thống sẽ tự đồng bộ các việc theo ca trong tương lai.</span></div></div>` : `<div class="field" style="grid-column:span 2"><label>Người nhận việc</label><div class="task-user-picker">${storeUsers.map(u => `<label class="task-user-option"><input type="checkbox" name="assignee_ids" value="${u.id}" ${selectedIds.has(Number(u.id))?'checked':''}><span class="task-user-dot"></span><span class="task-user-info"><b>${esc(u.full_name)}</b><small>${esc(u.store_name || t.store_name || '')}</small></span></label>`).join('') || '<div class="empty compact">Chưa có nhân sự trong cửa hàng</div>'}</div><span class="hint">Lượt đã hoàn thành được giữ nguyên để bảo toàn minh chứng.</span></div>`}
       </div>
       <div class="task-submit-row"><button class="btn">Lưu thay đổi</button></div>
     </form></div>`;
@@ -1928,8 +2047,13 @@ async function saveTaskEdit(e) {
   const form = e.currentTarget;
   const button = form.querySelector('button[type="submit"]');
   const payload = Object.fromEntries(new FormData(form));
-  payload.assignee_ids = [...form.querySelectorAll('input[name="assignee_ids"]:checked')].map(x => Number(x.value));
-  if (!payload.assignee_ids.length) return toast('Vui lòng chọn ít nhất một người nhận việc', 'danger');
+  const isShiftTask = form.dataset.assignmentMode === 'shift';
+  if (isShiftTask) {
+    delete payload.assignee_ids;
+  } else {
+    payload.assignee_ids = [...form.querySelectorAll('input[name="assignee_ids"]:checked')].map(x => Number(x.value));
+    if (!payload.assignee_ids.length) return toast('Vui lòng chọn ít nhất một người nhận việc', 'danger');
+  }
   button.disabled = true; button.textContent = 'Đang lưu...';
   try {
     await api(`/api/tasks/${form.dataset.id}`, { method:'PATCH', body:JSON.stringify(payload) });
@@ -1971,8 +2095,10 @@ async function submitTask(e) {
     payload.weekdays = ['weekly2','weekly3','custom_weekdays'].includes(payload.repeat_mode) ? selectedWeekdaysFrom('multiWeekdays') : [];
     delete payload.due_at;
   } else if (mode === 'shift') {
-    payload.assignee_ids = selectedFrom('shiftAssigneeSelect');
+    // Giao theo ca: không chọn nhân viên thủ công. Người nhận được lấy 100% từ Lịch làm việc.
+    payload.assignee_ids = [];
     payload.shift_ids = selectedFrom('taskShiftSelect');
+    if (!payload.shift_ids.length) return toast('Vui lòng chọn ít nhất một ca làm việc', 'danger');
     payload.start_date = payload.shift_start_date;
     payload.end_date = payload.shift_end_date;
     payload.due_time = payload.shift_due_time || '22:00';
@@ -2048,6 +2174,7 @@ async function renderViolations() {
   };
   $('#violationCode')?.addEventListener('change', () => syncViolation(true));
   $('#violationLevel')?.addEventListener('change', () => syncViolation(false));
+  $('#violationStoreFilter')?.addEventListener('change', e => { state.violationStoreId = e.target.value; renderViolations(); });
   syncViolation(false);
   formEl?.addEventListener('submit', async e => { e.preventDefault(); if (hasFileOverLimit(e.target)) return; try { await api('/api/violations', { method: 'POST', body: new FormData(e.target) }); toast('Đã lưu vi phạm theo SOP'); renderViolations(); } catch (err) { toast(err.message, 'danger'); } });
   $('#violationCatalogForm')?.addEventListener('submit', async e => {
@@ -2105,6 +2232,24 @@ async function renderChecklists() {
   shell(`${quick}<div id="checklistHistory" class="card"><div class="toolbar"><h3 style="margin-right:auto">Lịch sử đã chấm</h3>${exportBtn}</div><div class="record-card-list">${historyCards}</div></div><div id="assessmentDetail" style="margin-top:16px"></div><div id="checklistCreate" class="card" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">Tạo mới / chấm checklist</h3>${tabs}</div>${form}</div>`, 'Checklist', '');
   $$('.pillbar button').forEach(b => b.onclick = () => { state.checklistType = b.dataset.checklist; renderChecklists(); });
   $('#checklistForm')?.addEventListener('submit', submitChecklist);
+  const refreshChecklistEmployees = async () => {
+    const employeeSelect = $('#checkEmployee');
+    if (!employeeSelect) return;
+    const sid = Number($('#checkStore')?.value || state.user?.store_id || 0);
+    const rawDate = $('#checkAssessedAt')?.value || new Date().toISOString();
+    const d = String(rawDate).slice(0,10);
+    if (!sid || !d) return;
+    const keep = employeeSelect.value;
+    try {
+      const r = await api(`/api/store-staff?store_id=${encodeURIComponent(sid)}&date=${encodeURIComponent(d)}`);
+      const people = Array.isArray(r?.employees) ? r.employees : [];
+      employeeSelect.innerHTML = people.map(u => `<option value="${u.id}">${esc(u.full_name)}${u.is_transfer_context ? ' • luân chuyển' : ''}</option>`).join('');
+      if (people.some(u => String(u.id) === String(keep))) employeeSelect.value = keep;
+    } catch (_err) {}
+  };
+  $('#checkStore')?.addEventListener('change', refreshChecklistEmployees);
+  $('#checkAssessedAt')?.addEventListener('change', refreshChecklistEmployees);
+  if ($('#checkEmployee')) refreshChecklistEmployees();
   $$('.viewAssessmentBtn').forEach(btn => btn.addEventListener('click', () => renderAssessmentDetail(btn.dataset.id)));
   $$('[data-jump]').forEach(btn => btn.addEventListener('click', () => $(btn.dataset.jump)?.scrollIntoView({ behavior:'smooth', block:'start' })));
 }
@@ -2137,7 +2282,7 @@ function checklistForm(t) {
     <div class="grid three">
       <div class="field"><label>Cửa hàng</label><select name="store_id" id="checkStore" ${!isAllStoreUser() ? 'disabled' : ''}>${storeOptions}</select></div>
       ${target}
-      <div class="field"><label>Ngày chấm</label><input class="input" type="datetime-local" name="assessed_at" value="${new Date().toISOString().slice(0,16)}"></div>
+      <div class="field"><label>Ngày chấm</label><input class="input" id="checkAssessedAt" type="datetime-local" name="assessed_at" value="${new Date().toISOString().slice(0,16)}"></div>
     </div>
     <div class="hint">Checklist này có ${t.items.length} tiêu chí, tổng tối đa ${t.max_score} điểm. Mặc định đang để full điểm, người chấm chỉ cần giảm điểm và ghi chú ở mục chưa đạt.</div>
     ${sectionHtml}
@@ -2259,21 +2404,34 @@ async function renderLoyalty() {
   const effectiveFormStoreId = Number(state.loyaltyFormStoreId || fallbackStoreId);
   const createStoreOptions = loyaltyStoreChoices.map(st => `<option value="${st.id}" ${Number(st.id) === effectiveFormStoreId ? 'selected' : ''}>${esc(st.name)}</option>`).join('');
   const listStoreOptions = `${canReviewLoyalty ? `<option value="" ${!listStoreId ? 'selected' : ''}>Tất cả cửa hàng</option>` : ''}${loyaltyStoreChoices.map(st => `<option value="${st.id}" ${Number(st.id) === Number(listStoreId) ? 'selected' : ''}>${esc(st.name)}</option>`).join('')}`;
-  const loyaltyStaff = salesStaffInStore(effectiveFormStoreId);
-  const loyaltyEmployeeOptions = loyaltyStaff.map(u => `<option value="${u.id}">${esc(u.full_name)}</option>`).join('');
+  const loyaltyStaffRes = effectiveFormStoreId ? await api(`/api/store-staff?store_id=${encodeURIComponent(effectiveFormStoreId)}&date=${encodeURIComponent(todayIso)}`).catch(() => null) : null;
+  const loyaltyStaff = Array.isArray(loyaltyStaffRes?.employees) ? loyaltyStaffRes.employees : salesStaffInStore(effectiveFormStoreId);
+  const loyaltyEmployeeOptions = loyaltyStaff.map(u => `<option value="${u.id}">${esc(u.full_name)}${u.is_transfer_context ? ' • luân chuyển' : ''}</option>`).join('');
   const loyaltyStoreSelect = loyaltyStoreChoices.length > 1 ? `<div class="field"><label>Cửa hàng</label><select class="input" id="loyaltyStoreFilter" name="store_id">${createStoreOptions}</select></div>` : `<input type="hidden" name="store_id" value="${esc(effectiveFormStoreId)}">`;
   const statusPending = loyaltyRows.filter(r => r.status === 'pending').length;
   const statusApproved = loyaltyRows.filter(r => r.status === 'approved').length;
   const totalApproved = loyaltyRows.filter(r => r.status === 'approved').reduce((sum,r) => sum + Number(r.discount_amount || 0), 0);
   const scopeText = canReviewLoyalty && !listStoreId ? 'Toàn hệ thống' : (storeName(listStoreId) || 'Cửa hàng đang xem');
   const kpis = `<section class="grid three dash-kpis loyalty-kpis"><div class="card kpi"><div class="label">Chờ duyệt</div><div class="num">${statusPending}</div><div class="hint">Ưu tiên xử lý trước</div></div><div class="card kpi"><div class="label">Đã duyệt</div><div class="num">${statusApproved}</div><div class="hint">Đơn đã cộng doanh thu</div></div><div class="card kpi"><div class="label">Tổng tiền đã duyệt</div><div class="num">${money(totalApproved)}đ</div><div class="hint">${esc(scopeText)}</div></div></section>`;
-  const form = `<div class="card loyalty-card" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">Gửi đơn Loyalty</h3>${canReviewLoyalty ? '<span class="badge dark">Admin / Văn phòng duyệt</span>' : '<span class="badge">Cửa hàng gửi</span>'}</div><form id="loyaltyForm" class="grid four" enctype="multipart/form-data">${loyaltyStoreSelect}<div class="field"><label>Ngày</label><input class="input" type="date" name="sale_date" value="${todayIso}" required></div><div class="field"><label>Tên nhân viên</label><select class="input" id="loyaltyEmployeeSelect" name="user_id" required><option value="">Chọn nhân viên</option>${loyaltyEmployeeOptions}</select></div><div class="field"><label>Số hóa đơn</label><input class="input" name="invoice_number" placeholder="VD: DZ261234" required></div><div class="field"><label>Số tiền giảm</label><input class="input" type="text" inputmode="numeric" data-number-format name="discount_amount" placeholder="VD: 250.000" required></div><div class="field loyalty-evidence-field" style="grid-column:span 2"><label>Ảnh chứng từ</label><div class="loyalty-paste-zone" id="loyaltyPasteZone" tabindex="0"><b>Ctrl + V để dán ảnh chứng từ</b><span>Nhân viên cửa hàng cũng có thể dán trực tiếp • hoặc chọn ảnh bên dưới</span><div id="loyaltyPastePreview" class="loyalty-paste-preview"></div></div><input class="input" id="loyaltyEvidenceInput" type="file" name="evidence" accept="image/*,.jpg,.jpeg,.png,.webp" required></div><div class="field" style="align-self:end"><button class="btn">Lưu & gửi duyệt</button></div></form></div>`;
+  const form = `<div class="card loyalty-card" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">Gửi đơn Loyalty</h3>${canReviewLoyalty ? '<span class="badge dark">Admin / Văn phòng duyệt</span>' : '<span class="badge">Cửa hàng gửi</span>'}</div><form id="loyaltyForm" class="grid four" enctype="multipart/form-data">${loyaltyStoreSelect}<div class="field"><label>Ngày</label><input class="input" id="loyaltySaleDate" type="date" name="sale_date" value="${todayIso}" required></div><div class="field"><label>Tên nhân viên</label><select class="input" id="loyaltyEmployeeSelect" name="user_id" required><option value="">Chọn nhân viên</option>${loyaltyEmployeeOptions}</select></div><div class="field"><label>Số hóa đơn</label><input class="input" name="invoice_number" placeholder="VD: DZ261234" required></div><div class="field"><label>Số tiền giảm</label><input class="input" type="text" inputmode="numeric" data-number-format name="discount_amount" placeholder="VD: 250.000" required></div><div class="field loyalty-evidence-field" style="grid-column:span 2"><label>Ảnh chứng từ</label><div class="loyalty-paste-zone" id="loyaltyPasteZone" tabindex="0"><b>Ctrl + V để dán ảnh chứng từ</b><span>Nhân viên cửa hàng cũng có thể dán trực tiếp • hoặc chọn ảnh bên dưới</span><div id="loyaltyPastePreview" class="loyalty-paste-preview"></div></div><input class="input" id="loyaltyEvidenceInput" type="file" name="evidence" accept="image/*,.jpg,.jpeg,.png,.webp" required></div><div class="field" style="align-self:end"><button class="btn">Lưu & gửi duyệt</button></div></form></div>`;
   const list = `<div class="card" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">Danh sách Loyalty</h3>${canReviewLoyalty ? `<div class="field"><label>Cửa hàng xem</label><select class="input" id="loyaltyListStoreFilter">${listStoreOptions}</select></div><button class="btn secondary" type="button" id="loyaltyExportBtn">Tải Excel Loyalty</button>` : ''}</div><div class="table-wrap loyalty-table-wrap"><table class="loyalty-table"><thead><tr><th>Trạng thái</th><th>Ngày</th><th>Nhân viên</th><th>Cửa hàng</th><th>Số hóa đơn</th><th>Số tiền giảm</th><th>Chứng từ</th>${canReviewLoyalty ? '<th>Thao tác</th>' : ''}</tr></thead><tbody>${loyaltyRows.length ? loyaltyRows.map(r => `<tr class="${r.status === 'pending' ? 'loyalty-pending-row' : 'loyalty-approved-row'}"><td>${r.status === 'pending' ? '<span class="badge warn">Chờ duyệt</span>' : '<span class="badge ok">Đã duyệt</span>'}</td><td><b>${dOnly(r.sale_date)}</b></td><td><b>${esc(r.employee_name || '')}</b></td><td>${esc(r.store_name || '')}</td><td>${esc(r.invoice_number || '')}</td><td><b>${money(r.discount_amount || 0)}đ</b></td><td>${r.evidence_path ? renderFiles(r.evidence_path) : '-'}</td>${canReviewLoyalty ? `<td><div class="row loyalty-actions"><button class="btn secondary small loyaltyEditBtn" type="button" data-id="${r.id}">Sửa</button>${r.status === 'pending' ? `<button class="btn small loyaltyApproveBtn" type="button" data-id="${r.id}">Duyệt</button>` : ''}<button class="btn danger small loyaltyDeleteBtn" type="button" data-id="${r.id}" data-invoice="${esc(r.invoice_number || '')}" data-status="${esc(r.status || '')}">Xóa</button></div></td>` : ''}</tr>`).join('') : `<tr><td colspan="${canReviewLoyalty ? 8 : 7}"><div class="empty">Chưa có đơn Loyalty</div></td></tr>`}</tbody></table></div></div>`;
   shell(`${kpis}${form}${list}`, 'Loyalty', '');
 
   const refreshListStore = sid => { state.loyaltyStoreId = sid; renderLoyalty(); };
   $('#loyaltyListStoreFilter')?.addEventListener('change', e => refreshListStore(e.target.value));
   $('#loyaltyStoreFilter')?.addEventListener('change', e => { state.loyaltyFormStoreId = e.target.value; renderLoyalty(); });
+  const refreshLoyaltyStaffForDate = async () => {
+    const sid = Number($('#loyaltyStoreFilter')?.value || effectiveFormStoreId || 0);
+    const d = $('#loyaltySaleDate')?.value || todayIso;
+    const select = $('#loyaltyEmployeeSelect');
+    if (!sid || !select) return;
+    try {
+      const r = await api(`/api/store-staff?store_id=${encodeURIComponent(sid)}&date=${encodeURIComponent(d)}`);
+      const rows = Array.isArray(r?.employees) ? r.employees : [];
+      select.innerHTML = `<option value="">Chọn nhân viên</option>${rows.map(u => `<option value="${u.id}">${esc(u.full_name)}${u.is_transfer_context ? ' • luân chuyển' : ''}</option>`).join('')}`;
+    } catch (_err) {}
+  };
+  $('#loyaltySaleDate')?.addEventListener('change', refreshLoyaltyStaffForDate);
 
   const fileInput = $('#loyaltyEvidenceInput');
   const pasteZone = $('#loyaltyPasteZone');
@@ -2335,10 +2493,23 @@ async function renderLoyalty() {
     const overlay = document.createElement('div'); overlay.className = 'loyalty-edit-overlay';
     const editStores = loyaltyStoreChoices.map(st => `<option value="${st.id}" ${Number(st.id)===Number(row.store_id)?'selected':''}>${esc(st.name)}</option>`).join('');
     const editStaff = salesStaffInStore(row.store_id); const editEmployees = editStaff.map(u => `<option value="${u.id}" ${Number(u.id)===Number(row.user_id)?'selected':''}>${esc(u.full_name)}</option>`).join('');
-    overlay.innerHTML = `<div class="card loyalty-edit-modal"><div class="toolbar"><h3>Sửa đơn Loyalty</h3><button type="button" class="btn secondary small loyaltyEditClose">Đóng</button></div><form id="loyaltyEditForm" class="grid two" enctype="multipart/form-data"><div class="field"><label>Cửa hàng</label><select class="input" name="store_id" id="loyaltyEditStore">${editStores}</select></div><div class="field"><label>Nhân viên</label><select class="input" name="user_id" id="loyaltyEditEmployee">${editEmployees}</select></div><div class="field"><label>Ngày</label><input class="input" type="date" name="sale_date" value="${esc(row.sale_date)}" required></div><div class="field"><label>Số hóa đơn</label><input class="input" name="invoice_number" value="${esc(row.invoice_number || '')}" required></div><div class="field"><label>Số tiền giảm</label><input class="input" type="text" inputmode="numeric" data-number-format name="discount_amount" value="${money(row.discount_amount || 0)}" required></div><div class="field"><label>Thay ảnh chứng từ</label><div class="loyalty-paste-zone loyalty-edit-paste" tabindex="0"><b>Ctrl + V để dán ảnh mới</b><span>hoặc chọn file</span></div><input class="input loyalty-edit-evidence" type="file" name="evidence" accept="image/*"></div><div class="field" style="grid-column:1/-1"><button class="btn">Lưu chỉnh sửa</button></div></form></div>`;
+    overlay.innerHTML = `<div class="card loyalty-edit-modal"><div class="toolbar"><h3>Sửa đơn Loyalty</h3><button type="button" class="btn secondary small loyaltyEditClose">Đóng</button></div><form id="loyaltyEditForm" class="grid two" enctype="multipart/form-data"><div class="field"><label>Cửa hàng</label><select class="input" name="store_id" id="loyaltyEditStore">${editStores}</select></div><div class="field"><label>Nhân viên</label><select class="input" name="user_id" id="loyaltyEditEmployee">${editEmployees}</select></div><div class="field"><label>Ngày</label><input class="input" id="loyaltyEditDate" type="date" name="sale_date" value="${esc(row.sale_date)}" required></div><div class="field"><label>Số hóa đơn</label><input class="input" name="invoice_number" value="${esc(row.invoice_number || '')}" required></div><div class="field"><label>Số tiền giảm</label><input class="input" type="text" inputmode="numeric" data-number-format name="discount_amount" value="${money(row.discount_amount || 0)}" required></div><div class="field"><label>Thay ảnh chứng từ</label><div class="loyalty-paste-zone loyalty-edit-paste" tabindex="0"><b>Ctrl + V để dán ảnh mới</b><span>hoặc chọn file</span></div><input class="input loyalty-edit-evidence" type="file" name="evidence" accept="image/*"></div><div class="field" style="grid-column:1/-1"><button class="btn">Lưu chỉnh sửa</button></div></form></div>`;
     document.body.appendChild(overlay);
-    const redrawEmployees = () => { const sid = Number($('#loyaltyEditStore', overlay)?.value || 0); const select = $('#loyaltyEditEmployee', overlay); if (select) select.innerHTML = salesStaffInStore(sid).map(u => `<option value="${u.id}">${esc(u.full_name)}</option>`).join(''); };
-    $('#loyaltyEditStore', overlay)?.addEventListener('change', redrawEmployees);
+    const redrawEmployees = async (keepId = null) => {
+      const sid = Number($('#loyaltyEditStore', overlay)?.value || 0);
+      const d = $('#loyaltyEditDate', overlay)?.value || row.sale_date || todayIso;
+      const select = $('#loyaltyEditEmployee', overlay);
+      if (!sid || !select) return;
+      try {
+        const r = await api(`/api/store-staff?store_id=${encodeURIComponent(sid)}&date=${encodeURIComponent(d)}`);
+        const rows = Array.isArray(r?.employees) ? r.employees : [];
+        const chosen = Number(keepId || select.value || row.user_id || 0);
+        select.innerHTML = rows.map(u => `<option value="${u.id}" ${Number(u.id)===chosen?'selected':''}>${esc(u.full_name)}${u.is_transfer_context ? ' • luân chuyển' : ''}</option>`).join('');
+      } catch (_err) {}
+    };
+    $('#loyaltyEditStore', overlay)?.addEventListener('change', () => redrawEmployees());
+    $('#loyaltyEditDate', overlay)?.addEventListener('change', () => redrawEmployees());
+    redrawEmployees(row.user_id);
     $('.loyaltyEditClose', overlay)?.addEventListener('click', () => overlay.remove());
     const editFile = $('.loyalty-edit-evidence', overlay); const editPaste = $('.loyalty-edit-paste', overlay);
     editPaste?.addEventListener('paste', e => { const item = Array.from(e.clipboardData?.items || []).find(x => x.type?.startsWith('image/')); const blob = item?.getAsFile(); if (!blob || !editFile) return; const ext=(blob.type.split('/')[1]||'png').replace('jpeg','jpg'); const f=new File([blob],`loyalty-edit-${Date.now()}.${ext}`,{type:blob.type||'image/png'}); const dt=new DataTransfer(); dt.items.add(f); editFile.files=dt.files; editPaste.innerHTML='<b>Đã dán ảnh mới ✓</b>'; e.preventDefault(); });
@@ -2384,7 +2555,7 @@ async function renderSales() {
   const storeSelectTarget = salesStoreChoices.length > 1 ? `<div class="field"><label>Cửa hàng</label><select class="input" id="dailyTargetStoreFilter" name="store_id">${storeOptions}</select></div>` : `<input type="hidden" name="store_id" value="${esc(defaultStoreId)}">`;
   const targetForm = state.user?.role === 'admin' ? `<div class="card"><div class="toolbar" style="margin-bottom:${state.salesTargetEditMode?'12px':'0'}"><h3 style="margin-right:auto;margin-bottom:0">Set target đầu tháng nhiều nhân viên</h3>${state.salesTargetEditMode?'<button class="btn" type="submit" form="targetForm">Lưu target đã chọn</button>':'<button class="btn" type="button" id="salesTargetDataBtn">Sửa dữ liệu</button>'}</div><form id="targetForm" class="grid four" style="${state.salesTargetEditMode?'':'display:none'}">${targetStoreSelect}<div class="field"><label>Tháng target</label><input class="input" id="salesTargetMonthInput" type="month" name="target_month" value="${targetMonth}" required></div><div class="field target-employee-field" style="grid-column:1/-1"><label>Chọn nhân viên bán hàng áp dụng tại ${esc(selectedTargetStoreName)} trong ${esc(targetMonth)}</label><div class="row target-multi-actions"><button type="button" class="btn secondary small" id="targetSelectAllBtn">Chọn tất cả</button><button type="button" class="btn ghost small" id="targetClearAllBtn">Bỏ chọn</button></div><div class="target-employee-grid">${targetEmployeeChecks}</div><div class="hint" style="margin-top:8px">Nhân viên điều chuyển giữa tháng vẫn xuất hiện ở cả cửa hàng cũ và cửa hàng mới. Target được lưu riêng theo từng cửa hàng, không ghi đè target cửa hàng còn lại.</div></div><div class="field"><label>Target doanh thu tháng tại cửa hàng này</label><input class="input" type="text" inputmode="numeric" data-number-format name="target_revenue" required placeholder="VD: 80.000.000"></div><div class="field"><label>Target UPT</label><input class="input" type="number" step="0.01" name="target_upt" min="0" placeholder="VD: 2.50"></div><div class="field"><label>Target ATV</label><input class="input" type="text" inputmode="numeric" data-number-format name="target_atv" placeholder="VD: 1.500.000"></div><div class="field"><label>Target CR %</label><input class="input" type="number" step="0.01" name="target_cr" min="0" placeholder="VD: 35"></div><div class="field" style="grid-column:span 2"><label>Ghi chú target</label><input class="input" name="note" placeholder="VD: Target sau điều chuyển"></div></form></div>` : '';
   const todayIso = new Date().toISOString().slice(0,10);
-  const dailyTargetForm = state.user?.role === 'admin' ? `<div class="card" style="margin-top:16px"><div class="toolbar" style="margin-bottom:${state.salesDailyTargetEditMode?'12px':'0'}"><h3 style="margin-right:auto;margin-bottom:0">Set target doanh thu theo ngày - tổng cửa hàng</h3>${state.salesDailyTargetEditMode?'<button class="btn" type="submit" form="dailyTargetForm">Lưu target ngày đã chọn</button>':'<button class="btn" type="button" id="salesDailyTargetDataBtn">Sửa dữ liệu</button>'}</div><form id="dailyTargetForm" class="grid four daily-target-pick-form" style="${state.salesDailyTargetEditMode?'':'display:none'}">${storeSelectTarget}<div class="field" style="grid-column:span 2"><label>Chọn ngày cần set</label><div class="row daily-date-add-row"><input class="input" type="date" id="dailyTargetDatePicker" value="${todayIso}"><button type="button" class="btn secondary" id="dailyTargetAddDateBtn">Thêm ngày</button></div></div><div class="field"><label>Target doanh thu/ngày</label><input class="input" type="text" inputmode="numeric" data-number-format name="target_revenue" required placeholder="VD: 10.000.000"></div><div class="field" style="grid-column:1/-1"><label>Ngày đã chọn</label><div class="row daily-target-actions"><button type="button" class="btn secondary small" id="dailyTargetAddTodayBtn">Thêm hôm nay</button><button type="button" class="btn ghost small" id="dailyTargetClearDatesBtn">Xóa chọn</button></div><div id="dailyTargetDateList" class="daily-date-list"></div></div><div class="field" style="grid-column:span 3"><label>Ghi chú target ngày</label><input class="input" name="note" placeholder="VD: Target cuối tuần / ngày sale"></div></form></div>` : '';
+  const dailyTargetForm = state.user?.role === 'admin' ? `<div class="card" style="margin-top:16px"><div class="toolbar" style="margin-bottom:${state.salesDailyTargetEditMode?'12px':'0'}"><h3 style="margin-right:auto;margin-bottom:0">Set target doanh thu theo ngày - tổng cửa hàng</h3>${state.salesDailyTargetEditMode?'<button class="btn" type="submit" form="dailyTargetForm">Lưu target ngày đã chọn</button>':'<button class="btn" type="button" id="salesDailyTargetDataBtn">Sửa dữ liệu</button>'}</div><form id="dailyTargetForm" class="grid four daily-target-pick-form" style="${state.salesDailyTargetEditMode?'':'display:none'}">${storeSelectTarget}<div class="field"><label>Tháng chọn ngày</label><input class="input" type="month" id="dailyTargetCalendarMonth" value="${currentMonth}"></div><div class="field"><label>Target doanh thu/ngày</label><input class="input" type="text" inputmode="numeric" data-number-format name="target_revenue" required placeholder="VD: 10.000.000"></div><div class="field" style="grid-column:1/-1"><label>Chọn nhiều ngày cùng lúc</label><div class="row daily-target-bulk-actions"><button type="button" class="btn secondary small" id="dailyTargetSelectMonthBtn">Chọn cả tháng</button><button type="button" class="btn secondary small" id="dailyTargetSelectWeekdaysBtn">Chọn T2–T6</button><button type="button" class="btn secondary small" id="dailyTargetSelectWeekendBtn">Chọn T7 & CN</button><button type="button" class="btn ghost small" id="dailyTargetAddTodayBtn">Chọn hôm nay</button><button type="button" class="btn ghost small" id="dailyTargetClearDatesBtn">Xóa chọn</button></div><div class="daily-target-weekday-picker"><span class="daily-target-weekday-label">Chọn theo thứ:</span><div class="row daily-target-weekday-actions"><button type="button" class="btn secondary small dailyTargetWeekdayBtn" data-weekday="0">T2</button><button type="button" class="btn secondary small dailyTargetWeekdayBtn" data-weekday="1">T3</button><button type="button" class="btn secondary small dailyTargetWeekdayBtn" data-weekday="2">T4</button><button type="button" class="btn secondary small dailyTargetWeekdayBtn" data-weekday="3">T5</button><button type="button" class="btn secondary small dailyTargetWeekdayBtn" data-weekday="4">T6</button><button type="button" class="btn secondary small dailyTargetWeekdayBtn" data-weekday="5">T7</button><button type="button" class="btn secondary small dailyTargetWeekdayBtn" data-weekday="6">CN</button></div></div><div id="dailyTargetCalendar" class="daily-multi-calendar"></div><div class="hint" style="margin-top:7px">Ví dụ bấm <b>T3</b> sẽ chọn toàn bộ các ngày Thứ 3 trong tháng đang xem. Có thể bấm nhiều thứ liên tiếp như T2 + T3 + T5, hoặc chọn/bỏ riêng từng ngày trực tiếp trên lịch.</div></div><div class="field" style="grid-column:1/-1"><label>Hoặc chọn nhanh theo khoảng ngày</label><div class="row daily-target-range-row"><input class="input" type="date" id="dailyTargetRangeStart" value="${todayIso}"><span class="daily-target-range-sep">đến</span><input class="input" type="date" id="dailyTargetRangeEnd" value="${todayIso}"><button type="button" class="btn secondary" id="dailyTargetAddRangeBtn">Chọn khoảng ngày</button></div></div><div class="field" style="grid-column:1/-1"><label>Ngày đã chọn <span id="dailyTargetSelectedCount" class="badge">0 ngày</span></label><div id="dailyTargetDateList" class="daily-date-list"></div></div><div class="field" style="grid-column:span 3"><label>Ghi chú target ngày</label><input class="input" name="note" placeholder="VD: Target cuối tuần / ngày sale"></div></form></div>` : '';
   const rowsInputs = dailySalesStaff.map(u => `<tr data-user="${u.id}"><td><b>${esc(u.full_name)}</b><div class="hint">${esc(u.store_name || '')}</div></td><td><input class="input" name="revenue_${u.id}" type="text" inputmode="numeric" data-number-format value="0"></td><td><input class="input" name="bill_${u.id}" type="text" inputmode="numeric" data-number-format value="0"></td><td><input class="input" name="item_${u.id}" type="text" inputmode="numeric" data-number-format value="0"></td><td><input class="input" name="note_${u.id}" placeholder="Ghi chú NV"></td></tr>`).join('') || '<tr><td colspan="5"><div class="empty">Chưa có nhân viên bán hàng trong cửa hàng này</div></td></tr>';
   const salesForm = state.user?.role === 'admin' ? `<div class="card" style="margin-top:16px"><div class="toolbar" style="margin-bottom:${state.salesDailyEntryMode?'10px':'0'}"><h3 style="margin-right:auto;margin-bottom:0">Doanh thu từng ngày</h3>${state.salesDailyEntryMode?'<button class="btn" type="submit" form="dailySalesForm">Lưu doanh thu ngày</button>':'<button class="btn" type="button" id="salesDailyDataBtn">Sửa dữ liệu</button>'}</div><div style="${state.salesDailyEntryMode?'':'display:none'}"><p class="hint">Mỗi ngày cửa hàng nhập doanh thu từng nhân viên: doanh thu, số bill, số món. TF nhập theo khách mới/khách cũ, hệ thống tự cộng lượt khách tổng. Nếu nhập lại cùng ngày, hệ thống sẽ cập nhật thay vì cộng trùng.</p><form id="dailySalesForm"><div class="grid four">${storeSelect}<div class="field"><label>Ngày bán</label><input class="input" type="date" name="sale_date" value="${esc(dailyDate)}" required></div><div class="field"><label>Khách mới</label><input class="input" type="text" inputmode="numeric" data-number-format name="customer_new_count" value="0"></div><div class="field"><label>Khách cũ</label><input class="input" type="text" inputmode="numeric" data-number-format name="customer_old_count" value="0"></div><div class="field"><label>Lượt khách tổng</label><input class="input readonly" type="text" inputmode="numeric" data-number-format name="customer_count" value="0" readonly></div><div class="field"><label>Ghi chú cửa hàng</label><input class="input" name="note" placeholder="VD: Cuối ngày / ca tối"></div></div><div class="table-wrap revenue-sticky-name" style="margin-top:12px"><table><thead><tr><th>Nhân viên</th><th>Doanh thu</th><th>Số bill</th><th>Số món</th><th>Ghi chú</th></tr></thead><tbody>${rowsInputs}</tbody></table></div></form></div></div>` : '';
   const tabs = `<div class="pillbar"><button data-period="month" class="${state.leaderboardPeriod === 'month' ? 'active' : ''}">Tháng</button><button data-period="quarter" class="${state.leaderboardPeriod === 'quarter' ? 'active' : ''}">Quý</button><button data-period="year" class="${state.leaderboardPeriod === 'year' ? 'active' : ''}">Năm</button></div>`;
@@ -2405,20 +2576,102 @@ async function renderSales() {
   $('#salesUserStatusFilter')?.addEventListener('change', e => { state.salesUserStatus = e.target.value; localStorage.setItem('dezus_ops_sales_user_status', state.salesUserStatus); renderSales(); });
   $('#dailyTargetStoreFilter')?.addEventListener('change', e => { state.salesStoreId = e.target.value; renderSales(); });
   const dailyTargetDates = new Set([todayIso]);
+  let dailyTargetCalendarMonth = currentMonth;
+  const validYearMonth = (value) => /^\d{4}-\d{2}$/.test(String(value || ''));
+  const monthDates = (ym) => {
+    if (!validYearMonth(ym)) return [];
+    const [year, month] = ym.split('-').map(Number);
+    const total = new Date(year, month, 0).getDate();
+    return Array.from({ length: total }, (_, i) => `${ym}-${String(i + 1).padStart(2, '0')}`);
+  };
+  const dayOfWeekMonFirst = (iso) => {
+    const [y,m,d] = String(iso).split('-').map(Number);
+    return (new Date(y, m - 1, d).getDay() + 6) % 7;
+  };
+  const renderDailyTargetCalendar = () => {
+    const box = $('#dailyTargetCalendar');
+    if (!box || !validYearMonth(dailyTargetCalendarMonth)) return;
+    const dates = monthDates(dailyTargetCalendarMonth);
+    const firstOffset = dates.length ? dayOfWeekMonFirst(dates[0]) : 0;
+    const blanks = Array.from({ length: firstOffset }, () => '<span class="daily-calendar-blank"></span>').join('');
+    box.innerHTML = `<div class="daily-calendar-head"><span>T2</span><span>T3</span><span>T4</span><span>T5</span><span>T6</span><span>T7</span><span>CN</span></div><div class="daily-calendar-grid">${blanks}${dates.map(d => `<button type="button" class="daily-calendar-day ${dailyTargetDates.has(d) ? 'selected' : ''} ${d === todayIso ? 'today' : ''}" data-date="${esc(d)}"><b>${Number(d.slice(-2))}</b></button>`).join('')}</div>`;
+    $$('.daily-calendar-day', box).forEach(btn => btn.onclick = () => {
+      const d = btn.dataset.date;
+      if (dailyTargetDates.has(d)) dailyTargetDates.delete(d); else dailyTargetDates.add(d);
+      renderDailyTargetDates();
+    });
+  };
   const renderDailyTargetDates = () => {
     const box = $('#dailyTargetDateList');
     if (!box) return;
     const dates = [...dailyTargetDates].sort();
+    const counter = $('#dailyTargetSelectedCount');
+    if (counter) counter.textContent = `${dates.length} ngày`;
     box.innerHTML = dates.length ? dates.map(d => `<button type="button" class="daily-date-chip" data-date="${esc(d)}"><b>${dOnly(d)}</b><span>×</span></button>`).join('') : '<div class="empty small-empty">Chưa chọn ngày</div>';
     $$('.daily-date-chip', box).forEach(chip => chip.onclick = () => { dailyTargetDates.delete(chip.dataset.date); renderDailyTargetDates(); });
+    renderDailyTargetCalendar();
+    syncDailyTargetWeekdayButtons();
   };
   const addDailyTargetDate = (dateValue) => {
     if (!dateValue) return toast('Chọn ngày trước khi thêm', 'danger');
     dailyTargetDates.add(String(dateValue).slice(0,10));
     renderDailyTargetDates();
   };
+  const addDailyTargetRange = (startValue, endValue) => {
+    const start = String(startValue || '').slice(0,10);
+    const end = String(endValue || '').slice(0,10);
+    if (!start || !end) return toast('Chọn đủ từ ngày và đến ngày', 'danger');
+    if (end < start) return toast('Đến ngày phải sau hoặc bằng từ ngày', 'danger');
+    const [sy,sm,sd] = start.split('-').map(Number);
+    const [ey,em,ed] = end.split('-').map(Number);
+    const cursor = new Date(sy, sm - 1, sd);
+    const finish = new Date(ey, em - 1, ed);
+    let count = 0;
+    while (cursor <= finish && count < 370) {
+      const y = cursor.getFullYear();
+      const m = String(cursor.getMonth() + 1).padStart(2, '0');
+      const d = String(cursor.getDate()).padStart(2, '0');
+      dailyTargetDates.add(`${y}-${m}-${d}`);
+      cursor.setDate(cursor.getDate() + 1);
+      count += 1;
+    }
+    if (cursor <= finish) return toast('Chỉ được chọn tối đa 370 ngày/lần', 'danger');
+    dailyTargetCalendarMonth = start.slice(0,7);
+    const monthInput = $('#dailyTargetCalendarMonth');
+    if (monthInput) monthInput.value = dailyTargetCalendarMonth;
+    renderDailyTargetDates();
+  };
+  const selectCalendarDates = (predicate) => {
+    monthDates(dailyTargetCalendarMonth).forEach(d => { if (predicate(d)) dailyTargetDates.add(d); });
+    renderDailyTargetDates();
+  };
+  const toggleCalendarWeekday = (weekdayIndex) => {
+    const matches = monthDates(dailyTargetCalendarMonth).filter(d => dayOfWeekMonFirst(d) === Number(weekdayIndex));
+    if (!matches.length) return;
+    const allSelected = matches.every(d => dailyTargetDates.has(d));
+    matches.forEach(d => {
+      if (allSelected) dailyTargetDates.delete(d);
+      else dailyTargetDates.add(d);
+    });
+    renderDailyTargetDates();
+  };
+  const syncDailyTargetWeekdayButtons = () => {
+    $$('.dailyTargetWeekdayBtn').forEach(btn => {
+      const weekdayIndex = Number(btn.dataset.weekday);
+      const matches = monthDates(dailyTargetCalendarMonth).filter(d => dayOfWeekMonFirst(d) === weekdayIndex);
+      const selectedCount = matches.filter(d => dailyTargetDates.has(d)).length;
+      btn.classList.toggle('active', matches.length > 0 && selectedCount === matches.length);
+      btn.classList.toggle('partial', selectedCount > 0 && selectedCount < matches.length);
+      btn.setAttribute('aria-pressed', matches.length > 0 && selectedCount === matches.length ? 'true' : 'false');
+    });
+  };
   renderDailyTargetDates();
-  $('#dailyTargetAddDateBtn')?.addEventListener('click', () => addDailyTargetDate($('#dailyTargetDatePicker')?.value));
+  $('#dailyTargetCalendarMonth')?.addEventListener('change', e => { dailyTargetCalendarMonth = e.target.value || currentMonth; renderDailyTargetCalendar(); });
+  $('#dailyTargetSelectMonthBtn')?.addEventListener('click', () => selectCalendarDates(() => true));
+  $('#dailyTargetSelectWeekdaysBtn')?.addEventListener('click', () => selectCalendarDates(d => dayOfWeekMonFirst(d) <= 4));
+  $('#dailyTargetSelectWeekendBtn')?.addEventListener('click', () => selectCalendarDates(d => dayOfWeekMonFirst(d) >= 5));
+  $$('.dailyTargetWeekdayBtn').forEach(btn => btn.addEventListener('click', () => toggleCalendarWeekday(btn.dataset.weekday)));
+  $('#dailyTargetAddRangeBtn')?.addEventListener('click', () => addDailyTargetRange($('#dailyTargetRangeStart')?.value, $('#dailyTargetRangeEnd')?.value));
   $('#dailyTargetAddTodayBtn')?.addEventListener('click', () => addDailyTargetDate(todayIso));
   $('#dailyTargetClearDatesBtn')?.addEventListener('click', () => { dailyTargetDates.clear(); renderDailyTargetDates(); });
   $('#targetSelectAllBtn')?.addEventListener('click', () => { $$('input[name="user_ids"]', $('#targetForm')).forEach(cb => cb.checked = true); });
@@ -2657,12 +2910,12 @@ async function renderOnlineOrders() {
   const orders = data.orders || [];
   const summary = data.summary || { totals: {}, stores: [], employees: [] };
   const storeOptions = allowedStores.map(s => `<option value="${s.id}" ${Number(s.id) === Number(defaultStoreId) ? 'selected' : ''}>${esc(s.name)}</option>`).join('');
-  const staff = salesStaffInStore(defaultStoreId);
-  const employeeOptions = staff.map(u => `<option value="${u.id}">${esc(u.full_name)}</option>`).join('');
+  const staff = Array.isArray(data.staff) && data.staff.length ? data.staff : salesStaffInStore(defaultStoreId);
+  const employeeOptions = staff.map(u => `<option value="${u.id}">${esc(u.full_name)}${u.is_transfer_context ? ' • luân chuyển' : ''}</option>`).join('');
   const storeField = allScope ? `<div class="field"><label>Cửa hàng</label><select class="input" id="onlineOrderStoreFilter" name="store_id">${storeOptions}</select></div>` : `<input type="hidden" name="store_id" value="${esc(defaultStoreId)}">`;
   const t = summary.totals || {};
   const kpis = `<section class="grid four dash-kpis"><div class="card kpi"><div class="label">Số đơn online</div><div class="num">${money(t.order_count || 0)}</div><div class="hint">Theo tháng đang lọc</div></div><div class="card kpi"><div class="label">Tổng giá trị đơn</div><div class="num">${money(t.order_value || 0)}đ</div><div class="hint">Giá trị hóa đơn online</div></div><div class="card kpi"><div class="label">Doanh thu hưởng 30%</div><div class="num">${money(t.benefit_revenue || 0)}đ</div><div class="hint">Tự tính = giá trị đơn × 30%</div></div></section>`;
-  const form = can('can_manage_online_orders') ? `<div class="card"><h3>Nhập đơn online</h3><p class="hint">Cửa hàng nhập số hóa đơn, giá trị đơn, nhân viên đóng đơn. Doanh thu hưởng sẽ tự tính 30% giá trị đơn.</p><form id="onlineOrderForm" class="grid three">${storeField}<div class="field"><label>Ngày hóa đơn</label><input class="input" type="date" name="order_date" value="${new Date().toISOString().slice(0,10)}" required></div><div class="field"><label>Số hóa đơn</label><input class="input" name="invoice_no" placeholder="VD: OL12345" required></div><div class="field"><label>Giá trị đơn</label><input class="input" type="text" inputmode="numeric" data-number-format name="order_value" placeholder="1.000.000" required></div><div class="field"><label>Nhân viên đóng đơn</label><select class="input" name="packer_id" required>${employeeOptions}</select></div><div class="field"><label>Ghi chú</label><input class="input" name="note" placeholder="VD: đơn livestream, đơn web..."></div><div style="align-self:end"><button class="btn">Lưu đơn online</button></div></form></div>` : '';
+  const form = can('can_manage_online_orders') ? `<div class="card"><h3>Nhập đơn online</h3><p class="hint">Cửa hàng nhập số hóa đơn, giá trị đơn, nhân viên đóng đơn. Doanh thu hưởng sẽ tự tính 30% giá trị đơn.</p><form id="onlineOrderForm" class="grid three">${storeField}<div class="field"><label>Ngày hóa đơn</label><input class="input" id="onlineOrderDateInput" type="date" name="order_date" value="${new Date().toISOString().slice(0,10)}" required></div><div class="field"><label>Số hóa đơn</label><input class="input" name="invoice_no" placeholder="VD: OL12345" required></div><div class="field"><label>Giá trị đơn</label><input class="input" type="text" inputmode="numeric" data-number-format name="order_value" placeholder="1.000.000" required></div><div class="field"><label>Nhân viên đóng đơn</label><select class="input" id="onlineOrderPackerSelect" name="packer_id" required>${employeeOptions}</select></div><div class="field"><label>Ghi chú</label><input class="input" name="note" placeholder="VD: đơn livestream, đơn web..."></div><div style="align-self:end"><button class="btn">Lưu đơn online</button></div></form></div>` : '';
   const storeSummary = summary.stores?.length ? `<div class="table-wrap"><table><thead><tr><th>Cửa hàng</th><th>Số đơn</th><th>Tổng giá trị</th><th>Doanh thu hưởng 30%</th></tr></thead><tbody>${summary.stores.map(r => `<tr><td><b>${esc(r.store_name || '')}</b></td><td>${money(r.order_count || 0)}</td><td>${money(r.order_value || 0)}đ</td><td><b>${money(r.benefit_revenue || 0)}đ</b></td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Chưa có tổng hợp cửa hàng</div>';
   const employeeSummary = summary.employees?.length ? `<div class="table-wrap"><table><thead><tr><th>Nhân viên đóng đơn</th><th>Cửa hàng</th><th>Số đơn</th><th>Tổng giá trị</th><th>Doanh thu hưởng 30%</th></tr></thead><tbody>${summary.employees.map(r => `<tr><td><b>${esc(r.full_name || '')}</b></td><td>${esc(r.store_name || '')}</td><td>${money(r.order_count || 0)}</td><td>${money(r.order_value || 0)}đ</td><td><b>${money(r.benefit_revenue || 0)}đ</b></td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Chưa có tổng hợp cá nhân</div>';
   const detailRows = orders.length ? `<div class="table-wrap"><table><thead><tr><th>Ngày</th><th>Cửa hàng</th><th>Số hóa đơn</th><th>Giá trị</th><th>NV đóng</th><th>Doanh thu hưởng 30%</th><th>Ghi chú</th><th>Thao tác</th></tr></thead><tbody>${orders.map(o => `<tr><td>${dOnly(o.order_date)}</td><td>${esc(o.store_name || '')}</td><td><b>${esc(o.invoice_no || '')}</b></td><td>${money(o.order_value || 0)}đ</td><td>${esc(o.packer_name || '')}</td><td><b>${money(o.benefit_revenue || 0)}đ</b></td><td>${esc(o.note || '')}</td><td>${can('can_manage_online_orders') ? `<button class="btn small secondary onlineOrderEditBtn" data-id="${o.id}" data-order="${encodeURIComponent(JSON.stringify({ order_date: o.order_date || '', invoice_no: o.invoice_no || '', order_value: o.order_value || 0, packer_id: o.packer_id || '', note: o.note || '' }))}">Sửa</button><button class="btn small danger onlineOrderDeleteBtn" data-id="${o.id}">Xóa</button>` : ''}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Chưa có đơn online trong tháng này</div>';
@@ -2671,6 +2924,16 @@ async function renderOnlineOrders() {
   $('#onlineOrderMonthFilter')?.addEventListener('change', e => { state.onlineOrderMonth = e.target.value; renderOnlineOrders(); });
   $('#onlineOrderStoreFilter')?.addEventListener('change', e => { state.onlineOrderStoreId = e.target.value; renderOnlineOrders(); });
   $('#onlineOrderStoreFilter2')?.addEventListener('change', e => { state.onlineOrderStoreId = e.target.value; renderOnlineOrders(); });
+  $('#onlineOrderDateInput')?.addEventListener('change', async e => {
+    const sid = Number($('#onlineOrderStoreFilter')?.value || defaultStoreId || 0);
+    const select = $('#onlineOrderPackerSelect');
+    if (!sid || !select) return;
+    try {
+      const r = await api(`/api/store-staff?store_id=${encodeURIComponent(sid)}&date=${encodeURIComponent(e.target.value)}`);
+      const rows = Array.isArray(r?.employees) ? r.employees : [];
+      select.innerHTML = rows.map(u => `<option value="${u.id}">${esc(u.full_name)}${u.is_transfer_context ? ' • luân chuyển' : ''}</option>`).join('');
+    } catch (_err) {}
+  });
   $('#onlineOrderForm')?.addEventListener('submit', async e => {
     e.preventDefault();
     const payload = Object.fromEntries(new FormData(e.target));
@@ -3841,9 +4104,11 @@ async function renderSchedule() {
     : '';
   const filter = `<div class="card"><div class="toolbar"><h3 style="margin-right:auto">Lịch làm việc ${monthLabel(month)}</h3>${actions}${can('can_export') ? '<button class="btn secondary" data-export="work_schedules">Tải Excel lịch</button>' : ''}</div><div class="grid three">${storeSelect}<div class="field"><label>Chọn tháng</label><input class="input" type="month" id="scheduleMonthInput" value="${esc(month)}"></div><div class="field"><label>Chế độ</label><input class="input" value="${isEditing ? 'Đang sửa: chọn ca và thêm ghi chú' : 'Đang xem: bảng ca gọn, chỉ hiện mã ca'}" disabled></div></div></div>`;
   const shiftOptions = (selected) => `<option value="" data-code="">OFF</option>${shifts.map(sh => `<option value="${sh.id}" data-code="${esc(shiftCode(sh))}" ${Number(sh.id) === Number(selected) ? 'selected' : ''}>${esc(shiftCode(sh))}</option>`).join('')}`;
-  const makeRows = (week) => monthEmployees.map(emp => {
+  const makeRows = (week) => {
     const weekData = weekDatas.find(d => String(d.week_start) === String(week.week_start));
-    const weekEmp = (weekData?.employees || []).find(x => Number(x.id) === Number(emp.id));
+    const weekEmployees = (weekData?.employees || []).slice().sort((a,b) => String(a.role||'').localeCompare(String(b.role||'')) || String(a.full_name||'').localeCompare(String(b.full_name||''),'vi'));
+    return weekEmployees.map(emp => {
+    const weekEmp = emp;
     const eligibleDates = new Set(Array.isArray(weekEmp?.eligible_dates) ? weekEmp.eligible_dates : []);
     const cells = week.dates.map((day) => {
       if (!day.startsWith(month)) return `<td class="schedule-blank"></td>`;
@@ -3857,7 +4122,8 @@ async function renderSchedule() {
       return `<td class="schedule-view-cell">${shift ? shiftChip(shift, row.note || '') : '<span class="shift-chip off">OFF</span>'}</td>`;
     }).join('');
     return `<tr><td class="schedule-person"><b>${esc(emp.full_name)}</b><span>${roleLabel(emp.role)}</span></td>${cells}</tr>`;
-  }).join('') || `<tr><td colspan="8"><div class="empty">Chưa có nhân sự trong cửa hàng</div></td></tr>`;
+    }).join('') || `<tr><td colspan="8"><div class="empty">Tuần này không có nhân sự làm tại cửa hàng</div></td></tr>`;
+  };
   const legend = `<div class="schedule-legend">${shifts.map(sh => `<span>${shiftChip(sh)} <small>${esc(sh.start_time || '')}-${esc(sh.end_time || '')}</small></span>`).join('')}<span><span class="shift-chip off">OFF</span><small>Nghỉ/chưa phân ca</small></span></div>`;
   const weekTables = weeks.map((week, idx) => `<div class="schedule-week-block"><div class="schedule-week-title">Tuần ${idx + 1} <span>${week.dates.filter(d => d.startsWith(month)).map(dOnly).join(' - ')}</span></div><div class="table-wrap schedule-wrap"><table class="schedule-table"><thead><tr><th>Nhân sự</th>${week.dates.map((d) => `<th class="${d.startsWith(month) ? '' : 'schedule-out-month'}">${d.startsWith(month) ? weekLabel(d) : ''}</th>`).join('')}</tr></thead><tbody>${makeRows(week)}</tbody></table></div></div>`).join('');
   const scheduleTable = `<div class="card" style="margin-top:16px"><form id="scheduleForm"><div class="toolbar"><h3 style="margin-right:auto">Bảng phân ca theo tháng</h3>${isEditing ? '<span class="badge warning">Đang sửa</span>' : '<span class="badge ok">Đang xem</span>'}</div>${legend}${weekTables}</form></div>`;
@@ -3990,13 +4256,25 @@ async function renderBonuses() {
   const allowedStores = selectableStores();
   const bonusStoreId = state.bonusStoreId || (allowedStores[0]?.id || state.user?.store_id || '');
   state.bonusStoreId = bonusStoreId;
-  const bonusPeople = salesStaffInStore(bonusStoreId);
+  const bonusToday = new Date().toISOString().slice(0,10);
+  const bonusStaffRes = bonusStoreId ? await api(`/api/store-staff?store_id=${encodeURIComponent(bonusStoreId)}&date=${encodeURIComponent(bonusToday)}`).catch(() => null) : null;
+  const bonusPeople = Array.isArray(bonusStaffRes?.employees) ? bonusStaffRes.employees : salesStaffInStore(bonusStoreId);
   const bonusStoreField = allowedStores.length > 1 ? `<div class="field"><label>Cửa hàng</label><select class="input" id="bonusStoreFilter" name="store_id">${allowedStores.map(s => `<option value="${s.id}" ${Number(s.id)===Number(bonusStoreId)?'selected':''}>${esc(s.name)}</option>`).join('')}</select></div>` : `<input type="hidden" name="store_id" value="${esc(bonusStoreId)}">`;
-  const form = can('can_manage_bonuses') ? `<div class="card"><h3>Nhập tiền công/thưởng nhân viên</h3><p class="hint">Mỗi lần nhập thêm sẽ cộng vào tổng tiền công/thưởng của nhân viên. Bảng bên dưới hiển thị tổng theo nhân viên, không tách từng ngày.</p><form id="bonusForm" class="grid three">${bonusStoreField}<div class="field"><label>Nhân viên</label><select name="user_id" required>${bonusPeople.map(u => `<option value="${u.id}">${esc(u.full_name)} - ${esc(u.store_name || '')}</option>`).join('')}</select></div><div class="field"><label>Ngày ghi nhận</label><input class="input" type="date" name="bonus_date" value="${new Date().toISOString().slice(0,10)}" required></div><div class="field"><label>Loại tiền công/thưởng</label><select name="bonus_type"><option value="Hotbill">Hotbill</option><option value="Thưởng tuần">Thưởng tuần</option><option value="Thưởng KPI">Thưởng KPI</option><option value="Thưởng khác">Thưởng khác</option></select></div><div class="field"><label>Số tiền cộng thêm</label><input class="input" type="text" inputmode="numeric" data-number-format name="amount" required placeholder="100.000"></div><div class="field" style="grid-column:span 2"><label>Ghi chú</label><input class="input" name="note" placeholder="VD: Hotbill / thưởng tuần W30"></div><div style="grid-column:1/-1"><button class="btn">Cộng tiền</button></div></form></div>` : '';
+  const form = can('can_manage_bonuses') ? `<div class="card"><h3>Nhập tiền công/thưởng nhân viên</h3><p class="hint">Mỗi lần nhập thêm sẽ cộng vào tổng tiền công/thưởng của nhân viên. Bảng bên dưới hiển thị tổng theo nhân viên, không tách từng ngày.</p><form id="bonusForm" class="grid three">${bonusStoreField}<div class="field"><label>Nhân viên</label><select id="bonusEmployeeSelect" name="user_id" required>${bonusPeople.map(u => `<option value="${u.id}">${esc(u.full_name)}${u.is_transfer_context ? ' • luân chuyển' : ''}</option>`).join('')}</select></div><div class="field"><label>Ngày ghi nhận</label><input class="input" id="bonusDateInput" type="date" name="bonus_date" value="${bonusToday}" required></div><div class="field"><label>Loại tiền công/thưởng</label><select name="bonus_type"><option value="Hotbill">Hotbill</option><option value="Thưởng tuần">Thưởng tuần</option><option value="Thưởng KPI">Thưởng KPI</option><option value="Thưởng khác">Thưởng khác</option></select></div><div class="field"><label>Số tiền cộng thêm</label><input class="input" type="text" inputmode="numeric" data-number-format name="amount" required placeholder="100.000"></div><div class="field" style="grid-column:span 2"><label>Ghi chú</label><input class="input" name="note" placeholder="VD: Hotbill / thưởng tuần W30"></div><div style="grid-column:1/-1"><button class="btn">Cộng tiền</button></div></form></div>` : '';
   const rows = (data.summary || []).filter(b => !bonusStoreId || allowedStores.length <= 1 || Number(b.store_id) === Number(bonusStoreId));
   const list = rows.length ? `<div class="table-wrap"><table><thead><tr><th>Nhân viên</th><th>Cửa hàng</th><th>Tổng tiền công/thưởng</th><th>Hotbill</th><th>Thưởng tuần</th><th>Thưởng KPI</th><th>Khác</th><th>Số lần nhập</th><th>Cập nhật gần nhất</th><th>Ghi chú gần nhất</th></tr></thead><tbody>${rows.map(b => `<tr><td><b>${esc(b.employee_name)}</b></td><td>${esc(b.store_name || '')}</td><td><b>${money(b.total_amount)}đ</b></td><td>${money(b.hotbill_amount)}đ</td><td>${money(b.week_amount)}đ</td><td>${money(b.kpi_amount)}đ</td><td>${money(b.other_amount)}đ</td><td>${money(b.entries_count || 0)}</td><td>${dOnly(b.latest_date)}</td><td>${esc(b.latest_note || '')}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Chưa có dữ liệu tiền công/thưởng</div>';
   shell(`${form}<div class="card" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">Tổng tiền công/thưởng theo nhân viên</h3>${can('can_export') ? '<button class="btn secondary" data-export="bonuses">Tải Excel chi tiết</button>' : ''}</div>${list}</div>`, 'Tiền công/thưởng', 'Cộng tiền hotbill, thưởng tuần, thưởng KPI vào tổng tiền công của nhân viên');
   $('#bonusStoreFilter')?.addEventListener('change', e => { state.bonusStoreId = e.target.value; renderBonuses(); });
+  $('#bonusDateInput')?.addEventListener('change', async e => {
+    const sid = Number($('#bonusStoreFilter')?.value || bonusStoreId || 0);
+    const select = $('#bonusEmployeeSelect');
+    if (!sid || !select) return;
+    try {
+      const r = await api(`/api/store-staff?store_id=${encodeURIComponent(sid)}&date=${encodeURIComponent(e.target.value)}`);
+      const people = Array.isArray(r?.employees) ? r.employees : [];
+      select.innerHTML = people.map(u => `<option value="${u.id}">${esc(u.full_name)}${u.is_transfer_context ? ' • luân chuyển' : ''}</option>`).join('');
+    } catch (_err) {}
+  });
   $('#bonusForm')?.addEventListener('submit', async e => { e.preventDefault(); try { await api('/api/bonuses', { method: 'POST', body: JSON.stringify((() => { const payload = Object.fromEntries(new FormData(e.target)); payload.amount = cleanNumberInput(payload.amount); return payload; })()) }); toast('Đã cộng tiền công/thưởng'); renderBonuses(); } catch (err) { toast(err.message, 'danger'); } });
 }
 
