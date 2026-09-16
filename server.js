@@ -2191,7 +2191,8 @@ function excelHeaderLabel(key) {
     bai_dao_tao:'Bài đào tạo', diem:'Điểm', dung:'Số câu đúng', tong_cau:'Tổng câu', ket_qua:'Kết quả', ngay_lam_bai:'Ngày làm bài',
     loai:'Loại', vi_tri:'Vị trí', nhan_su:'Nhân sự', nguoi_dao_tao:'Người đào tạo', ma_tieu_chi:'Mã tiêu chí', nhom:'Nhóm', nang_luc:'Năng lực', tieu_chi:'Tiêu chí', ngay_training:'Ngày training', remark_cong_viec_hang_ngay:'Remark công việc hàng ngày', ngay_hoan_thanh_cong_viec:'Ngày hoàn thành công việc', link_cong_viec:'Link công việc', ghi_chu_training:'Ghi chú training', ghi_chu_chung:'Ghi chú chung', ngay_ke_hoach:'Ngày kế hoạch', gio_han:'Giờ hạn', tieu_de:'Tiêu đề', muc_tieu:'Mục tiêu', noi_dung:'Nội dung',
     category:'Danh mục', version:'Phiên bản', storage_type:'Loại lưu trữ', original_name:'Tên file', external_url:'Link', created_by_name:'Người tạo', download_count:'Lượt tải', description:'Mô tả',
-    phan:'Phần', tu_ngay:'Từ ngày', den_ngay:'Đến ngày', target_tuan:'Target tuần', phan_tram_dat:'% đạt', target_tuan_uoc_tinh:'Target tuần ước tính', ty_trong_dt:'% tỷ trọng DT', trang_thai_nhan_su:'Trạng thái nhân sự', feedback:'Feedback', van_de:'Vấn đề', hanh_dong_tuan_toi:'Hành động tuần tới', feedback_san_pham:'Feedback sản phẩm', top:'Top', san_pham:'Sản phẩm', ten_ctkm:'Tên CTKM', so_bill_tham_gia:'Số bill tham gia'
+    phan:'Phần', tu_ngay:'Từ ngày', den_ngay:'Đến ngày', target_tuan:'Target tuần', phan_tram_dat:'% đạt', target_tuan_uoc_tinh:'Target tuần ước tính', ty_trong_dt:'% tỷ trọng DT', trang_thai_nhan_su:'Trạng thái nhân sự', feedback:'Feedback', van_de:'Vấn đề', hanh_dong_tuan_toi:'Hành động tuần tới', feedback_san_pham:'Feedback sản phẩm', top:'Top', san_pham:'Sản phẩm', ten_ctkm:'Tên CTKM', so_bill_tham_gia:'Số bill tham gia',
+    ky:'Kỳ', chuc_vu:'Vị trí', tong_diem:'Tổng điểm', cong_viec_35:'Công việc /35', upt_30:'UPT /30', dao_tao_guests_20:'Đào tạo & GUESTS /20', ky_luat_15:'Kỷ luật /15', upt_dat:'UPT đạt', upt_percent:'% đạt UPT', ca_lam:'Ca làm', viec_duoc_giao:'Việc được giao', dung_han:'Đúng hạn', tre_han:'Trễ / quá hạn', khong_hoan_thanh:'Không hoàn thành'
   };
   if (labels[key]) return labels[key];
   return String(key || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
@@ -4175,8 +4176,39 @@ function aggregateProductLedgerAnalytics(user, opts={}) {
   const totals=rows.reduce((a,r)=>{['pos_qty','online_qty','unknown_qty','sold_qty','return_qty','import_qty','export_qty','stock_qty','sellable_qty','reserve_recommended'].forEach(k=>a[k]+=Number(r[k]||0));return a;},{pos_qty:0,online_qty:0,unknown_qty:0,sold_qty:0,return_qty:0,import_qty:0,export_qty:0,stock_qty:0,sellable_qty:0,reserve_recommended:0});
   const channelKnown=all.some(r=>r.channel&&r.channel!=='UNKNOWN');
   const valueKnown=all.some(r=>r.value_known);
-  return {source_mode:'ledger',start,end,store_id:scope,store_name:scope==='all'?'Toàn hệ thống':(getStore(scope)?.name||''),period_days:periodDays,search:opts.q||'',channel_known:channelKnown,value_known:valueKnown,totals,rows:speed,best_sellers:best,top_stock:stock.slice(0,100),top_imports:imports.slice(0,100),slow_movers:slow.slice(0,100)};
+  const restockRecommendations=buildRestockRecommendations(speed);
+  return {source_mode:'ledger',start,end,store_id:scope,store_name:scope==='all'?'Toàn hệ thống':(getStore(scope)?.name||''),period_days:periodDays,search:opts.q||'',channel_known:channelKnown,value_known:valueKnown,totals,rows:speed,best_sellers:best,top_stock:stock.slice(0,100),top_imports:imports.slice(0,100),slow_movers:slow.slice(0,100),restock_recommendations:restockRecommendations};
 }
+
+function buildRestockRecommendations(rows) {
+  const priorityRank={urgent:0,high:1,watch:2};
+  return (rows||[]).filter(r=>Number(r.sold_qty||0)>0 && Number(r.velocity||0)>0).map(r=>{
+    const sold=Number(r.sold_qty||0), stock=Math.max(0,Number(r.stock_qty||0)), velocity=Number(r.velocity||0);
+    const cover=r.days_cover==null?(stock<=0?0:null):Number(r.days_cover);
+    const soldBase=Math.max(1,sold+stock);
+    const sellThrough=Math.round((sold/soldBase)*1000)/10;
+    const daysSince=r.days_since_arrival==null?null:Number(r.days_since_arrival);
+    const recentHot=daysSince!==null && daysSince<=14 && sold>=3 && sellThrough>=40;
+    const targetDays=Math.max(recentHot?21:14, Math.min(45, Number(r.remaining_days||0)+7));
+    const desiredStock=Math.ceil(velocity*targetDays);
+    const restockQty=Math.max(0,desiredStock-stock);
+    const missSale=Math.max(0,Number(r.miss_sale_qty||0));
+    const shouldSuggest=restockQty>0 && (stock<=0 || missSale>0 || (cover!==null && cover<=14) || (recentHot && (cover===null || cover<=21)));
+    if(!shouldSuggest)return null;
+    let priority='watch',priority_label='Theo dõi sớm',reason='Tồn kho đang thấp so với tốc độ bán.';
+    if(stock<=0 || missSale>0 || (cover!==null && cover<=5)){
+      priority='urgent'; priority_label='Gấp';
+      reason=stock<=0?'Đã hết hàng nhưng vẫn có tốc độ bán.':(missSale>0?'Dự kiến thiếu hàng trước khi hết kỳ.':'Tồn chỉ đủ khoảng 5 ngày hoặc ít hơn.');
+    }else if((cover!==null && cover<=10) || recentHot){
+      priority='high'; priority_label='Nên tái';
+      reason=recentHot?'Hàng mới về đang có tỷ lệ bán nhanh, nên tái sớm.':'Tồn chỉ đủ khoảng 10 ngày hoặc ít hơn.';
+    }
+    const riskBase=cover===null?30:Math.max(0,30-cover);
+    const restockScore=Math.round((riskBase*2 + velocity*10 + sellThrough/5 + missSale*3)*100)/100;
+    return {...r,sell_through_pct:sellThrough,restock_target_days:targetDays,restock_qty:restockQty,restock_priority:priority,restock_priority_label:priority_label,restock_reason:reason,restock_score:restockScore};
+  }).filter(Boolean).sort((a,b)=>(priorityRank[a.restock_priority]??9)-(priorityRank[b.restock_priority]??9)||Number(b.restock_score||0)-Number(a.restock_score||0)||Number(b.velocity||0)-Number(a.velocity||0)||Number(b.sold_qty||0)-Number(a.sold_qty||0));
+}
+
 function productAnalyticsRange(rawStart, rawEnd) {
   const today=dateOnly(new Date());
   const start=/^\d{4}-\d{2}-\d{2}$/.test(String(rawStart||''))?String(rawStart):`${today.slice(0,7)}-01`;
@@ -4310,7 +4342,8 @@ function aggregateProductAnalytics(user, opts={}) {
   const slow=rows.filter(r=>eligible(r)&&r.stock_qty>0&&r.revenue>0).slice().sort((a,b)=>b.slow_score-a.slow_score||b.stock_qty-a.stock_qty||a.velocity-b.velocity);
   const speed=rows.filter(r=>eligible(r)&&(r.revenue>0||r.stock_qty>0||r.import_qty>0)).slice().sort((a,b)=>b.velocity-a.velocity||b.sold_qty-a.sold_qty);
   const totals=rows.reduce((a,r)=>{['pos_qty','online_qty','sold_qty','import_qty','export_qty','stock_qty','sellable_qty','potential_sell_qty','covered_sell_qty','miss_sale_qty','reserve_recommended'].forEach(k=>a[k]+=Number(r[k]||0));a.revenue+=Number(r.revenue||0);return a;},{pos_qty:0,online_qty:0,sold_qty:0,import_qty:0,export_qty:0,stock_qty:0,sellable_qty:0,potential_sell_qty:0,covered_sell_qty:0,miss_sale_qty:0,reserve_recommended:0,revenue:0});
-  return {source_mode:'sales_inventory',inventory_period_type:requestedPeriodType,inventory_period_found:exactInv.length>0,start,end,full_period_end:fullPeriodEnd,remaining_days:remainingDays,store_id:scope,store_name:scope==='all'?'Toàn hệ thống':(getStore(scope)?.name||''),period_days:periodDays,search:opts.q||'',totals,rows:speed,best_sellers:best,top_stock:stock.slice(0,100),top_imports:imports.slice(0,100),slow_movers:slow.slice(0,100)};
+  const restockRecommendations=buildRestockRecommendations(speed);
+  return {source_mode:'sales_inventory',inventory_period_type:requestedPeriodType,inventory_period_found:exactInv.length>0,start,end,full_period_end:fullPeriodEnd,remaining_days:remainingDays,store_id:scope,store_name:scope==='all'?'Toàn hệ thống':(getStore(scope)?.name||''),period_days:periodDays,search:opts.q||'',totals,rows:speed,best_sellers:best,top_stock:stock.slice(0,100),top_imports:imports.slice(0,100),slow_movers:slow.slice(0,100),restock_recommendations:restockRecommendations};
 }
 
 function weeklyAutoBestSellers(storeId,start,endExclusive) {
@@ -4384,7 +4417,10 @@ app.delete('/api/product-analytics/uploads/:batchId', requireAuth, (req,res)=>{
 app.get('/api/product-analytics/export.xlsx', requireAuth, (req,res)=>{
   try{
     const data=aggregateProductAnalytics(req.user,{store_id:req.query.store_id,start:req.query.start,end:req.query.end,q:req.query.q,period_type:req.query.period_type});
-    const rows=(data.rows||[]).map((r,i)=>({
+    const restockMap=new Map((data.restock_recommendations||[]).map(r=>[productNameKey(r.product_name),r]));
+    const rows=(data.rows||[]).map((r,i)=>{
+      const rr=restockMap.get(productNameKey(r.product_name))||{};
+      return ({
       stt:i+1,
       ten_san_pham:r.product_name||'',
       ban_pos:Number(r.pos_qty||0),
@@ -4402,8 +4438,12 @@ app.get('/api/product-analytics/export.xlsx', requireAuth, (req,res)=>{
       so_ngay_con_lai:Number(r.remaining_days||0),
       du_tru_de_xuat:Number(r.reserve_recommended||0),
       days_of_cover:r.days_cover==null?'':Number(r.days_cover),
-      ngay_nhap_gan_nhat:r.arrival_date||''
-    }));
+      ngay_nhap_gan_nhat:r.arrival_date||'',
+      sl_de_xuat_tai:Number(rr.restock_qty||0),
+      muc_do_de_xuat:rr.restock_priority_label||'',
+      ly_do_de_xuat:rr.restock_reason||''
+    });
+    });
     const buffer=toExcelBuffer(rows,'Phan tich hang hoa');
     res.header('Content-Type','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.attachment(`phan-tich-hang-hoa-${data.start}-${data.end}.xlsx`);res.send(buffer);
@@ -5998,13 +6038,49 @@ app.get('/api/export/:type.xlsx', requireAuth, requirePerm('can_export'), (req, 
   } else if (type === 'bonuses') {
     rows = bonusRowsForUser(req.user);
   } else if (type === 'performance') {
-    rows = computePerformance(req.user);
+    const now = new Date();
+    const year = Math.max(2000, Math.min(2100, Number(req.query.year) || now.getFullYear()));
+    const month = Math.max(1, Math.min(12, Number(req.query.month) || (now.getMonth() + 1)));
+    const storeId = Number(req.query.store_id || 0);
+    let performanceRows = computePerformance(req.user, year, month).sort((a, b) => Number(b.final_score || 0) - Number(a.final_score || 0));
+    if (storeId) {
+      const allowedStoreIds = getUserStoreIds(req.user).map(Number);
+      if (!isAllStoreRole(req.user) && !allowedStoreIds.includes(storeId)) return res.status(403).json({ error: 'Không có quyền xuất dữ liệu cửa hàng này' });
+      performanceRows = performanceRows.filter(r => Number(r.store_id) === storeId || (Array.isArray(r.period_store_ids) && r.period_store_ids.map(Number).includes(storeId)));
+    }
+    rows = performanceRows.map((r, idx) => ({
+      top: idx + 1,
+      ky: `Tháng ${month}/${year}`,
+      nhan_vien: r.full_name || '',
+      chuc_vu: r.role === 'manager' ? 'CHT' : 'NVBH',
+      cua_hang: (Array.isArray(r.period_store_names) && r.period_store_names.length ? r.period_store_names : [r.store_name || '']).filter(Boolean).join(' → '),
+      tong_diem: Number(r.final_score || 0),
+      cong_viec_35: Number(r.task_points_35 || 0),
+      upt_30: Number(r.upt_points_30 || 0),
+      dao_tao_guests_20: Number(r.training_guests_points_20 || 0),
+      ky_luat_15: Number(r.discipline_points_15 || 0),
+      upt_dat: Number(r.upt || 0),
+      target_upt: Number(r.target_upt || 0),
+      upt_percent: Number(r.upt_achievement_percent || 0),
+      ca_lam: Number(r.worked_shifts || 0),
+      viec_duoc_giao: Number(r.tasks_total || 0),
+      dung_han: Number(r.tasks_on_time || 0),
+      tre_han: Number(r.tasks_late || 0),
+      khong_hoan_thanh: Number(r.tasks_not_completed || 0)
+    }));
   } else {
     return res.status(404).json({ error: 'Loại xuất dữ liệu không hợp lệ' });
   }
-  const buffer = toExcelBuffer(rows, type);
+  const isPerformanceExport = type === 'performance';
+  const buffer = toExcelBuffer(rows, isPerformanceExport ? 'Tong hop diem' : type);
   res.header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-  res.attachment(`${type}-${dateOnly(new Date())}.xlsx`);
+  if (isPerformanceExport) {
+    const y = Math.max(2000, Math.min(2100, Number(req.query.year) || new Date().getFullYear()));
+    const m = Math.max(1, Math.min(12, Number(req.query.month) || (new Date().getMonth() + 1)));
+    res.attachment(`tong-hop-diem-${y}-${String(m).padStart(2, '0')}.xlsx`);
+  } else {
+    res.attachment(`${type}-${dateOnly(new Date())}.xlsx`);
+  }
   res.send(buffer);
 });
 

@@ -1,0 +1,19 @@
+DEZUS STORE OPS v4.213 - TỔNG HỢP ĐIỂM GỌN + EXPORT ĐÚNG KỲ
+
+1. Tổng hợp điểm
+- Đổi nút tải thành “Tải file tổng hợp điểm”.
+- File tải theo đúng Tháng / Năm / Cửa hàng đang chọn trên màn Tổng hợp điểm.
+- Tên file: tong-hop-diem-YYYY-MM.xlsx.
+
+2. File Excel rút gọn
+- Chỉ giữ các cột chính: Top, Kỳ, Nhân viên, Vị trí, Cửa hàng, Tổng điểm,
+  Công việc /35, UPT /30, Đào tạo & GUESTS /20, Kỷ luật /15,
+  UPT đạt, Target UPT, % đạt UPT, Ca làm, Việc được giao, Đúng hạn,
+  Trễ/quá hạn, Không hoàn thành.
+- Không xuất các object/JSON chi tiết gây khó đọc.
+
+3. Cách tính điểm
+- Thêm mục “Xem cách tính điểm” dạng thu gọn ngay trên trang Tổng hợp điểm.
+- Công việc 35đ; UPT 30đ nhưng được vượt tối đa 130% = 39đ;
+  Đào tạo & GUESTS 20đ; Kỷ luật 15đ.
+- Giữ nguyên công thức tính điểm hiện tại, chỉ làm rõ cách hiển thị và xuất file.

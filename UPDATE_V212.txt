@@ -1,0 +1,23 @@
+DEZUS STORE OPS v4.212 - ĐỀ XUẤT TÁI HÀNG
+
+1. Phân tích hàng hóa > Đề xuất tái
+- Thêm tab Đề xuất tái.
+- Hiển thị: mức độ ưu tiên, tên/mã sản phẩm, ngày về hàng, số ngày từ khi về, SL bán, tồn hiện tại, tốc độ bán/ngày, tỷ lệ đã bán, Days of Cover, mốc dự trữ, SL đề xuất tái và lý do.
+
+2. Tổng hợp
+- Thêm khối Đề xuất tái sớm ngay trong tab Tổng hợp.
+- Hiển thị top 5 mã cần xử lý và tổng số mã đang được đề xuất tái.
+- Có nút mở toàn bộ danh sách Đề xuất tái.
+
+3. Logic đề xuất
+- Chỉ xét sản phẩm đã phát sinh bán và có tốc độ bán > 0.
+- Ưu tiên mã tồn thấp so với tốc độ bán / có nguy cơ miss sale / đã hết hàng.
+- Mục tiêu dự trữ tối thiểu 14 ngày.
+- Hàng mới về bán nhanh có thể nâng mốc dự trữ lên 21 ngày.
+- Với kỳ hiện tại, hệ thống cộng thêm 7 ngày đệm để hạn chế hết hàng trước khi hàng tái về.
+- Mức độ: Gấp / Nên tái / Theo dõi sớm.
+
+4. Excel
+- File xuất Phân tích hàng hóa có thêm SL đề xuất tái, mức độ và lý do đề xuất.
+
+5. Không thay đổi LLV, target, doanh thu, phân quyền hoặc dữ liệu hiện tại.
