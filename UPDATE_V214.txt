@@ -1,0 +1,9 @@
+DEZUS STORE OPS v4.214 - ADMIN XÓA DỮ LIỆU THEO LOẠI
+
+- Thêm Admin > Dọn / Xóa dữ liệu theo loại.
+- Chỉ role Admin được xem và gọi API xóa; không thể cấp quyền này cho CHT/NVBH/Office.
+- Nhóm dữ liệu: LLV, doanh thu, target, báo cáo, order, đơn online, Loyalty/GGNV/Bill hủy, vi phạm, import phân tích hàng hóa, thùng rác công việc, backup cũ, ảnh/chứng từ mồ côi.
+- Có lọc cửa hàng, từ ngày, đến ngày khi phù hợp.
+- Bắt buộc Kiểm tra dữ liệu trước; hiển thị số bản ghi/file và dung lượng ước tính.
+- Xóa yêu cầu xác nhận + nhập XOA.
+- Dữ liệu nghiệp vụ tự tạo backup JSON trước khi xóa; nếu backup thất bại sẽ không xóa.

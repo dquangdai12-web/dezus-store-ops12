@@ -4364,7 +4364,22 @@ async function renderAdmin() {
   const storeEditCard = editStore ? `<div class="card" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">Sửa tên chi nhánh</h3><button class="btn secondary" id="cancelEditStoreBtn">Đóng</button></div><form id="editStoreForm" class="grid three admin-store-grid"><input type="hidden" name="id" value="${editStore.id}"><div class="field"><label>Tên chi nhánh</label><input class="input" name="name" value="${esc(editStore.name)}" required></div><div class="field"><label>Mã</label><input class="input readonly" value="${esc(editStore.code || '')}" readonly></div><div class="field admin-store-action"><label>&nbsp;</label><div class="row wrap"><button class="btn">Lưu tên</button><button class="btn secondary" type="button" id="cancelEditStoreBtn2">Hủy</button></div></div></form></div>` : '';
   const storeTable = `<div class="card" style="margin-top:16px"><h3>Danh sách chi nhánh</h3><div class="table-wrap"><table><thead><tr><th>ID</th><th>Chi nhánh</th><th>Mã</th><th>Trạng thái</th><th>Số tài khoản</th><th>Thao tác</th></tr></thead><tbody>${storeRows.map(st => `<tr><td><span class="badge dark">#${st.id}</span></td><td><b>${esc(st.name)}</b></td><td>${esc(st.code || '')}</td><td>${userStatusBadge(st.status || 'active')}</td><td>${money(st.users_count || 0)}</td><td><div class="row wrap"><button class="btn small secondary editStoreBtn" data-id="${st.id}">Sửa tên</button><button class="btn small danger deleteStoreBtn" data-id="${st.id}" data-name="${esc(st.name)}">Xóa chi nhánh</button></div></td></tr>`).join('')}</tbody></table></div></div>`;
   const exports = `<div class="card" style="margin-top:16px"><h3>Tải dữ liệu</h3><div class="export-grid"><button class="btn secondary" data-export="tasks">Công việc</button><button class="btn secondary" data-export="violations">Vi phạm</button><button class="btn secondary" data-export="assessments">Checklist</button><button class="btn secondary" data-export="sales">Doanh thu cập nhật</button><button class="btn secondary" data-export="sales_targets">Target tháng</button><button class="btn secondary" data-export="sales_daily_targets">Target ngày</button><button class="btn secondary" data-export="bonuses">Tiền thưởng</button><button class="btn secondary" data-export="documents">Tài liệu</button><button class="btn secondary" data-export="orders">Order hàng</button><button class="btn secondary" data-export="online_orders">Đơn online</button><button class="btn secondary" data-export="cdp_ojti">CDP/OJTI</button><button class="btn secondary" data-export="shifts">Ca làm</button><button class="btn secondary" data-export="work_schedules">Lịch làm việc</button><button class="btn secondary" data-export="user_transfers">Điều chuyển nhân sự</button><button class="btn secondary" data-export="performance">Tổng hợp điểm</button></div></div>`;
-  shell(`${form}${editCard}${transferCard}${storeForm}${storeEditCard}${storeTable}<div class="card" style="margin-top:16px"><h3>Danh sách tài khoản</h3>${table}</div>${exports}`, 'Admin', 'Cấp quyền, phân quyền xem và tải dữ liệu');
+  const cleanupCard = state.user?.role === 'admin' ? `<div class="card admin-cleanup-card" style="margin-top:16px">
+    <div class="toolbar"><div style="margin-right:auto"><p class="eyebrow">Chỉ Admin</p><h3>Dọn / Xóa dữ liệu theo loại</h3><p class="hint">Phân loại riêng từng nhóm. Hãy kiểm tra số bản ghi trước khi xóa. Dữ liệu nghiệp vụ sẽ tự tạo backup JSON trước khi xóa.</p></div></div>
+    <div class="admin-cleanup-warning"><b>Không cấp quyền này cho tài khoản khác.</b><span>Admin là vai trò duy nhất có thể gọi chức năng xóa hệ thống này.</span></div>
+    <form id="adminCleanupForm" class="grid four">
+      <div class="field"><label>Loại dữ liệu</label><select class="input" name="type" id="adminCleanupType">
+        <optgroup label="Dữ liệu vận hành"><option value="schedules">Lịch làm việc</option><option value="sales">Doanh thu ngày</option><option value="targets">Target tháng / ngày</option><option value="reports">Báo cáo ngày / tuần</option><option value="orders">Order hàng</option><option value="online_orders">Đơn online</option><option value="claims">Loyalty / GGNV / Bill hủy</option><option value="violations">Vi phạm</option><option value="product_imports">Dữ liệu import phân tích hàng hóa</option></optgroup>
+        <optgroup label="Dọn dung lượng"><option value="task_trash">Thùng rác công việc</option><option value="backups">File backup cũ</option><option value="orphan_uploads">Ảnh/chứng từ không còn tham chiếu</option></optgroup>
+      </select></div>
+      <div class="field"><label>Cửa hàng</label><select class="input" name="store_id" id="adminCleanupStore"><option value="">Tất cả cửa hàng</option>${storeRows.filter(st=>String(st.status||'active')!=='deleted').map(st=>`<option value="${st.id}">${esc(st.name)}</option>`).join('')}</select></div>
+      <div class="field"><label>Từ ngày</label><input class="input" type="date" name="from"></div>
+      <div class="field"><label>Đến ngày</label><input class="input" type="date" name="to"></div>
+      <div style="grid-column:1/-1" class="row wrap"><button type="button" class="btn secondary" id="adminCleanupPreviewBtn">Kiểm tra dữ liệu</button><button type="button" class="btn danger" id="adminCleanupDeleteBtn" disabled>Xóa dữ liệu đã kiểm tra</button></div>
+    </form>
+    <div id="adminCleanupPreview" class="admin-cleanup-preview"><div class="empty compact">Chọn loại dữ liệu và bấm “Kiểm tra dữ liệu”.</div></div>
+  </div>` : '';
+  shell(`${form}${editCard}${transferCard}${storeForm}${storeEditCard}${storeTable}<div class="card" style="margin-top:16px"><h3>Danh sách tài khoản</h3>${table}</div>${exports}${cleanupCard}`, 'Admin', 'Cấp quyền, phân quyền xem và tải dữ liệu');
   const createUserForm = $('#userForm');
   createUserForm?.querySelector('[name="role"]')?.addEventListener('change', () => applyRolePermissionPreset(createUserForm));
   $('#userForm')?.addEventListener('submit', async e => { e.preventDefault(); const fd = new FormData(e.target); const permissions = {}; Object.keys(PERM_LABELS).forEach(k => permissions[k] = fd.get(k) ? 1 : 0); const payload = { full_name: fd.get('full_name'), username: fd.get('username'), password: fd.get('password'), role: fd.get('role'), store_ids: selectedValues(e.target.querySelector('[name="store_ids"]')), permissions }; try { await api('/api/users', { method: 'POST', body: JSON.stringify(payload) }); toast('Đã tạo tài khoản'); await loadBase(); renderAdmin(); } catch (err) { toast(err.message, 'danger'); } });
@@ -4489,6 +4504,51 @@ async function renderAdmin() {
       renderAdmin();
     } catch (err) { toast(err.message, 'danger'); }
   }));
+
+  let adminCleanupLastPreview = null;
+  const cleanupForm = $('#adminCleanupForm');
+  const cleanupPreviewBox = $('#adminCleanupPreview');
+  const cleanupDeleteBtn = $('#adminCleanupDeleteBtn');
+  function cleanupFiltersFromForm() {
+    const fd = new FormData(cleanupForm);
+    return { type: fd.get('type') || '', store_id: fd.get('store_id') || '', from: fd.get('from') || '', to: fd.get('to') || '' };
+  }
+  async function previewAdminCleanup() {
+    if (!cleanupForm) return;
+    const f = cleanupFiltersFromForm();
+    if (cleanupPreviewBox) cleanupPreviewBox.innerHTML = '<div class="empty compact">Đang kiểm tra...</div>';
+    if (cleanupDeleteBtn) cleanupDeleteBtn.disabled = true;
+    try {
+      const q = new URLSearchParams(Object.entries(f).filter(([,v]) => v !== '')).toString();
+      const data = await api(`/api/admin/data-cleanup/preview?${q}`);
+      adminCleanupLastPreview = { filters: f, data };
+      const details = (data.details || []).map(x => `<tr><td>${esc(x.table || '')}</td><td><b>${Number(x.count || 0).toLocaleString('vi-VN')}</b></td></tr>`).join('');
+      cleanupPreviewBox.innerHTML = `<div class="cleanup-result-head"><div><span class="badge ${Number(data.count||0)?'danger':'ok'}">${Number(data.count||0).toLocaleString('vi-VN')} bản ghi/file</span><b>${esc(data.label || '')}</b></div><span class="hint">Ước tính ${fileSizeLabel(data.bytes || 0)}</span></div>${details?`<div class="table-wrap"><table><thead><tr><th>Nhóm dữ liệu</th><th>Số lượng</th></tr></thead><tbody>${details}</tbody></table></div>`:''}`;
+      if (cleanupDeleteBtn) cleanupDeleteBtn.disabled = Number(data.count || 0) <= 0;
+    } catch (err) {
+      adminCleanupLastPreview = null;
+      if (cleanupPreviewBox) cleanupPreviewBox.innerHTML = `<div class="empty compact">${esc(err.message)}</div>`;
+      toast(err.message, 'danger');
+    }
+  }
+  $('#adminCleanupPreviewBtn')?.addEventListener('click', previewAdminCleanup);
+  cleanupForm?.addEventListener('change', () => { adminCleanupLastPreview = null; if (cleanupDeleteBtn) cleanupDeleteBtn.disabled = true; });
+  cleanupDeleteBtn?.addEventListener('click', async () => {
+    if (!adminCleanupLastPreview) return toast('Hãy kiểm tra dữ liệu trước khi xóa', 'danger');
+    const { filters, data } = adminCleanupLastPreview;
+    const highRisk = !['backups','orphan_uploads','task_trash'].includes(filters.type);
+    const warning = highRisk ? '\n\nDữ liệu nghiệp vụ này có thể ảnh hưởng báo cáo lịch sử. Hệ thống sẽ tạo backup JSON trước khi xóa.' : '';
+    if (!confirm(`Xóa ${Number(data.count || 0).toLocaleString('vi-VN')} bản ghi/file thuộc “${data.label}”?${warning}`)) return;
+    const typed = prompt('Nhập XOA để xác nhận thao tác:');
+    if (String(typed || '').trim().toUpperCase() !== 'XOA') return toast('Đã hủy vì chưa nhập đúng XOA', 'danger');
+    try {
+      const res = await api('/api/admin/data-cleanup/delete', { method: 'POST', body: JSON.stringify({ ...filters, confirm_text: 'XOA' }) });
+      toast(`Đã xóa ${Number(res.deleted || 0).toLocaleString('vi-VN')} bản ghi/file${res.backup_file ? ' • Đã tạo backup' : ''}`);
+      adminCleanupLastPreview = null;
+      await previewAdminCleanup();
+    } catch (err) { toast(err.message, 'danger'); }
+  });
+
 }
 
 start();

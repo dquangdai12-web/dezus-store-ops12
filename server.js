@@ -273,9 +273,9 @@ function defaultDb() {
   const permissions = users.map(u => ({ user_id: u.id, ...ROLE_DEFAULTS[u.role] }));
   return {
     version: 2,
-    nextIds: { stores: 6, users: 7, tasks: 1, task_assignees: 1, violations: 1, violation_catalog_custom: 1, assessments: 1, assessment_items: 1, sales: 1, sales_targets: 1, sales_daily_targets: 1, sales_store_days: 1, bonuses: 1, documents: 1, shifts: 6, work_schedules: 1, orders: 1, online_orders: 1, product_feedback: 1, product_collections: 1, product_collection_items: 1, product_trainings: 1, product_training_attempts: 1, product_training_reads: 1, weekly_reports: 1, daily_reports: 1, cdp_ojti: 1, product_sales_imports: 1, product_inventory_imports: 1, product_import_batches: 1, loyalty_claims: 1, ggnv_claims: 1, bill_cancel_claims: 1, user_transfers: 1, task_delete_logs: 1 },
+    nextIds: { stores: 6, users: 7, tasks: 1, task_assignees: 1, violations: 1, violation_catalog_custom: 1, assessments: 1, assessment_items: 1, sales: 1, sales_targets: 1, sales_daily_targets: 1, sales_store_days: 1, bonuses: 1, documents: 1, shifts: 6, work_schedules: 1, orders: 1, online_orders: 1, product_feedback: 1, product_collections: 1, product_collection_items: 1, product_trainings: 1, product_training_attempts: 1, product_training_reads: 1, weekly_reports: 1, daily_reports: 1, cdp_ojti: 1, product_sales_imports: 1, product_inventory_imports: 1, product_import_batches: 1, loyalty_claims: 1, ggnv_claims: 1, bill_cancel_claims: 1, user_transfers: 1, task_delete_logs: 1, admin_cleanup_logs: 1 },
     stores, users, permissions, shifts,
-    tasks: [], task_assignees: [], violations: [], violation_catalog_custom: [], assessments: [], assessment_items: [], sales: [], sales_targets: [], sales_daily_targets: [], sales_store_days: [], bonuses: [], documents: [], orders: [], online_orders: [], product_feedback: [], product_collections: [], product_collection_items: [], product_trainings: [], product_training_attempts: [], product_training_reads: [], weekly_reports: [], daily_reports: [], cdp_ojti: [], product_sales_imports: [], product_inventory_imports: [], product_import_batches: [], loyalty_claims: [], ggnv_claims: [], bill_cancel_claims: [], work_schedules: [], user_transfers: [], task_delete_logs: []
+    tasks: [], task_assignees: [], violations: [], violation_catalog_custom: [], assessments: [], assessment_items: [], sales: [], sales_targets: [], sales_daily_targets: [], sales_store_days: [], bonuses: [], documents: [], orders: [], online_orders: [], product_feedback: [], product_collections: [], product_collection_items: [], product_trainings: [], product_training_attempts: [], product_training_reads: [], weekly_reports: [], daily_reports: [], cdp_ojti: [], product_sales_imports: [], product_inventory_imports: [], product_import_batches: [], loyalty_claims: [], ggnv_claims: [], bill_cancel_claims: [], work_schedules: [], user_transfers: [], task_delete_logs: [], admin_cleanup_logs: []
   };
 }
 
@@ -329,7 +329,8 @@ function loadDb() {
       shifts: parsed.shifts || base.shifts,
       work_schedules: parsed.work_schedules || [],
       user_transfers: parsed.user_transfers || [],
-      task_delete_logs: parsed.task_delete_logs || []
+      task_delete_logs: parsed.task_delete_logs || [],
+      admin_cleanup_logs: parsed.admin_cleanup_logs || []
     };
   } catch (err) {
     const backup = DB_PATH + `.broken-${Date.now()}.bak`;
@@ -363,6 +364,101 @@ function backupDbBeforeTaskDelete() {
   }
 }
 
+
+
+function backupDbBeforeAdminCleanup(label = 'cleanup') {
+  try {
+    if (!fs.existsSync(DB_PATH)) return null;
+    const dir = path.join(DATA_DIR, 'backups');
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    const safe = String(label || 'cleanup').replace(/[^a-zA-Z0-9_-]+/g, '-').slice(0, 50) || 'cleanup';
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const out = path.join(dir, `admin-${safe}-${stamp}.json`);
+    fs.copyFileSync(DB_PATH, out);
+    return out;
+  } catch (err) {
+    console.error('Không thể tạo backup trước khi dọn dữ liệu:', err.message);
+    return null;
+  }
+}
+
+const ADMIN_CLEANUP_TYPES = Object.freeze({
+  schedules: { label: 'Lịch làm việc', tables: ['work_schedules'] },
+  sales: { label: 'Doanh thu ngày', tables: ['sales', 'sales_store_days'] },
+  targets: { label: 'Target tháng / ngày', tables: ['sales_targets', 'sales_daily_targets'] },
+  reports: { label: 'Báo cáo ngày / tuần', tables: ['daily_reports', 'weekly_reports'] },
+  orders: { label: 'Order hàng', tables: ['orders'] },
+  online_orders: { label: 'Đơn online', tables: ['online_orders'] },
+  claims: { label: 'Loyalty / GGNV / Bill hủy', tables: ['loyalty_claims', 'ggnv_claims', 'bill_cancel_claims'] },
+  violations: { label: 'Vi phạm', tables: ['violations'] },
+  product_imports: { label: 'Dữ liệu import phân tích hàng hóa', tables: ['product_sales_imports', 'product_inventory_imports', 'product_import_batches'] },
+  task_trash: { label: 'Thùng rác công việc', tables: ['task_delete_logs'] },
+  backups: { label: 'File backup cũ', fileMode: 'backups' },
+  orphan_uploads: { label: 'Ảnh/chứng từ không còn tham chiếu', fileMode: 'orphan_uploads' }
+});
+
+function adminCleanupRowDate(row) {
+  if (!row || typeof row !== 'object') return '';
+  const keys = ['work_date','sale_date','target_date','target_month','report_date','week_start','order_date','invoice_date','record_date','import_date','created_at','deleted_at','updated_at','date'];
+  for (const key of keys) {
+    const raw = row[key];
+    if (!raw) continue;
+    const str = String(raw);
+    if (/^\d{4}-\d{2}$/.test(str)) return str + '-01';
+    const m = str.match(/^(\d{4}-\d{2}-\d{2})/);
+    if (m) return m[1];
+  }
+  return '';
+}
+function adminCleanupRowStoreId(row) {
+  if (!row || typeof row !== 'object') return 0;
+  return Number(row.store_id || row.location_store_id || 0) || 0;
+}
+function adminCleanupMatches(row, { store_id, from, to }) {
+  const sid = Number(store_id || 0);
+  if (sid && adminCleanupRowStoreId(row) !== sid) return false;
+  if (from || to) {
+    const d = adminCleanupRowDate(row);
+    if (!d) return false;
+    if (from && d < String(from)) return false;
+    if (to && d > String(to)) return false;
+  }
+  return true;
+}
+function adminCleanupPreview(type, filters = {}) {
+  const cfg = ADMIN_CLEANUP_TYPES[type];
+  if (!cfg) throw Object.assign(new Error('Loại dữ liệu không hợp lệ'), { status: 400 });
+  if (cfg.fileMode === 'backups') {
+    const dir = path.join(DATA_DIR, 'backups');
+    const files = fs.existsSync(dir) ? fs.readdirSync(dir).filter(name => fs.statSync(path.join(dir, name)).isFile()) : [];
+    const to = String(filters.to || '');
+    const rows = files.map(name => {
+      const full = path.join(dir, name); const st = fs.statSync(full);
+      return { name, full, bytes: st.size, date: st.mtime.toISOString().slice(0,10) };
+    }).filter(x => !to || x.date <= to);
+    return { type, label: cfg.label, count: rows.length, bytes: rows.reduce((a,x)=>a+x.bytes,0), details: [{ table: 'data/backups', count: rows.length }], fileRows: rows };
+  }
+  if (cfg.fileMode === 'orphan_uploads') {
+    const files = fs.existsSync(UPLOAD_DIR) ? fs.readdirSync(UPLOAD_DIR).filter(name => { try { return fs.statSync(path.join(UPLOAD_DIR,name)).isFile(); } catch { return false; } }) : [];
+    const dbText = JSON.stringify(db);
+    const rows = files.map(name => {
+      const full = path.join(UPLOAD_DIR,name); const st = fs.statSync(full);
+      const referenced = dbText.includes(`/uploads/${name}`) || dbText.includes(`uploads/${name}`);
+      return { name, full, bytes: st.size, referenced };
+    }).filter(x => !x.referenced);
+    return { type, label: cfg.label, count: rows.length, bytes: rows.reduce((a,x)=>a+x.bytes,0), details: [{ table: 'uploads (mồ côi)', count: rows.length }], fileRows: rows };
+  }
+  const details = [];
+  let count = 0, bytes = 0;
+  for (const table of cfg.tables) {
+    const arr = Array.isArray(db[table]) ? db[table] : [];
+    const matched = arr.filter(row => adminCleanupMatches(row, filters));
+    const b = Buffer.byteLength(JSON.stringify(matched), 'utf8');
+    details.push({ table, count: matched.length, bytes: b });
+    count += matched.length; bytes += b;
+  }
+  return { type, label: cfg.label, count, bytes, details };
+}
 
 function nextId(name) {
   const id = Number(db.nextIds[name] || 1);
@@ -5951,6 +6047,54 @@ app.get('/api/reports/performance', requireAuth, (req, res) => {
   const { start, end } = periodRange('month', new Date(Date.UTC(year, month - 1, 1)));
   const performance = computePerformance(req.user, year, month).sort((a, b) => b.final_score - a.final_score);
   res.json({ performance, storeSummary: storeSummaryRows(req.user, start, end), year, month });
+});
+
+
+// V4.214 - Dọn dữ liệu theo loại, chỉ Admin có quyền.
+app.get('/api/admin/data-cleanup/preview', requireAuth, (req, res) => {
+  if (req.user?.role !== 'admin') return res.status(403).json({ error: 'Chỉ Admin được xem/xóa dữ liệu hệ thống' });
+  try {
+    const type = String(req.query.type || '').trim();
+    const preview = adminCleanupPreview(type, { store_id: req.query.store_id, from: req.query.from, to: req.query.to });
+    return res.json({ ok: true, ...preview, details: preview.details || [] });
+  } catch (err) { return res.status(err.status || 500).json({ error: err.message || 'Không kiểm tra được dữ liệu' }); }
+});
+
+app.post('/api/admin/data-cleanup/delete', requireAuth, (req, res) => {
+  if (req.user?.role !== 'admin') return res.status(403).json({ error: 'Chỉ Admin được xóa dữ liệu hệ thống' });
+  const type = String(req.body?.type || '').trim();
+  const confirmText = String(req.body?.confirm_text || '').trim().toUpperCase();
+  if (confirmText !== 'XOA') return res.status(400).json({ error: 'Nhập XOA để xác nhận' });
+  const cfg = ADMIN_CLEANUP_TYPES[type];
+  if (!cfg) return res.status(400).json({ error: 'Loại dữ liệu không hợp lệ' });
+  const filters = { store_id: req.body?.store_id, from: req.body?.from, to: req.body?.to };
+  try {
+    const preview = adminCleanupPreview(type, filters);
+    if (!preview.count) return res.json({ ok: true, deleted: 0, message: 'Không có dữ liệu phù hợp để xóa' });
+    let backupPath = null;
+    let deleted = 0;
+    if (cfg.fileMode === 'backups') {
+      for (const row of preview.fileRows || []) { try { fs.unlinkSync(row.full); deleted += 1; } catch (_) {} }
+    } else if (cfg.fileMode === 'orphan_uploads') {
+      for (const row of preview.fileRows || []) { try { fs.unlinkSync(row.full); deleted += 1; } catch (_) {} }
+    } else {
+      backupPath = backupDbBeforeAdminCleanup(type);
+      if (!backupPath) return res.status(500).json({ error: 'Không tạo được backup nên hệ thống đã hủy thao tác xóa' });
+      for (const table of cfg.tables) {
+        const arr = Array.isArray(db[table]) ? db[table] : [];
+        const before = arr.length;
+        db[table] = arr.filter(row => !adminCleanupMatches(row, filters));
+        deleted += before - db[table].length;
+      }
+      db.admin_cleanup_logs = db.admin_cleanup_logs || [];
+      db.admin_cleanup_logs.push({
+        id: nextId('admin_cleanup_logs'), type, label: cfg.label, filters: clone(filters), deleted_count: deleted,
+        backup_file: backupPath ? path.basename(backupPath) : '', deleted_by: req.user.id, deleted_at: nowIso()
+      });
+      saveDb();
+    }
+    return res.json({ ok: true, deleted, backup_file: backupPath ? path.basename(backupPath) : '', bytes: preview.bytes || 0 });
+  } catch (err) { return res.status(err.status || 500).json({ error: err.message || 'Không xóa được dữ liệu' }); }
 });
 
 app.get('/api/export/:type.xlsx', requireAuth, requirePerm('can_export'), (req, res) => {

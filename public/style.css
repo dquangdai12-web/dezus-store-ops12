@@ -6141,3 +6141,12 @@ section.card>.toolbar+p.hint{display:none!important}
 @media (max-width: 700px){
   .daily-target-weekday-actions .btn{flex:1 1 calc(25% - 7px);min-width:54px}
 }
+
+
+/* V4.214 - Admin cleanup */
+.admin-cleanup-warning{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border:1px solid rgba(190,120,40,.28);border-radius:14px;margin:10px 0 14px;background:rgba(190,120,40,.06)}
+.admin-cleanup-warning span{color:var(--muted);font-size:13px}
+.admin-cleanup-preview{margin-top:14px}
+.cleanup-result-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px}
+.cleanup-result-head>div{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+@media(max-width:720px){.admin-cleanup-card .grid.four{grid-template-columns:1fr}.cleanup-result-head{align-items:flex-start;flex-direction:column}}
