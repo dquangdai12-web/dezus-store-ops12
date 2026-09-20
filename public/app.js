@@ -16,6 +16,7 @@ const state = {
   scheduleDate: isoDateLocal(new Date()),
   scheduleMonth: currentMonthLocal(),
   scheduleStoreId: '',
+  scheduleEmployeeStatus: 'active',
   orderStoreId: '',
   feedbackStoreId: '',
   feedbackMonth: new Date().toISOString().slice(0, 7),
@@ -4110,7 +4111,9 @@ async function renderSchedule() {
   const allSchedules = weekDatas.flatMap(d => d.schedules || []);
   const monthEmployeeMap = new Map();
   weekDatas.forEach(d => (d.employees || []).forEach(emp => monthEmployeeMap.set(Number(emp.id), emp)));
-  const monthEmployees = Array.from(monthEmployeeMap.values()).sort((a,b) => String(a.role||'').localeCompare(String(b.role||'')) || String(a.full_name||'').localeCompare(String(b.full_name||''),'vi'));
+  const scheduleEmployeeStatus = state.scheduleEmployeeStatus === 'all' ? 'all' : 'active';
+  const visibleScheduleEmployee = emp => scheduleEmployeeStatus === 'all' || String(emp.status || 'active') === 'active';
+  const monthEmployees = Array.from(monthEmployeeMap.values()).filter(visibleScheduleEmployee).sort((a,b) => String(a.role||'').localeCompare(String(b.role||'')) || String(a.full_name||'').localeCompare(String(b.full_name||''),'vi'));
   const scheduleMap = new Map(allSchedules.map(x => [`${x.user_id}_${x.work_date}`, x]));
   const canManage = Number(base.can_manage) === 1 || can('can_manage_schedule');
   const isEditing = canManage && state.scheduleEditMode;
@@ -4122,11 +4125,11 @@ async function renderSchedule() {
       ? `<button class="btn" type="submit" form="scheduleForm">Lưu lịch</button><button class="btn secondary" type="button" id="cancelScheduleEditBtn">Hủy sửa</button>`
       : `<button class="btn" type="button" id="editScheduleBtn">Sửa lịch</button>`)
     : '';
-  const filter = `<div class="card"><div class="toolbar"><h3 style="margin-right:auto">Lịch làm việc ${monthLabel(month)}</h3>${actions}${can('can_export') ? '<button class="btn secondary" data-export="work_schedules">Tải Excel lịch</button>' : ''}</div><div class="grid three">${storeSelect}<div class="field"><label>Chọn tháng</label><input class="input" type="month" id="scheduleMonthInput" value="${esc(month)}"></div><div class="field"><label>Chế độ</label><input class="input" value="${isEditing ? 'Đang sửa: chọn ca và thêm ghi chú' : 'Đang xem: bảng ca gọn, chỉ hiện mã ca'}" disabled></div></div></div>`;
+  const filter = `<div class="card"><div class="toolbar"><h3 style="margin-right:auto">Lịch làm việc ${monthLabel(month)}</h3>${actions}${can('can_export') ? '<button class="btn secondary" data-export="work_schedules">Tải Excel lịch</button>' : ''}</div><div class="grid three">${storeSelect}<div class="field"><label>Chọn tháng</label><input class="input" type="month" id="scheduleMonthInput" value="${esc(month)}"></div><div class="field"><label>Nhân sự hiển thị</label><select class="input" id="scheduleEmployeeStatusFilter"><option value="active" ${scheduleEmployeeStatus === 'active' ? 'selected' : ''}>Nhân viên đang làm</option><option value="all" ${scheduleEmployeeStatus === 'all' ? 'selected' : ''}>Toàn bộ nhân viên</option></select></div></div></div>`;
   const shiftOptions = (selected) => `<option value="" data-code="">OFF</option>${shifts.map(sh => `<option value="${sh.id}" data-code="${esc(shiftCode(sh))}" ${Number(sh.id) === Number(selected) ? 'selected' : ''}>${esc(shiftCode(sh))}</option>`).join('')}`;
   const makeRows = (week) => {
     const weekData = weekDatas.find(d => String(d.week_start) === String(week.week_start));
-    const weekEmployees = (weekData?.employees || []).slice().sort((a,b) => String(a.role||'').localeCompare(String(b.role||'')) || String(a.full_name||'').localeCompare(String(b.full_name||''),'vi'));
+    const weekEmployees = (weekData?.employees || []).filter(visibleScheduleEmployee).sort((a,b) => String(a.role||'').localeCompare(String(b.role||'')) || String(a.full_name||'').localeCompare(String(b.full_name||''),'vi'));
     return weekEmployees.map(emp => {
     const weekEmp = emp;
     const eligibleDates = new Set(Array.isArray(weekEmp?.eligible_dates) ? weekEmp.eligible_dates : []);
@@ -4151,6 +4154,7 @@ async function renderSchedule() {
   shell(`${filter}${scheduleTable}${shiftForm}`, 'Lịch làm việc', '');
   $('#scheduleMonthInput')?.addEventListener('change', e => { state.scheduleMonth = e.target.value; state.scheduleDate = `${e.target.value}-01`; state.scheduleEditMode = false; renderSchedule(); });
   $('#scheduleStoreFilter')?.addEventListener('change', e => { state.scheduleStoreId = e.target.value; state.scheduleEditMode = false; renderSchedule(); });
+  $('#scheduleEmployeeStatusFilter')?.addEventListener('change', e => { state.scheduleEmployeeStatus = e.target.value === 'all' ? 'all' : 'active'; renderSchedule(); });
   $('#editScheduleBtn')?.addEventListener('click', () => { state.scheduleEditMode = true; renderSchedule(); });
   $('#cancelScheduleEditBtn')?.addEventListener('click', () => { state.scheduleEditMode = false; renderSchedule(); });
   $$('.scheduleShift').forEach(sel => {
