@@ -620,7 +620,6 @@ function navItems() {
     ['ggnv', 'GGNV', 'GG', 'revenue'],
     ['bill_cancel', 'Bill hủy', 'BH', 'revenue'],
     ['online_orders', 'Đơn online', 'OL', 'revenue'],
-    ['bonuses', 'Tiền thưởng', '₫', 'revenue'],
     ['orders', 'Order hàng', 'SKU', 'product'],
     ['product_analytics', 'Phân tích hàng hóa', 'PA', 'product'],
     ['cdp_ojti', 'CDP / OJTI', 'OJTI', 'work'],
@@ -776,10 +775,10 @@ function shell(content, title = 'Tổng Quan', subtitle = 'Vận hành cửa hà
           <button class="mobile-icon-btn" id="logoutBtn2" title="Đăng xuất">↗</button>
         </div>
         <div class="topbar">
-          <div class="page-title"><h2>${esc(title)}</h2></div>
+          <div class="page-title">${state.route === 'dashboard' ? '' : `<h2>${esc(title)}</h2>`}</div>
           <div class="row mobile-top"><button class="btn secondary" id="logoutBtn3">Đăng xuất</button></div>
         </div>
-        <div class="mobile-page-title"><h2>${esc(mobileTitle)}</h2><button class="mobile-page-logout" id="logoutBtnMobile" type="button" aria-label="Đăng xuất">Đăng xuất</button></div>
+        <div class="mobile-page-title">${state.route === 'dashboard' ? '' : `<h2>${esc(mobileTitle)}</h2>`}<button class="mobile-page-logout" id="logoutBtnMobile" type="button" aria-label="Đăng xuất">Đăng xuất</button></div>
         <div class="mobile-cats">${mobileCats}</div>
         ${content}
       </main>
@@ -1045,15 +1044,13 @@ async function overviewPerformanceForPeriod(ctx) {
 
 async function renderDashboard() {
   const ctx = overviewPeriodContext();
-  const [tasksData, violationsData, leaderboardData, myPerf] = await Promise.all([
+  const [tasksData, leaderboardData, myPerf] = await Promise.all([
     api('/api/tasks'),
-    api('/api/violations'),
     api(`/api/sales/leaderboard?period=${encodeURIComponent(ctx.period)}&date=${encodeURIComponent(ctx.refDate)}&scope=overview_percent`),
     overviewPerformanceForPeriod(ctx),
   ]);
   const allTasks = tasksData.tasks || [];
   const tasks = allTasks.filter(t => overviewInPeriod(t.task_date || t.due_at || t.created_at, ctx));
-  const violations = (violationsData.violations || []).filter(v => overviewInPeriod(v.created_at || v.violation_date, ctx));
   const open = tasks.filter(t => t.status === 'assigned').length;
   const late = tasks.filter(t => ['overdue','completed_late','not_completed'].includes(t.status)).length;
   const done = tasks.filter(t => t.status === 'completed_on_time').length;
@@ -1088,10 +1085,7 @@ async function renderDashboard() {
       <div class="section-title"><h3>Top % đạt target doanh thu ${periodText}</h3><span class="badge">${esc(ctx.label)}</span></div>
       ${overviewLeaderboardCards(leaderboardRows)}
     </section>
-    <section class="card overview-violations-card overview-section-stack" style="margin-top:17px">
-      <div class="section-title"><h3>Vi phạm trong ${periodText}</h3><span class="badge danger">${violations.length} lỗi</span></div>
-      ${violations.slice(0, 8).map(v => `<div class="activity-item"><div><b>${esc(v.employee_name)}</b><span>${esc(v.store_name || '')} • ${dt(v.created_at)}</span><p>${esc(v.description || '')}</p></div><span class="badge danger">-${v.points_deducted}</span></div>`).join('') || '<div class="empty">Không có vi phạm trong kỳ này</div>'}
-    </section>
+
   `, 'Tổng Quan', '');
   $('#toggleOverviewRevenueBtn')?.addEventListener('click', () => {
     state.overviewRevenueExpanded = !state.overviewRevenueExpanded;

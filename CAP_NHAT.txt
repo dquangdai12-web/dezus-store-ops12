@@ -1,0 +1,12 @@
+DEZUS — GIAO DIỆN GỐC, TỔNG QUAN GỌN HƠN
+
+- Bỏ tiêu đề Tổng Quan trong nội dung trang (máy tính và điện thoại).
+- Bỏ khối Vi phạm trong tháng/quý/năm khỏi trang Tổng quan.
+- Bỏ mục Tiền thưởng trong nhóm Doanh thu.
+- Giữ chức năng xóa cửa hàng đã đóng chỉ cho admin; giữ dữ liệu lịch sử.
+- Giữ màu sắc, font, icon và bố cục gốc ở các phần còn lại.
+
+Cập nhật: server.js, public/app.js và public/index.html vào repo đang chạy,
+sau đó deploy lại Render. Nếu từng dùng giao diện thử, dùng public/style.css
+của gói này để khôi phục giao diện gốc.
+Không ghi đè dữ liệu thực tế, biến môi trường hoặc cấu hình ổ đĩa.
