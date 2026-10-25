@@ -2976,7 +2976,7 @@ app.delete('/api/user-transfers/:id', requireAuth, requirePerm('can_manage_users
 
 app.get('/api/stores', requireAuth, requirePerm('can_manage_users'), (req, res) => {
   const statusMode = ['active', 'inactive', 'all'].includes(String(req.query.status || 'active')) ? String(req.query.status || 'active') : 'active';
-  let rows = (db.stores || []).slice();
+  let rows = (db.stores || []).filter(s => s.status !== 'deleted');
   if (statusMode === 'active') rows = rows.filter(s => String(s.status || 'active') === 'active');
   if (statusMode === 'inactive') rows = rows.filter(s => String(s.status || 'active') !== 'active');
   rows.sort((a, b) => Number(a.id) - Number(b.id));
@@ -3002,7 +3002,7 @@ app.post('/api/stores', requireAuth, requirePerm('can_manage_users'), (req, res)
 
 app.patch('/api/stores/:id', requireAuth, requirePerm('can_manage_users'), (req, res) => {
   const id = Number(req.params.id);
-  const store = (db.stores || []).find(s => Number(s.id) === id);
+  const store = (db.stores || []).find(s => Number(s.id) === id && s.status !== 'deleted');
   if (!store) return res.status(404).json({ error: 'Không tìm thấy chi nhánh' });
   const name = String(req.body?.name || '').trim();
   if (!name) return res.status(400).json({ error: 'Vui lòng nhập tên chi nhánh' });
@@ -3017,37 +3017,20 @@ app.patch('/api/stores/:id', requireAuth, requirePerm('can_manage_users'), (req,
   res.json({ ok: true, store: clone(store) });
 });
 
-app.delete('/api/stores/:id', requireAuth, requirePerm('can_manage_users'), (req, res) => {
+// Retain the store record so historical reports can still resolve its name.
+app.delete('/api/stores/:id', requireAuth, (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Chỉ Admin được xóa cửa hàng đã đóng cửa' });
   const id = Number(req.params.id);
-  const store = (db.stores || []).find(s => Number(s.id) === id);
+  const store = (db.stores || []).find(s => Number(s.id) === id && s.status !== 'deleted');
   if (!store) return res.status(404).json({ error: 'Không tìm thấy chi nhánh' });
-  const refs = [];
-  const hasRef = (arr, fn) => Array.isArray(arr) && arr.some(fn);
-  if (hasRef(db.users, u => String(u.status || 'active') !== 'deleted' && (Number(u.store_id) === id || getUserStoreIds(u).includes(id)))) refs.push('tài khoản');
-  if (hasRef(db.tasks, x => Number(x.store_id) === id)) refs.push('công việc');
-  if (hasRef(db.violations, x => Number(x.store_id) === id)) refs.push('vi phạm');
-  if (hasRef(db.assessments, x => Number(x.store_id) === id)) refs.push('đánh giá');
-  if (hasRef(db.sales, x => Number(x.store_id) === id)) refs.push('doanh thu');
-  if (hasRef(db.sales_targets, x => Number(x.store_id) === id)) refs.push('target tháng');
-  if (hasRef(db.sales_daily_targets, x => Number(x.store_id) === id)) refs.push('target ngày');
-  if (hasRef(db.sales_store_days, x => Number(x.store_id) === id)) refs.push('tổng khách/ngày');
-  if (hasRef(db.bonuses, x => Number(x.store_id) === id)) refs.push('thưởng');
-  if (hasRef(db.documents, x => Number(x.store_id) === id)) refs.push('tài liệu');
-  if (hasRef(db.shifts, x => Number(x.store_id) === id)) refs.push('ca làm');
-  if (hasRef(db.work_schedules, x => Number(x.store_id) === id)) refs.push('lịch làm việc');
-  if (hasRef(db.user_transfers, x => x.status !== 'deleted' && (Number(x.from_store_id) === id || Number(x.to_store_id) === id))) refs.push('lịch sử điều chuyển');
-  if (hasRef(db.orders, x => Number(x.store_id) === id)) refs.push('order hàng');
-  if (hasRef(db.online_orders, x => Number(x.store_id) === id)) refs.push('đơn online');
-  if (hasRef(db.product_feedback, x => Number(x.store_id) === id)) refs.push('đánh giá sản phẩm');
-  if (hasRef(db.product_collections, x => Number(x.store_id) === id)) refs.push('bộ sưu tập');
-  if (hasRef(db.product_trainings, x => Number(x.store_id) === id)) refs.push('đào tạo sản phẩm');
-  if (hasRef(db.weekly_reports, x => Number(x.store_id) === id)) refs.push('báo cáo tuần');
-  if (hasRef(db.daily_reports, x => Number(x.store_id) === id)) refs.push('báo cáo ngày');
-  if (hasRef(db.cdp_ojti, x => Number(x.store_id) === id)) refs.push('CDP/OJTI');
-  if (refs.length) return res.status(400).json({ error: `Không thể xóa chi nhánh vì đang có dữ liệu liên quan: ${refs.join(', ')}` });
-  db.stores = (db.stores || []).filter(s => Number(s.id) !== id);
+  if (req.body?.confirm_closed !== true) return res.status(400).json({ error: 'Vui lòng xác nhận cửa hàng đã đóng cửa' });
+  store.status = 'deleted';
+  store.deleted_at = nowIso();
+  store.deleted_by = req.user.id;
+  store.updated_at = store.deleted_at;
+  store.updated_by = req.user.id;
   saveDb();
-  res.json({ ok: true, deleted: true });
+  res.json({ ok: true, deleted: true, history_preserved: true });
 });
 
 

@@ -1,0 +1,11 @@
+V216 - Xóa cửa hàng đã đóng (chỉ Admin)
+
+- Admin > Quản lý chi nhánh > Xóa cửa hàng đã đóng.
+- Xác nhận cửa hàng đã đóng trước khi xóa khỏi danh sách hoạt động.
+- Chỉ vai trò admin được gọi API xóa; quyền quản lý tài khoản không cấp quyền này.
+- Giữ nguyên dữ liệu lịch sử và tên cửa hàng, kể cả khi đã có doanh thu, lịch làm hoặc tài khoản liên quan.
+- Ghi nhận admin thực hiện và thời gian xóa.
+
+Cập nhật Render: thay server.js và public/app.js trong repo đang triển khai,
+commit/push và deploy lại. Không thay dữ liệu thực tế, biến môi trường hay cấu hình ổ đĩa.
+Kiểm tra: node --test tests/store-delete.test.js
