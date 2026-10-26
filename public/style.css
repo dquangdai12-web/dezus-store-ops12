@@ -6150,3 +6150,8 @@ section.card>.toolbar+p.hint{display:none!important}
 .cleanup-result-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px}
 .cleanup-result-head>div{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 @media(max-width:720px){.admin-cleanup-card .grid.four{grid-template-columns:1fr}.cleanup-result-head{align-items:flex-start;flex-direction:column}}
+
+/* V221: direct shift-code entry, original schedule layout preserved. */
+.schedule-cell .scheduleShift[hidden]{display:none!important}
+.schedule-cell .scheduleQuickShift{width:100%;text-align:center;font-weight:700;text-transform:uppercase;min-height:38px}
+.schedule-cell .scheduleQuickShift[aria-invalid="true"]{border-color:var(--danger);box-shadow:0 0 0 2px rgba(184,55,49,.15)}

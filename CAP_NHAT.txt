@@ -11,3 +11,9 @@ Cập nhật: server.js, public/app.js và public/index.html vào repo đang ch�
 sau đó deploy lại Render. Nếu từng dùng giao diện thử, dùng public/style.css
 của gói này để khôi phục giao diện gốc.
 Không ghi đè dữ liệu thực tế, biến môi trường hoặc cấu hình ổ đĩa.
+
+NHẬP NHANH LỊCH LÀM VIỆC
+Bấm Sửa lịch, nhập trực tiếp mã ca (không phân biệt hoa/thường).
+Có danh sách gợi ý để chọn; Enter chuyển sang ô ca tiếp theo, Shift+Enter quay lại.
+OFF hoặc để trống = nghỉ/chưa phân ca. Mã không hợp lệ sẽ chặn lưu.
+Bấm Lưu lịch để cập nhật; vẫn giữ ghi chú và quyền quản lý lịch hiện có.
