@@ -1,6 +1,7 @@
 DEZUS — GIAO DIỆN GỐC, TỔNG QUAN GỌN HƠN
 
 - Bỏ tiêu đề Tổng Quan trong nội dung trang (máy tính và điện thoại).
+- Bỏ hai dòng Tổng quan tháng và Dữ liệu đang hiển thị theo; giữ bộ lọc kỳ.
 - Bỏ khối Vi phạm trong tháng/quý/năm khỏi trang Tổng quan.
 - Bỏ mục Tiền thưởng trong nhóm Doanh thu.
 - Giữ chức năng xóa cửa hàng đã đóng chỉ cho admin; giữ dữ liệu lịch sử.

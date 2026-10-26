@@ -1028,7 +1028,7 @@ function overviewPeriodPicker(ctx) {
   } else {
     picker = `<div class="field overview-period-field"><label>Năm</label><select class="input" id="overviewYearFilter">${overviewYearsOptions(ctx.year)}</select></div>`;
   }
-  return `<section class="card overview-period-card"><div class="overview-period-head"><div><h3>Tổng quan ${ctx.period==='month'?'tháng':ctx.period==='quarter'?'quý':'năm'}</h3><p class="hint">Dữ liệu đang hiển thị theo <b>${esc(ctx.label)}</b></p></div>${tabs}</div><div class="overview-period-controls">${picker}</div></section>`;
+  return `<section class="card overview-period-card"><div class="overview-period-head">${tabs}</div><div class="overview-period-controls">${picker}</div></section>`;
 }
 
 async function overviewPerformanceForPeriod(ctx) {
