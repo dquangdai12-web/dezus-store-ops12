@@ -6155,3 +6155,9 @@ section.card>.toolbar+p.hint{display:none!important}
 .schedule-cell .scheduleShift[hidden]{display:none!important}
 .schedule-cell .scheduleQuickShift{width:100%;text-align:center;font-weight:700;text-transform:uppercase;min-height:38px}
 .schedule-cell .scheduleQuickShift[aria-invalid="true"]{border-color:var(--danger);box-shadow:0 0 0 2px rgba(184,55,49,.15)}
+
+/* V224: select uploads for quick cleanup. */
+.pa-cleanup-select{display:flex;gap:8px;align-items:center;font-size:12px;white-space:nowrap}
+.pa-cleanup-select input{width:18px;height:18px;accent-color:var(--brand)}
+.pa-history-row:has(.pa-batch-select){grid-template-columns:auto auto minmax(0,1fr) auto}
+@media(max-width:699px){.pa-history-row:has(.pa-batch-select){grid-template-columns:auto minmax(0,1fr)}.pa-history-row:has(.pa-batch-select) .pa-history-main{grid-column:1/-1}.pa-history-row:has(.pa-batch-select) .pa-delete-upload{grid-column:1/-1}}

@@ -4439,6 +4439,22 @@ function weeklyAutoBestSellers(storeId,start,endExclusive) {
 }
 
 
+// Non-admin accounts receive only the summary used by their dashboard.
+function productAnalyticsForViewer(user, data) {
+  if (user.role === 'admin') return data;
+  const pick = (row, keys) => Object.fromEntries(keys.filter(k => row[k] !== undefined).map(k => [k, row[k]]));
+  const basicKeys = ['product_name', 'sold_qty', 'stock_qty', 'velocity'];
+  const top = key => (data[key] || []).slice(0, 5).map(row => pick(row, basicKeys));
+  return {
+    access: 'summary', start:data.start, end:data.end, store_id:data.store_id,
+    store_name:data.store_name, period_days:data.period_days,
+    totals:pick(data.totals || {}, ['pos_qty','online_qty','import_qty','stock_qty','potential_sell_qty','sellable_qty','miss_sale_qty']),
+    best_sellers:top('best_sellers'), top_stock:top('top_stock'), slow_movers:top('slow_movers'),
+    restock_count:(data.restock_recommendations || []).length,
+    restock_recommendations:(data.restock_recommendations || []).slice(0,5).map(row => pick(row, ['product_name','restock_qty','restock_priority','restock_priority_label']))
+  };
+}
+
 app.get('/api/product-analytics/uploads', requireAuth, (req,res)=>{
   if(req.user.role!=='admin') return res.status(403).json({error:'Chỉ Admin được xem dữ liệu đã upload'});
   db.product_sales_imports=db.product_sales_imports||[];
@@ -4510,7 +4526,31 @@ app.delete('/api/product-analytics/uploads/:batchId', requireAuth, (req,res)=>{
   res.json({ok:true,deleted_rows:deletedRows,message:`Đã xóa lần upload ${batch.file_name||('#'+batchId)} (${deletedRows} dòng dữ liệu).`});
 });
 
+app.post('/api/product-analytics/uploads/delete-many', requireAuth, (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({error:'Chỉ Admin được xóa dữ liệu đã upload'});
+  const input = req.body?.batch_ids;
+  if (req.body?.confirmed !== true || !Array.isArray(input) || !input.length || input.length > 5000 || input.some(id => !Number.isSafeInteger(Number(id)) || Number(id) <= 0)) {
+    return res.status(400).json({error:'Chọn lần upload cần xóa và xác nhận phạm vi trước khi xóa'});
+  }
+  const ids = new Set(input.map(Number));
+  const batches = (db.product_import_batches || []).filter(b => ids.has(Number(b.id)) && b.status !== 'deleted');
+  if (batches.length !== ids.size) return res.status(409).json({error:'Danh sách upload đã thay đổi. Tải lại trang và chọn lại trước khi xóa.'});
+  const timestamp = nowIso();
+  let deletedRows = 0;
+  for (const name of ['product_sales_imports','product_inventory_imports','product_zero_value_exclusions','product_stock_ledger']) {
+    for (const row of db[name] || []) {
+      if (row.status !== 'deleted' && ids.has(Number(row.batch_id))) {
+        row.status = 'deleted'; row.deleted_at = timestamp; row.deleted_by = req.user.id; deletedRows++;
+      }
+    }
+  }
+  for (const batch of batches) { batch.status = 'deleted'; batch.deleted_at = timestamp; batch.deleted_by = req.user.id; }
+  saveDb();
+  res.json({ok:true, deleted_batches:batches.length, deleted_rows:deletedRows, message:`Đã xóa ${batches.length} lần upload (${deletedRows} dòng liên quan).`});
+});
+
 app.get('/api/product-analytics/export.xlsx', requireAuth, (req,res)=>{
+  if(req.user.role!=='admin') return res.status(403).json({error:'Chỉ Admin được tải dữ liệu chi tiết phân tích hàng hóa'});
   try{
     const data=aggregateProductAnalytics(req.user,{store_id:req.query.store_id,start:req.query.start,end:req.query.end,q:req.query.q,period_type:req.query.period_type});
     const restockMap=new Map((data.restock_recommendations||[]).map(r=>[productNameKey(r.product_name),r]));
@@ -4547,7 +4587,7 @@ app.get('/api/product-analytics/export.xlsx', requireAuth, (req,res)=>{
 });
 
 app.get('/api/product-analytics', requireAuth, (req,res)=>{
-  try { res.json(aggregateProductAnalytics(req.user,{store_id:req.query.store_id,start:req.query.start,end:req.query.end,q:req.query.q,period_type:req.query.period_type})); }
+  try { res.json(productAnalyticsForViewer(req.user, aggregateProductAnalytics(req.user,{store_id:req.query.store_id,start:req.query.start,end:req.query.end,q:req.query.q,period_type:req.query.period_type}))); }
   catch(err){ res.status(400).json({error:err.message||'Không thể tổng hợp hàng hóa'}); }
 });
 

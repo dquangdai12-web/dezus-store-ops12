@@ -30,3 +30,16 @@ Hiện bảng ngay đầu Phân tích hàng hóa cho admin: loại dữ liệu, 
 kỳ dữ liệu, số dòng còn và nhãn cũ hơn kỳ đang xem.
 Bao gồm doanh thu hàng hóa, xuất nhập tồn và sổ nhập/xuất kho nếu có.
 Kỳ cũ hiện trước; có thể mở xem toàn bộ. Đếm cả dữ liệu không còn gắn lần upload.
+
+V224 — PHÂN QUYỀN VÀ XÓA NHANH PHÂN TÍCH HÀNG HÓA
+- Admin xem dữ liệu chi tiết, file Excel, lịch sử nhập và quản lý dữ liệu.
+- Tài khoản khác chỉ xem tab Tổng hợp theo phạm vi cửa hàng hiện có.
+  API chỉ trả chỉ số và top 5 tổng hợp; không trả bảng chi tiết.
+- Admin lọc loại dữ liệu / kỳ cũ, chọn nhiều hoặc chọn tất cả đang hiển thị,
+  rồi bấm Xóa các lần upload đã chọn và xác nhận một lần.
+- Đổi bộ lọc sẽ bỏ chọn để tránh xóa nhầm các dòng đang bị ẩn.
+- Xóa theo toàn bộ lần upload, bao gồm tất cả cửa hàng trong file đó.
+- 6 bài kiểm tra đã đạt: giới hạn dữ liệu, quyền xóa/Excel, xác nhận và phạm vi xóa.
+
+Cập nhật server.js, public/app.js, public/index.html và public/style.css,
+sau đó deploy lại Render. Không thay dữ liệu thực tế hoặc biến môi trường.

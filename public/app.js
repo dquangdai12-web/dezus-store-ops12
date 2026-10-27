@@ -3140,10 +3140,10 @@ async function renderProductAnalytics(){
   const kpis=`<div class="grid four pa-kpis"><div class="card kpi pa-kpi"><div class="label">Bán POS</div><div class="num">${money(t.pos_qty||0)}</div></div><div class="card kpi pa-kpi"><div class="label">Bán Online</div><div class="num">${money(t.online_qty||0)}</div></div><div class="card kpi pa-kpi"><div class="label">Tổng nhập / Tồn</div><div class="num">${money(t.import_qty||0)} / ${money(t.stock_qty||0)}</div></div><div class="card kpi pa-kpi"><div class="label">Có thể bán thêm / Miss sale</div><div class="num">${money(t.potential_sell_qty??t.sellable_qty??0)} / ${money(t.miss_sale_qty||0)}</div></div></div>`;
   const hiddenTabs=['speed','best'];
   if(hiddenTabs.includes(state.productAnalyticsTab))state.productAnalyticsTab='sales';
-  const tabDefs=[['summary','Tổng hợp'],['sales','Chi tiết bán hàng'],['imports','Chi tiết nhập hàng'],['restock','Đề xuất tái'],['stock','Hàng tồn nhiều'],['slow','Hàng bán chậm']];if(isAdmin)tabDefs.push(['upload','Nhập file Sapo']);if(!isAdmin&&state.productAnalyticsTab==='upload')state.productAnalyticsTab='summary';
+  const tabDefs=[['summary','Tổng hợp'],['sales','Chi tiết bán hàng'],['imports','Chi tiết nhập hàng'],['restock','Đề xuất tái'],['stock','Hàng tồn nhiều'],['slow','Hàng bán chậm']];if(isAdmin)tabDefs.push(['upload','Nhập file Sapo']);if(!isAdmin){tabDefs.splice(1);state.productAnalyticsTab='summary';}
   const tabs=tabDefs.map(([k,l])=>`<button class="btn ${state.productAnalyticsTab===k?'':'secondary'} pa-tab" data-tab="${k}" type="button">${l}</button>`).join('');
   let content='';
-  if(state.productAnalyticsTab==='summary'){const best=(data.best_sellers||[]).slice(0,5),stock=(data.top_stock||[]).slice(0,5),slow=(data.slow_movers||[]).slice(0,5),restock=(data.restock_recommendations||[]).slice(0,5);const mini=(title,rows,field,suffix='')=>`<div class="card pa-mini"><h3>${title}</h3>${rows.length?rows.map((r,i)=>`<div class="pa-rank"><span class="badge dark">${i+1}</span><b>${esc(r.product_name||'')}</b><strong>${field==='velocity'?fmt2(r[field]||0):money(r[field]||0)}${suffix}</strong></div>`).join(''):'<div class="empty">Chưa có dữ liệu</div>'}</div>`;const restockMini=`<div class="card pa-mini pa-restock-mini"><div class="section-title"><h3>Đề xuất tái sớm</h3><span class="badge warn">${money((data.restock_recommendations||[]).length)} mã</span></div>${restock.length?restock.map((r,i)=>`<div class="pa-rank"><span class="badge ${r.restock_priority==='urgent'?'danger':r.restock_priority==='high'?'warn':'dark'}">${esc(r.restock_priority_label||'')}</span><b>${esc(r.product_name||'')}</b><strong>+${money(r.restock_qty||0)}</strong></div>`).join(''):'<div class="empty">Chưa có mã cần đề xuất tái</div>'}<div style="margin-top:10px"><button class="btn small secondary pa-open-restock" type="button">Xem toàn bộ đề xuất tái</button></div></div>`;content=`<div class="grid three pa-summary-grid">${mini('Top bán chạy',best,'sold_qty',' món')}${mini('Tồn nhiều',stock,'stock_qty','')}${mini('Bán chậm / tồn nhiều',slow,'stock_qty',' tồn')}</div><div style="margin-top:14px">${restockMini}</div><div class="card" style="margin-top:14px"><div class="section-title"><h3>Chi tiết tổng hợp</h3><div class="row">${productAnalyticsSortControl('speed')}<span class="badge">${data.period_days||1} ngày</span></div></div>${productAnalyticsTable(data.rows||[],'speed')}</div>`;}
+  if(state.productAnalyticsTab==='summary'){const best=(data.best_sellers||[]).slice(0,5),stock=(data.top_stock||[]).slice(0,5),slow=(data.slow_movers||[]).slice(0,5),restock=(data.restock_recommendations||[]).slice(0,5);const mini=(title,rows,field,suffix='')=>`<div class="card pa-mini"><h3>${title}</h3>${rows.length?rows.map((r,i)=>`<div class="pa-rank"><span class="badge dark">${i+1}</span><b>${esc(r.product_name||'')}</b><strong>${field==='velocity'?fmt2(r[field]||0):money(r[field]||0)}${suffix}</strong></div>`).join(''):'<div class="empty">Chưa có dữ liệu</div>'}</div>`;const restockMini=`<div class="card pa-mini pa-restock-mini"><div class="section-title"><h3>Đề xuất tái sớm</h3><span class="badge warn">${money(data.restock_count??(data.restock_recommendations||[]).length)} mã</span></div>${restock.length?restock.map((r,i)=>`<div class="pa-rank"><span class="badge ${r.restock_priority==='urgent'?'danger':r.restock_priority==='high'?'warn':'dark'}">${esc(r.restock_priority_label||'')}</span><b>${esc(r.product_name||'')}</b><strong>+${money(r.restock_qty||0)}</strong></div>`).join(''):'<div class="empty">Chưa có mã cần đề xuất tái</div>'}${isAdmin?'<div style="margin-top:10px"><button class="btn small secondary pa-open-restock" type="button">Xem toàn bộ đề xuất tái</button></div>':''}</div>`;content=`<div class="grid three pa-summary-grid">${mini('Top bán chạy',best,'sold_qty',' món')}${mini('Tồn nhiều',stock,'stock_qty','')}${mini('Bán chậm / tồn nhiều',slow,'stock_qty',' tồn')}</div><div style="margin-top:14px">${restockMini}</div>${isAdmin?`<div class="card" style="margin-top:14px"><div class="section-title"><h3>Chi tiết tổng hợp</h3><div class="row">${productAnalyticsSortControl('speed')}<span class="badge">${data.period_days||1} ngày</span></div></div>${productAnalyticsTable(data.rows||[],'speed')}</div>`:''}`;}
   else if(state.productAnalyticsTab==='sales')content=`<div class="card"><div class="section-title"><h3>Chi tiết bán hàng</h3><div class="row">${productAnalyticsSortControl('sales')}<span class="badge">POS / Online</span></div></div>${productAnalyticsTable(data.rows||[],'sales')}</div>`;
   else if(state.productAnalyticsTab==='best')content=`<div class="card"><div class="section-title"><h3>15 sản phẩm bán chạy</h3><div class="row">${productAnalyticsSortControl('speed')}<span class="badge">Gộp theo tên</span></div></div>${productAnalyticsTable((data.best_sellers||[]).slice(0,15),'speed')}</div>`;
   else if(state.productAnalyticsTab==='stock')content=`<div class="card"><div class="section-title"><h3>Hàng tồn nhiều</h3>${productAnalyticsSortControl('stock')}</div>${productAnalyticsTable(data.top_stock||[],'stock')}</div>`;
@@ -3191,7 +3191,7 @@ async function renderProductAnalytics(){
   </div>`
   else content=`<div class="card"><div class="section-title"><h3>Tốc độ bán</h3>${productAnalyticsSortControl('speed')}</div>${productAnalyticsTable(data.rows||[],'speed')}</div>`;
   const sourceWarning='';
-  const exportBtn=`<button class="btn secondary" id="paExportExcel" type="button">Tải Excel</button>`;
+  const exportBtn=isAdmin?`<button class="btn secondary" id="paExportExcel" type="button">Tải Excel</button>`:'';
   const coverageRows = uploadStatus?.coverage || [];
   const coverageType = row => row.type === 'sales' ? 'Doanh thu hàng hóa' : row.type === 'ledger' ? 'Sổ nhập / xuất kho' : `Xuất nhập tồn ${row.inventory_period_type === 'week' ? 'tuần' : row.inventory_period_type === 'month' ? 'tháng' : ''}`;
   const coverageTable = rows => `<div class="table-wrap"><table><thead><tr><th>Loại dữ liệu</th><th>Cửa hàng</th><th>Kỳ dữ liệu</th><th>Số dòng còn</th><th>So với kỳ đang xem</th></tr></thead><tbody>${rows.map(row => `<tr><td>${esc(coverageType(row))}</td><td>${esc(row.store_name)}</td><td>${row.start ? `${dOnly(row.start)} → ${dOnly(row.end)}` : 'Chưa có ngày'}${row.untracked_rows ? '<div class="hint">Có dữ liệu không gắn lần upload còn hiệu lực</div>' : ''}</td><td>${money(row.row_count)}</td><td>${row.end && row.end < range.start ? '<span class="badge warn">Cũ hơn kỳ đang xem</span>' : row.start && row.start > range.end ? 'Sau kỳ đang xem' : row.start ? 'Trong / giao với kỳ đang xem' : 'Chưa xác định'}</td></tr>`).join('')}</tbody></table></div>`;
@@ -3202,8 +3202,9 @@ async function renderProductAnalytics(){
     <div class="pa-history-body">
       <p class="hint">Xóa theo từng lần upload Sapo. Kiểm tra loại dữ liệu, kỳ báo cáo, cửa hàng và tên file trước khi xóa. Nếu file có nhiều cửa hàng, toàn bộ các cửa hàng trong lần upload đó đều bị ảnh hưởng.</p>
       <div class="grid two"><div class="field"><label>Loại dữ liệu cần tìm</label><select class="input" id="paCleanupType"><option value="all">Tất cả dữ liệu upload</option><option value="sales">Doanh thu hàng hóa</option><option value="inventory_detail">Xuất nhập tồn</option></select></div><div class="field"><label>Kỳ báo cáo kết thúc trước ngày (không bắt buộc)</label><input class="input" type="date" id="paCleanupBefore"></div></div>
+      <div class="row" style="margin:12px 0"><button class="btn secondary" id="paSelectVisible" type="button">Chọn tất cả đang hiển thị</button><button class="btn secondary" id="paClearSelection" type="button">Bỏ chọn</button><button class="btn danger" id="paDeleteSelected" type="button" disabled>Xóa các lần upload đã chọn</button><span class="hint" id="paSelectionCount" aria-live="polite"></span></div>
       <div class="hint" id="paCleanupCount" aria-live="polite"></div>
-      <div class="pa-history-list" id="paUploadHistory">${uploadBatches.length?uploadBatches.map(b=>`<div class="pa-history-row" data-upload-row="${esc(b.type)}" data-period-end="${esc(b.period_end||b.period_start||'')}"><span class="badge ${b.type==='sales'?'dark':''}">${b.type==='sales'?'Doanh thu':`XNT ${b.inventory_period_type==='week'?'Tuần':b.inventory_period_type==='month'?'Tháng':''}`}</span><div class="pa-history-main"><b>${esc((b.store_names||[]).join(', ')||'Không xác định cửa hàng')}</b><span>Kỳ báo cáo: ${dOnly(b.period_start)}${b.period_end&&b.period_end!==b.period_start?` → ${dOnly(b.period_end)}`:''} • ${money(b.active_rows??b.rows_valid??0)} dòng hiện còn</span><small>File: ${esc(b.file_name||'Không có tên')} ${b.created_at?`• Upload: ${dt(b.created_at)}`:''}</small></div><button class="btn danger pa-delete-upload" data-batch-id="${b.id}" type="button">Xóa lần upload này</button></div>`).join(''):'<div class="empty">Không có dữ liệu upload để xóa</div>'}</div>
+      <div class="pa-history-list" id="paUploadHistory">${uploadBatches.length?uploadBatches.map(b=>`<div class="pa-history-row" data-upload-row="${esc(b.type)}" data-period-end="${esc(b.period_end||b.period_start||'')}"><label class="pa-cleanup-select"><input type="checkbox" class="pa-batch-select" data-batch-id="${b.id}" aria-label="Chọn lần upload ${esc(b.file_name||String(b.id))}"> Chọn</label><span class="badge ${b.type==='sales'?'dark':''}">${b.type==='sales'?'Doanh thu':`XNT ${b.inventory_period_type==='week'?'Tuần':b.inventory_period_type==='month'?'Tháng':''}`}</span><div class="pa-history-main"><b>${esc((b.store_names||[]).join(', ')||'Không xác định cửa hàng')}</b><span>Kỳ báo cáo: ${dOnly(b.period_start)}${b.period_end&&b.period_end!==b.period_start?` → ${dOnly(b.period_end)}`:''} • ${money(b.active_rows??b.rows_valid??0)} dòng hiện còn</span><small>File: ${esc(b.file_name||'Không có tên')} ${b.created_at?`• Upload: ${dt(b.created_at)}`:''}</small></div><button class="btn danger pa-delete-upload" data-batch-id="${b.id}" type="button">Xóa lần upload này</button></div>`).join(''):'<div class="empty">Không có dữ liệu upload để xóa</div>'}</div>
       <div class="empty" id="paCleanupEmpty" hidden>Không tìm thấy dữ liệu phù hợp với bộ lọc.</div>
     </div>
   </details>`:'';
@@ -3231,7 +3232,41 @@ async function renderProductAnalytics(){
     const panel = $('#paCleanupPanel');
     panel?.addEventListener('toggle', () => { state.productAnalyticsCleanupOpen = panel.open; });
     $('#paOpenCleanup')?.addEventListener('click', () => { if (panel) { panel.open = true; state.productAnalyticsCleanupOpen = true; panel.scrollIntoView({behavior:'smooth',block:'start'}); } });
+    const selectedBatches = () => {
+      const ids = new Set($$('.pa-batch-select').filter(box => box.checked).map(box => String(box.dataset.batchId)));
+      return uploadBatches.filter(b => ids.has(String(b.id)));
+    };
+    const updateSelection = () => {
+      const selected = selectedBatches();
+      const rows = selected.reduce((sum,b) => sum + Number(b.active_rows??b.rows_valid??0), 0);
+      $('#paSelectionCount').textContent = `Đã chọn ${selected.length} lần upload • ${money(rows)} dòng dữ liệu`;
+      $('#paDeleteSelected').disabled = !selected.length;
+    };
+    $$('.pa-batch-select').forEach(box => box.addEventListener('change', updateSelection));
+    $('#paSelectVisible')?.addEventListener('click', () => {
+      $$('.pa-batch-select').forEach(box => { box.checked = !box.closest('[data-upload-row]').hidden; });
+      updateSelection();
+    });
+    $('#paClearSelection')?.addEventListener('click', () => { $$('.pa-batch-select').forEach(box => box.checked=false); updateSelection(); });
+    $('#paDeleteSelected')?.addEventListener('click', async () => {
+      const selected = selectedBatches();
+      if (!selected.length) return;
+      const rows = selected.reduce((sum,b) => sum + Number(b.active_rows??b.rows_valid??0),0);
+      const stores = [...new Set(selected.flatMap(b => b.store_names || []))].join(', ');
+      const files = selected.slice(0,10).map(b => `• ${b.file_name||'#'+b.id}: ${b.period_start||'?'} → ${b.period_end||b.period_start||'?'}`).join('\n');
+      if (!confirm(`XÓA NHANH ${selected.length} LẦN UPLOAD\n\nCửa hàng bị ảnh hưởng: ${stores||'Không xác định'}\n${money(rows)} dòng bán hàng / XNT và các dòng liên quan.\n${files}${selected.length>10?'\n… và '+(selected.length-10)+' lần upload khác':''}\n\nXóa toàn bộ các cửa hàng trong những file đã chọn. Xác nhận xóa?`)) return;
+      const button = $('#paDeleteSelected');
+      button.disabled = true;
+      try {
+        const out = await api('/api/product-analytics/uploads/delete-many', {method:'POST',body:JSON.stringify({batch_ids:selected.map(b=>b.id),confirmed:true})});
+        toast(out.message || 'Đã xóa dữ liệu đã chọn');
+        await renderProductAnalytics();
+      } catch (err) { toast(err.message,'danger'); button.disabled = false; }
+    });
+    updateSelection();
     const filterCleanup = () => {
+      $$('.pa-batch-select').forEach(box => box.checked=false);
+      updateSelection();
       const type = $('#paCleanupType').value;
       const before = $('#paCleanupBefore').value;
       let count = 0;
