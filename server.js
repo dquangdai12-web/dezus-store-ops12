@@ -320,6 +320,7 @@ function loadDb() {
       weekly_reports: parsed.weekly_reports || [],
       daily_reports: parsed.daily_reports || [],
       cdp_ojti: parsed.cdp_ojti || [],
+      product_price_lines: parsed.product_price_lines || [],
       product_sales_imports: parsed.product_sales_imports || [],
       product_inventory_imports: parsed.product_inventory_imports || [],
       product_import_batches: parsed.product_import_batches || [],
@@ -4440,13 +4441,51 @@ function weeklyAutoBestSellers(storeId,start,endExclusive) {
 
 
 // Non-admin accounts receive only the summary used by their dashboard.
+function sapoNumber(value) {
+  if(typeof value==='number') return Number.isFinite(value)?value:0;
+  const text=String(value??'').trim().replace(/\s|₫|đ|VND/gi,'');
+  if(!text) return 0;
+  const n=Number(text.includes(',')?text.replace(/\./g,'').replace(',','.'):text);
+  return Number.isFinite(n)?n:0;
+}
+function summarizePriceMix(lines) {
+  const groups={full:{quantity:0,revenue:0},discount:{quantity:0,revenue:0},unknown:{quantity:0,revenue:0}};
+  const bills=new Set(); let missingBills=0;
+  for(const r of lines){
+    const g=groups[r.price_group]||groups.unknown;
+    g.quantity+=r.quantity;g.revenue+=r.total_revenue;
+    if(r.order_id)bills.add(`${r.store_id}|${r.order_id}`);else missingBills++;
+  }
+  const quantity=Object.values(groups).reduce((n,g)=>n+g.quantity,0);
+  const revenue=Object.values(groups).reduce((n,g)=>n+g.revenue,0);
+  for(const g of Object.values(groups)){
+    g.quantity_pct=quantity>0?g.quantity/quantity*100:null;
+    g.revenue_pct=revenue>0?g.revenue/revenue*100:null;
+    g.quantity_per_bill=!missingBills&&bills.size?g.quantity/bills.size:null;
+  }
+  return {groups,quantity,revenue,bills:missingBills?null:bills.size,missing_bills:missingBills,line_count:lines.length};
+}
+function priceMixForViewer(user,opts={}) {
+  const {start,end}=productAnalyticsRange(opts.start,opts.end);
+  const scope=effectiveProductStoreId(user,opts.store_id);
+  const active=(db.product_price_lines||[]).filter(r=>r.status!=='deleted'&&(scope==='all'||Number(r.store_id)===Number(scope)));
+  const selected=[];
+  for(const sid of new Set(active.map(r=>r.store_id))){
+    const rows=active.filter(r=>r.store_id===sid);
+    const exact=rows.filter(r=>r.period_start===start&&r.period_end===end);
+    const atomic=rows.filter(r=>r.period_start===r.period_end&&r.period_start>=start&&r.period_end<=end);
+    selected.push(...(exact.length?exact:atomic));
+  }
+  return summarizePriceMix(selected);
+}
+
 function productAnalyticsForViewer(user, data) {
   if (user.role === 'admin') return data;
   const pick = (row, keys) => Object.fromEntries(keys.filter(k => row[k] !== undefined).map(k => [k, row[k]]));
   const basicKeys = ['product_name', 'sold_qty', 'stock_qty', 'velocity'];
   const top = key => (data[key] || []).slice(0, 5).map(row => pick(row, basicKeys));
   return {
-    access: 'summary', start:data.start, end:data.end, store_id:data.store_id,
+    price_mix:data.price_mix, access: 'summary', start:data.start, end:data.end, store_id:data.store_id,
     store_name:data.store_name, period_days:data.period_days,
     totals:pick(data.totals || {}, ['pos_qty','online_qty','import_qty','stock_qty','potential_sell_qty','sellable_qty','miss_sale_qty']),
     best_sellers:top('best_sellers'), top_stock:top('top_stock'), slow_movers:top('slow_movers'),
@@ -4461,13 +4500,14 @@ app.get('/api/product-analytics/uploads', requireAuth, (req,res)=>{
   db.product_inventory_imports=db.product_inventory_imports||[];
   db.product_import_batches=db.product_import_batches||[];
   const activeBatchIds=new Set([
+    ...(db.product_price_lines||[]).filter(r=>r.status!=='deleted').map(r=>Number(r.batch_id)),
     ...db.product_sales_imports.filter(r=>r.status!=='deleted').map(r=>Number(r.batch_id||0)),
     ...db.product_inventory_imports.filter(r=>r.status!=='deleted').map(r=>Number(r.batch_id||0))
   ]);
   const batches=(db.product_import_batches||[]).filter(b=>b.status!=='deleted'&&activeBatchIds.has(Number(b.id))).map(b=>{
     const bid=Number(b.id);
     const sourceRows=b.type==='sales'
-      ? db.product_sales_imports.filter(r=>r.status!=='deleted'&&Number(r.batch_id)===bid)
+      ? [...db.product_sales_imports,...(db.product_price_lines||[])].filter(r=>r.status!=='deleted'&&Number(r.batch_id)===bid)
       : db.product_inventory_imports.filter(r=>r.status!=='deleted'&&Number(r.batch_id)===bid);
     const storeIds=[...new Set(sourceRows.map(r=>Number(r.store_id)).filter(Boolean))];
     return {
@@ -4503,6 +4543,7 @@ app.get('/api/product-analytics/uploads', requireAuth, (req,res)=>{
   collectCoverage(db.product_sales_imports, 'sales');
   collectCoverage(db.product_inventory_imports, 'inventory_detail');
   collectCoverage(db.product_stock_ledger, 'ledger');
+  collectCoverage((db.product_price_lines||[]).map(r=>({...r,granularity:'period'})), 'sales');
   const coverage = Array.from(coverageMap.values()).sort((a,b) => String(a.start).localeCompare(String(b.start)) || a.store_name.localeCompare(b.store_name, 'vi'));
   res.json({sales:Array.from(salesMap.values()).sort((a,b)=>String(b.start).localeCompare(String(a.start))||a.store_name.localeCompare(b.store_name,'vi')),inventory:Array.from(invMap.values()).sort((a,b)=>String(b.start).localeCompare(String(a.start))||a.store_name.localeCompare(b.store_name,'vi')),batches,coverage});
 });
@@ -4518,7 +4559,7 @@ app.delete('/api/product-analytics/uploads/:batchId', requireAuth, (req,res)=>{
   const batch=db.product_import_batches.find(b=>Number(b.id)===batchId&&b.status!=='deleted');
   if(!batch) return res.status(404).json({error:'Không tìm thấy dữ liệu upload này hoặc dữ liệu đã bị xóa'});
   let deletedRows=0;
-  [db.product_sales_imports,db.product_inventory_imports,db.product_zero_value_exclusions].forEach(list=>list.forEach(r=>{
+  [db.product_sales_imports,db.product_inventory_imports,db.product_zero_value_exclusions,db.product_price_lines||[]].forEach(list=>list.forEach(r=>{
     if(r.status!=='deleted'&&Number(r.batch_id)===batchId){r.status='deleted';r.deleted_at=nowIso();r.deleted_by=req.user.id;deletedRows++;}
   }));
   batch.status='deleted';batch.deleted_at=nowIso();batch.deleted_by=req.user.id;
@@ -4537,7 +4578,7 @@ app.post('/api/product-analytics/uploads/delete-many', requireAuth, (req, res) =
   if (batches.length !== ids.size) return res.status(409).json({error:'Danh sách upload đã thay đổi. Tải lại trang và chọn lại trước khi xóa.'});
   const timestamp = nowIso();
   let deletedRows = 0;
-  for (const name of ['product_sales_imports','product_inventory_imports','product_zero_value_exclusions','product_stock_ledger']) {
+  for (const name of ['product_sales_imports','product_inventory_imports','product_zero_value_exclusions','product_stock_ledger','product_price_lines']) {
     for (const row of db[name] || []) {
       if (row.status !== 'deleted' && ids.has(Number(row.batch_id))) {
         row.status = 'deleted'; row.deleted_at = timestamp; row.deleted_by = req.user.id; deletedRows++;
@@ -4587,7 +4628,7 @@ app.get('/api/product-analytics/export.xlsx', requireAuth, (req,res)=>{
 });
 
 app.get('/api/product-analytics', requireAuth, (req,res)=>{
-  try { res.json(productAnalyticsForViewer(req.user, aggregateProductAnalytics(req.user,{store_id:req.query.store_id,start:req.query.start,end:req.query.end,q:req.query.q,period_type:req.query.period_type}))); }
+  try { const opts={store_id:req.query.store_id,start:req.query.start,end:req.query.end,q:req.query.q,period_type:req.query.period_type}; const data=aggregateProductAnalytics(req.user,opts); data.price_mix=priceMixForViewer(req.user,opts); res.json(productAnalyticsForViewer(req.user,data)); }
   catch(err){ res.status(400).json({error:err.message||'Không thể tổng hợp hàng hóa'}); }
 });
 
@@ -4640,16 +4681,16 @@ app.post('/api/product-analytics/import-sales', requireAuth, upload.single('file
     const rawRows=readExcelRows(req.file.path);
     const hasDateColumn=rawRows.some(row=>!!parseExcelDateValue(excelRowValue(row,['Ngày','Ngày tạo','Ngày bán','Ngày đơn hàng','Thời gian','Created at','Order date','Ngày ghi nhận'])));
     const granularity=hasDateColumn?'daily':'period';
-    const agg=new Map(); const zeroCandidates=[]; let skippedSource=0,skippedZero=0,skippedName=0,skippedStore=0,skippedDate=0;
+    const priceLines=[]; const agg=new Map(); const zeroCandidates=[]; let skippedSource=0,skippedZero=0,skippedName=0,skippedStore=0,skippedDate=0;
     rawRows.forEach(row=>{
       const sourceRaw=String(excelRowValue(row,['Tên kênh bán hàng','Nguồn','Nguồn đơn','Kênh bán hàng','Nguồn bán hàng','Source','Kênh','Kênh bán','Tên kênh'])??'').trim();
       const source=normalizeExcelHeader(sourceRaw)==='pos'?'POS':'ONLINE';
       const name=normalizeProductName(excelRowValue(row,['Tên sản phẩm','Sản phẩm','Tên hàng hóa','Tên hàng','Product name','Tên SP','Tên sản phẩm/ dịch vụ','Tên sản phẩm dịch vụ']));
       if (!name){skippedName++;return;}
       if (isAggregateProductName(name)) return;
-      const qty=Math.abs(parseMoneyLoose(excelRowValue(row,['Số lượng thực','Số lượng','SL hàng thực bán','Số lượng bán','SL bán','Quantity','Qty','Số SP bán','SL sản phẩm','Số lượng sản phẩm','Số lượng bán thực tế']))||0);
-      let revenue=parseMoneyLoose(excelRowValue(row,['Tổng doanh thu','Doanh thu thuần','Doanh thu','Thành tiền','Giá trị','Tổng tiền','Net sales','Revenue','Giá trị hàng bán','Doanh số','Giá trị đơn hàng']));
-      if (!revenue){const price=parseMoneyLoose(excelRowValue(row,['Giá bán','Đơn giá','Price'])); if(price&&qty) revenue=price*qty;}
+      const qty=Math.abs(sapoNumber(excelRowValue(row,['Số lượng thực','Số lượng','SL hàng thực bán','Số lượng bán','SL bán','Quantity','Qty','Số SP bán','SL sản phẩm','Số lượng sản phẩm','Số lượng bán thực tế']))||0);
+      let revenue=sapoNumber(excelRowValue(row,['Tổng doanh thu','Doanh thu thuần','Doanh thu','Thành tiền','Giá trị','Tổng tiền','Net sales','Revenue','Giá trị hàng bán','Doanh số','Giá trị đơn hàng']));
+      if (!revenue){const price=sapoNumber(excelRowValue(row,['Giá bán','Đơn giá','Price'])); if(price&&qty) revenue=price*qty;}
       const parsedDate=parseExcelDateValue(excelRowValue(row,['Ngày','Ngày tạo','Ngày bán','Ngày đơn hàng','Thời gian','Created at','Order date','Ngày ghi nhận']));
       const d=granularity==='daily'?parsedDate:reportEnd;
       if(granularity==='daily'&&!d){skippedDate++;return;}
@@ -4658,14 +4699,29 @@ app.post('/api/product-analytics/import-sales', requireAuth, upload.single('file
       let sid;
       if(selected==='all') { if(!importedStore){skippedStore++;return;} sid=importedStore.id; }
       else { if(importedStore && Number(importedStore.id)!==Number(selected)){skippedStore++;return;} sid=Number(selected); }
+      const exactValue=aliases=>{const keys=Object.keys(row);const k=keys.find(k=>aliases.some(a=>normalizeExcelHeader(a)===normalizeExcelHeader(k)));return k===undefined?undefined:row[k];};
+      const total=exactValue(['Tổng doanh thu']);
+      const base=exactValue(['Tiền hàng']);
+      const discount=exactValue(['Giảm giá']);
+      const returned=sapoNumber(exactValue(['Tiền hàng trả lại']));
+      if(total!==undefined&&total!==''){
+        const gross=sapoNumber(base), reduction=sapoNumber(discount);
+        const known=base!==undefined&&base!==''&&discount!==undefined&&discount!==''&&gross>0&&returned===0&&reduction>=0;
+        priceLines.push({store_id:sid,order_id:String(exactValue(['Mã đơn hàng'])??'').trim(),quantity:sapoNumber(exactValue(['Số lượng thực'])),total_revenue:sapoNumber(total),price_group:known?(Math.round(reduction*1000)*10>Math.round(gross*1000)?'discount':'full'):'unknown',period_start:granularity==='daily'?d:reportStart,period_end:granularity==='daily'?d:reportEnd});
+      }
       const key=productNameKey(name);
       if (!(revenue>0)){skippedZero++;zeroCandidates.push({store_id:sid,product_key:key,product_name:name,granularity,period_start:granularity==='period'?reportStart:'',period_end:granularity==='period'?reportEnd:'',sale_date:granularity==='daily'?d:''});return;}
       const aggKey=granularity==='period'?`${sid}|${reportStart}|${reportEnd}|${source}|${key}`:`${sid}|${d}|${source}|${key}`;
       const x=agg.get(aggKey)||{store_id:sid,sale_date:d,source,product_key:key,product_name:name,quantity:0,revenue:0,granularity,period_start:granularity==='period'?reportStart:'',period_end:granularity==='period'?reportEnd:''};
       x.quantity+=qty; x.revenue+=revenue; agg.set(aggKey,x);
     });
+    if(!agg.size&&!priceLines.length) return res.status(400).json({error:'Không tìm thấy dữ liệu hợp lệ; dữ liệu cũ được giữ nguyên.'});
     db.product_sales_imports=db.product_sales_imports||[]; db.product_import_batches=db.product_import_batches||[]; db.product_zero_value_exclusions=db.product_zero_value_exclusions||[];
     const batchId=nextId('product_import_batches');
+    db.product_price_lines=db.product_price_lines||[];
+    const touchedPriceStores=new Set([...priceLines.map(r=>r.store_id),...Array.from(agg.values()).map(r=>r.store_id)]);
+    db.product_price_lines.forEach(r=>{if(r.status!=='deleted'&&touchedPriceStores.has(r.store_id)&&r.period_start>=reportStart&&r.period_end<=reportEnd){r.status='deleted';r.deleted_at=nowIso();r.deleted_by=req.user.id;}});
+    priceLines.forEach(r=>db.product_price_lines.push({...r,batch_id:batchId,status:'active'}));
     let replaced=0, inserted=0;
     if(granularity==='period'){
       const touchedStores=new Set(Array.from(agg.values()).map(x=>Number(x.store_id)));
@@ -4688,7 +4744,7 @@ app.post('/api/product-analytics/import-sales', requireAuth, upload.single('file
     db.product_import_batches.push({id:batchId,type:'sales',file_name:req.file.originalname||'',period_start:reportStart,period_end:reportEnd,granularity,rows_raw:rawRows.length,rows_valid:agg.size,inserted,replaced,skipped_source:skippedSource,skipped_zero:skippedZero,skipped_name:skippedName,skipped_store:skippedStore,skipped_date:skippedDate,created_at:nowIso(),created_by:req.user.id});
     saveDb();
     const note=granularity==='period'?'File Sapo không có cột ngày: dữ liệu được lưu đúng theo kỳ báo cáo đã chọn. Khi xem, hãy chọn đúng kỳ này.':'File có ngày giao dịch: có thể lọc linh hoạt theo ngày.';
-    if(!agg.size){return res.status(400).json({error:`Không tìm thấy dòng bán hàng hợp lệ trong file. Đã đọc ${rawRows.length} dòng; bỏ ${skippedName} dòng thiếu tên SP, ${skippedStore} dòng không nhận được chi nhánh, ${skippedZero} dòng giá trị = 0. Hãy kiểm tra đúng file Báo cáo doanh thu/OPS theo sản phẩm.`});}
+    if(!agg.size&&!priceLines.length){return res.status(400).json({error:`Không tìm thấy dòng bán hàng hợp lệ trong file. Đã đọc ${rawRows.length} dòng; bỏ ${skippedName} dòng thiếu tên SP, ${skippedStore} dòng không nhận được chi nhánh, ${skippedZero} dòng giá trị = 0. Hãy kiểm tra đúng file Báo cáo doanh thu/OPS theo sản phẩm.`});}
     res.json({ok:true,file:req.file.originalname,raw_rows:rawRows.length,valid_rows:agg.size,inserted,replaced,skipped_source:skippedSource,skipped_zero:skippedZero,skipped_name:skippedName,skipped_store:skippedStore,granularity,period_start:reportStart,period_end:reportEnd,message:`Đã lấy ${agg.size} dòng gộp theo tên sản phẩm. POS được tách riêng; mọi nguồn khác được tính Online. Chỉ tính sản phẩm có giá trị > 0. ${note}`});
   } catch(err){res.status(400).json({error:err.message||'Không đọc được file Sapo'});} finally {try{fs.unlinkSync(req.file.path)}catch{}}
 });

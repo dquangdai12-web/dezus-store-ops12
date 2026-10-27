@@ -1,3 +1,24 @@
+BẢN 4.225 — PHÂN TÍCH NGUYÊN GIÁ / GIẢM GIÁ
+- Phân tích hàng hóa > Tổng hợp: số lượng, tỷ trọng số lượng, tổng doanh thu,
+  tỷ trọng doanh thu và số lượng mỗi nhóm trên tổng bill không trùng.
+- Giảm giá / Tiền hàng <= 10% là nguyên giá; > 10% là giảm giá.
+- Doanh thu lấy đúng cột Tổng doanh thu. Số 1,000 trong file Sapo là 1.
+- Nhập lại báo cáo Sapo có Mã đơn hàng để tính bill. Dữ liệu cũ chưa có
+  thông tin giảm giá không được tự suy đoán là nguyên giá.
+- Dòng có trả hàng/thiếu cơ sở phân loại nằm ở nhóm Chưa phân loại,
+  vẫn giữ số lượng và doanh thu có dấu trong tổng. Thiếu mã đơn: không tính UPT.
+- Báo cáo không có ngày giao dịch cần chọn đúng khoảng ngày khi nhập.
+  Xem đúng kỳ; báo cáo một ngày có thể cộng lên tuần/tháng. Nếu đã có báo cáo
+  đúng toàn kỳ thì ưu tiên báo cáo đó, không cộng chồng các báo cáo ngày.
+- Admin nhập/xóa; tài khoản khác chỉ xem bảng tổng hợp trong phạm vi cửa hàng.
+- Xóa lô dữ liệu cũng xóa phần phân tích nguyên giá/giảm giá liên quan.
+- Giữ giao diện cũ và tất cả chức năng các bản trước.
+
+TRIỂN KHAI
+Cập nhật server.js, public/app.js, public/index.html vào repo Render rồi deploy.
+Không ghi đè thư mục dữ liệu thực tế hoặc biến môi trường.
+Bản này chưa được triển khai tự động lên Render.
+
 DEZUS — GIAO DIỆN GỐC, TỔNG QUAN GỌN HƠN
 
 - Bỏ tiêu đề Tổng Quan trong nội dung trang (máy tính và điện thoại).
