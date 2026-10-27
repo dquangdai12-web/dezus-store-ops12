@@ -17,3 +17,16 @@ Bấm Sửa lịch, nhập trực tiếp mã ca (không phân biệt hoa/thườ
 Có danh sách gợi ý để chọn; Enter chuyển sang ô ca tiếp theo, Shift+Enter quay lại.
 OFF hoặc để trống = nghỉ/chưa phân ca. Mã không hợp lệ sẽ chặn lưu.
 Bấm Lưu lịch để cập nhật; vẫn giữ ghi chú và quyền quản lý lịch hiện có.
+
+PHÂN TÍCH HÀNG HÓA — XÓA DỮ LIỆU CŨ
+Nút Xóa dữ liệu cũ ngay đầu trang, chỉ admin sử dụng.
+Lọc theo loại dữ liệu và ngày kết thúc kỳ báo cáo; xem mọi lần upload còn dữ liệu.
+Mỗi dòng hiển thị cửa hàng, kỳ, file, thời điểm upload và số dòng hiện còn.
+Xóa theo từng lần upload, có hộp xác nhận chi tiết; không xóa theo riêng cửa hàng
+nếu lần upload chứa nhiều cửa hàng. Các dữ liệu ngoài lần upload được chọn được giữ.
+
+DỮ LIỆU HIỆN CÓ
+Hiện bảng ngay đầu Phân tích hàng hóa cho admin: loại dữ liệu, cửa hàng,
+kỳ dữ liệu, số dòng còn và nhãn cũ hơn kỳ đang xem.
+Bao gồm doanh thu hàng hóa, xuất nhập tồn và sổ nhập/xuất kho nếu có.
+Kỳ cũ hiện trước; có thể mở xem toàn bộ. Đếm cả dữ liệu không còn gắn lần upload.

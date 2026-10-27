@@ -4455,7 +4455,7 @@ app.get('/api/product-analytics/uploads', requireAuth, (req,res)=>{
       : db.product_inventory_imports.filter(r=>r.status!=='deleted'&&Number(r.batch_id)===bid);
     const storeIds=[...new Set(sourceRows.map(r=>Number(r.store_id)).filter(Boolean))];
     return {
-      id:b.id,type:b.type,inventory_period_type:b.inventory_period_type||'',file_name:b.file_name||'',period_start:b.period_start||'',period_end:b.period_end||'',granularity:b.granularity||'',rows_valid:Number(b.rows_valid||0),created_at:b.created_at||'',created_by_name:getUser(b.created_by)?.full_name||'',
+      id:b.id,type:b.type,inventory_period_type:b.inventory_period_type||'',file_name:b.file_name||'',period_start:b.period_start||'',period_end:b.period_end||'',granularity:b.granularity||'',rows_valid:Number(b.rows_valid||0),active_rows:sourceRows.length,created_at:b.created_at||'',created_by_name:getUser(b.created_by)?.full_name||'',
       store_ids:storeIds,store_names:storeIds.map(id=>getStore(id)?.name||`CH ${id}`)
     };
   }).sort((a,b)=>String(b.created_at).localeCompare(String(a.created_at)));
@@ -4471,7 +4471,24 @@ app.get('/api/product-analytics/uploads', requireAuth, (req,res)=>{
     const sid=Number(r.store_id); const st=getStore(sid)?.name||`CH ${sid}`; const start=dateOnly(r.period_start||r.snapshot_date), end=dateOnly(r.period_end||r.snapshot_date); if(!start)return;
     const ipt=String(r.inventory_period_type||''); const k=`${sid}|${ipt}|${start}|${end}`; invMap.set(k,{store_id:sid,store_name:st,start,end,inventory_period_type:ipt});
   });
-  res.json({sales:Array.from(salesMap.values()).sort((a,b)=>String(b.start).localeCompare(String(a.start))||a.store_name.localeCompare(b.store_name,'vi')),inventory:Array.from(invMap.values()).sort((a,b)=>String(b.start).localeCompare(String(a.start))||a.store_name.localeCompare(b.store_name,'vi')),batches:batches.slice(0,100)});
+  const coverageMap = new Map();
+  const coverageBatchIds = new Set((db.product_import_batches || []).filter(b => b.status !== 'deleted').map(b => Number(b.id)));
+  const collectCoverage = (rows, type) => (rows || []).filter(r => r.status !== 'deleted').forEach(r => {
+    const start = dateOnly(type === 'sales' ? (r.granularity === 'period' ? r.period_start : r.sale_date) : type === 'ledger' ? r.record_date : (r.period_start || r.snapshot_date));
+    const end = dateOnly(type === 'sales' ? (r.granularity === 'period' ? r.period_end : r.sale_date) : type === 'ledger' ? r.record_date : (r.period_end || r.snapshot_date)) || start;
+    const sid = Number(r.store_id || 0);
+    const periodType = type === 'inventory_detail' ? String(r.inventory_period_type || '') : '';
+    const key = JSON.stringify([type, sid, start, end, periodType]);
+    if (!coverageMap.has(key)) coverageMap.set(key, { type, store_id:sid, store_name:getStore(sid)?.name || `CH ${sid}`, start, end, inventory_period_type:periodType, row_count:0, untracked_rows:0 });
+    const entry = coverageMap.get(key);
+    entry.row_count++;
+    if (!coverageBatchIds.has(Number(r.batch_id))) entry.untracked_rows++;
+  });
+  collectCoverage(db.product_sales_imports, 'sales');
+  collectCoverage(db.product_inventory_imports, 'inventory_detail');
+  collectCoverage(db.product_stock_ledger, 'ledger');
+  const coverage = Array.from(coverageMap.values()).sort((a,b) => String(a.start).localeCompare(String(b.start)) || a.store_name.localeCompare(b.store_name, 'vi'));
+  res.json({sales:Array.from(salesMap.values()).sort((a,b)=>String(b.start).localeCompare(String(a.start))||a.store_name.localeCompare(b.store_name,'vi')),inventory:Array.from(invMap.values()).sort((a,b)=>String(b.start).localeCompare(String(a.start))||a.store_name.localeCompare(b.store_name,'vi')),batches,coverage});
 });
 
 app.delete('/api/product-analytics/uploads/:batchId', requireAuth, (req,res)=>{

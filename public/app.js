@@ -3126,7 +3126,7 @@ async function renderProductAnalytics(){
   if(!isAll)state.productAnalyticsStoreId=String(state.user?.store_id||state.user?.store_ids?.[0]||'');
   const range=productAnalyticsRangeForPeriod(state.productAnalyticsPeriod);state.productAnalyticsStart=range.start;state.productAnalyticsEnd=range.end;
   const query=`store_id=${encodeURIComponent(state.productAnalyticsStoreId||'all')}&start=${range.start}&end=${range.end}&period_type=${encodeURIComponent(state.productAnalyticsPeriod||'month')}&q=${encodeURIComponent(state.productAnalyticsSearch||'')}`;
-  const [data,uploadStatus]=await Promise.all([api(`/api/product-analytics?${query}`),isAdmin?api('/api/product-analytics/uploads').catch(()=>({sales:[],inventory:[],batches:[]})):Promise.resolve(null)]);
+  const [data,uploadStatus]=await Promise.all([api(`/api/product-analytics?${query}`),isAdmin?api('/api/product-analytics/uploads').catch(()=>({load_error:true,sales:[],inventory:[],batches:[],coverage:[]})):Promise.resolve(null)]);
   const storeSelect=isAll?`<div class="field"><label>Cửa hàng</label><select class="input" id="paStore"><option value="all" ${state.productAnalyticsStoreId==='all'?'selected':''}>Toàn hệ thống</option>${stores.map(st=>`<option value="${st.id}" ${String(st.id)===String(state.productAnalyticsStoreId)?'selected':''}>${esc(st.name)}</option>`).join('')}</select></div>`:`<div class="field"><label>Cửa hàng</label><input class="input" value="${esc(data.store_name||'')}" disabled></div>`;
   if(!['month','week','day'].includes(state.productAnalyticsPeriod)) state.productAnalyticsPeriod='month';
   const periodPickerInput=state.productAnalyticsPeriod==='month'
@@ -3192,16 +3192,22 @@ async function renderProductAnalytics(){
   else content=`<div class="card"><div class="section-title"><h3>Tốc độ bán</h3>${productAnalyticsSortControl('speed')}</div>${productAnalyticsTable(data.rows||[],'speed')}</div>`;
   const sourceWarning='';
   const exportBtn=`<button class="btn secondary" id="paExportExcel" type="button">Tải Excel</button>`;
+  const coverageRows = uploadStatus?.coverage || [];
+  const coverageType = row => row.type === 'sales' ? 'Doanh thu hàng hóa' : row.type === 'ledger' ? 'Sổ nhập / xuất kho' : `Xuất nhập tồn ${row.inventory_period_type === 'week' ? 'tuần' : row.inventory_period_type === 'month' ? 'tháng' : ''}`;
+  const coverageTable = rows => `<div class="table-wrap"><table><thead><tr><th>Loại dữ liệu</th><th>Cửa hàng</th><th>Kỳ dữ liệu</th><th>Số dòng còn</th><th>So với kỳ đang xem</th></tr></thead><tbody>${rows.map(row => `<tr><td>${esc(coverageType(row))}</td><td>${esc(row.store_name)}</td><td>${row.start ? `${dOnly(row.start)} → ${dOnly(row.end)}` : 'Chưa có ngày'}${row.untracked_rows ? '<div class="hint">Có dữ liệu không gắn lần upload còn hiệu lực</div>' : ''}</td><td>${money(row.row_count)}</td><td>${row.end && row.end < range.start ? '<span class="badge warn">Cũ hơn kỳ đang xem</span>' : row.start && row.start > range.end ? 'Sau kỳ đang xem' : row.start ? 'Trong / giao với kỳ đang xem' : 'Chưa xác định'}</td></tr>`).join('')}</tbody></table></div>`;
+  const existingDataBlock = !isAdmin ? '' : `<section class="card" id="paExistingData" style="margin-top:16px"><div class="section-title"><h3>Dữ liệu hiện có</h3><span class="badge">Toàn hệ thống</span></div>${uploadStatus?.load_error ? '<div class="empty">Không tải được danh sách dữ liệu. Vui lòng tải lại trang.</div>' : coverageRows.length ? `<p class="hint">${money(coverageRows.reduce((sum,row)=>sum+Number(row.row_count||0),0))} dòng còn dữ liệu • ${coverageRows.length} nhóm theo loại, cửa hàng và kỳ. Hiển thị kỳ cũ trước; không phụ thuộc bộ lọc cửa hàng hoặc tìm sản phẩm ở trên.</p>${coverageTable(coverageRows.slice(0,8))}${coverageRows.length>8?`<details style="margin-top:12px"><summary>Xem thêm ${coverageRows.length-8} nhóm dữ liệu</summary>${coverageTable(coverageRows.slice(8))}</details>`:''}` : '<div class="empty">Chưa có dữ liệu phân tích hàng hóa.</div>'}</section>`;
   const uploadBatches=(uploadStatus?.batches||[]);
-  const uploadStatusBlock=(isAdmin&&state.productAnalyticsTab==='upload')?`<details class="card pa-upload-status-card pa-history-card pa-history-details" style="margin-top:14px">
-    <summary class="pa-history-summary"><span><b>Lịch sử dữ liệu Sapo</b><small>${uploadBatches.length} lần upload</small></span><span class="badge">Xem chi tiết</span></summary>
+  const uploadStatusBlock=isAdmin?`<details id="paCleanupPanel" class="card pa-upload-status-card pa-history-card pa-history-details" style="margin-top:14px" ${state.productAnalyticsCleanupOpen?'open':''}>
+    <summary class="pa-history-summary"><span><b>Xóa dữ liệu cũ</b><small>Chỉ Admin • ${uploadBatches.length} lần upload còn dữ liệu</small></span><span class="badge danger">Quản lý dữ liệu</span></summary>
     <div class="pa-history-body">
-      <div class="pa-history-kpis"><div><span>Doanh thu</span><b>${(uploadStatus?.sales||[]).length}</b><small>kỳ đang có dữ liệu</small></div><div><span>Xuất nhập tồn</span><b>${(uploadStatus?.inventory||[]).length}</b><small>kỳ đang có dữ liệu</small></div></div>
-      <div class="pa-history-toolbar"><div class="pillbar pa-upload-filter"><button class="active" data-upload-type="all" type="button">Tất cả</button><button data-upload-type="sales" type="button">Doanh thu</button><button data-upload-type="inventory_detail" type="button">XNT</button></div></div>
-      <div class="pa-history-list" id="paUploadHistory">${uploadBatches.length?uploadBatches.slice(0,10).map(b=>`<div class="pa-history-row" data-upload-row="${esc(b.type)}"><span class="badge ${b.type==='sales'?'dark':''}">${b.type==='sales'?'Doanh thu':`XNT ${b.inventory_period_type==='week'?'Tuần':b.inventory_period_type==='month'?'Tháng':''}`}</span><div class="pa-history-main"><b>${esc((b.store_names||[]).join(', ')||'Không xác định cửa hàng')}</b><span>${dOnly(b.period_start)}${b.period_end&&b.period_end!==b.period_start?` → ${dOnly(b.period_end)}`:''} • ${money(b.rows_valid||0)} dòng</span><small>${esc(b.file_name||'')} ${b.created_at?`• ${dt(b.created_at)}`:''}</small></div><button class="btn danger pa-delete-upload" data-batch-id="${b.id}" type="button">Xóa</button></div>`).join(''):'<div class="empty">Chưa có dữ liệu upload</div>'}</div>
+      <p class="hint">Xóa theo từng lần upload Sapo. Kiểm tra loại dữ liệu, kỳ báo cáo, cửa hàng và tên file trước khi xóa. Nếu file có nhiều cửa hàng, toàn bộ các cửa hàng trong lần upload đó đều bị ảnh hưởng.</p>
+      <div class="grid two"><div class="field"><label>Loại dữ liệu cần tìm</label><select class="input" id="paCleanupType"><option value="all">Tất cả dữ liệu upload</option><option value="sales">Doanh thu hàng hóa</option><option value="inventory_detail">Xuất nhập tồn</option></select></div><div class="field"><label>Kỳ báo cáo kết thúc trước ngày (không bắt buộc)</label><input class="input" type="date" id="paCleanupBefore"></div></div>
+      <div class="hint" id="paCleanupCount" aria-live="polite"></div>
+      <div class="pa-history-list" id="paUploadHistory">${uploadBatches.length?uploadBatches.map(b=>`<div class="pa-history-row" data-upload-row="${esc(b.type)}" data-period-end="${esc(b.period_end||b.period_start||'')}"><span class="badge ${b.type==='sales'?'dark':''}">${b.type==='sales'?'Doanh thu':`XNT ${b.inventory_period_type==='week'?'Tuần':b.inventory_period_type==='month'?'Tháng':''}`}</span><div class="pa-history-main"><b>${esc((b.store_names||[]).join(', ')||'Không xác định cửa hàng')}</b><span>Kỳ báo cáo: ${dOnly(b.period_start)}${b.period_end&&b.period_end!==b.period_start?` → ${dOnly(b.period_end)}`:''} • ${money(b.active_rows??b.rows_valid??0)} dòng hiện còn</span><small>File: ${esc(b.file_name||'Không có tên')} ${b.created_at?`• Upload: ${dt(b.created_at)}`:''}</small></div><button class="btn danger pa-delete-upload" data-batch-id="${b.id}" type="button">Xóa lần upload này</button></div>`).join(''):'<div class="empty">Không có dữ liệu upload để xóa</div>'}</div>
+      <div class="empty" id="paCleanupEmpty" hidden>Không tìm thấy dữ liệu phù hợp với bộ lọc.</div>
     </div>
   </details>`:'';
-  shell(`<div class="card pa-filter-card"><div class="toolbar"><div style="margin-right:auto"><h3 style="margin:0">Phân tích hàng hóa</h3><div class="hint">${esc(data.store_name||'')} • ${dOnly(range.start)} → ${dOnly(range.end)}</div></div>${exportBtn}</div><div class="pa-filter-grid">${storeSelect}${search}${periodPicker}</div></div>${sourceWarning}${kpis}<div class="toolbar pa-tabs">${tabs}</div>${content}${uploadStatusBlock}`,'Phân tích hàng hóa','');
+  shell(`<div class="card pa-filter-card"><div class="toolbar"><div style="margin-right:auto"><h3 style="margin:0">Phân tích hàng hóa</h3><div class="hint">${esc(data.store_name||'')} • ${dOnly(range.start)} → ${dOnly(range.end)}</div></div>${isAdmin?'<button class="btn secondary" id="paOpenExistingData" type="button">Dữ liệu hiện có</button><button class="btn danger" id="paOpenCleanup" type="button">Xóa dữ liệu cũ</button>':''}${exportBtn}</div><div class="pa-filter-grid">${storeSelect}${search}${periodPicker}</div></div>${sourceWarning}${existingDataBlock}${kpis}<div class="toolbar pa-tabs">${tabs}</div>${content}${uploadStatusBlock}`,'Phân tích hàng hóa','');
   $('#paPeriodType')?.addEventListener('change',e=>{state.productAnalyticsPeriod=e.target.value;renderProductAnalytics();});$$('.pa-tab').forEach(b=>b.onclick=()=>{state.productAnalyticsTab=b.dataset.tab;renderProductAnalytics();});$('#paStore')?.addEventListener('change',e=>{state.productAnalyticsStoreId=e.target.value;renderProductAnalytics();});
   $('.pa-open-restock')?.addEventListener('click',()=>{state.productAnalyticsTab='restock';renderProductAnalytics();});
   $('#paMonth')?.addEventListener('change',e=>{state.productAnalyticsMonth=e.target.value||currentMonthLocal();renderProductAnalytics();});
@@ -3221,8 +3227,36 @@ async function renderProductAnalytics(){
   }));
   $('#paExportExcel')?.addEventListener('click',async()=>{try{const res=await fetch(`/api/product-analytics/export.xlsx?${query}`,{headers:{Authorization:`Bearer ${state.token}`}});if(!res.ok){const j=await res.json().catch(()=>({}));throw new Error(j.error||'Không tải được Excel');}const blob=await res.blob();const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=`phan-tich-hang-hoa-${range.start}-${range.end}.xlsx`;link.click();URL.revokeObjectURL(link.href);}catch(err){toast(err.message,'danger');}});
   if(isAdmin){
-    $$('.pa-upload-filter [data-upload-type]').forEach(btn=>btn.onclick=()=>{const type=btn.dataset.uploadType;$$('.pa-upload-filter [data-upload-type]').forEach(x=>x.classList.toggle('active',x===btn));$$('#paUploadHistory [data-upload-row]').forEach(row=>row.style.display=(type==='all'||row.dataset.uploadRow===type)?'grid':'none');});
-    $$('.pa-delete-upload').forEach(btn=>btn.onclick=async()=>{const id=btn.dataset.batchId;if(!confirm('Xóa lần upload này? Dữ liệu của lần upload này sẽ bị loại khỏi phân tích hàng hóa.'))return;btn.disabled=true;try{const out=await api(`/api/product-analytics/uploads/${id}`,{method:'DELETE'});toast(out.message||'Đã xóa dữ liệu');renderProductAnalytics();}catch(err){toast(err.message,'danger');btn.disabled=false;}});
+    $('#paOpenExistingData')?.addEventListener('click', () => $('#paExistingData')?.scrollIntoView({behavior:'smooth',block:'start'}));
+    const panel = $('#paCleanupPanel');
+    panel?.addEventListener('toggle', () => { state.productAnalyticsCleanupOpen = panel.open; });
+    $('#paOpenCleanup')?.addEventListener('click', () => { if (panel) { panel.open = true; state.productAnalyticsCleanupOpen = true; panel.scrollIntoView({behavior:'smooth',block:'start'}); } });
+    const filterCleanup = () => {
+      const type = $('#paCleanupType').value;
+      const before = $('#paCleanupBefore').value;
+      let count = 0;
+      $$('#paUploadHistory [data-upload-row]').forEach(row => {
+        const matches = (type === 'all' || row.dataset.uploadRow === type) && (!before || (row.dataset.periodEnd && row.dataset.periodEnd < before));
+        row.hidden = !matches;
+        row.style.display = matches ? '' : 'none';
+        if (matches) count++;
+      });
+      $('#paCleanupCount').textContent = `Đang hiển thị ${count} / ${uploadBatches.length} lần upload. Chọn nút xóa ở đúng dòng cần dọn.`;
+      $('#paCleanupEmpty').hidden = count > 0 || uploadBatches.length === 0;
+    };
+    $('#paCleanupType')?.addEventListener('change', filterCleanup);
+    $('#paCleanupBefore')?.addEventListener('change', filterCleanup);
+    filterCleanup();
+    $$('.pa-delete-upload').forEach(btn=>btn.onclick=async()=>{
+      const id=btn.dataset.batchId;
+      const batch=uploadBatches.find(b=>String(b.id)===String(id));
+      if(!batch)return;
+      const kind=batch.type==='sales'?'Doanh thu hàng hóa':'Xuất nhập tồn';
+      const message=`XÓA DỮ LIỆU CŨ\n\nLoại: ${kind}\nFile: ${batch.file_name||'#'+id}\nCửa hàng: ${(batch.store_names||[]).join(', ')||'Không xác định'}\nKỳ báo cáo: ${batch.period_start||'-'} → ${batch.period_end||batch.period_start||'-'}\nSố dòng hiện còn: ${batch.active_rows??batch.rows_valid??0}\n\nToàn bộ dữ liệu của lần upload này sẽ bị loại khỏi phân tích hàng hóa. Bạn xác nhận xóa?`;
+      if(!confirm(message))return;
+      btn.disabled=true;
+      try{const out=await api(`/api/product-analytics/uploads/${id}`,{method:'DELETE'});toast(out.message||'Đã xóa dữ liệu');renderProductAnalytics();}catch(err){toast(err.message,'danger');btn.disabled=false;}
+    });
   }
   const bindUpload=(id,url)=>{$(id)?.addEventListener('submit',async e=>{e.preventDefault();const btn=e.target.querySelector('button[type=submit]');if(btn){btn.disabled=true;btn.textContent='Đang đọc file...';}try{const fd=new FormData(e.target);const out=await api(url,{method:'POST',body:fd});toast(out.message||'Đã cập nhật dữ liệu');renderProductAnalytics();}catch(err){toast(err.message,'danger');if(btn){btn.disabled=false;btn.textContent='Thử lại';}}});};if(isAdmin){bindUpload('#paSalesUpload','/api/product-analytics/import-sales');bindUpload('#paInventoryWeekUpload','/api/product-analytics/import-inventory');bindUpload('#paInventoryMonthUpload','/api/product-analytics/import-inventory');}
 }
