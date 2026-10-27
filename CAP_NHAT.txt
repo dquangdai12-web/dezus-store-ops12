@@ -1,3 +1,8 @@
+BẢN 4.226
+- Tên nhóm: Hàng nguyên giá và Hàng giảm giá.
+- Giảm giá âm được tính theo giá trị tuyệt đối, vẫn áp dụng ngưỡng 10%.
+- Sau khi deploy, nhập lại file Sapo cùng kỳ để phân loại lại dữ liệu đã nhập.
+
 BẢN 4.225 — PHÂN TÍCH NGUYÊN GIÁ / GIẢM GIÁ
 - Phân tích hàng hóa > Tổng hợp: số lượng, tỷ trọng số lượng, tổng doanh thu,
   tỷ trọng doanh thu và số lượng mỗi nhóm trên tổng bill không trùng.

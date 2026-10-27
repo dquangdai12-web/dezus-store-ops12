@@ -4706,8 +4706,8 @@ app.post('/api/product-analytics/import-sales', requireAuth, upload.single('file
       const returned=sapoNumber(exactValue(['Tiền hàng trả lại']));
       if(total!==undefined&&total!==''){
         const gross=sapoNumber(base), reduction=sapoNumber(discount);
-        const known=base!==undefined&&base!==''&&discount!==undefined&&discount!==''&&gross>0&&returned===0&&reduction>=0;
-        priceLines.push({store_id:sid,order_id:String(exactValue(['Mã đơn hàng'])??'').trim(),quantity:sapoNumber(exactValue(['Số lượng thực'])),total_revenue:sapoNumber(total),price_group:known?(Math.round(reduction*1000)*10>Math.round(gross*1000)?'discount':'full'):'unknown',period_start:granularity==='daily'?d:reportStart,period_end:granularity==='daily'?d:reportEnd});
+        const known=base!==undefined&&base!==''&&discount!==undefined&&discount!==''&&gross>0&&returned===0;
+        priceLines.push({store_id:sid,order_id:String(exactValue(['Mã đơn hàng'])??'').trim(),quantity:sapoNumber(exactValue(['Số lượng thực'])),total_revenue:sapoNumber(total),price_group:known?(Math.round(Math.abs(reduction)*1000)*10>Math.round(gross*1000)?'discount':'full'):'unknown',period_start:granularity==='daily'?d:reportStart,period_end:granularity==='daily'?d:reportEnd});
       }
       const key=productNameKey(name);
       if (!(revenue>0)){skippedZero++;zeroCandidates.push({store_id:sid,product_key:key,product_name:name,granularity,period_start:granularity==='period'?reportStart:'',period_end:granularity==='period'?reportEnd:'',sale_date:granularity==='daily'?d:''});return;}
