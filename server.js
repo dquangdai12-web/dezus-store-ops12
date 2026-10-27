@@ -4449,6 +4449,8 @@ function sapoNumber(value) {
   return Number.isFinite(n)?n:0;
 }
 function summarizePriceMix(lines) {
+  // Exclude free gifts and packaging before totals and distinct-bill counting.
+  lines=lines.filter(r=>Number(r.total_revenue)!==0);
   const groups={full:{quantity:0,revenue:0},discount:{quantity:0,revenue:0},unknown:{quantity:0,revenue:0}};
   const bills=new Set(); let missingBills=0;
   for(const r of lines){
