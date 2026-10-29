@@ -1,3 +1,8 @@
+BẢN 4.229
+- Bỏ khối Đề xuất tái sớm ở Tổng hợp phân tích hàng hóa.
+- Loyalty: lọc tháng/quý/năm theo ngày đơn, mặc định tháng hiện tại.
+- Tổng tiền, số đơn, danh sách và Excel cùng áp dụng kỳ và cửa hàng đang chọn.
+
 BẢN 4.228
 - Tổng quan: chọn tháng/quý/năm bên trái, nút Tháng / Quý / Năm bên phải cùng hàng.
 - Phân tích hàng hóa: bỏ khối và nút Dữ liệu hiện có. Giữ chức năng Xóa dữ liệu cũ.

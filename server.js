@@ -3816,6 +3816,20 @@ function canSeeLoyalty(user, row) {
   return userHasStore(user, row.store_id);
 }
 
+function filterLoyaltyPeriod(rows, query) {
+  const period=String(query.period||'');
+  if(!period)return rows;
+  const year=Number(query.year),month=Number(query.month),quarter=Number(query.quarter);
+  if(!['month','quarter','year'].includes(period)||!Number.isInteger(year)||year<1900||year>9999||
+    (period==='month'&&(!Number.isInteger(month)||month<1||month>12))||
+    (period==='quarter'&&(!Number.isInteger(quarter)||quarter<1||quarter>4)))throw new Error('Kỳ Loyalty không hợp lệ');
+  const first=period==='month'?month:period==='quarter'?(quarter-1)*3+1:1;
+  const last=period==='month'?month:period==='quarter'?quarter*3:12;
+  const start=`${year}-${String(first).padStart(2,'0')}-01`;
+  const end=`${year}-${String(last).padStart(2,'0')}-${new Date(Date.UTC(year,last,0)).getUTCDate()}`;
+  return rows.filter(r=>String(r.sale_date||'').slice(0,10)>=start&&String(r.sale_date||'').slice(0,10)<=end);
+}
+
 app.get('/api/loyalty', requireAuth, (req, res) => {
   db.loyalty_claims = db.loyalty_claims || [];
   const storeId = Number(req.query.store_id || 0);
@@ -3824,6 +3838,7 @@ app.get('/api/loyalty', requireAuth, (req, res) => {
     if (!canReviewLoyalty(req.user) && !userHasStore(req.user, storeId)) return res.status(403).json({ error: 'Không có quyền xem Loyalty cửa hàng này' });
     rows = rows.filter(x => Number(x.store_id) === storeId);
   }
+  try { rows=filterLoyaltyPeriod(rows,req.query); } catch(err) { return res.status(400).json({error:err.message}); }
   rows.sort((a,b) => (a.status === 'pending' ? 0 : 1) - (b.status === 'pending' ? 0 : 1) || String(b.sale_date || '').localeCompare(String(a.sale_date || '')) || Number(b.id)-Number(a.id));
   res.json({ rows: rows.map(loyaltyPublicRow), can_review: canReviewLoyalty(req.user), can_edit: canReviewLoyalty(req.user) });
 });
@@ -3834,6 +3849,7 @@ app.get('/api/loyalty/export.xlsx', requireAuth, (req, res) => {
   const storeId = Number(req.query.store_id || 0);
   let rows = (db.loyalty_claims || []).filter(x => canSeeLoyalty(req.user, x));
   if (storeId) rows = rows.filter(x => Number(x.store_id) === storeId);
+  try { rows=filterLoyaltyPeriod(rows,req.query); } catch(err) { return res.status(400).json({error:err.message}); }
   rows.sort((a,b) => (a.status === 'pending' ? 0 : 1) - (b.status === 'pending' ? 0 : 1) || String(b.sale_date || '').localeCompare(String(a.sale_date || '')) || Number(b.id)-Number(a.id));
   const out = rows.map(x => { const r = loyaltyPublicRow(x); return { trang_thai: r.status === 'approved' ? 'Đã duyệt' : 'Chờ duyệt', ngay: r.sale_date || '', nhan_vien: r.employee_name || '', cua_hang: r.store_name || '', so_hoa_don: r.invoice_number || '', so_tien_giam: Number(r.discount_amount || 0), chung_tu: r.evidence_path || '', nguoi_duyet: r.reviewer_name || '', ngay_duyet: r.reviewed_at || '', ngay_tao: r.created_at || '' }; });
   const buffer = toExcelBuffer(out, 'Loyalty');
