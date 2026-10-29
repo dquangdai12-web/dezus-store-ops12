@@ -6161,3 +6161,14 @@ section.card>.toolbar+p.hint{display:none!important}
 .pa-cleanup-select input{width:18px;height:18px;accent-color:var(--brand)}
 .pa-history-row:has(.pa-batch-select){grid-template-columns:auto auto minmax(0,1fr) auto}
 @media(max-width:699px){.pa-history-row:has(.pa-batch-select){grid-template-columns:auto minmax(0,1fr)}.pa-history-row:has(.pa-batch-select) .pa-history-main{grid-column:1/-1}.pa-history-row:has(.pa-batch-select) .pa-delete-upload{grid-column:1/-1}}
+
+/* V228: period input left, period tabs right on the same row. */
+.overview-period-row{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;overflow-x:auto}
+.overview-period-row .overview-period-controls{margin-top:0!important;flex:0 0 auto}
+.overview-period-row .overview-period-tabs{margin:0 0 0 auto!important;align-self:flex-end;width:auto!important;flex:0 0 auto}
+@media(max-width:699px){
+  .overview-period-row{gap:10px}
+  .overview-period-row .overview-period-controls{display:flex!important;margin-top:0!important}
+  .overview-period-row .overview-period-field{width:auto!important;min-width:120px!important}
+  .overview-period-row .overview-period-tabs button{white-space:nowrap;padding:8px!important}
+}

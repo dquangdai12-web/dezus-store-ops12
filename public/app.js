@@ -1028,7 +1028,7 @@ function overviewPeriodPicker(ctx) {
   } else {
     picker = `<div class="field overview-period-field"><label>Năm</label><select class="input" id="overviewYearFilter">${overviewYearsOptions(ctx.year)}</select></div>`;
   }
-  return `<section class="card overview-period-card"><div class="overview-period-head">${tabs}</div><div class="overview-period-controls">${picker}</div></section>`;
+  return `<section class="card overview-period-card"><div class="overview-period-row"><div class="overview-period-controls">${picker}</div>${tabs}</div></section>`;
 }
 
 async function overviewPerformanceForPeriod(ctx) {
@@ -3199,10 +3199,6 @@ async function renderProductAnalytics(){
   else content=`<div class="card"><div class="section-title"><h3>Tốc độ bán</h3>${productAnalyticsSortControl('speed')}</div>${productAnalyticsTable(data.rows||[],'speed')}</div>`;
   const sourceWarning='';
   const exportBtn=isAdmin?`<button class="btn secondary" id="paExportExcel" type="button">Tải Excel</button>`:'';
-  const coverageRows = uploadStatus?.coverage || [];
-  const coverageType = row => row.type === 'sales' ? 'Doanh thu hàng hóa' : row.type === 'ledger' ? 'Sổ nhập / xuất kho' : `Xuất nhập tồn ${row.inventory_period_type === 'week' ? 'tuần' : row.inventory_period_type === 'month' ? 'tháng' : ''}`;
-  const coverageTable = rows => `<div class="table-wrap"><table><thead><tr><th>Loại dữ liệu</th><th>Cửa hàng</th><th>Kỳ dữ liệu</th><th>Số dòng còn</th><th>So với kỳ đang xem</th></tr></thead><tbody>${rows.map(row => `<tr><td>${esc(coverageType(row))}</td><td>${esc(row.store_name)}</td><td>${row.start ? `${dOnly(row.start)} → ${dOnly(row.end)}` : 'Chưa có ngày'}${row.untracked_rows ? '<div class="hint">Có dữ liệu không gắn lần upload còn hiệu lực</div>' : ''}</td><td>${money(row.row_count)}</td><td>${row.end && row.end < range.start ? '<span class="badge warn">Cũ hơn kỳ đang xem</span>' : row.start && row.start > range.end ? 'Sau kỳ đang xem' : row.start ? 'Trong / giao với kỳ đang xem' : 'Chưa xác định'}</td></tr>`).join('')}</tbody></table></div>`;
-  const existingDataBlock = !isAdmin ? '' : `<section class="card" id="paExistingData" style="margin-top:16px"><div class="section-title"><h3>Dữ liệu hiện có</h3><span class="badge">Toàn hệ thống</span></div>${uploadStatus?.load_error ? '<div class="empty">Không tải được danh sách dữ liệu. Vui lòng tải lại trang.</div>' : coverageRows.length ? `<p class="hint">${money(coverageRows.reduce((sum,row)=>sum+Number(row.row_count||0),0))} dòng còn dữ liệu • ${coverageRows.length} nhóm theo loại, cửa hàng và kỳ. Hiển thị kỳ cũ trước; không phụ thuộc bộ lọc cửa hàng hoặc tìm sản phẩm ở trên.</p>${coverageTable(coverageRows.slice(0,8))}${coverageRows.length>8?`<details style="margin-top:12px"><summary>Xem thêm ${coverageRows.length-8} nhóm dữ liệu</summary>${coverageTable(coverageRows.slice(8))}</details>`:''}` : '<div class="empty">Chưa có dữ liệu phân tích hàng hóa.</div>'}</section>`;
   const uploadBatches=(uploadStatus?.batches||[]);
   const uploadStatusBlock=isAdmin?`<details id="paCleanupPanel" class="card pa-upload-status-card pa-history-card pa-history-details" style="margin-top:14px" ${state.productAnalyticsCleanupOpen?'open':''}>
     <summary class="pa-history-summary"><span><b>Xóa dữ liệu cũ</b><small>Chỉ Admin • ${uploadBatches.length} lần upload còn dữ liệu</small></span><span class="badge danger">Quản lý dữ liệu</span></summary>
@@ -3215,7 +3211,7 @@ async function renderProductAnalytics(){
       <div class="empty" id="paCleanupEmpty" hidden>Không tìm thấy dữ liệu phù hợp với bộ lọc.</div>
     </div>
   </details>`:'';
-  shell(`<div class="card pa-filter-card"><div class="toolbar"><div style="margin-right:auto"><h3 style="margin:0">Phân tích hàng hóa</h3><div class="hint">${esc(data.store_name||'')} • ${dOnly(range.start)} → ${dOnly(range.end)}</div></div>${isAdmin?'<button class="btn secondary" id="paOpenExistingData" type="button">Dữ liệu hiện có</button><button class="btn danger" id="paOpenCleanup" type="button">Xóa dữ liệu cũ</button>':''}${exportBtn}</div><div class="pa-filter-grid">${storeSelect}${search}${periodPicker}</div></div>${sourceWarning}${existingDataBlock}${kpis}<div class="toolbar pa-tabs">${tabs}</div>${content}${uploadStatusBlock}`,'Phân tích hàng hóa','');
+  shell(`<div class="card pa-filter-card"><div class="toolbar"><div style="margin-right:auto"><h3 style="margin:0">Phân tích hàng hóa</h3><div class="hint">${esc(data.store_name||'')} • ${dOnly(range.start)} → ${dOnly(range.end)}</div></div>${isAdmin?'<button class="btn danger" id="paOpenCleanup" type="button">Xóa dữ liệu cũ</button>':''}${exportBtn}</div><div class="pa-filter-grid">${storeSelect}${search}${periodPicker}</div></div>${sourceWarning}${kpis}<div class="toolbar pa-tabs">${tabs}</div>${content}${uploadStatusBlock}`,'Phân tích hàng hóa','');
   $('#paPeriodType')?.addEventListener('change',e=>{state.productAnalyticsPeriod=e.target.value;renderProductAnalytics();});$$('.pa-tab').forEach(b=>b.onclick=()=>{state.productAnalyticsTab=b.dataset.tab;renderProductAnalytics();});$('#paStore')?.addEventListener('change',e=>{state.productAnalyticsStoreId=e.target.value;renderProductAnalytics();});
   $('.pa-open-restock')?.addEventListener('click',()=>{state.productAnalyticsTab='restock';renderProductAnalytics();});
   $('#paMonth')?.addEventListener('change',e=>{state.productAnalyticsMonth=e.target.value||currentMonthLocal();renderProductAnalytics();});
@@ -3235,7 +3231,6 @@ async function renderProductAnalytics(){
   }));
   $('#paExportExcel')?.addEventListener('click',async()=>{try{const res=await fetch(`/api/product-analytics/export.xlsx?${query}`,{headers:{Authorization:`Bearer ${state.token}`}});if(!res.ok){const j=await res.json().catch(()=>({}));throw new Error(j.error||'Không tải được Excel');}const blob=await res.blob();const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=`phan-tich-hang-hoa-${range.start}-${range.end}.xlsx`;link.click();URL.revokeObjectURL(link.href);}catch(err){toast(err.message,'danger');}});
   if(isAdmin){
-    $('#paOpenExistingData')?.addEventListener('click', () => $('#paExistingData')?.scrollIntoView({behavior:'smooth',block:'start'}));
     const panel = $('#paCleanupPanel');
     panel?.addEventListener('toggle', () => { state.productAnalyticsCleanupOpen = panel.open; });
     $('#paOpenCleanup')?.addEventListener('click', () => { if (panel) { panel.open = true; state.productAnalyticsCleanupOpen = true; panel.scrollIntoView({behavior:'smooth',block:'start'}); } });

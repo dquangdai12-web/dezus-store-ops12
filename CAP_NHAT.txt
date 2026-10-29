@@ -1,3 +1,8 @@
+BẢN 4.228
+- Tổng quan: chọn tháng/quý/năm bên trái, nút Tháng / Quý / Năm bên phải cùng hàng.
+- Phân tích hàng hóa: bỏ khối và nút Dữ liệu hiện có. Giữ chức năng Xóa dữ liệu cũ.
+- Deploy cả public/app.js, public/style.css và public/index.html.
+
 BẢN 4.227
 - Bảng nguyên giá / giảm giá bỏ sản phẩm Tổng doanh thu = 0 (túi giấy, quà tặng).
 - Không tính số lượng, tỷ trọng hoặc bill chỉ có sản phẩm 0 đồng.
