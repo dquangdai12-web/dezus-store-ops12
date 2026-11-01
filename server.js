@@ -107,6 +107,8 @@ app.get('/evidence-view/:filename', (req, res) => {
   return res.download(filePath, downloadName);
 });
 
+app.get('/api/export-build', (req,res) => { res.setHeader('Cache-Control','no-store'); res.json({version:'EXPORT-FIX-V5',exportPeriodRequired:true,build:'2026-11-02'}); });
+
 app.use('/uploads', express.static(UPLOAD_DIR));
 app.use(express.static(path.join(ROOT, 'public'), {
   setHeaders: (res, filePath) => {
@@ -6424,7 +6426,9 @@ app.get('/api/export/:type.xlsx', requireAuth, requirePerm('can_export'), (req, 
   if(type==='sales'&&req.query.sales_mode==='store')rows=aggregateSalesExportByDay(rows);
   const isPerformanceExport = type === 'performance';
   const buffer = toExcelBuffer(rows, isPerformanceExport ? 'Tong hop diem' : type);
-  res.setHeader('X-Dezus-Export-Version','FIX-V4');
+  res.setHeader('X-Dezus-Export-Version','FIX-V5');
+  res.setHeader('X-Dezus-Export-Start',exportStart||'');
+  res.setHeader('X-Dezus-Export-End',exportEnd||'');
   res.setHeader('X-Dezus-Export-Rows',String(rows.length));
   res.header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
   if (isPerformanceExport) {

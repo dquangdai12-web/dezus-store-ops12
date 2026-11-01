@@ -1,0 +1,2 @@
+FIX V5: Visible export button label, API /api/export-build build id, Excel header version verification, row count and date-range toast.
+On production verify https://dezus-store-ops12.onrender.com/api/export-build returns EXPORT-FIX-V5.
