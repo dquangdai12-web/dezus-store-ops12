@@ -546,7 +546,7 @@ async function downloadExport(type) {
       if(type==='online_orders' && !/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) throw new Error('Vui lòng chọn tháng xuất đơn online');
       if(type==='sales' && !/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) throw new Error('Vui lòng chọn tháng/quý/năm xuất doanh thu');
       if(month){const range=exportPeriodBounds(month,type==='online_orders'?'month':period);qs.set('export_start',range.start);qs.set('export_end',range.end);if(period==='month')qs.set('export_month',month);}
-      if(state.route==='dashboard'){const range=overviewPeriodContext();qs.delete('export_month');qs.set('export_start',range.start);qs.set('export_end',new Date(new Date(range.end).getTime()-86400000).toISOString().slice(0,10));}
+      if(state.route==='dashboard' && type!=='sales' && type!=='online_orders'){const range=overviewPeriodContext();qs.delete('export_month');qs.set('export_start',range.start);qs.set('export_end',new Date(new Date(range.end).getTime()-86400000).toISOString().slice(0,10));}
       const storeId=type==='online_orders' ? ($('#onlineOrderStoreFilter2')?.value || state.onlineOrderStoreId) : state[storeFields[type]];
       if(storeId&&storeId!=='all')qs.set('store_id',String(storeId));
       if(type.startsWith('product_feedback')&&state.feedbackCollectionId)qs.set('collection_id',String(state.feedbackCollectionId));
@@ -559,10 +559,10 @@ async function downloadExport(type) {
           if(selectedStore&&selectedStore!=='all')qs.set('store_id',String(selectedStore));
         }
       }
-      exportUrl+=`?${qs}`;downloadName=`${type}${salesMode?'-'+salesMode:''}-${qs.get('export_start')||month}-${qs.get('export_end')||''}.xlsx`;
+      exportUrl+=`?${qs}`;downloadName=`${type}${salesMode?'-'+salesMode:''}-${qs.get('export_start')||month}-${qs.get('export_end')||''}-FIX-V4.xlsx`;
     }
     const res = await fetch(exportUrl, { headers: { Authorization: `Bearer ${state.token}` } });
-    if (!res.ok) throw new Error('Không tải được dữ liệu');
+    if (!res.ok) { const detail=await res.json().catch(()=>({}));throw new Error(detail.error||'Không tải được dữ liệu'); }
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');

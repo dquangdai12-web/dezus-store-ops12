@@ -1,0 +1,6 @@
+DEZUS EXPORT FIX V4
+- App JS URL changed to force new browser resource.
+- Sales/online exports strictly require date range server side.
+- Dashboard override cannot affect sales and online export.
+- Download filenames include FIX-V4 and exact range, diagnostic response headers.
+- Existing data untouched.

@@ -6285,6 +6285,7 @@ app.get('/api/export/:type.xlsx', requireAuth, requirePerm('can_export'), (req, 
   const exportStart=String(req.query.export_start||''),exportEnd=String(req.query.export_end||'');
   if((exportStart||exportEnd)&&(!/^\d{4}-\d{2}-\d{2}$/.test(exportStart)||!/^\d{4}-\d{2}-\d{2}$/.test(exportEnd)||exportEnd<exportStart))return res.status(400).json({error:'Kỳ xuất dữ liệu không hợp lệ'});
   const exportStore=Number(req.query.store_id)||null;
+  if(['sales','online_orders'].includes(type) && (!exportStart || !exportEnd)) return res.status(400).json({error:'Thiếu khoảng ngày xuất dữ liệu'});
   if(type==='sales'){
     if(!exportStart || !exportEnd) return res.status(400).json({error:'Vui lòng chọn kỳ xuất doanh thu (tháng/quý/năm)'});
     if(!['store','personal'].includes(String(req.query.sales_mode||''))) return res.status(400).json({error:'Vui lòng chọn dữ liệu cửa hàng hoặc cá nhân'});
@@ -6418,10 +6419,13 @@ app.get('/api/export/:type.xlsx', requireAuth, requirePerm('can_export'), (req, 
     return res.status(404).json({ error: 'Loại xuất dữ liệu không hợp lệ' });
   }
   rows=exportStart?filterExportPeriod(rows,type,exportStart,exportEnd):filterExportMonth(rows,type,exportMonth);
+  if(['sales','online_orders'].includes(type) && rows.some(r => { const d=String(r[type==='sales'?'sale_date':'ngay']||'').slice(0,10); return d<exportStart || d>exportEnd; })) return res.status(500).json({error:'Lỗi kiểm tra kỳ xuất: có dữ liệu nằm ngoài kỳ được chọn'});
   if(exportStore)rows=rows.filter(r=>r.store_id!==undefined?Number(r.store_id)===exportStore:(r.store_name||r.cua_hang)?(r.store_name||r.cua_hang)===(getStore(exportStore)?.name):true);
   if(type==='sales'&&req.query.sales_mode==='store')rows=aggregateSalesExportByDay(rows);
   const isPerformanceExport = type === 'performance';
   const buffer = toExcelBuffer(rows, isPerformanceExport ? 'Tong hop diem' : type);
+  res.setHeader('X-Dezus-Export-Version','FIX-V4');
+  res.setHeader('X-Dezus-Export-Rows',String(rows.length));
   res.header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
   if (isPerformanceExport) {
     const y = Math.max(2000, Math.min(2100, Number(req.query.year) || new Date().getFullYear()));
