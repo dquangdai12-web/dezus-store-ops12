@@ -6182,3 +6182,5 @@ section.card>.toolbar+p.hint{display:none!important}
 .shift-chip.f,.scheduleShift.tone-f,.schedule-cell .scheduleQuickShift.tone-f{background:#e9d5ff!important;color:#581c87!important;border:2px solid #a855f7!important}
 .shift-chip.other,.scheduleShift.tone-other,.schedule-cell .scheduleQuickShift.tone-other{background:#a5f3fc!important;color:#164e63!important;border:2px solid #06b6d4!important}
 .shift-chip.off,.scheduleShift.tone-off,.schedule-cell .scheduleQuickShift.tone-off{background:#e5e7eb!important;color:#4b5563!important;border:2px solid #9ca3af!important}
+
+.schedule-cell .scheduleQuickShift[aria-invalid="true"]{background:#fee2e2!important;color:#991b1b!important;border:2px solid #dc2626!important;box-shadow:0 0 0 2px #fecaca!important}

@@ -5556,6 +5556,8 @@ app.get('/api/shifts', requireAuth, (req, res) => {
 app.post('/api/shifts', requireAuth, requirePerm('can_manage_shifts'), (req, res) => {
   const { code, name, start_time, end_time, note } = req.body || {};
   if (!name || !start_time || !end_time) return res.status(400).json({ error: 'Thiếu tên ca, giờ bắt đầu hoặc giờ kết thúc' });
+  if(!['S','C','G','F'].includes(String(code||'').trim().toUpperCase()))return res.status(400).json({error:'Chỉ dùng mã ca S, C, G hoặc F'});
+  if(activeShifts().some(s=>s.code===String(code).trim().toUpperCase()))return res.status(400).json({error:'Ca đã tồn tại, hãy sửa giờ ca hiện có'});
   const id = nextId('shifts');
   db.shifts = db.shifts || [];
   db.shifts.push({ id, code: String(code || name).trim().slice(0, 12), name: String(name).trim(), start_time: String(start_time), end_time: String(end_time), note: note || '', status: 'active', created_by: req.user.id, created_at: nowIso(), updated_by: req.user.id, updated_at: nowIso() });
@@ -5567,7 +5569,7 @@ app.patch('/api/shifts/:id', requireAuth, requirePerm('can_manage_shifts'), (req
   const row = (db.shifts || []).find(s => Number(s.id) === Number(req.params.id));
   if (!row || row.status === 'deleted') return res.status(404).json({ error: 'Không tìm thấy ca làm' });
   const { code, name, start_time, end_time, note, status } = req.body || {};
-  if (code !== undefined) row.code = String(code || '').trim().slice(0, 12);
+  if(code!==undefined&&String(code).trim().toUpperCase()!==row.code)return res.status(400).json({error:'Giữ mã ca S, C, G, F; chỉ chỉnh giờ và ghi chú'});
   if (name !== undefined) row.name = String(name || '').trim();
   if (start_time !== undefined) row.start_time = String(start_time || '');
   if (end_time !== undefined) row.end_time = String(end_time || '');
@@ -6376,6 +6378,40 @@ app.get('*', (_req, res) => {
   res.setHeader('Expires', '0');
   res.sendFile(path.join(ROOT, 'public', 'index.html'));
 });
+
+function consolidateShiftGroups(data) {
+  if(data.shift_groups_v231)return false;
+  const shifts=data.shifts||(data.shifts=[]), mapping=new Map();
+  const group=sh=>String(sh.code||sh.name||'').replace(/^Ca\s+/i,'').trim().toUpperCase().match(/^([SCGF])\d*$/)?.[1];
+  const defaults={S:['08:30','16:30'],C:['14:00','22:30'],G:['12:00','22:00'],F:['09:00','17:00']};
+  let next=Math.max(0,...shifts.map(s=>Number(s.id)||0))+1;
+  for(const letter of ['S','C','G','F']){
+    const members=shifts.filter(sh=>group(sh)===letter);
+    const live=members.filter(sh=>sh.status!=='deleted');
+    let primary=live.find(sh=>String(sh.code).toUpperCase()===letter)||live[0];
+    if(!primary){primary={id:next++,status:'active',created_at:nowIso()};shifts.push(primary);}
+    const times=(key)=>live.map(sh=>sh[key]).filter(t=>/^([01]\d|2[0-3]):[0-5]\d$/.test(t||'')).sort();
+    const starts=times('start_time'),ends=times('end_time');
+    primary.start_time=letter==='C'?'14:00':starts[0]||defaults[letter][0];
+    primary.end_time=letter==='C'?'22:30':ends.at(-1)||defaults[letter][1];
+    primary.code=letter;primary.name=`Ca ${letter}`;primary.status='active';
+    for(const old of members){mapping.set(Number(old.id),Number(primary.id));if(old!==primary){old.status='deleted';old.merged_into=primary.id;}}
+  }
+  for(const sh of shifts)if(!['S','C','G','F'].includes(sh.code)&&sh.status!=='deleted')sh.status='deleted';
+  for(const row of data.work_schedules||[])if(mapping.has(Number(row.shift_id)))row.shift_id=mapping.get(Number(row.shift_id));
+  for(const task of data.tasks||[])if(Array.isArray(task.shift_ids))task.shift_ids=[...new Set(task.shift_ids.map(id=>mapping.get(Number(id))||Number(id)))];
+  data.nextIds=data.nextIds||{};data.nextIds.shifts=Math.max(next,Number(data.nextIds.shifts)||1);
+  data.shift_groups_v231=true;
+  return true;
+}
+if(!db.shift_groups_v231){
+  if(fs.existsSync(DB_PATH))fs.copyFileSync(DB_PATH,DB_PATH+'.before-shift-groups-'+Date.now()+'.bak');
+  consolidateShiftGroups(db);
+  const datesByStore=new Map();
+  for(const row of db.work_schedules||[]){if(row.status==='deleted')continue;if(!datesByStore.has(row.store_id))datesByStore.set(row.store_id,[]);datesByStore.get(row.store_id).push(row.work_date);}
+  for(const [store,dates] of datesByStore)syncFutureShiftTasksForSchedule(store,dates);
+  saveDb();
+}
 
 app.listen(PORT, () => {
   console.log('==========================================');

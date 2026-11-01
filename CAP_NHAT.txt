@@ -1,3 +1,10 @@
+BẢN 4.231
+- Gộp ca S1/S2, C1/C2, G1/G2, F1/F2 thành S/C/G/F.
+- C: 14:00–22:30. S/G/F lấy giờ bắt đầu sớm nhất và kết thúc muộn nhất.
+- Tự chuyển lịch và mã ca gắn công việc; đồng bộ người nhận công việc từ hôm nay.
+- Tự sao lưu dữ liệu trước chuyển đổi, chỉ chạy một lần khi khởi động.
+- Ô chưa xếp ca để trống, gõ trực tiếp S/C/G/F, mã sai báo đỏ và chặn lưu.
+
 BẢN 4.230
 - Bỏ Bill hủy khỏi menu desktop/mobile; giữ dữ liệu lịch sử.
 - Ca S xanh lá, C xanh dương, G/G1 vàng, G2 cam, F tím, OFF xám.
