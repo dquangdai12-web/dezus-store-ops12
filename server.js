@@ -6285,6 +6285,11 @@ app.get('/api/export/:type.xlsx', requireAuth, requirePerm('can_export'), (req, 
   const exportStart=String(req.query.export_start||''),exportEnd=String(req.query.export_end||'');
   if((exportStart||exportEnd)&&(!/^\d{4}-\d{2}-\d{2}$/.test(exportStart)||!/^\d{4}-\d{2}-\d{2}$/.test(exportEnd)||exportEnd<exportStart))return res.status(400).json({error:'Kỳ xuất dữ liệu không hợp lệ'});
   const exportStore=Number(req.query.store_id)||null;
+  if(type==='sales'){
+    if(!exportStart || !exportEnd) return res.status(400).json({error:'Vui lòng chọn kỳ xuất doanh thu (tháng/quý/năm)'});
+    if(!['store','personal'].includes(String(req.query.sales_mode||''))) return res.status(400).json({error:'Vui lòng chọn dữ liệu cửa hàng hoặc cá nhân'});
+    if(exportStore && (!getStore(exportStore) || (req.user.role!=='admin' && !userHasStore(req.user,exportStore)))) return res.status(403).json({error:'Không có quyền xuất dữ liệu cửa hàng này'});
+  }
   let rows = [];
   if (type === 'tasks') {
     rows = taskRowsForUser(req.user).map(r => ({ task_id: r.id, title: r.title, priority: r.priority, due_at: r.task_date || r.due_at, store_id:r.store_id, store_name: r.store_name, assignee_name: r.assignee_name, completed_at: r.completed_at, evidence_path: r.evidence_path, evidence_note: r.evidence_note, points_delta: r.points_delta, status: r.status }));
@@ -6326,7 +6331,8 @@ app.get('/api/export/:type.xlsx', requireAuth, requirePerm('can_export'), (req, 
   } else if (type === 'orders') {
     rows = aggregateOrderRows(orderRowsForUser(req.user,exportStore).filter(r=>!exportMonth||String(r.order_date||'').slice(0,7)===exportMonth)).map(o => ({ lan_order: o.batch_name, store_id: o.store_id, store_name: o.store_name, sku: o.sku || '', product_name: o.product_name || '', size: o.size || '', tong_so_luong: Number(o.total_quantity || 0), ngay_dau: o.first_order_date || '', ngay_cuoi: o.last_order_date || '', trang_thai: o.status_label, ghi_chu: o.note || '', so_dong_gop: Number(o.source_count || 0), nguoi_tao: o.created_by_name || '' }));
   } else if (type === 'online_orders') {
-    rows = onlineOrderRowsForUser(req.user,exportStore).map(o => ({ id: o.id, ngay: o.order_date || '', cua_hang: o.store_name || '', so_hoa_don: o.invoice_no || '', gia_tri_don: Number(o.order_value || 0), doanh_thu_huong_30: Number(o.benefit_revenue || 0), nhan_vien_dong: o.packer_name || '', ghi_chu: o.note || '', nguoi_nhap: o.created_by_name || '', ngay_cap_nhat: o.updated_at || o.created_at || '' }));
+    if(!exportStart && !exportMonth) return res.status(400).json({error:'Vui lòng chọn tháng xuất đơn online'});
+    rows = onlineOrderRowsForUser(req.user,exportStore,exportMonth || (exportStart && exportStart.slice(0,7))).map(o => ({ id: o.id, ngay: o.order_date || '', cua_hang: o.store_name || '', so_hoa_don: o.invoice_no || '', gia_tri_don: Number(o.order_value || 0), doanh_thu_huong_30: Number(o.benefit_revenue || 0), nhan_vien_dong: o.packer_name || '', ghi_chu: o.note || '', nguoi_nhap: o.created_by_name || '', ngay_cap_nhat: o.updated_at || o.created_at || '' }));
   } else if (type === 'product_feedback') {
     rows = productFeedbackRowsForUser(req.user,exportStore,req.query.collection_id||null,exportMonth||null).map(r => ({ id: r.id, thang_bst: r.collection_month || '', bst_list: r.collection_name || '', ngay: r.feedback_date || '', cua_hang: r.store_name || '', sku: r.sku || '', ten_sp: r.product_name || '', kieu_dang: r.style_feedback || '', chat_lieu: r.material_feedback || '', loi_san_pham: r.product_errors || '', danh_gia_khach: r.customer_feedback || '', mong_muon_tai_san_pham: r.restock_wish || '', ghi_chu: r.note || '', nguoi_nhap: r.created_by_name || '', ngay_nhap: r.created_at || '' }));
   } else if (type === 'product_feedback_summary') {
