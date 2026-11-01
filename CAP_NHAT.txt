@@ -1,3 +1,20 @@
+BẢN 4.235
+- Tải Excel doanh thu hỏi Dữ liệu cửa hàng hoặc Dữ liệu cá nhân.
+- Cửa hàng: mỗi cửa hàng/ngày một dòng, không có tên nhân viên.
+- Cộng doanh thu, bill, món; khách tính một lần/ngày; UPT/ATV tính lại từ tổng.
+- Giữ kỳ tháng/quý/năm và cửa hàng đang lọc.
+
+BẢN 4.234
+- Xuất doanh thu theo đúng tháng/quý/năm đang hiển thị, giữ cửa hàng đang chọn.
+- Các trang lọc tháng giữ kỳ tháng; trang không lọc kỳ không tự ép tháng hiện tại.
+- Tải dữ liệu quản trị có chọn Tháng/Quý/Năm và mốc thời gian.
+
+BẢN 4.233
+- Xuất Excel gửi tháng và cửa hàng đang lọc lên máy chủ.
+- Lịch làm việc, doanh thu, công việc, đơn online chỉ lấy dữ liệu tháng chọn.
+- Khu vực Tải dữ liệu quản trị có ô chọn tháng tải.
+- Danh mục ca làm không có ngày nên vẫn xuất danh mục ca.
+
 BẢN 4.232
 - Giao việc theo ca lưu đủ ngày, kể cả chưa có lịch làm việc.
 - Lưu lịch tuần mới tự gắn người nhận cho công việc đã lên kế hoạch.

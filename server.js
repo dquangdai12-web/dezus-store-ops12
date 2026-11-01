@@ -6245,17 +6245,56 @@ app.post('/api/admin/data-cleanup/delete', requireAuth, (req, res) => {
   } catch (err) { return res.status(err.status || 500).json({ error: err.message || 'Không xóa được dữ liệu' }); }
 });
 
+function aggregateSalesExportByDay(rows){
+  const groups=new Map();
+  for(const r of rows){
+    const key=`${r.store_id}|${String(r.sale_date).slice(0,10)}`;
+    const g=groups.get(key)||{sale_date:String(r.sale_date).slice(0,10),store_id:r.store_id,store_name:r.store_name,revenue:0,bill_count:0,item_count:0,khach_moi:0,khach_cu:0,luot_khach_tong:0};
+    for(const k of ['revenue','bill_count','item_count'])g[k]+=Number(r[k]||0);
+    // Customer traffic is stored once per store/day, repeated on employee rows.
+    for(const k of ['khach_moi','khach_cu','luot_khach_tong'])g[k]=Math.max(g[k],Number(r[k]||0));
+    groups.set(key,g);
+  }
+  return [...groups.values()].map(g=>({...g,upt:g.bill_count?Math.round(g.item_count/g.bill_count*100)/100:0,atv:g.bill_count?Math.round(g.revenue/g.bill_count):0})).sort((a,b)=>a.sale_date.localeCompare(b.sale_date)||String(a.store_name).localeCompare(String(b.store_name),'vi'));
+}
+
+function filterExportMonth(rows,type,month){
+  if(!month)return rows;
+  const fields={tasks:'due_at',violations:'created_at',assessments:'assessed_at',sales:'sale_date',sales_targets:'target_month',sales_daily_targets:'target_date',work_schedules:'work_date',user_transfers:'effective_date',online_orders:'ngay',product_feedback:'ngay',product_collections:'thang',bonuses:'bonus_date',documents:'created_at',product_training_attempts:'ngay_lam_bai'};
+  const key=fields[type];
+  return key?rows.filter(r=>String(r[key]||'').slice(0,7)===month):rows;
+}
+
+function filterExportPeriod(rows,type,start,end){
+  if(!start||!end)return rows;
+  const months=[];let cursor=start.slice(0,7);
+  while(cursor<=end.slice(0,7)&&months.length<120){months.push(cursor);const [y,m]=cursor.split('-').map(Number);cursor=new Date(Date.UTC(y,m,1)).toISOString().slice(0,7);}
+  return rows.filter(r=>months.some(month=>filterExportMonth([r],type,month).length));
+}
+
 app.get('/api/export/:type.xlsx', requireAuth, requirePerm('can_export'), (req, res) => {
   const type = req.params.type;
+  const exportMonth=String(req.query.export_month||'');
+  if(exportMonth&&!/^\d{4}-(0[1-9]|1[0-2])$/.test(exportMonth))return res.status(400).json({error:'Tháng xuất dữ liệu không hợp lệ'});
+  const exportStart=String(req.query.export_start||''),exportEnd=String(req.query.export_end||'');
+  if((exportStart||exportEnd)&&(!/^\d{4}-\d{2}-\d{2}$/.test(exportStart)||!/^\d{4}-\d{2}-\d{2}$/.test(exportEnd)||exportEnd<exportStart))return res.status(400).json({error:'Kỳ xuất dữ liệu không hợp lệ'});
+  const exportStore=Number(req.query.store_id)||null;
   let rows = [];
   if (type === 'tasks') {
-    rows = taskRowsForUser(req.user).map(r => ({ task_id: r.id, title: r.title, priority: r.priority, due_at: r.due_at, store_name: r.store_name, assignee_name: r.assignee_name, completed_at: r.completed_at, evidence_path: r.evidence_path, evidence_note: r.evidence_note, points_delta: r.points_delta, status: r.status }));
+    rows = taskRowsForUser(req.user).map(r => ({ task_id: r.id, title: r.title, priority: r.priority, due_at: r.task_date || r.due_at, store_id:r.store_id, store_name: r.store_name, assignee_name: r.assignee_name, completed_at: r.completed_at, evidence_path: r.evidence_path, evidence_note: r.evidence_note, points_delta: r.points_delta, status: r.status }));
   } else if (type === 'violations') {
     rows = violationRowsForUser(req.user);
   } else if (type === 'assessments') {
     rows = assessmentRowsForUser(req.user);
   } else if (type === 'sales') {
     rows = db.sales.map(sa => { const sd = (db.sales_store_days || []).find(x => Number(x.store_id) === Number(sa.store_id) && String(x.sale_date) === String(sa.sale_date)); const cc = customerCountsFromRow(sd || {}); return { id: sa.id, sale_date: sa.sale_date, store_id: sa.store_id, employee_name: getUser(sa.user_id)?.full_name || '', store_name: getStore(sa.store_id)?.name || '', revenue: Number(sa.revenue || 0), bill_count: Number(sa.bill_count || 0), item_count: Number(sa.item_count || 0), khach_moi: cc.customer_new_count, khach_cu: cc.customer_old_count, luot_khach_tong: cc.customer_count, upt: Number(sa.bill_count || 0) ? Math.round((Number(sa.item_count || 0) / Number(sa.bill_count || 0)) * 100) / 100 : 0, atv: Number(sa.bill_count || 0) ? Math.round(Number(sa.revenue || 0) / Number(sa.bill_count || 0)) : 0, note: sa.note || '', created_at: sa.created_at || '', updated_at: sa.updated_at || '' }; });
+    if(req.query.sales_mode==='store'){
+      const seen=new Set(rows.map(r=>`${r.store_id}|${r.sale_date}`));
+      for(const d of db.sales_store_days||[]){
+        if(seen.has(`${d.store_id}|${d.sale_date}`))continue;
+        const cc=customerCountsFromRow(d);rows.push({sale_date:d.sale_date,store_id:d.store_id,store_name:getStore(d.store_id)?.name||'',revenue:0,bill_count:0,item_count:0,khach_moi:cc.customer_new_count,khach_cu:cc.customer_old_count,luot_khach_tong:cc.customer_count});
+      }
+    }
     if (req.user.role !== 'admin') rows = rows.filter(r => userHasStore(req.user, r.store_id));
     rows = rows.sort((a, b) => new Date(b.sale_date) - new Date(a.sale_date));
   } else if (type === 'sales_targets') {
@@ -6276,13 +6315,13 @@ app.get('/api/export/:type.xlsx', requireAuth, requirePerm('can_export'), (req, 
   } else if (type === 'user_transfers') {
     rows = (db.user_transfers || []).filter(x => x.status !== 'deleted').map(x => ({ id:x.id, employee_name:getUser(x.user_id)?.full_name||'', transfer_type:x.transfer_type==='temporary'?'Hỗ trợ tạm thời':'Điều chuyển chính thức', from_store:getStore(x.from_store_id)?.name||'', to_store:getStore(x.to_store_id)?.name||'', effective_date:x.effective_date||'', end_date:x.end_date||'', note:x.note||'', created_by:getUser(x.created_by)?.full_name||'', created_at:x.created_at||'' })).sort((a,b)=>String(b.effective_date).localeCompare(String(a.effective_date)));
   } else if (type === 'orders') {
-    rows = aggregateOrderRows(orderRowsForUser(req.user)).map(o => ({ lan_order: o.batch_name, store_id: o.store_id, store_name: o.store_name, sku: o.sku || '', product_name: o.product_name || '', size: o.size || '', tong_so_luong: Number(o.total_quantity || 0), ngay_dau: o.first_order_date || '', ngay_cuoi: o.last_order_date || '', trang_thai: o.status_label, ghi_chu: o.note || '', so_dong_gop: Number(o.source_count || 0), nguoi_tao: o.created_by_name || '' }));
+    rows = aggregateOrderRows(orderRowsForUser(req.user,exportStore).filter(r=>!exportMonth||String(r.order_date||'').slice(0,7)===exportMonth)).map(o => ({ lan_order: o.batch_name, store_id: o.store_id, store_name: o.store_name, sku: o.sku || '', product_name: o.product_name || '', size: o.size || '', tong_so_luong: Number(o.total_quantity || 0), ngay_dau: o.first_order_date || '', ngay_cuoi: o.last_order_date || '', trang_thai: o.status_label, ghi_chu: o.note || '', so_dong_gop: Number(o.source_count || 0), nguoi_tao: o.created_by_name || '' }));
   } else if (type === 'online_orders') {
-    rows = onlineOrderRowsForUser(req.user).map(o => ({ id: o.id, ngay: o.order_date || '', cua_hang: o.store_name || '', so_hoa_don: o.invoice_no || '', gia_tri_don: Number(o.order_value || 0), doanh_thu_huong_30: Number(o.benefit_revenue || 0), nhan_vien_dong: o.packer_name || '', ghi_chu: o.note || '', nguoi_nhap: o.created_by_name || '', ngay_cap_nhat: o.updated_at || o.created_at || '' }));
+    rows = onlineOrderRowsForUser(req.user,exportStore).map(o => ({ id: o.id, ngay: o.order_date || '', cua_hang: o.store_name || '', so_hoa_don: o.invoice_no || '', gia_tri_don: Number(o.order_value || 0), doanh_thu_huong_30: Number(o.benefit_revenue || 0), nhan_vien_dong: o.packer_name || '', ghi_chu: o.note || '', nguoi_nhap: o.created_by_name || '', ngay_cap_nhat: o.updated_at || o.created_at || '' }));
   } else if (type === 'product_feedback') {
-    rows = productFeedbackRowsForUser(req.user).map(r => ({ id: r.id, thang_bst: r.collection_month || '', bst_list: r.collection_name || '', ngay: r.feedback_date || '', cua_hang: r.store_name || '', sku: r.sku || '', ten_sp: r.product_name || '', kieu_dang: r.style_feedback || '', chat_lieu: r.material_feedback || '', loi_san_pham: r.product_errors || '', danh_gia_khach: r.customer_feedback || '', mong_muon_tai_san_pham: r.restock_wish || '', ghi_chu: r.note || '', nguoi_nhap: r.created_by_name || '', ngay_nhap: r.created_at || '' }));
+    rows = productFeedbackRowsForUser(req.user,exportStore,req.query.collection_id||null,exportMonth||null).map(r => ({ id: r.id, thang_bst: r.collection_month || '', bst_list: r.collection_name || '', ngay: r.feedback_date || '', cua_hang: r.store_name || '', sku: r.sku || '', ten_sp: r.product_name || '', kieu_dang: r.style_feedback || '', chat_lieu: r.material_feedback || '', loi_san_pham: r.product_errors || '', danh_gia_khach: r.customer_feedback || '', mong_muon_tai_san_pham: r.restock_wish || '', ghi_chu: r.note || '', nguoi_nhap: r.created_by_name || '', ngay_nhap: r.created_at || '' }));
   } else if (type === 'product_feedback_summary') {
-    rows = productFeedbackSummaryForUser(req.user).map(r => ({ bst_list: r.collection_name || '', sku: r.sku || '', ten_sp: r.product_name || '', so_lan_danh_gia: Number(r.count || 0), cua_hang: r.stores || '', ngay_dau: r.first_date || '', ngay_cuoi: r.last_date || '', de_xuat_tai: Number(r.restock_yes || 0), khong_tai: Number(r.restock_no || 0), theo_doi_them: Number(r.restock_watch || 0), ket_luan: r.recommend_label || '', tong_hop_kieu_dang: r.style_notes || '', tong_hop_chat_lieu: r.material_notes || '', tong_hop_loi: r.error_notes || '', tong_hop_y_kien_khach: r.customer_notes || '', ghi_chu: r.notes || '' }));
+    rows = productFeedbackSummaryForUser(req.user,exportStore,req.query.collection_id||null,exportMonth||null).map(r => ({ bst_list: r.collection_name || '', sku: r.sku || '', ten_sp: r.product_name || '', so_lan_danh_gia: Number(r.count || 0), cua_hang: r.stores || '', ngay_dau: r.first_date || '', ngay_cuoi: r.last_date || '', de_xuat_tai: Number(r.restock_yes || 0), khong_tai: Number(r.restock_no || 0), theo_doi_them: Number(r.restock_watch || 0), ket_luan: r.recommend_label || '', tong_hop_kieu_dang: r.style_notes || '', tong_hop_chat_lieu: r.material_notes || '', tong_hop_loi: r.error_notes || '', tong_hop_y_kien_khach: r.customer_notes || '', ghi_chu: r.notes || '' }));
   } else if (type === 'product_collections') {
     rows = productCollectionRowsForUser(req.user).flatMap(c => (c.items || []).map(i => ({ thang: c.collection_month || '', bst_list: c.name || '', pham_vi: c.store_name || '', sku: i.sku || '', ten_sp: i.product_name || '', ghi_chu_sp: i.note || '', ghi_chu_bst: c.description || '', nguoi_tao: c.created_by_name || '', ngay_tao: c.created_at || '' })));
   } else if (type === 'product_trainings') {
@@ -6363,6 +6402,9 @@ app.get('/api/export/:type.xlsx', requireAuth, requirePerm('can_export'), (req, 
   } else {
     return res.status(404).json({ error: 'Loại xuất dữ liệu không hợp lệ' });
   }
+  rows=exportStart?filterExportPeriod(rows,type,exportStart,exportEnd):filterExportMonth(rows,type,exportMonth);
+  if(exportStore)rows=rows.filter(r=>r.store_id!==undefined?Number(r.store_id)===exportStore:(r.store_name||r.cua_hang)?(r.store_name||r.cua_hang)===(getStore(exportStore)?.name):true);
+  if(type==='sales'&&req.query.sales_mode==='store')rows=aggregateSalesExportByDay(rows);
   const isPerformanceExport = type === 'performance';
   const buffer = toExcelBuffer(rows, isPerformanceExport ? 'Tong hop diem' : type);
   res.header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');

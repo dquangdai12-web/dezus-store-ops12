@@ -503,8 +503,28 @@ async function api(path, opts = {}) {
   return data;
 }
 
+function exportPeriodBounds(month,period='month') {
+  const [year,m]=month.split('-').map(Number);
+  const first=period==='year'?1:period==='quarter'?Math.floor((m-1)/3)*3+1:m;
+  const last=period==='year'?12:period==='quarter'?first+2:first;
+  return {start:`${year}-${String(first).padStart(2,'0')}-01`,end:new Date(Date.UTC(year,last,0)).toISOString().slice(0,10)};
+}
+
+function chooseSalesExportMode(){
+  return new Promise(resolve=>{
+    const dialog=document.createElement('dialog');dialog.className='sales-export-dialog';
+    dialog.innerHTML='<h3>Tải Excel doanh thu</h3><p>Chọn dữ liệu cần tải trong kỳ đang xem.</p><div class="grid two"><button class="btn" data-mode="store">Dữ liệu cửa hàng<br><small>Tổng hợp từng ngày, không có nhân viên</small></button><button class="btn secondary" data-mode="personal">Dữ liệu cá nhân<br><small>Chi tiết theo nhân viên</small></button></div><button class="btn secondary" data-mode="" style="margin-top:16px">Hủy</button>';
+    const finish=mode=>{dialog.close();dialog.remove();resolve(mode);};
+    dialog.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>finish(b.dataset.mode)));
+    dialog.addEventListener('cancel',e=>{e.preventDefault();finish('');});
+    document.body.appendChild(dialog);dialog.showModal();
+  });
+}
+
 async function downloadExport(type) {
   try {
+    const salesMode=type==='sales'?await chooseSalesExportMode():'';
+    if(type==='sales'&&!salesMode)return;
     let exportUrl = `/api/export/${type}.xlsx`;
     let downloadName = `${type}.xlsx`;
     if (type === 'performance') {
@@ -515,6 +535,21 @@ async function downloadExport(type) {
       if (storeId) qs.set('store_id', String(storeId));
       exportUrl += `?${qs.toString()}`;
       downloadName = `tong-hop-diem-${year}-${String(month).padStart(2,'0')}.xlsx`;
+    }
+    if(type!=='performance'){
+      const monthFields={work_schedules:'scheduleMonth',sales:'salesMonth',sales_targets:'salesTargetMonth',sales_daily_targets:'salesMonth',online_orders:'onlineOrderMonth',product_feedback:'feedbackMonth',product_feedback_summary:'feedbackMonth',product_collections:'feedbackMonth',user_transfers:'adminTransferMonth'};
+      const storeFields={work_schedules:'scheduleStoreId',sales:'salesStoreId',sales_targets:'salesStoreId',sales_daily_targets:'salesStoreId',online_orders:'onlineOrderStoreId',orders:'orderStoreId',product_feedback:'feedbackStoreId',product_feedback_summary:'feedbackStoreId',tasks:'taskSummaryStoreId',violations:'violationStoreId'};
+      const visibleMonth=$('#exportMonthFilter')?.value||document.querySelector('input[type="month"][id$="Filter"],#scheduleMonthInput,#adminTransferMonthInput')?.value;
+      const month=visibleMonth||(state.route==='tasks'?currentMonthLocal():state[monthFields[type]])||'';
+      const period=$('#exportPeriodFilter')?.value||(state.route==='sales'?state.leaderboardPeriod:'month')||'month';
+      const qs=new URLSearchParams();
+      if(month){const range=exportPeriodBounds(month,period);qs.set('export_start',range.start);qs.set('export_end',range.end);if(period==='month')qs.set('export_month',month);}
+      if(state.route==='dashboard'){const range=overviewPeriodContext();qs.delete('export_month');qs.set('export_start',range.start);qs.set('export_end',new Date(new Date(range.end).getTime()-86400000).toISOString().slice(0,10));}
+      const storeId=state[storeFields[type]];
+      if(storeId&&storeId!=='all')qs.set('store_id',String(storeId));
+      if(type.startsWith('product_feedback')&&state.feedbackCollectionId)qs.set('collection_id',String(state.feedbackCollectionId));
+      if(type==='sales')qs.set('sales_mode',salesMode);
+      exportUrl+=`?${qs}`;downloadName=`${type}${salesMode?'-'+salesMode:''}-${qs.get('export_start')||month}-${qs.get('export_end')||''}.xlsx`;
     }
     const res = await fetch(exportUrl, { headers: { Authorization: `Bearer ${state.token}` } });
     if (!res.ok) throw new Error('Không tải được dữ liệu');
@@ -4482,7 +4517,7 @@ async function renderAdmin() {
   const storeForm = `<div class="card" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">Quản lý chi nhánh</h3><span class="hint">Sửa tên / thêm / xóa chi nhánh</span></div><form id="storeForm" class="grid three admin-store-grid"><div class="field"><label>Tên chi nhánh mới</label><input class="input" name="name" placeholder="VD: Hà Nội Centre" required></div><div class="field"><label>Mã tạo tự động</label><input class="input readonly" value="Tự sinh theo tên" readonly></div><div class="field admin-store-action"><label>&nbsp;</label><button class="btn">Thêm chi nhánh</button></div></form></div>`;
   const storeEditCard = editStore ? `<div class="card" style="margin-top:16px"><div class="toolbar"><h3 style="margin-right:auto">Sửa tên chi nhánh</h3><button class="btn secondary" id="cancelEditStoreBtn">Đóng</button></div><form id="editStoreForm" class="grid three admin-store-grid"><input type="hidden" name="id" value="${editStore.id}"><div class="field"><label>Tên chi nhánh</label><input class="input" name="name" value="${esc(editStore.name)}" required></div><div class="field"><label>Mã</label><input class="input readonly" value="${esc(editStore.code || '')}" readonly></div><div class="field admin-store-action"><label>&nbsp;</label><div class="row wrap"><button class="btn">Lưu tên</button><button class="btn secondary" type="button" id="cancelEditStoreBtn2">Hủy</button></div></div></form></div>` : '';
   const storeTable = `<div class="card" style="margin-top:16px"><h3>Danh sách chi nhánh</h3><div class="table-wrap"><table><thead><tr><th>ID</th><th>Chi nhánh</th><th>Mã</th><th>Trạng thái</th><th>Số tài khoản</th><th>Thao tác</th></tr></thead><tbody>${storeRows.map(st => `<tr><td><span class="badge dark">#${st.id}</span></td><td><b>${esc(st.name)}</b></td><td>${esc(st.code || '')}</td><td>${userStatusBadge(st.status || 'active')}</td><td>${money(st.users_count || 0)}</td><td><div class="row wrap"><button class="btn small secondary editStoreBtn" data-id="${st.id}">Sửa tên</button>${state.user?.role === 'admin' ? `<button class="btn small danger deleteStoreBtn" data-id="${st.id}" data-name="${esc(st.name)}">Xóa cửa hàng đã đóng</button>` : ''}</div></td></tr>`).join('')}</tbody></table></div></div>`;
-  const exports = `<div class="card" style="margin-top:16px"><h3>Tải dữ liệu</h3><div class="export-grid"><button class="btn secondary" data-export="tasks">Công việc</button><button class="btn secondary" data-export="violations">Vi phạm</button><button class="btn secondary" data-export="assessments">Checklist</button><button class="btn secondary" data-export="sales">Doanh thu cập nhật</button><button class="btn secondary" data-export="sales_targets">Target tháng</button><button class="btn secondary" data-export="sales_daily_targets">Target ngày</button><button class="btn secondary" data-export="bonuses">Tiền thưởng</button><button class="btn secondary" data-export="documents">Tài liệu</button><button class="btn secondary" data-export="orders">Order hàng</button><button class="btn secondary" data-export="online_orders">Đơn online</button><button class="btn secondary" data-export="cdp_ojti">CDP/OJTI</button><button class="btn secondary" data-export="shifts">Ca làm</button><button class="btn secondary" data-export="work_schedules">Lịch làm việc</button><button class="btn secondary" data-export="user_transfers">Điều chuyển nhân sự</button><button class="btn secondary" data-export="performance">Tổng hợp điểm</button></div></div>`;
+  const exports = `<div class="card" style="margin-top:16px"><div class="toolbar"><h3>Tải dữ liệu</h3><div class="field"><label>Kỳ dữ liệu</label><select class="input" id="exportPeriodFilter"><option value="month">Tháng</option><option value="quarter">Quý</option><option value="year">Năm</option></select></div><div class="field"><label>Mốc thời gian</label><input class="input" type="month" id="exportMonthFilter" value="${currentMonthLocal()}"></div></div><div class="export-grid"><button class="btn secondary" data-export="tasks">Công việc</button><button class="btn secondary" data-export="violations">Vi phạm</button><button class="btn secondary" data-export="assessments">Checklist</button><button class="btn secondary" data-export="sales">Doanh thu cập nhật</button><button class="btn secondary" data-export="sales_targets">Target tháng</button><button class="btn secondary" data-export="sales_daily_targets">Target ngày</button><button class="btn secondary" data-export="bonuses">Tiền thưởng</button><button class="btn secondary" data-export="documents">Tài liệu</button><button class="btn secondary" data-export="orders">Order hàng</button><button class="btn secondary" data-export="online_orders">Đơn online</button><button class="btn secondary" data-export="cdp_ojti">CDP/OJTI</button><button class="btn secondary" data-export="shifts">Ca làm</button><button class="btn secondary" data-export="work_schedules">Lịch làm việc</button><button class="btn secondary" data-export="user_transfers">Điều chuyển nhân sự</button><button class="btn secondary" data-export="performance">Tổng hợp điểm</button></div></div>`;
   const cleanupCard = state.user?.role === 'admin' ? `<div class="card admin-cleanup-card" style="margin-top:16px">
     <div class="toolbar"><div style="margin-right:auto"><p class="eyebrow">Chỉ Admin</p><h3>Dọn / Xóa dữ liệu theo loại</h3><p class="hint">Phân loại riêng từng nhóm. Hãy kiểm tra số bản ghi trước khi xóa. Dữ liệu nghiệp vụ sẽ tự tạo backup JSON trước khi xóa.</p></div></div>
     <div class="admin-cleanup-warning"><b>Không cấp quyền này cho tài khoản khác.</b><span>Admin là vai trò duy nhất có thể gọi chức năng xóa hệ thống này.</span></div>
