@@ -2383,6 +2383,38 @@ function scheduledUsersByShift(storeId, workDate, shiftIds = []) {
 }
 
 
+function restoreMissingShiftTasks(data) {
+  const batches=new Map();let added=0;
+  for(const t of data.tasks||[]){
+    if(!t.recurrence_batch||!Array.isArray(t.shift_ids)||!t.shift_ids.length)continue;
+    if(!batches.has(t.recurrence_batch))batches.set(t.recurrence_batch,[]);
+    batches.get(t.recurrence_batch).push(t);
+  }
+  for(const tasks of batches.values()){
+    // A deleted occurrence can be intentional: never reconstruct its batch.
+    if(tasks.some(t=>t.status==='deleted'))continue;
+    const source=tasks[0];
+    const m=String(source.description||'').match(/Giao cố định\/nhiều ngày: (\d{4}-\d{2}-\d{2}) đến (\d{4}-\d{2}-\d{2}), (.+?)\./);
+    if(!m)continue;
+    const step=m[3].match(/^lặp mỗi (\d+) ngày$/);
+    const week=m[3].match(/^theo thứ trong tuần \(([^)]+)\)$/);
+    if(!step&&!week)continue;
+    const weekdays=week?week[1].split(',').map(x=>({T2:1,T3:2,T4:3,T5:4,T6:5,T7:6,CN:0})[x.trim()]):[];
+    if(week&&weekdays.some(x=>x===undefined))continue;
+    const dates=step?dateRangeEvery(m[1],m[2],Number(step[1])):dateRangeByWeekdays(m[1],m[2],weekdays);
+    const exists=new Set(tasks.map(taskWorkDate));
+    const time=String(source.due_at||'').match(/T(\d{2}:\d{2}(?::\d{2})?)/)?.[1];
+    if(!time)continue;
+    for(const date of dates){
+      if(date<dateOnly(new Date())||exists.has(date))continue;
+      const row={...source,id:nextId('tasks'),task_date:date,due_at:`${date}T${time}`,created_at:nowIso(),restored_shift_plan:true};
+      delete row.shift_synced_at;delete row.updated_at;delete row.updated_by;
+      data.tasks.push(row);exists.add(date);added++;
+    }
+  }
+  return added;
+}
+
 function taskWorkDate(row) {
   return dateOnly(row.task_date || row.due_at || new Date());
 }
@@ -3309,7 +3341,7 @@ app.post('/api/tasks', requireAuth, requirePerm('can_assign_tasks'), (req, res) 
       const u = getActiveUser(uid);
       return u && u.role !== 'admin' && userCanWorkAtStoreOnDate(u, storeId, workDate);
     });
-    if (!validUsers.length) return;
+    if (!validUsers.length && !selectedShiftIds.length) return;
     const taskId = nextId('tasks');
     const dueAt = useMultiDate ? `${workDate}T${due_time || '22:00'}` : due_at;
     const extraDesc = [];
@@ -3343,9 +3375,9 @@ app.post('/api/tasks', requireAuth, requirePerm('can_assign_tasks'), (req, res) 
     });
     createdTasks += 1;
   });
-  if (!createdAssignments) return res.status(400).json({ error: selectedShiftIds.length ? 'Không tìm thấy người được xếp trong Lịch làm việc của cửa hàng/ngày/ca đã chọn. Hãy kiểm tra LLV trước khi giao việc.' : 'Không có nhân viên hợp lệ để giao việc.' });
+  if (!createdTasks) return res.status(400).json({error:'Không có công việc hợp lệ để tạo.'});
   saveDb();
-  res.json({ ok: true, created_tasks: createdTasks, created_assignments: createdAssignments });
+  res.json({ ok: true, created_tasks: createdTasks, created_assignments: createdAssignments, message: `Đã lưu ${createdTasks} công việc, giao ${createdAssignments} lượt cho nhân viên. Ngày chưa có lịch sẽ tự cập nhật khi lưu lịch làm việc.` });
 });
 
 function resolveTaskBulkSelection(payload = {}) {
@@ -6411,6 +6443,15 @@ if(!db.shift_groups_v231){
   for(const row of db.work_schedules||[]){if(row.status==='deleted')continue;if(!datesByStore.has(row.store_id))datesByStore.set(row.store_id,[]);datesByStore.get(row.store_id).push(row.work_date);}
   for(const [store,dates] of datesByStore)syncFutureShiftTasksForSchedule(store,dates);
   saveDb();
+}
+
+if(!db.shift_task_plan_v232){
+  if(fs.existsSync(DB_PATH))fs.copyFileSync(DB_PATH,DB_PATH+'.before-shift-task-fix-'+Date.now()+'.bak');
+  restoreMissingShiftTasks(db);
+  const datesByStore=new Map();
+  for(const t of db.tasks||[]){if(t.status==='deleted'||!t.shift_ids?.length)continue;if(!datesByStore.has(t.store_id))datesByStore.set(t.store_id,[]);datesByStore.get(t.store_id).push(taskWorkDate(t));}
+  for(const [store,dates] of datesByStore)syncFutureShiftTasksForSchedule(store,dates);
+  db.shift_task_plan_v232=true;saveDb();
 }
 
 app.listen(PORT, () => {

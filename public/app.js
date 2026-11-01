@@ -2125,7 +2125,7 @@ async function submitTask(e) {
   try {
     const res = await api('/api/tasks', { method: 'POST', body: JSON.stringify(payload) });
     const count = Number(res.created_assignments || 0);
-    toast(count ? `Đã giao ${count} đầu việc cho nhân viên` : 'Đã giao việc thành công');
+    toast(res.message || (count ? `Đã giao ${count} đầu việc cho nhân viên` : 'Đã lưu công việc chờ lịch làm việc'));
     renderTasks();
   } catch (err) { toast(err.message, 'danger'); }
 }

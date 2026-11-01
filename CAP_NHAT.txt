@@ -1,3 +1,10 @@
+BẢN 4.232
+- Giao việc theo ca lưu đủ ngày, kể cả chưa có lịch làm việc.
+- Lưu lịch tuần mới tự gắn người nhận cho công việc đã lên kế hoạch.
+- Tự bổ sung ngày thiếu từ hôm nay cho đợt cũ còn đủ mô tả khoảng ngày/quy tắc lặp; bỏ qua đợt có công việc đã xóa.
+- Giữ bài đã hoàn thành, tránh trùng người nhận khi lưu lịch lại.
+- Tự sao lưu trước khi khôi phục kế hoạch cũ.
+
 BẢN 4.231
 - Gộp ca S1/S2, C1/C2, G1/G2, F1/F2 thành S/C/G/F.
 - C: 14:00–22:30. S/G/F lấy giờ bắt đầu sớm nhất và kết thúc muộn nhất.
