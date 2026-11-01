@@ -384,7 +384,9 @@ function shiftCode(shift) {
 
 function shiftTone(code) {
   const c = String(code || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
-  if (!c) return 'off';
+  if (!c || c === 'OFF') return 'off';
+  if (c === 'G1') return 'g1';
+  if (c === 'G2') return 'g2';
   if (c.startsWith('S')) return 's';
   if (c.startsWith('C')) return 'c';
   if (c.startsWith('G')) return 'g';
@@ -402,7 +404,7 @@ function applyScheduleSelectTone(sel) {
   if (!sel) return;
   const opt = sel.options[sel.selectedIndex];
   const code = opt ? (opt.dataset.code || '') : '';
-  sel.classList.remove('tone-s', 'tone-c', 'tone-g', 'tone-f', 'tone-other', 'tone-off');
+  sel.classList.remove('tone-s', 'tone-c', 'tone-g', 'tone-f', 'tone-other', 'tone-off', 'tone-g1', 'tone-g2');
   sel.classList.add(`tone-${shiftTone(code)}`);
 }
 
@@ -618,7 +620,6 @@ function navItems() {
     ['weekly_report', 'Báo cáo tuần', 'WK', 'revenue'],
     ['loyalty', 'Loyalty', 'LY', 'revenue'],
     ['ggnv', 'GGNV', 'GG', 'revenue'],
-    ['bill_cancel', 'Bill hủy', 'BH', 'revenue'],
     ['online_orders', 'Đơn online', 'OL', 'revenue'],
     ['orders', 'Order hàng', 'SKU', 'product'],
     ['product_analytics', 'Phân tích hàng hóa', 'PA', 'product'],
@@ -634,7 +635,7 @@ function navItems() {
   ];
   return items.filter(([id]) => {
     if (id === 'dashboard' || id === 'account' || id === 'tasks' || id === 'violations' || id === 'checklists' || id === 'sales') return true;
-    if (id === 'loyalty' || id === 'ggnv' || id === 'bill_cancel') return true;
+    if (id === 'loyalty' || id === 'ggnv') return true;
     if (id === 'daily_report') return canAny('can_manage_daily_report','can_manage_sales','can_view_store_sales_summary','can_view_weekly_report','can_manage_weekly_report');
     if (id === 'weekly_report') return can('can_view_weekly_report') || can('can_manage_weekly_report');
     if (id === 'online_orders') return can('can_view_online_orders') || can('can_manage_online_orders');
@@ -680,7 +681,7 @@ function navGroups() {
   return [
     { key:'overview', label:'Tổng Quan', icon:appUiIcon('home'), ids:['dashboard'] },
     { key:'work', label:'Công việc', icon:appUiIcon('checklist'), ids:['tasks','cdp_ojti','checklists','schedule','violations'] },
-    { key:'revenue', label:'Doanh thu', icon:appUiIcon('revenue'), ids:['sales','daily_report','weekly_report','loyalty','ggnv','bill_cancel','online_orders','bonuses'] },
+    { key:'revenue', label:'Doanh thu', icon:appUiIcon('revenue'), ids:['sales','daily_report','weekly_report','loyalty','ggnv','online_orders','bonuses'] },
     { key:'product', label:'Sản phẩm', icon:appUiIcon('product'), ids:['orders','product_analytics'] },
     { key:'more', label:'Tài liệu', icon:appUiIcon('document'), ids:['documents','reports'] },
     { key:'system', label:'Hệ thống', icon:appUiIcon('admin'), ids:['account','admin'] },
@@ -691,7 +692,7 @@ function mobileNavGroups() {
   return [
     { key:'overview', label:'Tổng Quan', icon:appUiIcon('home'), ids:['dashboard'] },
     { key:'work', label:'Công việc', icon:appUiIcon('tasks'), ids:['tasks','cdp_ojti','checklists','schedule','violations'] },
-    { key:'revenue', label:'Doanh thu', icon:appUiIcon('revenue'), ids:['sales','daily_report','weekly_report','loyalty','ggnv','bill_cancel','online_orders','bonuses'] },
+    { key:'revenue', label:'Doanh thu', icon:appUiIcon('revenue'), ids:['sales','daily_report','weekly_report','loyalty','ggnv','online_orders','bonuses'] },
     { key:'product', label:'Sản phẩm', icon:appUiIcon('product'), ids:['orders','product_analytics'] },
     { key:'more', label:'Thêm', icon:appUiIcon('more'), ids:['documents','reports','account','admin'] },
   ];
@@ -4254,7 +4255,7 @@ async function renderSchedule() {
     const select = input.closest('td').querySelector('.scheduleShift');
     select.value = result.id;
     applyScheduleSelectTone(select);
-    input.classList.remove('tone-s', 'tone-c', 'tone-g', 'tone-f', 'tone-other', 'tone-off');
+    input.classList.remove('tone-s', 'tone-c', 'tone-g', 'tone-f', 'tone-other', 'tone-off', 'tone-g1', 'tone-g2');
     input.classList.add(`tone-${result.id ? shiftTone(result.code) : 'off'}`);
     if (normalize) input.value = result.code;
     return true;

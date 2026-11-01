@@ -1,3 +1,8 @@
+BẢN 4.230
+- Bỏ Bill hủy khỏi menu desktop/mobile; giữ dữ liệu lịch sử.
+- Ca S xanh lá, C xanh dương, G/G1 vàng, G2 cam, F tím, OFF xám.
+- Áp dụng màu cho ô nhập ca, chế độ xem và chú thích.
+
 BẢN 4.229
 - Bỏ khối Đề xuất tái sớm ở Tổng hợp phân tích hàng hóa.
 - Loyalty: lọc tháng/quý/năm theo ngày đơn, mặc định tháng hiện tại.

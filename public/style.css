@@ -6172,3 +6172,13 @@ section.card>.toolbar+p.hint{display:none!important}
   .overview-period-row .overview-period-field{width:auto!important;min-width:120px!important}
   .overview-period-row .overview-period-tabs button{white-space:nowrap;padding:8px!important}
 }
+
+/* V230: distinct shift colors in viewing, editing and legend. */
+.shift-chip.s,.scheduleShift.tone-s,.schedule-cell .scheduleQuickShift.tone-s{background:#bbf7d0!important;color:#14532d!important;border:2px solid #22c55e!important}
+.shift-chip.c,.scheduleShift.tone-c,.schedule-cell .scheduleQuickShift.tone-c{background:#bfdbfe!important;color:#1e3a8a!important;border:2px solid #3b82f6!important}
+.shift-chip.g,.scheduleShift.tone-g,.schedule-cell .scheduleQuickShift.tone-g{background:#fde68a!important;color:#78350f!important;border:2px solid #f59e0b!important}
+.shift-chip.g1,.scheduleShift.tone-g1,.schedule-cell .scheduleQuickShift.tone-g1{background:#fde68a!important;color:#78350f!important;border:2px solid #f59e0b!important}
+.shift-chip.g2,.scheduleShift.tone-g2,.schedule-cell .scheduleQuickShift.tone-g2{background:#fed7aa!important;color:#7c2d12!important;border:2px solid #f97316!important}
+.shift-chip.f,.scheduleShift.tone-f,.schedule-cell .scheduleQuickShift.tone-f{background:#e9d5ff!important;color:#581c87!important;border:2px solid #a855f7!important}
+.shift-chip.other,.scheduleShift.tone-other,.schedule-cell .scheduleQuickShift.tone-other{background:#a5f3fc!important;color:#164e63!important;border:2px solid #06b6d4!important}
+.shift-chip.off,.scheduleShift.tone-off,.schedule-cell .scheduleQuickShift.tone-off{background:#e5e7eb!important;color:#4b5563!important;border:2px solid #9ca3af!important}
