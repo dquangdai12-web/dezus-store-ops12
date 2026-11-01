@@ -6267,9 +6267,15 @@ function filterExportMonth(rows,type,month){
 
 function filterExportPeriod(rows,type,start,end){
   if(!start||!end)return rows;
-  const months=[];let cursor=start.slice(0,7);
-  while(cursor<=end.slice(0,7)&&months.length<120){months.push(cursor);const [y,m]=cursor.split('-').map(Number);cursor=new Date(Date.UTC(y,m,1)).toISOString().slice(0,7);}
-  return rows.filter(r=>months.some(month=>filterExportMonth([r],type,month).length));
+  const fields={tasks:'due_at',violations:'created_at',assessments:'assessed_at',sales:'sale_date',sales_targets:'target_month',sales_daily_targets:'target_date',work_schedules:'work_date',user_transfers:'effective_date',online_orders:'ngay',orders:'ngay_cuoi',product_feedback:'ngay',product_collections:'thang',bonuses:'bonus_date',documents:'created_at',product_training_attempts:'ngay_lam_bai'};
+  const key=fields[type];
+  if(!key)return rows;
+  return rows.filter(r=>{
+    const value=String(r[key]||'').slice(0,10);
+    if(!value)return false;
+    if(/^\d{4}-\d{2}$/.test(value))return value>=start.slice(0,7)&&value<=end.slice(0,7);
+    return value>=start&&value<=end;
+  });
 }
 
 app.get('/api/export/:type.xlsx', requireAuth, requirePerm('can_export'), (req, res) => {
@@ -6296,6 +6302,9 @@ app.get('/api/export/:type.xlsx', requireAuth, requirePerm('can_export'), (req, 
       }
     }
     if (req.user.role !== 'admin') rows = rows.filter(r => userHasStore(req.user, r.store_id));
+    if(req.query.sales_mode==='personal' && ['active','inactive'].includes(req.query.user_status)){
+      rows=rows.filter(r=>{const sale=db.sales.find(x=>Number(x.id)===Number(r.id));const user=sale&&getUser(sale.user_id);return user && (req.query.user_status==='active' ? user.status!=='inactive' && user.status!=='deleted' : user.status==='inactive');});
+    }
     rows = rows.sort((a, b) => new Date(b.sale_date) - new Date(a.sale_date));
   } else if (type === 'sales_targets') {
     rows = (db.sales_targets || []).map(t => ({ id: t.id, target_month: t.target_month, store_id: t.store_id, employee_name: getUser(t.user_id)?.full_name || '', store_name: getStore(t.store_id)?.name || '', target: Number(t.target_revenue ?? t.target ?? 0), target_upt: Number(t.target_upt || 0), target_atv: Number(t.target_atv || 0), target_cr: Number(t.target_cr || 0), note: t.note || '', updated_at: t.updated_at || t.created_at || '' }));

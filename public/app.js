@@ -539,16 +539,16 @@ async function downloadExport(type) {
     if(type!=='performance'){
       const monthFields={work_schedules:'scheduleMonth',sales:'salesMonth',sales_targets:'salesTargetMonth',sales_daily_targets:'salesMonth',online_orders:'onlineOrderMonth',product_feedback:'feedbackMonth',product_feedback_summary:'feedbackMonth',product_collections:'feedbackMonth',user_transfers:'adminTransferMonth'};
       const storeFields={work_schedules:'scheduleStoreId',sales:'salesStoreId',sales_targets:'salesStoreId',sales_daily_targets:'salesStoreId',online_orders:'onlineOrderStoreId',orders:'orderStoreId',product_feedback:'feedbackStoreId',product_feedback_summary:'feedbackStoreId',tasks:'taskSummaryStoreId',violations:'violationStoreId'};
-      const visibleMonth=$('#exportMonthFilter')?.value||document.querySelector('input[type="month"][id$="Filter"],#scheduleMonthInput,#adminTransferMonthInput')?.value;
-      const month=visibleMonth||(state.route==='tasks'?currentMonthLocal():state[monthFields[type]])||'';
-      const period=$('#exportPeriodFilter')?.value||(state.route==='sales'?state.leaderboardPeriod:'month')||'month';
+      const visibleMonth=state.route==='admin' ? $('#exportMonthFilter')?.value : (type==='sales' ? $('#salesMonthFilter')?.value : type==='work_schedules' ? $('#scheduleMonthInput')?.value : document.querySelector('input[type="month"][id$="Filter"]')?.value);
+      const month=visibleMonth||state[monthFields[type]]||(state.route==='tasks'?currentMonthLocal():'');
+      const period=(state.route==='admin'?$('#exportPeriodFilter')?.value:null)||(state.route==='sales'?state.leaderboardPeriod:'month')||'month';
       const qs=new URLSearchParams();
       if(month){const range=exportPeriodBounds(month,period);qs.set('export_start',range.start);qs.set('export_end',range.end);if(period==='month')qs.set('export_month',month);}
       if(state.route==='dashboard'){const range=overviewPeriodContext();qs.delete('export_month');qs.set('export_start',range.start);qs.set('export_end',new Date(new Date(range.end).getTime()-86400000).toISOString().slice(0,10));}
       const storeId=state[storeFields[type]];
       if(storeId&&storeId!=='all')qs.set('store_id',String(storeId));
       if(type.startsWith('product_feedback')&&state.feedbackCollectionId)qs.set('collection_id',String(state.feedbackCollectionId));
-      if(type==='sales')qs.set('sales_mode',salesMode);
+      if(type==='sales'){qs.set('sales_mode',salesMode);if(salesMode==='personal')qs.set('user_status',$('#salesUserStatusFilter')?.value||'all');}
       exportUrl+=`?${qs}`;downloadName=`${type}${salesMode?'-'+salesMode:''}-${qs.get('export_start')||month}-${qs.get('export_end')||''}.xlsx`;
     }
     const res = await fetch(exportUrl, { headers: { Authorization: `Bearer ${state.token}` } });

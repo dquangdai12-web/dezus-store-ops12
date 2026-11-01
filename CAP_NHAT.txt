@@ -120,3 +120,10 @@ V224 — PHÂN QUYỀN VÀ XÓA NHANH PHÂN TÍCH HÀNG HÓA
 
 Cập nhật server.js, public/app.js, public/index.html và public/style.css,
 sau đó deploy lại Render. Không thay dữ liệu thực tế hoặc biến môi trường.
+
+BAN SUA XUAT EXCEL 2026-11-02
+- Lay dung thang va ky thang/quy/nam dang xem o trang Doanh thu; khong lay nham bo loc trang Admin.
+- API loc dung khoang ngay export_start/export_end thay vi lay tron thang.
+- Giu hai lua chon xuat doanh thu cua hang theo ngay va doanh thu ca nhan.
+- Loc trang thai nhan su khi xuat doanh thu ca nhan.
+- Da kiem tra cu phap JS va 24 bai test tu dong (24/24 dat).
