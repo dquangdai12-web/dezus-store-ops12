@@ -51,12 +51,12 @@ const state = {
   overviewMonth: localStorage.getItem('dezus_ops_overview_month') || currentMonthLocal(),
   overviewQuarter: Number(localStorage.getItem('dezus_ops_overview_quarter')) || (Math.floor(new Date().getMonth()/3)+1),
   overviewYear: Number(localStorage.getItem('dezus_ops_overview_year')) || new Date().getFullYear(),
-  productAnalyticsPeriod: 'month',
+  productAnalyticsPeriod: 'week',
   productAnalyticsMonth: currentMonthLocal(),
-  productAnalyticsWeekStart: mondayOf(isoDateLocal(new Date())),
+  productAnalyticsWeekStart: addDays(mondayOf(isoDateLocal(new Date())), -7),
   productAnalyticsDay: isoDateLocal(new Date()),
-  productAnalyticsStart: `${currentMonthLocal()}-01`,
-  productAnalyticsEnd: isoDateLocal(new Date()),
+  productAnalyticsStart: addDays(mondayOf(isoDateLocal(new Date())), -7),
+  productAnalyticsEnd: addDays(mondayOf(isoDateLocal(new Date())), -1),
   productAnalyticsStoreId: '',
   productAnalyticsTab: 'summary',
   productAnalyticsSearch: '',
@@ -3088,7 +3088,7 @@ function productAnalyticsRangeForPeriod(period) {
     return {start:day,end:day};
   }
   if(period==='week') {
-    const picked=state.productAnalyticsWeekStart||mondayOf(today);
+    const picked=state.productAnalyticsWeekStart||addDays(mondayOf(today),-7);
     const start=mondayOf(picked);
     state.productAnalyticsWeekStart=start;
     const sunday=isoDateLocal(new Date(parseLocalDate(start).getTime()+6*86400000));
@@ -3185,7 +3185,7 @@ function priceMixTable(mix){
   if(!mix?.line_count)return '<div class="card"><h3>Nguyên giá / Giảm giá</h3><p class="hint">Chưa có dữ liệu cho kỳ này. Admin cần nhập lại file Sapo có Mã đơn hàng, Số lượng thực, Tiền hàng, Giảm giá và Tổng doanh thu.</p></div>';
   const number=v=>v==null?'—':Number(v).toLocaleString('vi-VN',{maximumFractionDigits:2});
   const rows=[['full','Hàng nguyên giá'],['discount','Hàng giảm giá'],['unknown','Chưa phân loại / có trả hàng']];
-  return `<div class="card" style="margin-bottom:14px"><h3>Nguyên giá / Giảm giá</h3><p class="hint">${mix.bills==null?'Thiếu mã đơn: chưa tính được số bill':number(mix.bills)+' bill không trùng'} · Toàn bộ sản phẩm trong kỳ và cửa hàng đang chọn</p><div class="table-wrap"><table><thead><tr><th>Nhóm hàng</th><th>Số lượng</th><th>% số lượng</th><th>Tổng doanh thu</th><th>% doanh thu</th><th>Số lượng / bill</th></tr></thead><tbody>${rows.map(([key,label])=>{const g=mix.groups[key];return `<tr><td>${label}</td><td>${number(g.quantity)}</td><td>${number(g.quantity_pct)}%</td><td>${number(g.revenue)} đ</td><td>${number(g.revenue_pct)}%</td><td>${number(g.quantity_per_bill)}</td></tr>`;}).join('')}<tr><td><b>Tổng</b></td><td>${number(mix.quantity)}</td><td>${mix.quantity>0?'100%':'—'}</td><td>${number(mix.revenue)} đ</td><td>${mix.revenue>0?'100%':'—'}</td><td>${number(mix.bills?mix.quantity/mix.bills:null)}</td></tr></tbody></table></div><p class="hint">Tỷ lệ giảm tính theo giá trị tuyệt đối của khoản giảm giá. Doanh thu lấy đúng cột Tổng doanh thu. Số lượng mỗi nhóm chia cho tổng bill; bill có cả hai nhóm chỉ đếm một lần. Dòng có trả hàng hoặc thiếu cơ sở phân loại được tách riêng, vẫn tính vào tổng.</p></div>`;
+  return `<div class="card" style="margin-bottom:14px"><h3>Nguyên giá / Giảm giá</h3><p class="hint">${mix.bills==null?'Thiếu mã đơn: chưa tính được số bill':number(mix.bills)+' bill không trùng'} · Toàn bộ sản phẩm trong kỳ và cửa hàng đang chọn</p><div class="table-wrap"><table><thead><tr><th>Nhóm hàng</th><th>Số lượng</th><th>% số lượng</th><th>Tổng doanh thu</th><th>% doanh thu</th><th>Số lượng / bill</th></tr></thead><tbody>${rows.map(([key,label])=>{const g=mix.groups[key];return `<tr><td>${label}</td><td>${number(g.quantity)}</td><td>${number(g.quantity_pct)}%</td><td>${number(g.revenue)} đ</td><td>${number(g.revenue_pct)}%</td><td>${number(g.quantity_per_bill)}</td></tr>`;}).join('')}<tr><td><b>Tổng</b></td><td>${number(mix.quantity)}</td><td>${mix.quantity>0?'100%':'—'}</td><td>${number(mix.revenue)} đ</td><td>${mix.revenue>0?'100%':'—'}</td><td>${number(mix.bills?mix.quantity/mix.bills:null)}</td></tr></tbody></table></div></div>`;
 }
 
 async function renderProductAnalytics(){
@@ -3194,11 +3194,11 @@ async function renderProductAnalytics(){
   const stores=state.boot.stores||[];
   if(!state.productAnalyticsStoreId)state.productAnalyticsStoreId=isAll?'all':String(state.user?.store_id||state.user?.store_ids?.[0]||'');
   if(!isAll)state.productAnalyticsStoreId=String(state.user?.store_id||state.user?.store_ids?.[0]||'');
+  if(!['month','week','day'].includes(state.productAnalyticsPeriod))state.productAnalyticsPeriod='week';
   const range=productAnalyticsRangeForPeriod(state.productAnalyticsPeriod);state.productAnalyticsStart=range.start;state.productAnalyticsEnd=range.end;
-  const query=`store_id=${encodeURIComponent(state.productAnalyticsStoreId||'all')}&start=${range.start}&end=${range.end}&period_type=${encodeURIComponent(state.productAnalyticsPeriod||'month')}&q=${encodeURIComponent(state.productAnalyticsSearch||'')}`;
+  const query=`store_id=${encodeURIComponent(state.productAnalyticsStoreId||'all')}&start=${range.start}&end=${range.end}&period_type=${encodeURIComponent(state.productAnalyticsPeriod||'week')}&q=${encodeURIComponent(state.productAnalyticsSearch||'')}`;
   const [data,uploadStatus]=await Promise.all([api(`/api/product-analytics?${query}`),isAdmin?api('/api/product-analytics/uploads').catch(()=>({load_error:true,sales:[],inventory:[],batches:[],coverage:[]})):Promise.resolve(null)]);
   const storeSelect=isAll?`<div class="field"><label>Cửa hàng</label><select class="input" id="paStore"><option value="all" ${state.productAnalyticsStoreId==='all'?'selected':''}>Toàn hệ thống</option>${stores.map(st=>`<option value="${st.id}" ${String(st.id)===String(state.productAnalyticsStoreId)?'selected':''}>${esc(st.name)}</option>`).join('')}</select></div>`:`<div class="field"><label>Cửa hàng</label><input class="input" value="${esc(data.store_name||'')}" disabled></div>`;
-  if(!['month','week','day'].includes(state.productAnalyticsPeriod)) state.productAnalyticsPeriod='month';
   const periodPickerInput=state.productAnalyticsPeriod==='month'
     ? `<input class="input pa-period-value" type="month" id="paMonth" value="${esc(state.productAnalyticsMonth||currentMonthLocal())}">`
     : state.productAnalyticsPeriod==='week'

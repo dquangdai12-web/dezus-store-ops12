@@ -1,0 +1,5 @@
+V6 - Phân tích hàng hóa
+1. Xóa dòng chú thích dài ở bảng Nguyên giá / Giảm giá (không sửa thuật toán).
+2. Mặc định mở trang chọn Tuần trước, thứ Hai đến Chủ nhật. Ví dụ ngày 02/11/2026: 26/10/2026 - 01/11/2026.
+3. Giữ khả năng chuyển Ngày/Tuần/Tháng và chọn tuần khác.
+4. Tăng phiên bản app.js để trình duyệt cập nhật.
