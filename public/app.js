@@ -4262,7 +4262,7 @@ async function renderSchedule() {
   const visibleScheduleEmployee = emp => scheduleEmployeeStatus === 'all' || String(emp.status || 'active') === 'active';
   const monthEmployees = Array.from(monthEmployeeMap.values()).filter(visibleScheduleEmployee).sort((a,b) => String(a.role||'').localeCompare(String(b.role||'')) || String(a.full_name||'').localeCompare(String(b.full_name||''),'vi'));
   const scheduleMap = new Map(allSchedules.map(x => [`${x.user_id}_${x.work_date}`, x]));
-  const canManage = Number(base.can_manage) === 1 || can('can_manage_schedule');
+  const canManage = state.user?.role === 'admin' || Number(base.can_manage) === 1 || can('can_manage_schedule');
   const isEditing = canManage && state.scheduleEditMode;
   const storeSelect = isAllStoreUser()
     ? `<div class="field"><label>Cửa hàng</label><select class="input" id="scheduleStoreFilter">${selectableStores().map(st => `<option value="${st.id}" ${Number(st.id) === Number(base.store_id) ? 'selected' : ''}>${esc(st.name)}</option>`).join('')}</select></div>`
@@ -4287,7 +4287,7 @@ async function renderSchedule() {
       if (!isEligible) return `<td class="schedule-view-cell schedule-not-eligible"><span class="hint">—</span></td>`;
       const shift = shifts.find(sh => Number(sh.id) === Number(row.shift_id));
       if (isEditing) {
-        return `<td class="schedule-cell"><input class="input scheduleQuickShift tone-${shift ? shiftTone(shiftCode(shift)) : 'off'}" value="${esc(shift ? shiftCode(shift) : '')}" autocomplete="off" spellcheck="false" aria-label="Ca của ${esc(emp.full_name)} ngày ${day}" placeholder=""><select hidden class="input scheduleShift tone-${shiftTone(shiftCode(shift))}" data-week="${week.week_start}" data-user="${emp.id}" data-date="${day}">${shiftOptions(row.shift_id || '')}</select><input class="input scheduleNote" data-user="${emp.id}" data-date="${day}" value="${esc(row.note || '')}" placeholder="Ghi chú"></td>`;
+        return `<td class="schedule-cell"><input class="input scheduleQuickShift tone-${shift ? shiftTone(shiftCode(shift)) : 'off'}" value="${esc(shift ? shiftCode(shift) : '')}" autocomplete="off" spellcheck="false" list="scheduleShiftCodes" aria-label="Ca của ${esc(emp.full_name)} ngày ${day}" placeholder=""><select hidden class="input scheduleShift tone-${shiftTone(shiftCode(shift))}" data-week="${week.week_start}" data-user="${emp.id}" data-date="${day}">${shiftOptions(row.shift_id || '')}</select><input class="input scheduleNote" data-user="${emp.id}" data-date="${day}" value="${esc(row.note || '')}" placeholder="Ghi chú"></td>`;
       }
       return `<td class="schedule-view-cell">${shift ? shiftChip(shift, row.note || '') : '<span class="shift-chip off" aria-label="Chưa phân ca"></span>'}</td>`;
     }).join('');
@@ -4296,7 +4296,7 @@ async function renderSchedule() {
   };
   const legend = `<div class="schedule-legend">${shifts.map(sh => `<span>${shiftChip(sh)} <small>${esc(sh.start_time || '')}-${esc(sh.end_time || '')}</small></span>`).join('')}<span><span class="shift-chip off" aria-label="Chưa phân ca"></span><small>Nghỉ/chưa phân ca</small></span></div>`;
   const weekTables = weeks.map((week, idx) => `<div class="schedule-week-block"><div class="schedule-week-title">Tuần ${idx + 1} <span>${week.dates.filter(d => d.startsWith(month)).map(dOnly).join(' - ')}</span></div><div class="table-wrap schedule-wrap"><table class="schedule-table"><thead><tr><th>Nhân sự</th>${week.dates.map((d) => `<th class="${d.startsWith(month) ? '' : 'schedule-out-month'}">${d.startsWith(month) ? weekLabel(d) : ''}</th>`).join('')}</tr></thead><tbody>${makeRows(week)}</tbody></table></div></div>`).join('');
-  const scheduleTable = `<div class="card" style="margin-top:16px"><form id="scheduleForm"><div class="toolbar"><h3 style="margin-right:auto">Bảng phân ca theo tháng</h3>${isEditing ? '<span class="badge warning">Đang sửa</span>' : '<span class="badge ok">Đang xem</span>'}</div>${isEditing ? `<p class="hint">Nhập mã ca đã tạo (ví dụ S, S1, G2, F); để trống nếu chưa xếp ca. Mã sai sẽ báo đỏ. Nhấn Enter sang ô tiếp theo, rồi bấm Lưu lịch.</p>` : ''}${legend}${weekTables}</form></div>`;
+  const scheduleTable = `<div class="card" style="margin-top:16px"><datalist id="scheduleShiftCodes">${shifts.map(sh => `<option value="${esc(shiftCode(sh))}"></option>`).join('')}</datalist><form id="scheduleForm"><div class="toolbar"><h3 style="margin-right:auto">Bảng phân ca theo tháng</h3>${isEditing ? '<span class="badge warning">Đang sửa</span>' : '<span class="badge ok">Đang xem</span>'}</div>${isEditing ? `<p class="hint">Nhập mã ca đã tạo (ví dụ S, S1, G2, F); để trống nếu chưa xếp ca. Mã sai sẽ báo đỏ. Nhấn Enter sang ô tiếp theo, rồi bấm Lưu lịch.</p>` : ''}${legend}${weekTables}</form></div>`;
   const shiftForm = state.user?.role === 'admin' ? `<div class="card" id="adminShiftManager" style="margin-top:16px"><h3>Quản lý ca làm · Admin</h3><p class="hint">Tạo ca mới với mã riêng như S1, S2, G1, G2, F2; các ca hiện tại vẫn được giữ nguyên.</p><form id="shiftForm" class="grid three simple-shift-form"><div class="field"><label>Mã ca</label><input class="input" name="code" placeholder="Ví dụ: S1, G2, F2" maxlength="12" pattern="[A-Za-z][A-Za-z0-9]{0,11}" required></div><div class="field"><label>Giờ bắt đầu</label><input class="input" type="time" name="start_time" required></div><div class="field"><label>Giờ kết thúc</label><input class="input" type="time" name="end_time" required></div><input type="hidden" name="name"><div style="grid-column:1/-1"><button class="btn" type="submit">Tạo ca mới</button></div></form><div class="shift-admin-list">${shifts.map(sh => `<div class="shift-admin-card"><div class="shift-admin-code">${shiftChip(sh)}</div><div class="grid three"><div class="field"><label>Mã ca</label><input class="input shiftField" data-id="${sh.id}" data-field="code" value="${esc(shiftCode(sh))}"></div><div class="field"><label>Bắt đầu</label><input class="input shiftField" data-id="${sh.id}" data-field="start_time" type="time" value="${esc(sh.start_time || '')}"></div><div class="field"><label>Kết thúc</label><input class="input shiftField" data-id="${sh.id}" data-field="end_time" type="time" value="${esc(sh.end_time || '')}"></div><input type="hidden" class="shiftField" data-id="${sh.id}" data-field="name" value="Ca ${esc(shiftCode(sh))}"><div class="row" style="grid-column:1/-1"><button type="button" class="btn small secondary saveShiftBtn" data-id="${sh.id}">Lưu</button><button type="button" class="btn small danger deleteShiftBtn" data-id="${sh.id}" data-name="${esc(shiftCode(sh))}">Xóa</button></div></div></div>`).join('')}</div></div>` : '';
   shell(`${filter}${state.user?.role === 'admin' ? '<div style="margin:12px 0"><button class="btn secondary" id="openShiftManagerBtn" type="button">+ Tạo / quản lý ca (Admin)</button></div>' : ''}${scheduleTable}${shiftForm}`, 'Lịch làm việc', '');
   $('#openShiftManagerBtn')?.addEventListener('click', () => $('#adminShiftManager')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
@@ -4349,7 +4349,9 @@ async function renderSchedule() {
       grouped.get(sel.dataset.week).push(entry);
     });
     try {
-      await Promise.all(Array.from(grouped.entries()).map(([week_start, entries]) => api('/api/schedules/bulk', { method: 'POST', body: JSON.stringify({ store_id: base.store_id, week_start, entries }) })));
+      const results = await Promise.all(Array.from(grouped.entries()).map(([week_start, entries]) => api('/api/schedules/bulk', { method: 'POST', body: JSON.stringify({ store_id: base.store_id, week_start, entries }) })));
+      const rejected = results.flatMap(result => result.rejected || []);
+      if (rejected.length) throw new Error(`${rejected.length} ô lịch không lưu được: ${rejected.slice(0, 3).map(r => `${r.work_date || ''} (${r.reason})`).join('; ')}`);
       toast('Đã lưu lịch làm việc');
       state.scheduleEditMode = false;
       renderSchedule();
@@ -4362,8 +4364,9 @@ async function renderSchedule() {
       payload.code = String(payload.code || '').trim().toUpperCase();
       payload.name = `Ca ${payload.code}`;
       await api('/api/shifts', { method: 'POST', body: JSON.stringify(payload) });
-      toast('Đã thêm ca làm');
-      renderSchedule();
+      state.scheduleEditMode = true;
+      toast(`Đã thêm ca ${payload.code}. Có thể điền ngay vào bảng lịch và bấm Lưu lịch.`);
+      await renderSchedule();
     } catch (err) { toast(err.message, 'danger'); }
   });
   $$('.saveShiftBtn').forEach(btn => btn.addEventListener('click', async () => {

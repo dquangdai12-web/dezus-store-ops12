@@ -1,0 +1,1 @@
+V9 (04/11/2026): Sau khi Admin tạo ca, tự mở Sửa lịch để có thể nhập mã ca vào ngày làm việc ngay. Gợi ý mã ca trong ô nhập. API lưu lịch trả về các dòng bị bỏ qua và lý do thay vì báo thành công sai; giao diện hiện lỗi nếu có dòng không lưu. Giữ nguyên dữ liệu ca và lịch hiện có.

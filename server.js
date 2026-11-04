@@ -5668,19 +5668,33 @@ app.post('/api/schedules/bulk', requireAuth, requirePerm('can_manage_schedule'),
   if (!Array.isArray(entries)) return res.status(400).json({ error: 'Dữ liệu lịch không hợp lệ' });
   db.work_schedules = db.work_schedules || [];
   let count = 0;
+  const rejected = [];
   entries.forEach(item => {
-    const user = getActiveUser(Number(item.user_id));
-    if (!user || !userCanWorkAtStoreOnDate(user, storeId, item.work_date) || user.role === 'admin') return;
     const workDate = dateOnly(item.work_date);
-    if (!dates.includes(workDate)) return;
-    const shiftId = item.shift_id ? Number(item.shift_id) : null;
-    const shift = shiftId ? (db.shifts || []).find(s => Number(s.id) === shiftId && s.status !== 'deleted') : null;
-    let row = db.work_schedules.find(x => Number(x.store_id) === Number(storeId) && Number(x.user_id) === Number(user.id) && String(x.work_date) === workDate);
-    if (!shiftId) {
-      if (row) { row.status = 'deleted'; row.updated_by = req.user.id; row.updated_at = nowIso(); count += 1; }
+    const user = getActiveUser(Number(item.user_id));
+    if (!user || user.role === 'admin') {
+      rejected.push({ work_date: workDate, user_id: item.user_id, reason: 'Nhân viên không hợp lệ' });
       return;
     }
-    if (!shift) return;
+    if (!dates.includes(workDate)) {
+      rejected.push({ work_date: workDate, user_id: user.id, reason: 'Ngày nằm ngoài tuần được chọn' });
+      return;
+    }
+    if (!userCanWorkAtStoreOnDate(user, storeId, workDate)) {
+      rejected.push({ work_date: workDate, user_id: user.id, reason: 'Nhân viên không thuộc cửa hàng tại ngày này' });
+      return;
+    }
+    const shiftId = item.shift_id ? Number(item.shift_id) : null;
+    const shift = shiftId ? (db.shifts || []).find(s => Number(s.id) === shiftId && s.status !== 'deleted') : null;
+    if (shiftId && !shift) {
+      rejected.push({ work_date: workDate, user_id: user.id, reason: 'Mã ca chưa được tạo hoặc đã bị xóa' });
+      return;
+    }
+    let row = db.work_schedules.find(x => Number(x.store_id) === Number(storeId) && Number(x.user_id) === Number(user.id) && String(x.work_date) === workDate);
+    if (!shiftId) {
+      if (row && row.status !== 'deleted') { row.status = 'deleted'; row.updated_by = req.user.id; row.updated_at = nowIso(); count += 1; }
+      return;
+    }
     if (row) {
       row.shift_id = shiftId;
       row.note = item.note || '';
@@ -5695,7 +5709,7 @@ app.post('/api/schedules/bulk', requireAuth, requirePerm('can_manage_schedule'),
   });
   const shiftSync = syncFutureShiftTasksForSchedule(storeId, dates, req.user.id);
   saveDb();
-  res.json({ ok: true, count, shift_sync: shiftSync });
+  res.json({ ok: rejected.length === 0, count, rejected, shift_sync: shiftSync });
 });
 
 
