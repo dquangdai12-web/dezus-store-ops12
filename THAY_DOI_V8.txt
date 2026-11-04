@@ -1,0 +1,1 @@
+V8 (04/11/2026): Admin được tạo ca mới (S1, S2, G1, G2, F2...) tại Lịch làm việc. API POST /api/shifts chỉ Admin; kiểm tra mã, giờ, chống trùng. Các ca mới dùng được ngay khi nhập lịch; giữ nguyên dữ liệu và chức năng V7.

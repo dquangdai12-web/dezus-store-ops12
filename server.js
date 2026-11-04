@@ -5587,23 +5587,42 @@ app.get('/api/shifts', requireAuth, (req, res) => {
   res.json({ shifts: activeShifts() });
 });
 
-app.post('/api/shifts', requireAuth, requirePerm('can_manage_shifts'), (req, res) => {
-  const { code, name, start_time, end_time, note } = req.body || {};
-  if (!name || !start_time || !end_time) return res.status(400).json({ error: 'Thiếu tên ca, giờ bắt đầu hoặc giờ kết thúc' });
-  if(!['S','C','G','F'].includes(String(code||'').trim().toUpperCase()))return res.status(400).json({error:'Chỉ dùng mã ca S, C, G hoặc F'});
-  if(activeShifts().some(s=>s.code===String(code).trim().toUpperCase()))return res.status(400).json({error:'Ca đã tồn tại, hãy sửa giờ ca hiện có'});
-  const id = nextId('shifts');
+// Only administrators may create new shift codes. Keep existing shifts and schedules untouched.
+function validNewShiftCode(code) {
+  return /^[A-Z][A-Z0-9]{0,11}$/.test(String(code || '').trim().toUpperCase());
+}
+function validShiftTime(time) {
+  return /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(String(time || ''));
+}
+app.post('/api/shifts', requireAuth, (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Chỉ Admin được tạo ca mới' });
+  const { code, start_time, end_time, note } = req.body || {};
+  const normalizedCode = String(code || '').trim().toUpperCase();
+  if (!validNewShiftCode(normalizedCode)) return res.status(400).json({ error: 'Mã ca phải từ 1–12 ký tự, bắt đầu bằng chữ (ví dụ S1, S2, G1, G2, F2)' });
+  if (!validShiftTime(start_time) || !validShiftTime(end_time)) return res.status(400).json({ error: 'Giờ ca phải đúng định dạng HH:mm' });
+  if ((db.shifts || []).some(sh => String(sh.code || '').trim().toUpperCase() === normalizedCode && sh.status !== 'deleted')) return res.status(409).json({ error: 'Mã ca đã tồn tại' });
   db.shifts = db.shifts || [];
-  db.shifts.push({ id, code: String(code || name).trim().slice(0, 12), name: String(name).trim(), start_time: String(start_time), end_time: String(end_time), note: note || '', status: 'active', created_by: req.user.id, created_at: nowIso(), updated_by: req.user.id, updated_at: nowIso() });
+  // Re-activate a deleted code rather than create a duplicate that could confuse old schedules.
+  const deleted = db.shifts.find(sh => String(sh.code || '').trim().toUpperCase() === normalizedCode && sh.status === 'deleted');
+  let id;
+  if (deleted) {
+    deleted.status = 'active'; deleted.name = `Ca ${normalizedCode}`;
+    deleted.start_time = start_time; deleted.end_time = end_time;
+    deleted.note = String(note || ''); deleted.updated_by = req.user.id; deleted.updated_at = nowIso();
+    id = deleted.id;
+  } else {
+    id = nextId('shifts');
+    db.shifts.push({ id, code: normalizedCode, name: `Ca ${normalizedCode}`, start_time, end_time, note: String(note || ''), status: 'active', created_by: req.user.id, created_at: nowIso(), updated_by: req.user.id, updated_at: nowIso() });
+  }
   saveDb();
-  res.json({ ok: true, id });
+  res.json({ ok: true, id, code: normalizedCode });
 });
 
 app.patch('/api/shifts/:id', requireAuth, requirePerm('can_manage_shifts'), (req, res) => {
   const row = (db.shifts || []).find(s => Number(s.id) === Number(req.params.id));
   if (!row || row.status === 'deleted') return res.status(404).json({ error: 'Không tìm thấy ca làm' });
   const { code, name, start_time, end_time, note, status } = req.body || {};
-  if(code!==undefined&&String(code).trim().toUpperCase()!==row.code)return res.status(400).json({error:'Giữ mã ca S, C, G, F; chỉ chỉnh giờ và ghi chú'});
+  if(code!==undefined&&String(code).trim().toUpperCase()!==row.code)return res.status(400).json({error:'Không thể đổi mã ca đã tạo; hãy chỉnh giờ và ghi chú'});
   if (name !== undefined) row.name = String(name || '').trim();
   if (start_time !== undefined) row.start_time = String(start_time || '');
   if (end_time !== undefined) row.end_time = String(end_time || '');

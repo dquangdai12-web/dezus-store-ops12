@@ -1,0 +1,6 @@
+V7 – Phân tích hàng hóa
+- Bỏ dòng mô tả dài ở bảng Nguyên giá / Giảm giá (đã bỏ từ V6).
+- Khi nhấn menu vào Phân tích hàng hóa từ trang khác, đặt lại chế độ Tuần và ngày thứ Hai của tuần trước.
+- Chọn các bộ lọc trong trang vẫn hoạt động bình thường, không tự reset khi lọc.
+- Dấu nhận biết V7 được đặt trong nhãn Thời gian trên trang Phân tích hàng hóa.
+- Đổi phiên bản app.js tại index.html để tránh dùng cache JavaScript cũ.

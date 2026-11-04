@@ -837,7 +837,7 @@ function shell(content, title = 'Tổng Quan', subtitle = 'Vận hành cửa hà
       ${mobileSubnav}
       <nav class="mobile-bottom-nav">${mobileBottom}</nav>
     </div>`;
-  $$('[data-route]').forEach(btn => btn.onclick = () => { state.route = btn.dataset.route; localStorage.setItem('dezus_ops_route', state.route); render(); });
+  $$('[data-route]').forEach(btn => btn.onclick = () => { if (btn.dataset.route === 'product_analytics' && state.route !== 'product_analytics') resetProductAnalyticsOnEntry(); state.route = btn.dataset.route; localStorage.setItem('dezus_ops_route', state.route); render(); });
   $$('[data-group]').forEach(btn => btn.onclick = () => {
     const key = btn.dataset.group;
     state.navOpenGroup = key;
@@ -845,6 +845,7 @@ function shell(content, title = 'Tổng Quan', subtitle = 'Vận hành cửa hà
     const group = groups.find(g => g.key === key);
     const firstRoute = firstRouteInGroup(group, items);
     if (firstRoute) {
+      if (firstRoute === 'product_analytics' && state.route !== 'product_analytics') resetProductAnalyticsOnEntry();
       state.route = firstRoute;
       localStorage.setItem('dezus_ops_route', state.route);
     }
@@ -3081,6 +3082,16 @@ async function renderOrders() {
 
 
 
+// Reset the default period only on entry from navigation, not on filter changes.
+function resetProductAnalyticsOnEntry() {
+  const today = isoDateLocal(new Date());
+  const previousMonday = addDays(mondayOf(today), -7);
+  state.productAnalyticsPeriod = 'week';
+  state.productAnalyticsWeekStart = previousMonday;
+  state.productAnalyticsStart = previousMonday;
+  state.productAnalyticsEnd = addDays(previousMonday, 6);
+}
+
 function productAnalyticsRangeForPeriod(period) {
   const today=isoDateLocal(new Date());
   if(period==='day') {
@@ -3204,7 +3215,7 @@ async function renderProductAnalytics(){
     : state.productAnalyticsPeriod==='week'
       ? `<input class="input pa-period-value" type="date" id="paWeekStart" value="${esc(range.start)}" title="Ngày đầu tuần">`
       : `<input class="input pa-period-value" type="date" id="paDay" value="${esc(state.productAnalyticsDay||range.start)}">`;
-  const periodPicker=`<div class="field pa-period-field"><label>Thời gian</label><div class="pa-period-control"><select class="input" id="paPeriodType"><option value="day" ${state.productAnalyticsPeriod==='day'?'selected':''}>Ngày</option><option value="week" ${state.productAnalyticsPeriod==='week'?'selected':''}>Tuần</option><option value="month" ${state.productAnalyticsPeriod==='month'?'selected':''}>Tháng</option></select>${periodPickerInput}</div></div>`;
+  const periodPicker=`<div class="field pa-period-field"><label>Thời gian · V7</label><div class="pa-period-control"><select class="input" id="paPeriodType"><option value="day" ${state.productAnalyticsPeriod==='day'?'selected':''}>Ngày</option><option value="week" ${state.productAnalyticsPeriod==='week'?'selected':''}>Tuần</option><option value="month" ${state.productAnalyticsPeriod==='month'?'selected':''}>Tháng</option></select>${periodPickerInput}</div></div>`;
   const search=`<div class="field pa-search-field"><label>Tìm sản phẩm</label><div class="pa-search-control"><input class="input" id="paSearch" value="${esc(state.productAnalyticsSearch||'')}" placeholder="Nhập tên sản phẩm..."><button class="btn pa-search-btn" id="paSearchBtn" type="button">Tìm</button></div></div>`;
   const t=data.totals||{};
   const kpis=`<div class="grid four pa-kpis"><div class="card kpi pa-kpi"><div class="label">Bán POS</div><div class="num">${money(t.pos_qty||0)}</div></div><div class="card kpi pa-kpi"><div class="label">Bán Online</div><div class="num">${money(t.online_qty||0)}</div></div><div class="card kpi pa-kpi"><div class="label">Tổng nhập / Tồn</div><div class="num">${money(t.import_qty||0)} / ${money(t.stock_qty||0)}</div></div><div class="card kpi pa-kpi"><div class="label">Có thể bán thêm / Miss sale</div><div class="num">${money(t.potential_sell_qty??t.sellable_qty??0)} / ${money(t.miss_sale_qty||0)}</div></div></div>`;
@@ -4224,7 +4235,6 @@ function statusCdpLabel(v) {
 function resolveScheduleShiftInput(value, shifts) {
   const code = String(value || '').trim().toUpperCase();
   if (!code) return { valid: true, id: '', code: '' };
-  if (!['S','C','G','F'].includes(code)) return { valid:false, id:'', code };
   const matches = shifts.filter(sh => shiftCode(sh).toUpperCase() === code);
   if (matches.length !== 1) return { valid: false, id: '', code };
   return { valid: true, id: String(matches[0].id), code: shiftCode(matches[0]) };
@@ -4286,9 +4296,10 @@ async function renderSchedule() {
   };
   const legend = `<div class="schedule-legend">${shifts.map(sh => `<span>${shiftChip(sh)} <small>${esc(sh.start_time || '')}-${esc(sh.end_time || '')}</small></span>`).join('')}<span><span class="shift-chip off" aria-label="Chưa phân ca"></span><small>Nghỉ/chưa phân ca</small></span></div>`;
   const weekTables = weeks.map((week, idx) => `<div class="schedule-week-block"><div class="schedule-week-title">Tuần ${idx + 1} <span>${week.dates.filter(d => d.startsWith(month)).map(dOnly).join(' - ')}</span></div><div class="table-wrap schedule-wrap"><table class="schedule-table"><thead><tr><th>Nhân sự</th>${week.dates.map((d) => `<th class="${d.startsWith(month) ? '' : 'schedule-out-month'}">${d.startsWith(month) ? weekLabel(d) : ''}</th>`).join('')}</tr></thead><tbody>${makeRows(week)}</tbody></table></div></div>`).join('');
-  const scheduleTable = `<div class="card" style="margin-top:16px"><form id="scheduleForm"><div class="toolbar"><h3 style="margin-right:auto">Bảng phân ca theo tháng</h3>${isEditing ? '<span class="badge warning">Đang sửa</span>' : '<span class="badge ok">Đang xem</span>'}</div>${isEditing ? `<p class="hint">Nhập S, C, G hoặc F; để trống nếu chưa xếp ca. Mã sai sẽ báo đỏ. Nhấn Enter sang ô tiếp theo, rồi bấm Lưu lịch.</p>` : ''}${legend}${weekTables}</form></div>`;
-  const shiftForm = can('can_manage_shifts') ? `<div class="card" style="margin-top:16px"><h3>Admin set ca và giờ của ca</h3><form id="shiftForm" class="grid three simple-shift-form"><div class="field"><label>Mã ca</label><input class="input" name="code" placeholder="S / C / G1" required></div><div class="field"><label>Giờ bắt đầu</label><input class="input" type="time" name="start_time" required></div><div class="field"><label>Giờ kết thúc</label><input class="input" type="time" name="end_time" required></div><input type="hidden" name="name"><div style="grid-column:1/-1"><button class="btn">Thêm ca</button></div></form><div class="shift-admin-list">${shifts.map(sh => `<div class="shift-admin-card"><div class="shift-admin-code">${shiftChip(sh)}</div><div class="grid three"><div class="field"><label>Mã ca</label><input class="input shiftField" data-id="${sh.id}" data-field="code" value="${esc(shiftCode(sh))}"></div><div class="field"><label>Bắt đầu</label><input class="input shiftField" data-id="${sh.id}" data-field="start_time" type="time" value="${esc(sh.start_time || '')}"></div><div class="field"><label>Kết thúc</label><input class="input shiftField" data-id="${sh.id}" data-field="end_time" type="time" value="${esc(sh.end_time || '')}"></div><input type="hidden" class="shiftField" data-id="${sh.id}" data-field="name" value="Ca ${esc(shiftCode(sh))}"><div class="row" style="grid-column:1/-1"><button type="button" class="btn small secondary saveShiftBtn" data-id="${sh.id}">Lưu</button><button type="button" class="btn small danger deleteShiftBtn" data-id="${sh.id}" data-name="${esc(shiftCode(sh))}">Xóa</button></div></div></div>`).join('')}</div></div>` : '';
-  shell(`${filter}${scheduleTable}${shiftForm}`, 'Lịch làm việc', '');
+  const scheduleTable = `<div class="card" style="margin-top:16px"><form id="scheduleForm"><div class="toolbar"><h3 style="margin-right:auto">Bảng phân ca theo tháng</h3>${isEditing ? '<span class="badge warning">Đang sửa</span>' : '<span class="badge ok">Đang xem</span>'}</div>${isEditing ? `<p class="hint">Nhập mã ca đã tạo (ví dụ S, S1, G2, F); để trống nếu chưa xếp ca. Mã sai sẽ báo đỏ. Nhấn Enter sang ô tiếp theo, rồi bấm Lưu lịch.</p>` : ''}${legend}${weekTables}</form></div>`;
+  const shiftForm = state.user?.role === 'admin' ? `<div class="card" id="adminShiftManager" style="margin-top:16px"><h3>Quản lý ca làm · Admin</h3><p class="hint">Tạo ca mới với mã riêng như S1, S2, G1, G2, F2; các ca hiện tại vẫn được giữ nguyên.</p><form id="shiftForm" class="grid three simple-shift-form"><div class="field"><label>Mã ca</label><input class="input" name="code" placeholder="Ví dụ: S1, G2, F2" maxlength="12" pattern="[A-Za-z][A-Za-z0-9]{0,11}" required></div><div class="field"><label>Giờ bắt đầu</label><input class="input" type="time" name="start_time" required></div><div class="field"><label>Giờ kết thúc</label><input class="input" type="time" name="end_time" required></div><input type="hidden" name="name"><div style="grid-column:1/-1"><button class="btn" type="submit">Tạo ca mới</button></div></form><div class="shift-admin-list">${shifts.map(sh => `<div class="shift-admin-card"><div class="shift-admin-code">${shiftChip(sh)}</div><div class="grid three"><div class="field"><label>Mã ca</label><input class="input shiftField" data-id="${sh.id}" data-field="code" value="${esc(shiftCode(sh))}"></div><div class="field"><label>Bắt đầu</label><input class="input shiftField" data-id="${sh.id}" data-field="start_time" type="time" value="${esc(sh.start_time || '')}"></div><div class="field"><label>Kết thúc</label><input class="input shiftField" data-id="${sh.id}" data-field="end_time" type="time" value="${esc(sh.end_time || '')}"></div><input type="hidden" class="shiftField" data-id="${sh.id}" data-field="name" value="Ca ${esc(shiftCode(sh))}"><div class="row" style="grid-column:1/-1"><button type="button" class="btn small secondary saveShiftBtn" data-id="${sh.id}">Lưu</button><button type="button" class="btn small danger deleteShiftBtn" data-id="${sh.id}" data-name="${esc(shiftCode(sh))}">Xóa</button></div></div></div>`).join('')}</div></div>` : '';
+  shell(`${filter}${state.user?.role === 'admin' ? '<div style="margin:12px 0"><button class="btn secondary" id="openShiftManagerBtn" type="button">+ Tạo / quản lý ca (Admin)</button></div>' : ''}${scheduleTable}${shiftForm}`, 'Lịch làm việc', '');
+  $('#openShiftManagerBtn')?.addEventListener('click', () => $('#adminShiftManager')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
   $('#scheduleMonthInput')?.addEventListener('change', e => { state.scheduleMonth = e.target.value; state.scheduleDate = `${e.target.value}-01`; state.scheduleEditMode = false; renderSchedule(); });
   $('#scheduleStoreFilter')?.addEventListener('change', e => { state.scheduleStoreId = e.target.value; state.scheduleEditMode = false; renderSchedule(); });
   $('#scheduleEmployeeStatusFilter')?.addEventListener('change', e => { state.scheduleEmployeeStatus = e.target.value === 'all' ? 'all' : 'active'; renderSchedule(); });
@@ -4301,7 +4312,7 @@ async function renderSchedule() {
   const quickInputs = $$('.scheduleQuickShift');
   const syncQuickShift = (input, normalize = false) => {
     const result = resolveScheduleShiftInput(input.value, shifts);
-    input.setCustomValidity(result.valid ? '' : 'Chỉ nhập S, C, G, F hoặc để trống.');
+    input.setCustomValidity(result.valid ? '' : 'Chỉ nhập mã ca có trong danh sách hoặc để trống.');
     input.setAttribute('aria-invalid', String(!result.valid));
     if (!result.valid) return false;
     const select = input.closest('td').querySelector('.scheduleShift');
