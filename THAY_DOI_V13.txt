@@ -1,0 +1,4 @@
+V13 – Làm đẹp phần từng cửa hàng trong Tổng hợp báo cáo ngày:
+- Màu pastel rất nhẹ theo nhóm chỉ số, không dùng nền đậm.
+- Viền trái mảnh, màu chữ rõ, nền thẻ cửa hàng trắng.
+- Không thay đổi dữ liệu, báo cáo, logic hoặc phân quyền.

@@ -1,0 +1,1 @@
+V14: Cập nhật nền các thẻ KPI của từng cửa hàng trong Tổng hợp báo cáo ngày theo ảnh mẫu: nền pastel gradient rất nhẹ, vòng tròn mờ góc phải, sọc màu mảnh bên trái, số đậm dễ đọc. Giữ nguyên dữ liệu, tính toán và phân quyền.

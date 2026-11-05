@@ -1,0 +1,1 @@
+V16: Đồng bộ họa tiết hình tròn mờ của KPI trang Doanh thu cho ô chỉ số ở Tổng hợp báo cáo ngày. Sửa thứ tự lớp để hình tròn hiển thị đúng; giữ màu pastel V15 và logic dữ liệu. Đổi phiên bản CSS để trình duyệt tải lại.

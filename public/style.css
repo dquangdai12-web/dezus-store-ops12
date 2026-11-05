@@ -6224,7 +6224,112 @@ section.card>.toolbar+p.hint{display:none!important}
 .daily-overview-stores .store-daily-metric span{font-size:12px;font-weight:700;color:#6c7785;text-transform:none}
 .daily-overview-stores .store-daily-metric strong{font-size:18px;line-height:1.2;color:#1a2433;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .daily-overview-stores .store-daily-metric small{font-size:11px;line-height:1.35;color:#7a8698}
+/* V13 — pastel accents: restrained, consistent, accessible contrast */
+.daily-overview-stores .store-daily-card{background:#fff;border-color:#e4ebf2;box-shadow:0 5px 18px rgba(29,53,78,.045)}
+.daily-overview-stores .store-daily-revenue{color:#247b60;letter-spacing:-.035em}
+.daily-overview-stores .store-daily-metric{--tile-bg:#f8fafc;--tile-border:#e8edf3;--tile-accent:#7290a8;--tile-ink:#253649;background:var(--tile-bg);border-color:var(--tile-border);border-left:3px solid var(--tile-accent);box-shadow:none}
+.daily-overview-stores .store-daily-metric strong{color:var(--tile-ink)}
+.daily-overview-stores .store-daily-metric:nth-child(1){--tile-bg:#f5f2fd;--tile-border:#e9e2f7;--tile-accent:#a18bc8;--tile-ink:#514278}
+.daily-overview-stores .store-daily-metric:nth-child(2),
+.daily-overview-stores .store-daily-metric:nth-child(3){--tile-bg:#f1f7fd;--tile-border:#e1ecf8;--tile-accent:#80a9d4;--tile-ink:#355c82}
+.daily-overview-stores .store-daily-metric:nth-child(4),
+.daily-overview-stores .store-daily-metric:nth-child(5){--tile-bg:#eff8f6;--tile-border:#ddf0ea;--tile-accent:#7ab6a1;--tile-ink:#326a58}
+.daily-overview-stores .store-daily-metric:nth-child(6),
+.daily-overview-stores .store-daily-metric:nth-child(7),
+.daily-overview-stores .store-daily-metric:nth-child(8){--tile-bg:#fff8ef;--tile-border:#f5e9d7;--tile-accent:#d5b17c;--tile-ink:#85613a}
+.daily-overview-stores .store-daily-metric:nth-child(9),
+.daily-overview-stores .store-daily-metric:nth-child(10){--tile-bg:#f7f8fc;--tile-border:#e9ecf5;--tile-accent:#a5afcb;--tile-ink:#596684}
 @media(max-width:600px){.daily-overview-stores .store-daily-metrics{grid-template-columns:1fr 1fr}.daily-overview-stores .store-daily-metric strong{font-size:16px}}
 @media(max-width:1100px){.daily-overview-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:760px){.daily-overview-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.daily-overview-toolbar{padding:17px}.daily-overview-kpis .daily-overview-kpi{min-height:128px;padding:15px}.daily-overview-kpis .num{font-size:21px}.daily-overview-table{padding:14px}}
 @media(max-width:380px){.daily-overview-kpis .num{font-size:18px}}
+
+/* V15 — use the exact Sales dashboard KPI colors, not an approximate pastel palette. */
+.daily-overview-stores .store-daily-metric{
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+  min-height:104px;
+  padding:15px 16px;
+  gap:8px;
+  border-radius:17px;
+  border:1px solid #dbe4ee;
+  border-left:4px solid var(--tile-accent);
+  background:linear-gradient(180deg,var(--tile-bg) 0%,#ffffff 100%);
+  box-shadow:0 4px 14px rgba(15,23,42,.04);
+}
+.daily-overview-stores .store-daily-metric::after{
+  content:"";
+  position:absolute;
+  z-index:0;
+  width:108px;
+  height:108px;
+  border-radius:50%;
+  right:-30px;
+  top:-38px;
+  background:var(--tile-circle);
+  opacity:.18;
+  pointer-events:none;
+}
+.daily-overview-stores .store-daily-metric span{
+  font-size:12px;
+  font-weight:750;
+  text-transform:uppercase;
+  letter-spacing:.025em;
+  color:#516071;
+}
+.daily-overview-stores .store-daily-metric strong{
+  font-size:clamp(17px,1.45vw,22px);
+  font-weight:800;
+  line-height:1.22;
+  letter-spacing:-.035em;
+  color:#111827;
+  white-space:normal;
+  overflow-wrap:anywhere;
+}
+.daily-overview-stores .store-daily-metric small{
+  margin-top:auto;
+  font-size:12px;
+  line-height:1.4;
+  color:#667085;
+}
+/* Same exact color values as .sales-summary-shell .sales-summary-grid KPI cards. */
+.daily-overview-stores .store-daily-metric:nth-child(1){--tile-bg:#f6f3ff;--tile-accent:#9d7df2;--tile-circle:#b69cff} /* target */
+.daily-overview-stores .store-daily-metric:nth-child(2){--tile-bg:#eef6ff;--tile-accent:#4d9cff;--tile-circle:#5ca9ff} /* bill */
+.daily-overview-stores .store-daily-metric:nth-child(3){--tile-bg:#edf9ff;--tile-accent:#4ab2d6;--tile-circle:#6ec6e3} /* items */
+.daily-overview-stores .store-daily-metric:nth-child(4){--tile-bg:#f0faf3;--tile-accent:#68b77c;--tile-circle:#94d2a3} /* guests */
+.daily-overview-stores .store-daily-metric:nth-child(5){--tile-bg:#eefaff;--tile-accent:#58bdd7;--tile-circle:#8fd4e6} /* new guests */
+.daily-overview-stores .store-daily-metric:nth-child(6){--tile-bg:#edf9ff;--tile-accent:#4ab2d6;--tile-circle:#6ec6e3} /* UPT */
+.daily-overview-stores .store-daily-metric:nth-child(7){--tile-bg:#eef8f2;--tile-accent:#5ab37f;--tile-circle:#7bca9b} /* ATV */
+.daily-overview-stores .store-daily-metric:nth-child(8){--tile-bg:#fff4f7;--tile-accent:#e97b9d;--tile-circle:#f2a6bc} /* CR */
+.daily-overview-stores .store-daily-metric:nth-child(9){--tile-bg:#fff8ee;--tile-accent:#f0b44c;--tile-circle:#f5ca78} /* missing size */
+.daily-overview-stores .store-daily-metric:nth-child(10){--tile-bg:#f6f3ff;--tile-accent:#9784ea;--tile-circle:#b7a9f3} /* feedback */
+@media(max-width:600px){
+  .daily-overview-stores .store-daily-metric{padding:12px;min-height:100px}
+  .daily-overview-stores .store-daily-metric strong{font-size:17px}
+  .daily-overview-stores .store-daily-metric::after{width:85px;height:85px;right:-26px;top:-32px}
+}
+
+/* V16: match the ornamental circle on the Sales dashboard and keep it visible. */
+.daily-overview-stores .store-daily-metric::after{
+  z-index:0;
+  right:-18px;
+  top:-18px;
+  width:110px;
+  height:110px;
+  opacity:.18;
+}
+.daily-overview-stores .store-daily-metric > span,
+.daily-overview-stores .store-daily-metric > strong,
+.daily-overview-stores .store-daily-metric > small{
+  position:relative;
+  z-index:1;
+}
+@media(max-width:600px){
+  .daily-overview-stores .store-daily-metric::after{
+    width:82px;
+    height:82px;
+    right:-14px;
+    top:-14px;
+  }
+}

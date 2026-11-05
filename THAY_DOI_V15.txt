@@ -1,0 +1,1 @@
+V15: Đồng bộ chính xác mã màu KPI của trang Doanh thu cho các ô chỉ số từng cửa hàng trong Tổng hợp báo cáo ngày. Chỉ thay đổi CSS giao diện, giữ nguyên dữ liệu và chức năng.
