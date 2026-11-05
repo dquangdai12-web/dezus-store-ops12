@@ -1,0 +1,4 @@
+V17 - Tong hop bao cao ngay:
+- 9 KPI tong he thong dung mau nen pastel, vien trai va hoa tiet tron mo dong bo trang Doanh thu.
+- KPI trong tung cua hang thu nho chieu cao, padding, co chu va hoa tiet; giu nguyen so lieu.
+- Tang version CSS de trinh duyet tai giao dien moi sau deploy.
