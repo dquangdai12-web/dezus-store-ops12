@@ -1,0 +1,4 @@
+V12: Làm đẹp mục Tổng hợp báo cáo ngày.
+- Phần Tình hình từng cửa hàng đổi từ dòng chữ dài sang các khung KPI nhỏ riêng cho từng chỉ số.
+- Tách rõ Target, Bill, Món, Khách, Khách mới, UPT, ATV, CR, Thiếu size, Feedback.
+- Giữ nguyên dữ liệu, quyền truy cập và bố cục tổng thể của mục báo cáo ngày.

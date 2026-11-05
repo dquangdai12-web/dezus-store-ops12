@@ -669,7 +669,7 @@ function navItems() {
     ['dashboard', 'Tổng Quan', '◆', 'overview'],
     ['sales', 'Doanh thu', '%', 'revenue'],
     ['daily_report', 'Báo cáo ngày', 'DR', 'revenue'],
-    ['store_daily_summary', 'Tổng hợp báo cáo ngày', 'TH', 'revenue'],
+    ['store_daily_summary', 'Tổng hợp báo cáo ngày', 'TH', 'daily_overview'],
     ['weekly_report', 'Báo cáo tuần', 'WK', 'revenue'],
     ['loyalty', 'Loyalty', 'LY', 'revenue'],
     ['ggnv', 'GGNV', 'GG', 'revenue'],
@@ -735,7 +735,8 @@ function navGroups() {
   return [
     { key:'overview', label:'Tổng Quan', icon:appUiIcon('home'), ids:['dashboard'] },
     { key:'work', label:'Công việc', icon:appUiIcon('checklist'), ids:['tasks','cdp_ojti','checklists','schedule','violations'] },
-    { key:'revenue', label:'Doanh thu', icon:appUiIcon('revenue'), ids:['sales','daily_report','store_daily_summary','weekly_report','loyalty','ggnv','online_orders','bonuses'] },
+    { key:'daily_overview', label:'Tổng hợp báo cáo ngày', icon:appUiIcon('weekly'), ids:['store_daily_summary'] },
+    { key:'revenue', label:'Doanh thu', icon:appUiIcon('revenue'), ids:['sales','daily_report','weekly_report','loyalty','ggnv','online_orders','bonuses'] },
     { key:'product', label:'Sản phẩm', icon:appUiIcon('product'), ids:['orders','product_analytics'] },
     { key:'more', label:'Tài liệu', icon:appUiIcon('document'), ids:['documents','reports'] },
     { key:'system', label:'Hệ thống', icon:appUiIcon('admin'), ids:['account','admin'] },
@@ -746,7 +747,8 @@ function mobileNavGroups() {
   return [
     { key:'overview', label:'Tổng Quan', icon:appUiIcon('home'), ids:['dashboard'] },
     { key:'work', label:'Công việc', icon:appUiIcon('tasks'), ids:['tasks','cdp_ojti','checklists','schedule','violations'] },
-    { key:'revenue', label:'Doanh thu', icon:appUiIcon('revenue'), ids:['sales','daily_report','store_daily_summary','weekly_report','loyalty','ggnv','online_orders','bonuses'] },
+    { key:'daily_overview', label:'Tổng hợp báo cáo ngày', icon:appUiIcon('weekly'), ids:['store_daily_summary'] },
+    { key:'revenue', label:'Doanh thu', icon:appUiIcon('revenue'), ids:['sales','daily_report','weekly_report','loyalty','ggnv','online_orders','bonuses'] },
     { key:'product', label:'Sản phẩm', icon:appUiIcon('product'), ids:['orders','product_analytics'] },
     { key:'more', label:'Thêm', icon:appUiIcon('more'), ids:['documents','reports','account','admin'] },
   ];
@@ -762,7 +764,7 @@ function mobileIconFor(id) {
     violations:appUiIcon('alert'),
     sales:appUiIcon('revenue'),
     daily_report:appUiIcon('weekly'),
-    store_daily_summary:appUiIcon('revenue'),
+    store_daily_summary:appUiIcon('weekly'),
     weekly_report:appUiIcon('weekly'),
     loyalty:appUiIcon('bonus'),
     ggnv:appUiIcon('bonus'),
@@ -1304,22 +1306,48 @@ async function renderStoreDailySummary() {
     ].filter(Boolean).join('');
     const missing = (st.missing_size_items || []).length;
     const feedback = (st.product_feedback_items || []).length;
+    const metric = (label, value, hint='') => `<div class="store-daily-metric"><span>${label}</span><strong>${value}</strong>${hint ? `<small>${hint}</small>` : ''}</div>`;
+    const targetValue = st.target_revenue ? `${money(st.target_revenue)}đ` : 'Chưa đặt';
+    const targetHint = st.target_revenue ? `${percent(st.achievement_percent)} target` : 'Chưa có target';
+    const uptimeValue = Number(st.upt || 0).toLocaleString('vi-VN', { maximumFractionDigits: 2 });
     return `<article class="card store-daily-card">
       <div class="section-title"><h3>${esc(st.store_name)}</h3><span class="badge ${st.has_report ? 'ok' : 'warn'}">${st.has_report ? 'Đã có báo cáo' : 'Chưa có báo cáo'}</span></div>
       <div class="store-daily-revenue">${money(st.revenue)}đ</div>
-      <div class="store-daily-small">Target: ${st.target_revenue ? `${money(st.target_revenue)}đ · ${percent(st.achievement_percent)}` : 'Chưa đặt'} · Bill: ${money(st.bill_count)} · Món: ${money(st.item_count)}</div>
-      <div class="store-daily-small">Khách: ${money(st.customer_count)} · Khách mới: ${money(st.customer_new_count)} · UPT: ${Number(st.upt || 0).toLocaleString('vi-VN')} · ATV: ${money(st.atv)}đ · CR: ${percent(st.cr)}</div>
+      <div class="store-daily-metrics">
+        ${metric('Target ngày', targetValue, targetHint)}
+        ${metric('Bill', money(st.bill_count), 'Số hóa đơn')}
+        ${metric('Món', money(st.item_count), 'Số lượng bán')}
+        ${metric('Khách', money(st.customer_count), 'Tổng lượt khách')}
+        ${metric('Khách mới', money(st.customer_new_count), 'Khách mới trong ngày')}
+        ${metric('UPT', uptimeValue, 'Món / bill')}
+        ${metric('ATV', `${money(st.atv)}đ`, 'Doanh thu / bill')}
+        ${metric('CR', percent(st.cr), 'Bill / khách')}
+        ${metric('Thiếu size', money(missing), 'Mẫu cần bổ sung')}
+        ${metric('Feedback', money(feedback), 'Phản hồi sản phẩm')}
+      </div>
       <div class="store-daily-situation"><b>Tình hình cửa hàng</b>${notes || '<p class="muted">Chưa có ghi chú tình hình trong ngày.</p>'}</div>
-      <div class="store-daily-small">Thiếu size / cần order: <b>${missing}</b> · Feedback sản phẩm: <b>${feedback}</b></div>
       ${missing ? `<details><summary>Chi tiết thiếu size (${missing})</summary>${st.missing_size_items.map(x => `<p>${esc(x.sku || x.product_name)} ${esc(x.product_name && x.sku ? '– ' + x.product_name : '')} · Size ${esc(x.size)} · SL ${money(x.quantity)} ${esc(x.note)}</p>`).join('')}</details>` : ''}
       ${feedback ? `<details><summary>Chi tiết feedback (${feedback})</summary>${st.product_feedback_items.map(x => `<p>${esc(x.sku || x.product_name)} · ${esc(x.product_errors)} ${esc(x.customer_feedback)} ${esc(x.note)}</p>`).join('')}</details>` : ''}
     </article>`;
   }).join('');
   const tableRows = (data.stores || []).map(st => `<tr><td><b>${esc(st.store_name)}</b></td><td>${st.has_report ? 'Đã báo cáo' : 'Chưa báo cáo'}</td><td class="num">${money(st.revenue)}đ</td><td class="num">${percent(st.achievement_percent)}</td><td class="num">${money(st.bill_count)}</td><td class="num">${money(st.customer_count)}</td></tr>`).join('');
-  shell(`<div class="card"><div class="toolbar"><div class="field"><label>Ngày tổng hợp</label><input class="input" type="date" id="storeDailySummaryDate" value="${esc(data.date || date)}"></div><button class="btn secondary" type="button" id="storeDailySummaryToday">Hôm nay</button></div><p class="muted">Tổng hợp tự động từ Doanh thu và Báo cáo ngày của các cửa hàng. Chỉ Admin và Văn phòng được xem.</p></div>
-    <div class="store-daily-kpis"><div class="card"><span>Doanh số toàn hệ thống</span><strong>${money(total.revenue)}đ</strong></div><div class="card"><span>Target / Hoàn thành</span><strong>${total.target_revenue ? `${money(total.target_revenue)}đ · ${percent(total.achievement_percent)}` : 'Chưa đặt target'}</strong></div><div class="card"><span>Số bill / Món</span><strong>${money(total.bill_count)} / ${money(total.item_count)}</strong></div><div class="card"><span>Cửa hàng đã báo cáo</span><strong>${money(total.reported_stores)} / ${money(data.total_stores)}</strong></div></div>
-    <div class="card"><div class="section-title"><h3>So sánh các cửa hàng · ${dOnly(data.date)}</h3></div><div class="table-wrap"><table><thead><tr><th>Cửa hàng</th><th>Trạng thái</th><th>Doanh số</th><th>% Target</th><th>Bill</th><th>Lượt khách</th></tr></thead><tbody>${tableRows || '<tr><td colspan="6">Không có cửa hàng đang hoạt động</td></tr>'}</tbody></table></div></div>
-    <div class="section-title" style="margin-top:18px"><h3>Tình hình từng cửa hàng</h3></div><div class="store-daily-grid">${cards || '<div class="card">Chưa có dữ liệu cửa hàng.</div>'}</div>`, 'Tổng hợp báo cáo ngày', 'Doanh số và tình hình các cửa hàng');
+  const kpi = (label, value, hint, type) => `<div class="card kpi sales-kpi daily-overview-kpi ${type}"><div class="label">${label}</div><div class="num">${value}</div><div class="hint">${hint}</div></div>`;
+  const kpis = [
+    kpi('Doanh thu thực đạt', `${money(total.revenue)}đ`, 'Tổng doanh số các cửa hàng trong ngày', 'kpi-revenue'),
+    kpi('Target ngày', `${money(total.target_revenue)}đ`, total.target_revenue ? 'Chỉ tiêu doanh thu toàn hệ thống' : 'Chưa đặt target', 'kpi-dailytarget'),
+    kpi('Hoàn thành target', percent(total.achievement_percent), total.target_revenue ? 'Doanh thu / target ngày' : 'Chưa có target để tính', 'kpi-timeline'),
+    kpi('Số bill', money(total.bill_count), 'Tổng hóa đơn đã ghi nhận', 'kpi-dailyneed'),
+    kpi('Số món', money(total.item_count), 'Tổng số lượng sản phẩm đã bán', 'kpi-upt'),
+    kpi('UPT', Number(total.bill_count ? total.item_count / total.bill_count : 0).toLocaleString('vi-VN', {maximumFractionDigits: 2}), 'Số món trung bình / bill', 'kpi-atv'),
+    kpi('ATV', `${money(total.bill_count ? total.revenue / total.bill_count : 0)}đ`, 'Doanh thu trung bình / bill', 'kpi-asp'),
+    kpi('Lượt khách', money(total.customer_count), `Khách mới: ${money(total.customer_new_count)} · Khách cũ: ${money(total.customer_old_count)}`, 'kpi-totalguest'),
+    kpi('Tình trạng báo cáo', `${money(total.reported_stores)} / ${money(data.total_stores)}`, 'Số cửa hàng đã gửi báo cáo ngày', 'kpi-new')
+  ].join('');
+  shell(`<div class="card daily-overview-toolbar"><div class="daily-overview-head"><div><div class="daily-overview-eyebrow">BÁO CÁO VẬN HÀNH TOÀN HỆ THỐNG</div><h3>Tổng quan hoạt động cửa hàng</h3><p class="muted">Doanh thu, chỉ số bán hàng và diễn biến hoạt động tại các cửa hàng trong ngày.</p></div><div class="toolbar"><div class="field"><label for="storeDailySummaryDate">Chọn ngày báo cáo</label><input class="input" type="date" id="storeDailySummaryDate" value="${esc(data.date || date)}"></div><button class="btn secondary" type="button" id="storeDailySummaryToday">Hôm nay</button></div></div></div>
+    <div class="section-title daily-overview-section"><h3>Chỉ số doanh thu · ${dOnly(data.date)}</h3></div>
+    <div class="grid four dash-kpis sales-summary-grid daily-overview-kpis">${kpis}</div>
+    <div class="card daily-overview-table"><div class="section-title"><h3>So sánh doanh số các cửa hàng</h3><span class="muted">${dOnly(data.date)}</span></div><div class="table-wrap"><table><thead><tr><th>Cửa hàng</th><th>Trạng thái</th><th>Doanh số</th><th>% Target</th><th>Bill</th><th>Lượt khách</th></tr></thead><tbody>${tableRows || '<tr><td colspan="6">Không có cửa hàng đang hoạt động</td></tr>'}</tbody></table></div></div>
+    <div class="section-title daily-overview-section"><h3>Tình hình từng cửa hàng</h3><span class="muted">Báo cáo ca sáng, ca tối và phản hồi</span></div><div class="store-daily-grid daily-overview-stores">${cards || '<div class="card">Chưa có dữ liệu cửa hàng.</div>'}</div>`, 'Tổng hợp báo cáo ngày', 'Doanh số và tình hình các cửa hàng');
   $('#storeDailySummaryDate')?.addEventListener('change', e => { state.storeDailySummaryDate = e.target.value; render(); });
   $('#storeDailySummaryToday')?.addEventListener('click', () => { state.storeDailySummaryDate = isoDateLocal(new Date()); render(); });
 }

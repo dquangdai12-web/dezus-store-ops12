@@ -1,0 +1,5 @@
+V11 - Bao cao ngay cua hang
+- Dua Tong hop bao cao ngay thanh nhom menu lon rieng tren desktop va mobile.
+- KPI doanh so theo card tuong tu trang Doanh thu: doanh thu, target, % target, bill, mon, UPT, ATV, khach, tinh trang bao cao.
+- Cai thien khoang cach, bang so sanh va card tinh hinh cua hang.
+- Giu nguyen du lieu va phan quyen Admin / Van phong o client va server.

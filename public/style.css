@@ -6189,3 +6189,42 @@ section.card>.toolbar+p.hint{display:none!important}
 
 /* V10: Admin / Office consolidated daily store report */
 .store-daily-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:15px 0}.store-daily-kpis .card{display:flex;flex-direction:column;gap:9px}.store-daily-kpis span{color:var(--muted,#697078);font-size:13px}.store-daily-kpis strong{font-size:clamp(17px,2vw,24px)}.store-daily-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.store-daily-card{min-width:0}.store-daily-revenue{font-weight:800;font-size:clamp(24px,2.4vw,34px);margin:10px 0}.store-daily-small{font-size:13px;line-height:1.7;margin-bottom:5px}.store-daily-situation{border-top:1px solid #ddd;margin:12px 0;padding-top:12px;white-space:normal;overflow-wrap:anywhere}.store-daily-situation p{margin:7px 0;white-space:pre-wrap}.store-daily-card details{margin-top:9px;overflow-wrap:anywhere}.store-daily-card summary{cursor:pointer;font-weight:600}.store-daily-card details p{font-size:13px;margin:8px 0}@media(max-width:900px){.store-daily-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.store-daily-grid{grid-template-columns:1fr}}@media(max-width:520px){.store-daily-kpis{grid-template-columns:1fr 1fr}.store-daily-kpis strong{font-size:17px}}
+
+/* V11 — Standalone Admin/Office daily report dashboard */
+.daily-overview-toolbar{padding:22px 24px;margin-bottom:18px;border:1px solid var(--border,#e6e9ef);background:linear-gradient(115deg,#fff 65%,#f5f8fd)}
+.daily-overview-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:18px}
+.daily-overview-head h3{font-size:21px;letter-spacing:-.4px;margin:6px 0}
+.daily-overview-head .muted{font-size:13px;margin:0}
+.daily-overview-eyebrow{font-size:11px;font-weight:800;letter-spacing:1.2px;color:#586b82}
+.daily-overview-head .toolbar{display:flex;align-items:end;gap:10px;flex-wrap:wrap}
+.daily-overview-head .field{margin:0}
+.daily-overview-section{margin:20px 0 12px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.daily-overview-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin:0 0 20px}
+.daily-overview-kpis .daily-overview-kpi{position:relative;display:flex;flex-direction:column;gap:11px;min-width:0;min-height:146px;padding:20px;border-radius:17px;overflow:hidden;border:1px solid #e6eaf2;box-shadow:0 5px 20px rgba(26,42,68,.035);background:#fff}
+.daily-overview-kpi:before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:#4b7ca8}
+.daily-overview-kpi.kpi-revenue{background:linear-gradient(145deg,#ecf8f2,#fff)}
+.daily-overview-kpi.kpi-revenue:before{background:#39a36f}
+.daily-overview-kpi.kpi-dailytarget{background:linear-gradient(145deg,#f4f0ff,#fff)}
+.daily-overview-kpi.kpi-dailytarget:before{background:#9472d8}
+.daily-overview-kpi.kpi-timeline{background:linear-gradient(145deg,#eef5ff,#fff)}
+.daily-overview-kpi.kpi-timeline:before{background:#5288dc}
+.daily-overview-kpi.kpi-dailyneed{background:linear-gradient(145deg,#fff7ef,#fff)}
+.daily-overview-kpi.kpi-dailyneed:before{background:#ee9b42}
+.daily-overview-kpis .label{font-size:13px;font-weight:650;color:#64748b}
+.daily-overview-kpis .num{font-size:clamp(21px,2.2vw,30px);font-weight:800;line-height:1.2;letter-spacing:-.6px;overflow-wrap:anywhere;color:#1e293b}
+.daily-overview-kpis .hint{margin-top:auto;font-size:12px;color:#758397;line-height:1.5}
+.daily-overview-table{margin-bottom:20px;padding:20px}
+.daily-overview-table .section-title{margin-bottom:16px}
+.daily-overview-table thead th{white-space:nowrap}
+.daily-overview-table tbody td{padding-top:13px;padding-bottom:13px}
+.daily-overview-stores .store-daily-card{border-radius:16px;border:1px solid #e4eaf1;box-shadow:0 4px 17px rgba(20,34,52,.035);padding:20px}
+.daily-overview-stores .store-daily-revenue{font-size:26px;color:#238458}
+.daily-overview-stores .store-daily-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:14px 0 8px}
+.daily-overview-stores .store-daily-metric{background:linear-gradient(180deg,#fbfdff,#f3f7fb);border:1px solid #e6edf5;border-radius:14px;padding:11px 12px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.daily-overview-stores .store-daily-metric span{font-size:12px;font-weight:700;color:#6c7785;text-transform:none}
+.daily-overview-stores .store-daily-metric strong{font-size:18px;line-height:1.2;color:#1a2433;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.daily-overview-stores .store-daily-metric small{font-size:11px;line-height:1.35;color:#7a8698}
+@media(max-width:600px){.daily-overview-stores .store-daily-metrics{grid-template-columns:1fr 1fr}.daily-overview-stores .store-daily-metric strong{font-size:16px}}
+@media(max-width:1100px){.daily-overview-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:760px){.daily-overview-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.daily-overview-toolbar{padding:17px}.daily-overview-kpis .daily-overview-kpi{min-height:128px;padding:15px}.daily-overview-kpis .num{font-size:21px}.daily-overview-table{padding:14px}}
+@media(max-width:380px){.daily-overview-kpis .num{font-size:18px}}
