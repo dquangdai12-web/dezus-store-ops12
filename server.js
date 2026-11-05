@@ -5393,6 +5393,57 @@ function dailyReportZaloText(payload) {
 }
 
 
+// V10: Read-only, cross-store daily briefing. Only Admin / Office may access.
+app.get('/api/store-daily-summary', requireAuth, (req, res) => {
+  if (!isAllStoreRole(req.user)) return res.status(403).json({ error: 'Chỉ Admin và Văn phòng được xem tổng hợp báo cáo ngày' });
+  const rawDate = String(req.query.date || '').trim();
+  const todayVN = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+  const reportDate = rawDate || todayVN;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(reportDate) || Number.isNaN(Date.parse(reportDate + 'T00:00:00Z')) || new Date(reportDate + 'T00:00:00Z').toISOString().slice(0, 10) !== reportDate) {
+    return res.status(400).json({ error: 'Ngày xem không hợp lệ' });
+  }
+  const stores = (db.stores || []).filter(st => String(st.status || 'active') === 'active');
+  const rows = stores.map(st => {
+    const sid = Number(st.id);
+    const report = dailyReportRow(sid, reportDate);
+    const sales = (db.sales || []).filter(x => Number(x.store_id) === sid && dateVal(x.sale_date) === reportDate);
+    const saleDay = (db.sales_store_days || []).find(x => Number(x.store_id) === sid && dateVal(x.sale_date) === reportDate);
+    const target = storeDailyTarget(sid, reportDate);
+    const totals = sales.reduce((out, x) => {
+      out.revenue += Number(x.revenue || 0);
+      out.bill_count += Number(x.bill_count || 0);
+      out.item_count += Number(x.item_count || 0);
+      return out;
+    }, { revenue: 0, bill_count: 0, item_count: 0 });
+    const customers = saleDay ? customerCountsFromRow(saleDay) : { customer_new_count: 0, customer_old_count: 0, customer_count: 0 };
+    const morning = String(report?.store_situation_morning || '').trim();
+    const evening = String(report?.store_situation_evening || '').trim();
+    const fallback = String(report?.store_note || saleDay?.note || '').trim();
+    return {
+      store_id: sid, store_name: st.name, has_report: !!report,
+      revenue: totals.revenue, bill_count: totals.bill_count, item_count: totals.item_count,
+      target_revenue: Number(target.target_revenue || 0),
+      achievement_percent: Number(target.target_revenue || 0) > 0 ? Math.round(totals.revenue / Number(target.target_revenue) * 10000) / 100 : null,
+      customer_count: customers.customer_count, customer_new_count: customers.customer_new_count, customer_old_count: customers.customer_old_count,
+      upt: totals.bill_count ? Math.round(totals.item_count / totals.bill_count * 100) / 100 : 0,
+      atv: totals.bill_count ? Math.round(totals.revenue / totals.bill_count) : 0,
+      cr: customers.customer_count ? Math.round(totals.bill_count / customers.customer_count * 10000) / 100 : 0,
+      store_situation_morning: morning, store_situation_evening: evening,
+      store_note: morning || evening ? '' : fallback,
+      missing_size_items: report ? normalizeMissingSizeItems(report.missing_size_items || []).map(x => ({ sku:x.sku, product_name:x.product_name, size:x.size, quantity:x.quantity, note:x.note })) : [],
+      product_feedback_items: report ? normalizeDailyFeedbackItems(report.product_feedback_items || []).map(x => ({ sku:x.sku, product_name:x.product_name, product_errors:x.product_errors, customer_feedback:x.customer_feedback, note:x.note })) : []
+    };
+  });
+  const total = rows.reduce((a, r) => {
+    ['revenue','bill_count','item_count','target_revenue','customer_count','customer_new_count','customer_old_count'].forEach(k => a[k] += r[k]);
+    if (r.has_report) a.reported_stores++;
+    return a;
+  }, { revenue:0, bill_count:0, item_count:0, target_revenue:0, customer_count:0, customer_new_count:0, customer_old_count:0, reported_stores:0 });
+  total.achievement_percent = total.target_revenue ? Math.round(total.revenue / total.target_revenue * 10000) / 100 : null;
+  res.set('Cache-Control','no-store');
+  res.json({ date:reportDate, total_stores:rows.length, totals:total, stores:rows });
+});
+
 app.get('/api/daily-report', requireAuth, (req, res) => {
   try {
     res.json(buildDailyReport(req.user, req.query.report_date || req.query.date, req.query.store_id));

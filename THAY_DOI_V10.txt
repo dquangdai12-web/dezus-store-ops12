@@ -1,0 +1,7 @@
+DEZUS V10 – TỔNG HỢP BÁO CÁO NGÀY CỬA HÀNG
+- Menu Doanh thu > Tổng hợp báo cáo ngày: chỉ hiện với Admin và Văn phòng.
+- Endpoint GET /api/store-daily-summary?date=YYYY-MM-DD: xác thực phiên đăng nhập và chặn tài khoản không phải admin/office.
+- Tổng doanh số từ dòng bán hàng theo nhân viên trong ngày, tránh cộng trùng doanh thu; khách theo dữ liệu sales_store_days; target theo cấu hình target ngày.
+- Hiện tình hình ca sáng/ca tối, thiếu size, phản hồi và trạng thái đã có/chưa có báo cáo ngày.
+- Lọc theo ngày, có nút Hôm nay; không thay đổi bản ghi hiện có.
+- Giữ lại các thay đổi nhập ca V9 và các chức năng trước đó.
