@@ -6405,3 +6405,122 @@ section.card>.toolbar+p.hint{display:none!important}
   .daily-overview-stores .store-daily-metric::after{width:64px;height:64px;right:-12px;top:-16px}
   .daily-overview-kpis .daily-overview-kpi::after{width:80px;height:80px;right:-14px;top:-14px}
 }
+
+/* V18: Return employee sales in the daily report's Zalo preview to a vertical list. */
+#dailyReportSummaryBox .daily-employee-vertical{
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  justify-content:flex-start;
+  gap:5px;
+  padding:10px 0;
+}
+#dailyReportSummaryBox .daily-employee-vertical .daily-overview-numbers{
+  flex:0 1 auto;
+  text-align:left;
+  margin:0;
+}
+#dailyReportSummaryBox .daily-employee-vertical .daily-overview-numbers strong,
+#dailyReportSummaryBox .daily-employee-vertical .daily-overview-numbers span{
+  display:block;
+  white-space:normal;
+  margin-top:3px;
+}
+#dailyReportSummaryBox .daily-employee-vertical > small{
+  display:block;
+  color:#64748b;
+  font-size:11.5px;
+}
+
+
+/* V19: Match daily report summary layout to original screenshot style. */
+.daily-overview-card-v19{
+  border-left:4px solid #4d9cff!important;
+  background:linear-gradient(180deg,#ffffff,#fbfdff)!important;
+}
+.daily-report-title-v19 .daily-overview-percent{
+  min-width:120px;
+  padding:10px 14px;
+  border-radius:16px;
+  background:linear-gradient(135deg,#eef7ff,#dceeff);
+  border:1px solid #cfe3f8;
+  display:flex;
+  flex-direction:column-reverse;
+  gap:4px;
+  align-items:center;
+  justify-content:center;
+}
+.daily-report-title-v19 .daily-overview-percent b{font-size:22px}
+.daily-report-kpis-v19{grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.daily-report-kpis-v19 .daily-overview-kpi{
+  min-height:68px;
+  padding:13px 14px;
+  border-radius:16px;
+  gap:8px;
+}
+.daily-report-kpis-v19 .daily-overview-kpi .label{font-size:11px}
+.daily-report-kpis-v19 .daily-overview-kpi .num{font-size:17px;letter-spacing:-.03em}
+.daily-overview-grid-v19{grid-template-columns:1.15fr 1fr 1fr;gap:14px}
+.daily-overview-grid-v19 .daily-overview-section{
+  border-radius:18px;
+  border:1px solid #e2e8f0;
+  background:#fff;
+  min-height:220px;
+}
+.daily-overview-grid-v19 .daily-overview-section h4{font-size:15px;margin-bottom:12px}
+.daily-report-employee-item{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+  padding:12px 0;
+  border-top:1px solid #eef2f7;
+}
+.daily-report-employee-item:first-of-type{border-top:0}
+.daily-report-employee-name{
+  flex:1 1 auto;
+  min-width:0;
+  color:#172033;
+  font-size:13px;
+  font-weight:700;
+  line-height:1.45;
+}
+.daily-report-employee-meta{
+  flex:0 0 auto;
+  text-align:right;
+}
+.daily-report-employee-meta strong{
+  display:block;
+  color:#2a8c88;
+  font-size:13px;
+  font-weight:800;
+  line-height:1.35;
+}
+.daily-report-employee-meta span{
+  display:block;
+  margin-top:3px;
+  color:#7b8794;
+  font-size:11.5px;
+}
+.daily-report-employee-meta small{
+  display:block;
+  margin-top:4px;
+  color:#8a94a3;
+  font-size:10.8px;
+  line-height:1.35;
+}
+@media (max-width:1180px){
+  .daily-report-kpis-v19{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .daily-overview-grid-v19{grid-template-columns:1fr}
+}
+@media (max-width:699px){
+  .daily-report-title-v19 .daily-overview-percent{min-width:96px;padding:9px 10px}
+  .daily-report-title-v19 .daily-overview-percent b{font-size:19px}
+  .daily-report-kpis-v19 .daily-overview-kpi{min-height:62px;padding:11px 12px}
+  .daily-report-kpis-v19 .daily-overview-kpi .num{font-size:15px}
+  .daily-overview-grid-v19 .daily-overview-section{min-height:auto}
+  .daily-report-employee-item{gap:10px}
+  .daily-report-employee-name{font-size:12.5px}
+  .daily-report-employee-meta strong{font-size:12.5px}
+  .daily-report-employee-meta span{font-size:11px}
+}

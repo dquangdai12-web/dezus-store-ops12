@@ -1,0 +1,5 @@
+V19: Chỉnh lại bố cục Tổng quan báo cáo ngày theo mẫu gốc.
+- 10 ô KPI nhỏ phía trên theo dạng khung như ảnh mẫu.
+- Khối Tình hình cửa hàng full ngang.
+- 3 cột phía dưới: Doanh thu cá nhân | Thiếu size / cần order | Lỗi / feedback khách.
+- Doanh thu cá nhân hiển thị dạng hàng dọc: tên bên trái, doanh thu/bill/món căn phải.

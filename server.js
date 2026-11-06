@@ -5360,7 +5360,12 @@ function dailyReportZaloText(payload) {
   sales.forEach(r => {
     const u = getUser(r.user_id);
     if (!u) return;
-    lines.push(`- ${u.full_name}: ${fmt(r.revenue)}đ | Bill ${fmt(r.bill_count)} | Món ${fmt(r.item_count)}${r.note ? ` | ${r.note}` : ''}`);
+    // Each employee uses a vertical block for easier reading when pasted into Zalo.
+    lines.push(`- ${u.full_name}`);
+    lines.push(`  Doanh thu: ${fmt(r.revenue)}đ`);
+    lines.push(`  Bill: ${fmt(r.bill_count)}`);
+    lines.push(`  Món: ${fmt(r.item_count)}`);
+    if (r.note) lines.push(`  Ghi chú: ${r.note}`);
   });
   const customerNew = Number(payload.customer_new_count || 0);
   const customerOld = Number(payload.customer_old_count || 0);

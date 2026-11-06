@@ -1,0 +1,1 @@
+V18 - Báo cáo ngày: đưa doanh số nhân viên về hàng dọc trong bản xem trước gửi Zalo và nội dung sao chép Zalo. Mỗi nhân viên có tên, doanh thu, bill, món và ghi chú trên dòng riêng. Giữ nguyên các chức năng, dữ liệu và style khác của V17.
