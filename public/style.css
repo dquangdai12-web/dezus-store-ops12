@@ -6406,121 +6406,77 @@ section.card>.toolbar+p.hint{display:none!important}
   .daily-overview-kpis .daily-overview-kpi::after{width:80px;height:80px;right:-14px;top:-14px}
 }
 
-/* V18: Return employee sales in the daily report's Zalo preview to a vertical list. */
-#dailyReportSummaryBox .daily-employee-vertical{
-  display:flex;
-  flex-direction:column;
-  align-items:stretch;
-  justify-content:flex-start;
-  gap:5px;
-  padding:10px 0;
-}
-#dailyReportSummaryBox .daily-employee-vertical .daily-overview-numbers{
-  flex:0 1 auto;
-  text-align:left;
-  margin:0;
-}
-#dailyReportSummaryBox .daily-employee-vertical .daily-overview-numbers strong,
-#dailyReportSummaryBox .daily-employee-vertical .daily-overview-numbers span{
-  display:block;
-  white-space:normal;
-  margin-top:3px;
-}
-#dailyReportSummaryBox .daily-employee-vertical > small{
-  display:block;
-  color:#64748b;
-  font-size:11.5px;
-}
 
-
-/* V19: Match daily report summary layout to original screenshot style. */
-.daily-overview-card-v19{
-  border-left:4px solid #4d9cff!important;
-  background:linear-gradient(180deg,#ffffff,#fbfdff)!important;
+/* V20: V9 original daily report preview, employee rows run vertically. */
+#dailyReportSummaryBox .daily-overview-kpis{
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:10px;
+  margin-bottom:14px;
 }
-.daily-report-title-v19 .daily-overview-percent{
-  min-width:120px;
-  padding:10px 14px;
+#dailyReportSummaryBox .daily-overview-kpis > div{
+  min-height:auto;
+  padding:12px;
   border-radius:16px;
-  background:linear-gradient(135deg,#eef7ff,#dceeff);
-  border:1px solid #cfe3f8;
-  display:flex;
-  flex-direction:column-reverse;
-  gap:4px;
-  align-items:center;
-  justify-content:center;
-}
-.daily-report-title-v19 .daily-overview-percent b{font-size:22px}
-.daily-report-kpis-v19{grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}
-.daily-report-kpis-v19 .daily-overview-kpi{
-  min-height:68px;
-  padding:13px 14px;
-  border-radius:16px;
-  gap:8px;
-}
-.daily-report-kpis-v19 .daily-overview-kpi .label{font-size:11px}
-.daily-report-kpis-v19 .daily-overview-kpi .num{font-size:17px;letter-spacing:-.03em}
-.daily-overview-grid-v19{grid-template-columns:1.15fr 1fr 1fr;gap:14px}
-.daily-overview-grid-v19 .daily-overview-section{
-  border-radius:18px;
+  background:#f8fafc;
   border:1px solid #e2e8f0;
-  background:#fff;
-  min-height:220px;
+  box-shadow:none;
 }
-.daily-overview-grid-v19 .daily-overview-section h4{font-size:15px;margin-bottom:12px}
-.daily-report-employee-item{
+#dailyReportSummaryBox .daily-overview-kpis span{
+  font-size:11px;
+  color:#64748b;
+  font-weight:800;
+  letter-spacing:.04em;
+}
+#dailyReportSummaryBox .daily-overview-kpis b{font-size:17px;color:#0f172a;margin-top:7px}
+#dailyReportSummaryBox .daily-overview-grid{grid-template-columns:1.1fr 1fr 1fr;gap:12px}
+#dailyReportSummaryBox .daily-overview-section{display:block;margin:0;min-width:0;padding:13px;border-radius:17px}
+#dailyReportSummaryBox .daily-overview-section h4{font-size:14px;margin:0 0 10px}
+#dailyReportSummaryBox .daily-overview-row{
   display:flex;
-  align-items:flex-start;
+  flex-direction:row;
   justify-content:space-between;
-  gap:14px;
-  padding:12px 0;
+  align-items:flex-start;
+  gap:10px;
+  padding:10px 0;
   border-top:1px solid #eef2f7;
 }
-.daily-report-employee-item:first-of-type{border-top:0}
-.daily-report-employee-name{
-  flex:1 1 auto;
-  min-width:0;
-  color:#172033;
-  font-size:13px;
-  font-weight:700;
-  line-height:1.45;
+#dailyReportSummaryBox .daily-overview-row:first-of-type{border-top:0}
+#dailyReportSummaryBox .daily-overview-row > div:first-child{min-width:0;flex:1}
+#dailyReportSummaryBox .daily-overview-numbers{flex:0 0 auto;text-align:right;margin:0}
+#dailyReportSummaryBox .daily-overview-numbers strong{color:#0f766e;font-size:13px}
+#dailyReportSummaryBox .daily-overview-numbers span{color:#64748b;font-size:11px}
+@media(max-width:1180px){
+  #dailyReportSummaryBox .daily-overview-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #dailyReportSummaryBox .daily-overview-grid{grid-template-columns:1fr}
 }
-.daily-report-employee-meta{
-  flex:0 0 auto;
-  text-align:right;
+@media(max-width:699px){
+  #dailyReportSummaryBox .daily-overview-row{display:flex;flex-direction:row}
+  #dailyReportSummaryBox .daily-overview-numbers{text-align:right;margin:0}
+  #dailyReportSummaryBox .daily-overview-kpis > div{padding:10px}
+  #dailyReportSummaryBox .daily-overview-kpis b{font-size:14px}
 }
-.daily-report-employee-meta strong{
-  display:block;
-  color:#2a8c88;
-  font-size:13px;
-  font-weight:800;
-  line-height:1.35;
-}
-.daily-report-employee-meta span{
-  display:block;
-  margin-top:3px;
-  color:#7b8794;
-  font-size:11.5px;
-}
-.daily-report-employee-meta small{
-  display:block;
-  margin-top:4px;
-  color:#8a94a3;
-  font-size:10.8px;
-  line-height:1.35;
-}
-@media (max-width:1180px){
-  .daily-report-kpis-v19{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .daily-overview-grid-v19{grid-template-columns:1fr}
-}
-@media (max-width:699px){
-  .daily-report-title-v19 .daily-overview-percent{min-width:96px;padding:9px 10px}
-  .daily-report-title-v19 .daily-overview-percent b{font-size:19px}
-  .daily-report-kpis-v19 .daily-overview-kpi{min-height:62px;padding:11px 12px}
-  .daily-report-kpis-v19 .daily-overview-kpi .num{font-size:15px}
-  .daily-overview-grid-v19 .daily-overview-section{min-height:auto}
-  .daily-report-employee-item{gap:10px}
-  .daily-report-employee-name{font-size:12.5px}
-  .daily-report-employee-meta strong{font-size:12.5px}
-  .daily-report-employee-meta span{font-size:11px}
+
+/* V21: Keep desktop sidebar compact like V9; prevent horizontal scrollbar. */
+@media (min-width:861px){
+  .app-shell{grid-template-columns:248px minmax(0,1fr)!important;max-width:100%;overflow-x:clip}
+  .sidebar{
+    width:248px!important;min-width:0!important;max-width:248px!important;
+    padding:14px 10px!important;gap:10px!important;
+    overflow-x:hidden!important;overflow-y:auto!important;
+    scrollbar-width:thin;
+  }
+  .sidebar .side-nav{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:1px!important;width:100%!important;min-width:0!important;overflow-x:hidden!important;overflow-y:visible!important;padding-right:0!important}
+  .sidebar .nav-group{min-width:0!important;max-width:100%!important;width:100%!important;margin-bottom:4px!important}
+  .sidebar .nav-group-btn{width:100%!important;max-width:100%!important;min-width:0!important;min-height:43px!important;padding:8px 9px!important;gap:6px!important;border-radius:12px!important;white-space:normal!important}
+  .sidebar .nav-group-main{display:flex!important;min-width:0!important;max-width:100%!important;flex:1 1 auto!important;gap:8px!important;overflow:hidden!important}
+  .sidebar .nav-group-main b{width:29px!important;height:29px!important;flex:0 0 29px!important}
+  .sidebar .nav-group-main strong{display:block!important;min-width:0!important;max-width:100%!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;font-size:12px!important}
+  .sidebar .nav-group-caret{flex:0 0 auto!important;font-size:14px!important}
+  .sidebar .nav-sub{min-width:0!important;max-width:100%!important;padding:4px 0 2px 5px!important;gap:2px!important}
+  .sidebar .nav-btn{min-width:0!important;max-width:100%!important;width:100%!important;min-height:32px!important;padding:7px 7px 7px 11px!important;font-size:11px!important;gap:5px!important;overflow:hidden!important}
+  .sidebar .nav-btn span:first-child{min-width:0!important;flex:1 1 auto!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
+  .sidebar .nav-dot{flex:0 0 auto!important;max-width:40px!important;font-size:8px!important;padding:2px 4px!important}
+  .sidebar .logo{max-width:100%!important;min-width:0!important}
+  .sidebar .side-bottom{min-width:0!important;max-width:100%!important}
+  .sidebar .user-pill{overflow-wrap:anywhere}
 }

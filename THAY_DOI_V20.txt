@@ -1,0 +1,1 @@
+V20: Khôi phục giao diện báo cáo ngày theo V9, mỗi nhân viên một dòng dọc; doanh thu/bill/món cùng hàng căn phải. Khôi phục các nhóm menu như V9 trên desktop/mobile; tính năng Tổng hợp báo cáo ngày nằm trong Doanh thu, vẫn giới hạn Admin/Văn phòng. Không sửa máy chủ hay dữ liệu.\n

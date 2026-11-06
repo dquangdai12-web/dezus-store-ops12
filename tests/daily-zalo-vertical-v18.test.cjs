@@ -13,9 +13,13 @@ test('Zalo employee sales use separate vertical lines', () => {
   assert.match(block, /lines\.push\(`  Bill: /);
   assert.match(block, /lines\.push\(`  Món: /);
 });
-test('Zalo report preview renders one vertical card per employee', () => {
+test('Daily report preview restores employee rows from V9 (one employee per row)', () => {
   const app = fs.readFileSync(path.join(root, 'public/app.js'), 'utf8');
   const style = fs.readFileSync(path.join(root, 'public/style.css'), 'utf8');
-  assert.match(app, /daily-overview-row daily-employee-vertical/);
-  assert.match(style, /#dailyReportSummaryBox \.daily-employee-vertical\{/);
+  const preview = app.split('function dailyReportOverviewBox(data = {}) {')[1].split('async function renderDailyReport()')[0];
+  assert.match(preview, /sales\.map\(r => `<div class="daily-overview-row">/);
+  assert.match(preview, /<b>\$\{esc\(r\.full_name \|\| ''\)\}<\/b>/);
+  assert.match(preview, /Bill \$\{money\(r\.bill_count \|\| 0\)\} • Món/);
+  assert.doesNotMatch(preview, /daily-report-employee-item|daily-employee-vertical/);
+  assert.match(style, /#dailyReportSummaryBox \.daily-overview-row\{/);
 });

@@ -1,0 +1,5 @@
+DEZUS V21 - Thu gọn thanh danh mục theo V9
+- Khong thay doi nhom menu va du lieu / chuc nang bao cao V20.
+- Sidebar desktop thu gon: nut danh muc, icon, menu con va khoang cach.
+- Khong cho sidebar cuon ngang; cuon doc khi danh muc dai.
+- Giu danh muc Tong hop bao cao ngay ben trong Doanh thu nhu ban V20.
