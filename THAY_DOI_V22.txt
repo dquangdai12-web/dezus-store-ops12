@@ -1,0 +1,1 @@
+V22: Ẩn thanh cuộn của sidebar, vẫn cho phép cuộn bằng chuột/touchpad; đưa Tổng hợp báo cáo ngày ra mục cấp cao ngang với Doanh thu trên desktop và mobile. Giữ phân quyền Admin/Văn phòng. Không thay đổi dữ liệu.

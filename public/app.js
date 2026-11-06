@@ -669,7 +669,7 @@ function navItems() {
     ['dashboard', 'Tổng Quan', '◆', 'overview'],
     ['sales', 'Doanh thu', '%', 'revenue'],
     ['daily_report', 'Báo cáo ngày', 'DR', 'revenue'],
-    ['store_daily_summary', 'Tổng hợp báo cáo ngày', 'TH', 'revenue'],
+    ['store_daily_summary', 'Tổng hợp báo cáo ngày', 'TH', 'daily_overview'],
     ['weekly_report', 'Báo cáo tuần', 'WK', 'revenue'],
     ['loyalty', 'Loyalty', 'LY', 'revenue'],
     ['ggnv', 'GGNV', 'GG', 'revenue'],
@@ -735,7 +735,8 @@ function navGroups() {
   return [
     { key:'overview', label:'Tổng Quan', icon:appUiIcon('home'), ids:['dashboard'] },
     { key:'work', label:'Công việc', icon:appUiIcon('checklist'), ids:['tasks','cdp_ojti','checklists','schedule','violations'] },
-    { key:'revenue', label:'Doanh thu', icon:appUiIcon('revenue'), ids:['sales','daily_report','store_daily_summary','weekly_report','loyalty','ggnv','online_orders','bonuses'] },
+    { key:'daily_overview', label:'Tổng hợp báo cáo ngày', icon:appUiIcon('weekly'), ids:['store_daily_summary'] },
+    { key:'revenue', label:'Doanh thu', icon:appUiIcon('revenue'), ids:['sales','daily_report','weekly_report','loyalty','ggnv','online_orders','bonuses'] },
     { key:'product', label:'Sản phẩm', icon:appUiIcon('product'), ids:['orders','product_analytics'] },
     { key:'more', label:'Tài liệu', icon:appUiIcon('document'), ids:['documents','reports'] },
     { key:'system', label:'Hệ thống', icon:appUiIcon('admin'), ids:['account','admin'] },
@@ -746,7 +747,8 @@ function mobileNavGroups() {
   return [
     { key:'overview', label:'Tổng Quan', icon:appUiIcon('home'), ids:['dashboard'] },
     { key:'work', label:'Công việc', icon:appUiIcon('tasks'), ids:['tasks','cdp_ojti','checklists','schedule','violations'] },
-    { key:'revenue', label:'Doanh thu', icon:appUiIcon('revenue'), ids:['sales','daily_report','store_daily_summary','weekly_report','loyalty','ggnv','online_orders','bonuses'] },
+    { key:'daily_overview', label:'Tổng hợp báo cáo ngày', icon:appUiIcon('weekly'), ids:['store_daily_summary'] },
+    { key:'revenue', label:'Doanh thu', icon:appUiIcon('revenue'), ids:['sales','daily_report','weekly_report','loyalty','ggnv','online_orders','bonuses'] },
     { key:'product', label:'Sản phẩm', icon:appUiIcon('product'), ids:['orders','product_analytics'] },
     { key:'more', label:'Thêm', icon:appUiIcon('more'), ids:['documents','reports','account','admin'] },
   ];

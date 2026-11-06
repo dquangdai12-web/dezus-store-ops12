@@ -6480,3 +6480,14 @@ section.card>.toolbar+p.hint{display:none!important}
   .sidebar .side-bottom{min-width:0!important;max-width:100%!important}
   .sidebar .user-pill{overflow-wrap:anywhere}
 }
+
+
+/* V22: Remove visible scrollbar tracks from sidebar; retain mouse-wheel / touchpad scrolling. */
+@media (min-width:861px){
+  .sidebar{overflow-x:hidden!important;overflow-y:auto!important;scrollbar-width:none!important;-ms-overflow-style:none!important}
+  .sidebar::-webkit-scrollbar{display:none!important;width:0!important;height:0!important}
+  .sidebar .side-nav{overflow-x:hidden!important;overflow-y:auto!important;scrollbar-width:none!important;-ms-overflow-style:none!important;padding-right:0!important}
+  .sidebar .side-nav::-webkit-scrollbar{display:none!important;width:0!important;height:0!important}
+  .app-shell{overflow-x:clip!important}
+}
+.nav-group.group-daily_overview .nav-group-main b{color:#8fb8de!important;background:rgba(143,184,222,.17)!important}
