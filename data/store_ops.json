@@ -33,7 +33,10 @@
     "product_import_batches": 1,
     "loyalty_claims": 1,
     "ggnv_claims": 1,
-    "bill_cancel_claims": 1
+    "bill_cancel_claims": 1,
+    "user_transfers": 1,
+    "task_delete_logs": 1,
+    "admin_cleanup_logs": 1
   },
   "stores": [
     {
@@ -72,61 +75,61 @@
       "id": 1,
       "full_name": "Admin PKD",
       "username": "admin",
-      "password_hash": "$2a$10$AqlTYCzjFfbcwngk.Eyv3.ncnmEsPW5CqJodFeOI1Y9VPSCAPeMZ6",
+      "password_hash": "$2a$10$j/Xv/Cn69LYr4qBzBdKhkuHThsVx6KhCOUUjzqbD0.buaZbqw05Ze",
       "role": "admin",
       "store_id": null,
       "status": "active",
-      "created_at": "2026-08-24T09:31:26.737Z"
+      "created_at": "2026-11-11T17:43:11.279Z"
     },
     {
       "id": 2,
       "full_name": "QL Bà Triệu",
       "username": "qly.bt",
-      "password_hash": "$2a$10$AqlTYCzjFfbcwngk.Eyv3.ncnmEsPW5CqJodFeOI1Y9VPSCAPeMZ6",
+      "password_hash": "$2a$10$j/Xv/Cn69LYr4qBzBdKhkuHThsVx6KhCOUUjzqbD0.buaZbqw05Ze",
       "role": "manager",
       "store_id": 1,
       "status": "active",
-      "created_at": "2026-08-24T09:31:26.737Z"
+      "created_at": "2026-11-11T17:43:11.279Z"
     },
     {
       "id": 3,
       "full_name": "ĐSKD Bà Triệu 01",
       "username": "nv.bt1",
-      "password_hash": "$2a$10$AqlTYCzjFfbcwngk.Eyv3.ncnmEsPW5CqJodFeOI1Y9VPSCAPeMZ6",
+      "password_hash": "$2a$10$j/Xv/Cn69LYr4qBzBdKhkuHThsVx6KhCOUUjzqbD0.buaZbqw05Ze",
       "role": "employee",
       "store_id": 1,
       "status": "active",
-      "created_at": "2026-08-24T09:31:26.737Z"
+      "created_at": "2026-11-11T17:43:11.279Z"
     },
     {
       "id": 4,
       "full_name": "ĐSKD Bà Triệu 02",
       "username": "nv.bt2",
-      "password_hash": "$2a$10$AqlTYCzjFfbcwngk.Eyv3.ncnmEsPW5CqJodFeOI1Y9VPSCAPeMZ6",
+      "password_hash": "$2a$10$j/Xv/Cn69LYr4qBzBdKhkuHThsVx6KhCOUUjzqbD0.buaZbqw05Ze",
       "role": "employee",
       "store_id": 1,
       "status": "active",
-      "created_at": "2026-08-24T09:31:26.737Z"
+      "created_at": "2026-11-11T17:43:11.279Z"
     },
     {
       "id": 5,
       "full_name": "QL Đà Nẵng",
       "username": "qly.dn",
-      "password_hash": "$2a$10$AqlTYCzjFfbcwngk.Eyv3.ncnmEsPW5CqJodFeOI1Y9VPSCAPeMZ6",
+      "password_hash": "$2a$10$j/Xv/Cn69LYr4qBzBdKhkuHThsVx6KhCOUUjzqbD0.buaZbqw05Ze",
       "role": "manager",
       "store_id": 2,
       "status": "active",
-      "created_at": "2026-08-24T09:31:26.737Z"
+      "created_at": "2026-11-11T17:43:11.279Z"
     },
     {
       "id": 6,
       "full_name": "ĐSKD Đà Nẵng 01",
       "username": "nv.dn1",
-      "password_hash": "$2a$10$AqlTYCzjFfbcwngk.Eyv3.ncnmEsPW5CqJodFeOI1Y9VPSCAPeMZ6",
+      "password_hash": "$2a$10$j/Xv/Cn69LYr4qBzBdKhkuHThsVx6KhCOUUjzqbD0.buaZbqw05Ze",
       "role": "employee",
       "store_id": 2,
       "status": "active",
-      "created_at": "2026-08-24T09:31:26.737Z"
+      "created_at": "2026-11-11T17:43:11.279Z"
     }
   ],
   "permissions": [
@@ -386,37 +389,37 @@
       "end_time": "16:30",
       "note": "Ca sáng",
       "status": "active",
-      "created_at": "2026-08-24T09:31:26.737Z"
+      "created_at": "2026-11-11T17:43:11.279Z"
     },
     {
       "id": 2,
       "code": "C",
       "name": "Ca C",
       "start_time": "14:00",
-      "end_time": "22:00",
+      "end_time": "22:30",
       "note": "Ca chiều",
       "status": "active",
-      "created_at": "2026-08-24T09:31:26.737Z"
+      "created_at": "2026-11-11T17:43:11.279Z"
     },
     {
       "id": 3,
-      "code": "G1",
-      "name": "Ca G1",
+      "code": "G",
+      "name": "Ca G",
       "start_time": "12:00",
       "end_time": "22:00",
       "note": "Ca gãy / full peak",
       "status": "active",
-      "created_at": "2026-08-24T09:31:26.737Z"
+      "created_at": "2026-11-11T17:43:11.279Z"
     },
     {
       "id": 4,
-      "code": "F1",
-      "name": "Ca F1",
+      "code": "F",
+      "name": "Ca F",
       "start_time": "09:00",
       "end_time": "17:00",
       "note": "",
       "status": "active",
-      "created_at": "2026-08-24T09:31:26.737Z"
+      "created_at": "2026-11-11T17:43:11.279Z"
     },
     {
       "id": 5,
@@ -425,8 +428,9 @@
       "start_time": "14:30",
       "end_time": "20:30",
       "note": "",
-      "status": "active",
-      "created_at": "2026-08-24T09:31:26.737Z"
+      "status": "deleted",
+      "created_at": "2026-11-11T17:43:11.279Z",
+      "merged_into": 2
     }
   ],
   "tasks": [],
@@ -458,5 +462,10 @@
   "loyalty_claims": [],
   "ggnv_claims": [],
   "bill_cancel_claims": [],
-  "work_schedules": []
+  "work_schedules": [],
+  "user_transfers": [],
+  "task_delete_logs": [],
+  "admin_cleanup_logs": [],
+  "shift_groups_v231": true,
+  "shift_task_plan_v232": true
 }

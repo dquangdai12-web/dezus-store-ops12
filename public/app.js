@@ -731,11 +731,17 @@ function appUiIcon(name) {
   return icons[name] || icons.more;
 }
 
+
+// V47 navigation skin only. The original routes, permission rules and API functions stay intact.
+const DEZUS_MENU_ICON_GROUP = {'dashboard':'/assets/v47/icon-dashboard.png','work':'/assets/v47/icon-work.png','daily_overview':'/assets/v47/icon-report.png','revenue':'/assets/v47/icon-sales.png','product':'/assets/v47/icon-product.png','more':'/assets/v47/icon-folder-doc.png','system':'/assets/v47/icon-system.png'};
+const DEZUS_MENU_ICON_CHILD = {'tasks':'/assets/v47/child-tasks.png','cdp_ojti':'/assets/v47/child-cdp_ojti.png','checklists':'/assets/v47/child-checklists.png','schedule':'/assets/v47/child-schedule.png','violations':'/assets/v47/child-violations.png','sales':'/assets/v47/child-sales.png','daily_report':'/assets/v47/child-daily_report.png','weekly_report':'/assets/v47/child-weekly_report.png','loyalty':'/assets/v47/child-loyalty.png','ggnv':'/assets/v47/child-ggnv.png','online_orders':'/assets/v47/child-online_orders.png','bonuses':'/assets/v47/child-sales.png','orders':'/assets/v47/child-orders.png','product_analytics':'/assets/v47/child-product_analytics.png','documents':'/assets/v47/child-documents.png','reports':'/assets/v47/child-reports.png','account':'/assets/v47/child-account.png','admin':'/assets/v47/child-admin.png','store_daily_summary':'/assets/v47/icon-report.png'};
+function dezusNavPicture(src) { return src ? `<img class="v47-nav-picture" src="${src}" alt="" aria-hidden="true">` : ''; }
+
 function navGroups() {
   return [
     { key:'overview', label:'Tổng Quan', icon:appUiIcon('home'), ids:['dashboard'] },
-    { key:'work', label:'Công việc', icon:appUiIcon('checklist'), ids:['tasks','cdp_ojti','checklists','schedule','violations'] },
     { key:'daily_overview', label:'Tổng hợp báo cáo ngày', icon:appUiIcon('weekly'), ids:['store_daily_summary'] },
+    { key:'work', label:'Công việc', icon:appUiIcon('checklist'), ids:['tasks','cdp_ojti','checklists','schedule','violations'] },
     { key:'revenue', label:'Doanh thu', icon:appUiIcon('revenue'), ids:['sales','daily_report','weekly_report','loyalty','ggnv','online_orders','bonuses'] },
     { key:'product', label:'Sản phẩm', icon:appUiIcon('product'), ids:['orders','product_analytics'] },
     { key:'more', label:'Tài liệu', icon:appUiIcon('document'), ids:['documents','reports'] },
@@ -746,8 +752,8 @@ function navGroups() {
 function mobileNavGroups() {
   return [
     { key:'overview', label:'Tổng Quan', icon:appUiIcon('home'), ids:['dashboard'] },
-    { key:'work', label:'Công việc', icon:appUiIcon('tasks'), ids:['tasks','cdp_ojti','checklists','schedule','violations'] },
     { key:'daily_overview', label:'Tổng hợp báo cáo ngày', icon:appUiIcon('weekly'), ids:['store_daily_summary'] },
+    { key:'work', label:'Công việc', icon:appUiIcon('tasks'), ids:['tasks','cdp_ojti','checklists','schedule','violations'] },
     { key:'revenue', label:'Doanh thu', icon:appUiIcon('revenue'), ids:['sales','daily_report','weekly_report','loyalty','ggnv','online_orders','bonuses'] },
     { key:'product', label:'Sản phẩm', icon:appUiIcon('product'), ids:['orders','product_analytics'] },
     { key:'more', label:'Thêm', icon:appUiIcon('more'), ids:['documents','reports','account','admin'] },
@@ -801,8 +807,10 @@ function shell(content, title = 'Tổng Quan', subtitle = 'Vận hành cửa hà
   const sideNav = groups.map(group => {
     const groupItems = availableGroupItems(group, items);
     if (!groupItems.length) return '';
-    const open = state.navOpenGroup === group.key || activeGroup === group.key;
-    return `<div class="nav-group ${open ? 'open' : ''} group-${group.key}"><button class="nav-group-btn group-${group.key} ${activeGroup === group.key ? 'active' : ''}" data-group="${group.key}"><span class="nav-group-main"><b>${group.icon}</b><strong>${group.label}</strong></span><span class="nav-group-caret">${open ? '−' : '+'}</span></button><div class="nav-sub ${open ? 'show' : ''}">${groupItems.map(([id, label, dot]) => `<button class="nav-btn ${state.route === id ? 'active' : ''}" data-route="${id}"><span>${label}</span><span class="nav-dot">${dot}</span></button>`).join('')}</div></div>`;
+    const open = state.navOpenGroup === group.key;
+    const isSingle = groupItems.length === 1;
+    const category = group.key === 'overview' ? '<div class="v48-nav-category">TỔNG HỢP</div>' : group.key === 'work' ? '<div class="v48-nav-category">VẬN HÀNH</div>' : group.key === 'system' ? '<div class="v48-nav-category">HỆ THỐNG</div>' : '';
+    return `${category}<div class="nav-group ${open ? 'open' : ''} group-${group.key}"><button class="nav-group-btn group-${group.key} ${activeGroup === group.key ? 'active' : ''}" data-group="${group.key}" aria-expanded="${!isSingle && open}"><span class="nav-group-main"><b>${dezusNavPicture(DEZUS_MENU_ICON_GROUP[group.key]) || group.icon}</b><strong>${group.label}</strong></span>${!isSingle ? `<span class="nav-group-caret">⌄</span>` : ''}</button>${isSingle ? '' : `<div class="nav-sub ${open ? 'show' : ''}">${groupItems.map(([id, label, dot]) => `<button class="nav-btn ${state.route === id ? 'active' : ''}" data-route="${id}"><span class="v47-subnav-leading">${dezusNavPicture(DEZUS_MENU_ICON_CHILD[id])}<span>${label}</span></span><span class="nav-dot">${dot}</span></button>`).join('')}</div>`}</div>`;
   }).join('');
   const mobileGroups = mobileNavGroups();
   const mobileActiveGroup = mobileGroups.find(g => g.ids.includes(state.route) && availableGroupItems(g, items).length)?.key || activeGroup;
@@ -818,7 +826,7 @@ function shell(content, title = 'Tổng Quan', subtitle = 'Vận hành cửa hà
     <div class="app-shell">
       <aside class="sidebar">
         <div class="logo brand-logo-wrap brand-logo-compact">
-          <img class="brand-wordmark sidebar-wordmark" src="/assets/dezus-wordmark.png" alt="DEZUS">
+          <img class="brand-wordmark sidebar-wordmark" src="/assets/v47/dezus-wordmark.png" alt="DEZUS">
           <div class="brand-copy"><p class="brand-subtitle">Store Operations</p></div>
         </div>
         <nav class="side-nav">${sideNav}</nav>
@@ -829,13 +837,10 @@ function shell(content, title = 'Tổng Quan', subtitle = 'Vận hành cửa hà
       </aside>
       <main class="main">
         <div class="mobile-app-head">
-          <div class="mobile-logo brand-logo-wrap brand-logo-compact"><img class="brand-wordmark mobile-wordmark" src="/assets/dezus-wordmark.png" alt="DEZUS"><div class="brand-copy"><p class="brand-subtitle">Store Operations</p><span>${esc(userStoreText(state.user))}</span></div></div>
+          <div class="mobile-logo brand-logo-wrap brand-logo-compact"><img class="brand-wordmark mobile-wordmark" src="/assets/v47/dezus-wordmark.png" alt="DEZUS"><div class="brand-copy"><p class="brand-subtitle">Store Operations</p><span>${esc(userStoreText(state.user))}</span></div></div>
           <button class="mobile-icon-btn" id="logoutBtn2" title="Đăng xuất">↗</button>
         </div>
-        <div class="topbar">
-          <div class="page-title">${state.route === 'dashboard' ? '' : `<h2>${esc(title)}</h2>`}</div>
-          <div class="row mobile-top"><button class="btn secondary" id="logoutBtn3">Đăng xuất</button></div>
-        </div>
+        ${state.route === 'dashboard' ? '' : `<div class="topbar v48-topbar"><div class="page-title"><h2>${esc(title)}</h2></div></div>`}
         <div class="mobile-page-title">${state.route === 'dashboard' ? '' : `<h2>${esc(mobileTitle)}</h2>`}<button class="mobile-page-logout" id="logoutBtnMobile" type="button" aria-label="Đăng xuất">Đăng xuất</button></div>
         <div class="mobile-cats">${mobileCats}</div>
         ${content}
@@ -843,19 +848,30 @@ function shell(content, title = 'Tổng Quan', subtitle = 'Vận hành cửa hà
       ${mobileSubnav}
       <nav class="mobile-bottom-nav">${mobileBottom}</nav>
     </div>`;
-  $$('[data-route]').forEach(btn => btn.onclick = () => { if (btn.dataset.route === 'product_analytics' && state.route !== 'product_analytics') resetProductAnalyticsOnEntry(); state.route = btn.dataset.route; localStorage.setItem('dezus_ops_route', state.route); render(); });
+  $$('[data-route]').forEach(btn => btn.onclick = () => { if (btn.dataset.route === 'product_analytics' && state.route !== 'product_analytics') resetProductAnalyticsOnEntry(); state.route = btn.dataset.route; state.navOpenGroup = activeGroupKey(items); localStorage.setItem('dezus_ops_nav_group', state.navOpenGroup); localStorage.setItem('dezus_ops_route', state.route); render(); });
   $$('[data-group]').forEach(btn => btn.onclick = () => {
     const key = btn.dataset.group;
-    state.navOpenGroup = key;
-    localStorage.setItem('dezus_ops_nav_group', key);
     const group = groups.find(g => g.key === key);
-    const firstRoute = firstRouteInGroup(group, items);
-    if (firstRoute) {
-      if (firstRoute === 'product_analytics' && state.route !== 'product_analytics') resetProductAnalyticsOnEntry();
-      state.route = firstRoute;
+    if (!group) return;
+    const available = availableGroupItems(group, items);
+    if (available.length === 1) {
+      state.navOpenGroup = key;
+      state.route = available[0][0];
+      localStorage.setItem('dezus_ops_nav_group', key);
       localStorage.setItem('dezus_ops_route', state.route);
+      render();
+      return;
     }
-    render();
+    state.navOpenGroup = state.navOpenGroup === key ? '' : key;
+    localStorage.setItem('dezus_ops_nav_group', state.navOpenGroup);
+    // Expand/collapse without changing current form contents or losing unsaved input.
+    $$('.sidebar .nav-group').forEach(node => {
+      const active = node.classList.contains(`group-${state.navOpenGroup}`);
+      node.classList.toggle('open', active);
+      node.querySelector('.nav-sub')?.classList.toggle('show', active);
+      const trigger = node.querySelector('.nav-group-btn');
+      if (trigger) trigger.setAttribute('aria-expanded', String(active));
+    });
   });
   $('#logoutBtn')?.addEventListener('click', logout);
   $('#logoutBtn2')?.addEventListener('click', logout);
@@ -877,7 +893,7 @@ function renderLogin() {
     <div class="login-wrap">
       <form class="login-card" id="loginForm">
         <section class="login-form-panel">
-          <div class="logo brand-logo-wrap brand-logo-compact"><img class="brand-wordmark login-wordmark" src="/assets/dezus-wordmark.png" alt="DEZUS"><div class="brand-copy"><p class="brand-subtitle">Store Operations</p></div></div>
+          <div class="logo brand-logo-wrap brand-logo-compact"><img class="brand-wordmark login-wordmark" src="/assets/v47/dezus-wordmark.png" alt="DEZUS"><div class="brand-copy"><p class="brand-subtitle">Store Operations</p></div></div>
           <div class="login-copy">
             <h2>Đăng nhập hệ thống</h2>
           </div>
@@ -1116,36 +1132,33 @@ async function renderDashboard() {
   const done = tasks.filter(t => t.status === 'completed_on_time').length;
   const total = Math.max(tasks.length, 1);
   const onTimeRate = Math.round((done / total) * 100);
-  const top = (leaderboardData.leaderboard || []).slice(0, 5);
-  const today = new Date().toLocaleDateString('vi-VN', { weekday:'long', day:'2-digit', month:'2-digit', year:'numeric' });
   const leaderboardRows = leaderboardData.leaderboard || [];
-  const periodText = ctx.period === 'month' ? 'tháng' : ctx.period === 'quarter' ? 'quý' : 'năm';
-  const scoreLabel = ctx.period === 'month' ? 'Điểm tổng hợp' : 'Điểm TB tháng';
+  const today = new Date().toLocaleDateString('vi-VN', {day:'2-digit',month:'2-digit',year:'numeric'});
+  const rankPct = r => Number(r.achievement_percent ?? 0).toLocaleString('vi-VN',{maximumFractionDigits:1}) + '%';
+  const topRows = leaderboardRows.slice(0,3);
+  const podiumOrder = [topRows[1],topRows[0],topRows[2]].filter(Boolean);
+  const podium = podiumOrder.map(r => {
+    const rank=topRows.indexOf(r)+1;
+    const name=userDisplayName(r);
+    const initials=String(r.full_name || r.name || 'D').trim().split(/\s+/).slice(-2).map(x=>x[0]||'').join('').toUpperCase();
+    return `<article class="v48-rank-card v48-top${rank}"><span class="v48-rank-label">TOP ${rank}</span><div class="v48-rank-avatar">${esc(initials)}</div><strong class="v48-rank-name">${name}</strong><div class="v48-rank-percent">${rankPct(r)}</div><small>Đạt target cá nhân</small></article>`;
+  }).join('');
+  const rankList = leaderboardRows.slice(3).map((r,i)=>`<div class="v48-rank-row"><span class="v48-rank-number">#${i+4}</span><strong>${userDisplayName(r)}</strong><span class="v48-rank-store">${esc(r.store_name || '')}</span><b class="v48-rank-row-pct">${rankPct(r)}</b></div>`).join('');
   shell(`
-    ${overviewPeriodPicker(ctx)}
-    <section class="card hero-card" style="margin-top:14px">
-      <div>
-        <span class="badge dark">${esc(today)}</span>
-        <h3>Xin chào, ${esc(state.user.full_name)}</h3>
-        <p class="hint">Đang xem ${esc(ctx.label)}</p>
+    <section class="v48-dashboard" id="overviewPage">
+      <div class="v48-fashion-hero" role="img" aria-label="Ảnh thời trang DEZUS"></div>
+      <div class="v48-rank-head"><div><h2>Bảng xếp hạng doanh thu</h2><p>Xếp hạng theo % hoàn thành target cá nhân tại cửa hàng</p></div>
+        <div class="v48-overview-filter">${overviewPeriodPicker(ctx)}</div>
       </div>
-      <div class="hero-score">
-        <span>${scoreLabel}</span>
-        <b>${myPerf?.final_score ?? '-'}</b>
-        <small>/100</small>
+      <section class="v48-rank-board">
+        <div class="v48-podium">${podium || '<div class="empty">Chưa có dữ liệu doanh thu và target cá nhân</div>'}</div>
+        <div class="v48-member-list"><div class="v48-list-title"><h3>Danh sách thành viên</h3><span>% doanh thu thực đạt / target cá nhân</span></div>${rankList || '<div class="empty">Chưa có thành viên tiếp theo</div>'}</div>
+      </section>
+      <div class="v48-supporting-grid">
+        <section class="v48-supporting-card"><h3>Tiến độ công việc</h3><div class="v48-stats"><div><span>Đang mở</span><strong>${open}</strong></div><div><span>Đúng hạn</span><strong>${done}</strong></div><div><span>Trễ hạn</span><strong>${late}</strong></div><div><span>Tỷ lệ đúng hạn</span><strong>${onTimeRate}%</strong></div></div></section>
+        <section class="v48-supporting-card"><h3>Thông tin kỳ báo cáo</h3><div class="v48-period-summary"><span>Đang xem ${esc(ctx.label)}</span><strong>${esc(today)}</strong></div><p>Số liệu tổng hợp từ hệ thống thực, không sử dụng số liệu giả của bản demo.</p></section>
       </div>
     </section>
-    <section class="grid four dash-kpis">
-      <div class="card kpi dashboard-kpi kpi-open"><div class="label">Việc đang mở</div><div class="num">${open}</div><div class="hint">Trong ${esc(ctx.label)}</div></div>
-      <div class="card kpi dashboard-kpi kpi-done"><div class="label">Đúng hạn</div><div class="num ok-text">${done}</div><div class="hint">Tỷ lệ đúng hạn ${onTimeRate}%</div></div>
-      <div class="card kpi dashboard-kpi kpi-late"><div class="label">Trễ / quá hạn</div><div class="num danger-text">${late}</div><div class="hint">Theo kỳ đang xem</div></div>
-      <div class="card kpi top-month-kpi"><div class="top-month-head"><div><div class="label">Top ${periodText}</div><div class="num top-month-name">${top[0] ? esc(top[0].full_name) : '-'}</div><div class="hint top-month-store">${top[0] ? esc(top[0].store_name || '') : 'Chưa có dữ liệu'}</div></div><div class="top-month-cup" aria-hidden="true">🏆</div></div></div>
-    </section>
-    <section class="card overview-leaderboard-card overview-section-stack overview-leaderboard-full" style="margin-top:17px">
-      <div class="section-title"><h3>Top % đạt target doanh thu ${periodText}</h3><span class="badge">${esc(ctx.label)}</span></div>
-      ${overviewLeaderboardCards(leaderboardRows)}
-    </section>
-
   `, 'Tổng Quan', '');
   $('#toggleOverviewRevenueBtn')?.addEventListener('click', () => {
     state.overviewRevenueExpanded = !state.overviewRevenueExpanded;
