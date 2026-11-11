@@ -1,0 +1,1 @@
+V58: Banner Tổng quan lớn hơn theo chiều cao, giữ ảnh gốc từ mép trên xuống; nguyên nội dung và chức năng các mục con.

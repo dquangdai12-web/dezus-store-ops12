@@ -1,0 +1,5 @@
+DEZUS PREVIEW V50 — KIỂM TRA LOGO
+Tên gói và tên dịch vụ Render thử nghiệm riêng để tránh nhầm với web chính.
+Đã cập nhật title và nhãn ở góc trên cùng, cache-bust các tài nguyên.
+Giữ nguyên logo nhúng từ V49, CSS, bố cục, menu, các mục con, API, phân quyền và dữ liệu trong mã nguồn.
+Khi cập nhật 1 dịch vụ Render cũ, Render KHÔNG tự đổi tên dịch vụ vì thay render.yaml. Tạo dịch vụ thử nghiệm RIÊNG để nhìn thấy tên mới.

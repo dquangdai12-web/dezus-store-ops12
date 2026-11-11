@@ -1,0 +1,7 @@
+DEZUS V47 – Gộp mã nguồn thật V22 với nhận diện V46.
+- Dùng nguyên server.js, toàn bộ API, auth/permission, xuất nhập dữ liệu, lưu dữ liệu từ V22.
+- Dùng nguyên nội dung các trang con từ public/app.js V22, không dùng trang minh họa pages.js.
+- Gắn logo, banner và icon của V46; lớp giao diện Space Silver–Maroon.
+- Sidebar mỗi lần chỉ mở một nhóm, hover rõ và phân quyền menu tự động từ user thật.
+- Dữ liệu thực nằm ở persistent disk Render qua STORAGE_ROOT; không ghi đè database khi deploy.
+- Tổng quan sử dụng leaderboard thật từ API V22; các KPI công việc gốc vẫn giữ nguyên.

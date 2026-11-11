@@ -1,0 +1,1 @@
+DEZUS V49: Khôi phục ảnh logo chữ DEZUS bằng cách nhúng trực tiếp asset PNG trong app.js cho desktop, mobile và đăng nhập, có Store Operations dưới logo. Giữ NGUYÊN CSS, bố cục, kích thước sidebar, cỡ chữ, banner, bảng xếp hạng, các mục con, phân quyền và API của V48. Không thay đổi dữ liệu.

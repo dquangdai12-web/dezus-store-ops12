@@ -1,0 +1,5 @@
+DEZUS V63
+- Bỏ toàn bộ header Tổng quan vận hành ở trang Tổng Quan, không để khung trống.
+- Tăng cao banner: desktop 375px (từ 350px), nhỏ 330px (từ 310px), mobile 247px (từ 232px); giữ nguyên bề ngang, căn ảnh từ phía trên.
+- Thay icon mục Tổng Quan bằng ảnh PNG do người dùng vừa đính kèm, giữ nguyên tỷ lệ.
+- Không chỉnh chức năng / nội dung mục nhỏ hoặc backend.

@@ -1,0 +1,1 @@
+V48: Dùng giao diện V46 cho shell + Tổng quan (banner, leaderboard, sidebar, topbar). Giữ nguyên toàn bộ hàm render các mục nhỏ, API, phân quyền và nhập/xuất V22. Tổng quan đọc dữ liệu thật từ API, không dùng seed demo. Menu lớn 1 route hiển thị trực tiếp; accordion không thay đổi trang hay làm mất dữ liệu đang nhập.

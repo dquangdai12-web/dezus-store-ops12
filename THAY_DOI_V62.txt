@@ -1,0 +1,1 @@
+V62: Khung tiêu đề Tổng quan chỉ rộng vừa chữ và thấp gọn. Banner cao hơn 26px trên desktop, giữ nguyên bề ngang và căn ảnh từ trên xuống. Sidebar cuộn đến cuối mới thấy nút Đăng xuất. Không thay đổi nội dung/logic mục nhỏ.

@@ -1,0 +1,1 @@
+V56: Đưa Tổng hợp báo cáo ngày ngay sau Tổng Quan ở cả desktop/mobile; chỉnh font menu lớn về 13px, 650 giống V46; bỏ nhãn DEZUS BẢN THỬ V55 ở topbar. Giữ nguyên nội dung/hàm của mục nhỏ.

@@ -1,0 +1,1 @@
+V54: Đối chiếu trực tiếp với file HTML V46 người dùng tải lên; khôi phục kích thước sidebar/menu lớn/icon/chữ, khoảng cách, topbar, banner, typography và các khung xếp hạng của Tổng quan. Chỉ thay CSS các lớp giao diện chung và Tổng quan; dữ liệu mục con, hàm API và phân quyền giữ nguyên từ V53.

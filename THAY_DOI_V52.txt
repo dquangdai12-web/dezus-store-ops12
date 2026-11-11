@@ -1,0 +1,5 @@
+V52
+- Tăng kích thước banner tổng quan và chỉnh vị trí ảnh để thấy mặt rõ hơn.
+- Đưa menu mục lớn về style/kích thước gần giống demo V46.
+- Tăng logo sidebar và giữ DEZUS + Store Operations hiển thị rõ.
+- Sửa lại icon mục Tổng Quan và đồng bộ cỡ chữ menu lớn.

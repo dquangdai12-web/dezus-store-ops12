@@ -1,0 +1,1 @@
+V61: Xóa cụm ngày/avatar/đăng xuất ở góc trên (giữ đăng xuất ở sidebar và menu mobile); giảm riêng tiêu đề Tổng quan vận hành thành 18px desktop / 16px mobile; tăng chiều cao banner lên 324px desktop, 286px màn hẹp và 212px mobile, giữ ảnh căn từ mép trên; giữ nguyên các nội dung khác.

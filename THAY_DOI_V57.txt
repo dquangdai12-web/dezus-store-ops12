@@ -1,0 +1,1 @@
+V57: Banner Tổng quan căn ảnh gốc từ mép trên (background-position: center top) trên desktop và mobile. Các mục khác giữ nguyên V56.

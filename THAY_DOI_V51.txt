@@ -1,0 +1,1 @@
+V51: Sửa lỗi logo DEZUS không thấy trên sidebar nền bạc. Nguyên nhân CSS cũ áp filter:brightness(0) invert(1) biến wordmark chữ đen thành trắng. Chỉ override filter:none cho wordmark desktop/mobile/login; giữ nguyên bố cục, banner, menu và các hàm chức năng. Đổi tên bản thử thành V51 để dễ kiểm tra.
