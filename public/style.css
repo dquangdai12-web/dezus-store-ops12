@@ -8096,3 +8096,78 @@ body{font-family:Inter,'Segoe UI',Arial,sans-serif!important}
 .v48-dashboard .v48-podium .dz72-tag b{
   font-weight: 900 !important;
 }
+
+
+/* DEZUS V89: enlarge actual employee portraits on live dashboard.
+   Use an absolute, bottom-anchored PNG cutout so card width does not
+   shrink the person on wider displays. Copy and labels remain unchanged. */
+@media (min-width: 1201px) {
+  .v48-dashboard .v48-podium .dz72-award .dz72-person:not(.dz72-no-photo),
+  .v48-dashboard .v48-podium .dz72-award.dz72-rank-1 .dz72-person:not(.dz72-no-photo) {
+    width: 62% !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    height: 100% !important;
+    overflow: visible !important;
+  }
+  .v48-dashboard .v48-podium .dz72-award .dz72-person:not(.dz72-no-photo) img {
+    position: absolute !important;
+    width: auto !important;
+    height: 116% !important;
+    max-height: none !important;
+    max-width: none !important;
+    right: -3px !important;
+    bottom: 0 !important;
+    transform: none !important;
+    object-fit: contain !important;
+    object-position: right bottom !important;
+  }
+  .v48-dashboard .v48-podium .dz72-award.dz72-rank-1 .dz72-person:not(.dz72-no-photo) img {
+    height: 120% !important;
+    max-height: none !important;
+    right: -3px !important;
+    transform: none !important;
+  }
+}
+@media (min-width: 861px) and (max-width: 1200px) {
+  .v48-dashboard .v48-podium .dz72-award .dz72-person:not(.dz72-no-photo),
+  .v48-dashboard .v48-podium .dz72-award.dz72-rank-1 .dz72-person:not(.dz72-no-photo) {
+    width: 60% !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    overflow: visible !important;
+  }
+  .v48-dashboard .v48-podium .dz72-award .dz72-person:not(.dz72-no-photo) img {
+    position: absolute !important;
+    width: auto !important;
+    height: 108% !important;
+    max-height: none !important;
+    max-width: none !important;
+    right: -5px !important;
+    bottom: 0 !important;
+    transform: none !important;
+    object-fit: contain !important;
+    object-position: right bottom !important;
+  }
+  .v48-dashboard .v48-podium .dz72-award.dz72-rank-1 .dz72-person:not(.dz72-no-photo) img {
+    height: 113% !important;
+    max-height: none !important;
+    right: -5px !important;
+    transform: none !important;
+  }
+}
+@media (max-width: 860px) {
+  .v48-dashboard .v48-podium .dz72-award .dz72-person:not(.dz72-no-photo) {
+    width: 60% !important;
+    right: 0 !important;
+  }
+  .v48-dashboard .v48-podium .dz72-award .dz72-person:not(.dz72-no-photo) img {
+    width: auto !important;
+    height: 108% !important;
+    max-width: none !important;
+    max-height: none !important;
+    transform: translateX(0) !important;
+    object-fit: contain !important;
+    object-position: right bottom !important;
+  }
+}

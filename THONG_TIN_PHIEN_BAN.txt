@@ -421,3 +421,10 @@ V86
 
 === V88 ===
 - Tăng độ đậm chữ TOP 1 / TOP 2 / TOP 3 để nổi và rõ hơn.
+
+
+=== V89 ===
+- Tăng kích thước ảnh chân dung trên các thẻ TOP ở bản web thực tế.
+- Bỏ giới hạn co ảnh theo chiều ngang; ảnh PNG bám đáy thẻ và được phóng lớn hơn.
+- Tối ưu riêng desktop, màn hình trung bình và điện thoại.
+- Chỉ thay CSS/nhớ tải CSS mới; không thay đổi dữ liệu, logo, icon, nhãn, menu hay API.
