@@ -7163,3 +7163,936 @@ body{font-family:Inter,'Segoe UI',Arial,sans-serif!important}
 @media(max-width:860px){
   .v48-dashboard .v48-fashion-hero,.v48-fashion-hero{height:247px!important;min-height:247px!important;}
 }
+
+
+/* V64 - two-column full leaderboard, matching user's sample while keeping live data */
+.v48-rank-card .v64-podium-store{
+  display:block!important;max-width:100%;margin-top:4px;
+  font-size:12px!important;font-weight:650;color:#596170!important;
+  line-height:1.35;white-space:normal;overflow-wrap:anywhere;
+}
+.v64-member-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;align-items:start}
+.v64-rank-table-wrap{min-width:0;overflow-x:auto;border:1px solid #d7e0e9;border-radius:17px;background:#fff;box-shadow:0 3px 9px rgba(40,57,70,.04)}
+.v64-rank-table{width:100%;min-width:465px;table-layout:fixed;border-collapse:collapse;border-spacing:0;font-size:12px;color:#1b293a}
+.v64-rank-table th{padding:11px 12px!important;text-align:left!important;font-weight:800!important;font-size:10px!important;color:#233955!important;background:#eaf2f8!important;border-bottom:1px solid #d7e1ea!important;white-space:nowrap}
+.v64-rank-table td{padding:11px 12px!important;border-bottom:1px solid #e8eef3!important;font-size:12px!important;color:#243143!important;vertical-align:middle!important;line-height:1.35!important;overflow-wrap:anywhere}
+.v64-rank-table tr:nth-child(even) td{background:#f0f5fa!important}
+.v64-rank-table tbody tr:last-child td{border-bottom:0!important}
+.v64-rank-table tbody tr:hover td{background:#e7eff8!important;transition:background-color .18s ease}
+.v64-rank-table th:nth-child(1){width:17%}
+.v64-rank-table th:nth-child(2){width:32%}
+.v64-rank-table th:nth-child(3){width:30%}
+.v64-rank-table th:nth-child(4){width:21%}
+.v64-member-name{font-weight:750!important}
+.v64-member-store{font-weight:500!important}
+.v64-rank-badge{display:inline-block;border:1px solid #bed9ec;background:#d9eaf7;color:#24516d;border-radius:999px;padding:4px 8px;font-size:10px;font-weight:750;white-space:nowrap}
+.v64-rank-percent{display:inline-block;border:1px solid #cde6d7;background:#eaf7ef;color:#1d4932;border-radius:999px;padding:4px 8px;font-weight:750;font-size:10px;white-space:nowrap}
+@media(max-width:1279px){.v64-member-columns{grid-template-columns:1fr}.v64-rank-table{min-width:540px}}
+@media(max-width:860px){.v64-rank-table{min-width:495px}.v48-rank-card .v64-podium-store{font-size:10px!important}.v64-rank-table td{padding:10px 9px!important}.v64-rank-table th{padding:10px 9px!important}}
+@media(prefers-reduced-motion:reduce){.v64-rank-table tbody tr:hover td{transition:none}}
+
+
+/* V65 - harmonize employee leaderboard with DEZUS wine / silver palette. */
+.v64-rank-table-wrap{background:#fff!important;border:1px solid #d9d9de!important;box-shadow:0 3px 10px rgba(48,30,36,.045)!important}
+.v64-rank-table th{background:#f0edef!important;color:#371f27!important;border-bottom:1px solid #dbd3d7!important}
+.v64-rank-table td{color:#262228!important;border-bottom-color:#eae5e7!important}
+.v64-rank-table tr:nth-child(even) td{background:#f8f5f6!important}
+.v64-rank-table tbody tr:hover td{background:#eee2e6!important}
+.v64-member-name{color:#251c20!important}
+.v64-member-store{color:#655c61!important}
+.v64-rank-badge{background:#f3e8eb!important;border-color:#d8c0c8!important;color:#590907!important}
+.v64-rank-percent{background:#f5edef!important;border-color:#dcc7ce!important;color:#590907!important}
+/* Account and sign-out directly follow the last navigation category, without a viewport-high spacer. */
+@media(min-width:861px){
+  .sidebar{justify-content:flex-start!important;overflow-y:auto!important}
+  .sidebar .side-nav{min-height:0!important;height:auto!important;flex:none!important;overflow-y:visible!important;padding-bottom:0!important}
+  .sidebar .side-bottom{margin-top:14px!important;flex:none!important;padding-top:11px!important;padding-bottom:16px!important;gap:8px!important}
+}
+
+.admin-user-photo-field{
+  min-width:0!important;
+}
+.admin-user-photo-main{grid-column:span 2!important}
+.admin-user-photo-preview{
+  min-height:170px!important;
+  border:1px dashed #c9ced6!important;
+  border-radius:18px!important;
+  background:#f7f8fa!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  overflow:hidden!important;
+  padding:12px!important;
+}
+.admin-user-photo-preview span{color:#6b7280!important;font-size:13px!important;font-weight:600!important}
+.admin-user-photo-preview.has-photo{background:linear-gradient(180deg,#fbfbfc,#f2f4f7)!important}
+.admin-user-photo-preview img{display:block!important;max-width:100%!important;max-height:220px!important;object-fit:contain!important;object-position:center bottom!important}
+.admin-user-photo-actions{margin-top:10px!important;display:flex!important;gap:8px!important;flex-wrap:wrap!important}
+@media(max-width:860px){
+  .v66-rank-card,.v48-rank-card.v66-rank-card,.v48-rank-card.v48-top1.v66-rank-card,.v48-rank-card.v48-top3.v66-rank-card{min-height:244px!important;padding:12px 10px 14px!important}
+  .v66-rank-photo-wrap{min-height:132px!important;border-radius:14px!important}
+  .v66-rank-photo{max-height:150px!important}
+  .v66-rank-photo-fallback span{width:62px!important;height:62px!important;font-size:22px!important}
+  .v66-rank-name{font-size:13px!important}
+  .v66-rank-top{font-size:9px!important;padding:6px 9px!important}
+  .v66-rank-percent{font-size:18px!important}
+  .admin-user-photo-main,.admin-user-photo-side{grid-column:1/-1!important}
+}
+
+
+
+/* V72 - a single, isolated, responsive podium component. No inherited rank-card rules. */
+.v48-dashboard .v48-rank-board{padding:0!important;border:0!important;box-shadow:none!important;background:transparent!important}
+.v48-dashboard .v48-podium{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1.24fr) minmax(0,1fr)!important;align-items:end!important;gap:13px!important;margin-bottom:24px!important}
+.v48-dashboard .v48-podium .dz72-award{box-sizing:border-box!important;position:relative!important;isolation:isolate!important;display:block!important;overflow:hidden!important;width:100%!important;height:304px!important;min-width:0!important;min-height:0!important;margin:0!important;padding:0!important;border:1px solid #dee3e9!important;border-radius:24px!important;background:linear-gradient(155deg,#fff 0%,#faf8fa 100%)!important;box-shadow:0 12px 30px rgba(33,37,45,.075)!important;text-align:left!important;color:#151820!important;transform:none!important;transition:box-shadow .2s ease,translate .2s ease!important}
+.v48-dashboard .v48-podium .dz72-award:hover{translate:0 -3px!important;box-shadow:0 16px 38px rgba(33,37,45,.11)!important}
+.v48-dashboard .v48-podium .dz72-rank-1{height:342px!important;border:2px solid #f0cbd2!important;background:linear-gradient(120deg,#9c3541 0%,#7c1e2b 57%,#962f3e 100%)!important;box-shadow:0 17px 42px rgba(101,17,31,.23)!important;color:#fff!important}
+.v48-dashboard .v48-podium .dz72-rank-1:before{content:'❦'!important;position:absolute!important;top:18px!important;right:21%!important;font-size:106px!important;line-height:1!important;color:rgba(255,255,255,.15)!important;pointer-events:none!important;z-index:0!important}
+.v48-dashboard .v48-podium .dz72-tag{position:absolute!important;z-index:5!important;top:21px!important;left:22px!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:7px!important;min-width:99px!important;height:39px!important;box-sizing:border-box!important;padding:0 14px!important;border-radius:99px!important;border:1px solid #d9dee5!important;background:#edf0f4!important;color:#27303b!important;font-weight:800!important;font-size:16px!important;letter-spacing:.01em!important;white-space:nowrap!important}
+.v48-dashboard .v48-podium .dz72-rank-1 .dz72-tag{top:25px!important;left:30px!important;background:#fff1e7!important;color:#7a1d28!important;border-color:#eedbd3!important;height:41px!important;min-width:118px!important}
+.v48-dashboard .v48-podium .dz72-rank-3 .dz72-tag{background:#f7e9ec!important;border-color:#ead0d6!important;color:#8c3b47!important}
+.v48-dashboard .v48-podium .dz72-crown{font-size:16px!important;line-height:1!important}
+/* Copy sits on the left. Text is never laid out in the image box. */
+.v48-dashboard .v48-podium .dz72-copy{position:absolute!important;z-index:4!important;left:22px!important;bottom:22px!important;width:calc(61% - 15px)!important;min-width:0!important;display:flex!important;flex-direction:column!important;align-items:flex-start!important;justify-content:flex-end!important;gap:0!important;text-align:left!important;pointer-events:none!important}
+.v48-dashboard .v48-podium .dz72-rank-1 .dz72-copy{left:30px!important;bottom:27px!important;width:calc(59% - 18px)!important}
+.v48-dashboard .v48-podium .dz72-name{display:-webkit-box!important;-webkit-box-orient:vertical!important;-webkit-line-clamp:2!important;line-clamp:2!important;overflow:hidden!important;width:100%!important;max-width:100%!important;min-width:0!important;margin:0!important;color:inherit!important;font-size:clamp(15px,1.45vw,23px)!important;font-weight:850!important;line-height:1.13!important;letter-spacing:-.024em!important;overflow-wrap:break-word!important;word-break:normal!important;text-align:left!important}
+.v48-dashboard .v48-podium .dz72-rule{display:block!important;width:86%!important;height:2px!important;margin:13px 0 10px!important;border-radius:2px!important;background:#dfadb5!important;flex:0 0 auto!important}
+.v48-dashboard .v48-podium .dz72-rank-1 .dz72-rule{background:rgba(255,255,255,.65)!important}
+.v48-dashboard .v48-podium .dz72-store{display:block!important;max-width:100%!important;font-size:clamp(12px,1.05vw,16px)!important;font-weight:400!important;line-height:1.3!important;margin:0 0 20px!important;color:inherit!important;overflow-wrap:break-word!important}
+.v48-dashboard .v48-podium .dz72-goal{box-sizing:border-box!important;display:flex!important;flex-direction:column!important;align-items:flex-start!important;justify-content:center!important;width:max-content!important;max-width:100%!important;min-width:128px!important;padding:12px 14px!important;border-radius:17px!important;border:1px solid #ead9dc!important;background:rgba(255,255,255,.94)!important;box-shadow:0 6px 16px rgba(70,24,34,.055)!important;white-space:nowrap!important}
+.v48-dashboard .v48-podium .dz72-rank-1 .dz72-goal{background:rgba(255,255,255,.10)!important;border-color:rgba(255,255,255,.25)!important;box-shadow:none!important}
+.v48-dashboard .v48-podium .dz72-goal-label{display:block!important;font-size:clamp(10px,.87vw,13px)!important;font-weight:700!important;color:#722735!important;line-height:1.3!important;white-space:nowrap!important}
+.v48-dashboard .v48-podium .dz72-rank-1 .dz72-goal-label{color:#fff!important}
+.v48-dashboard .v48-podium .dz72-goal strong{display:block!important;font-size:clamp(21px,2vw,31px)!important;line-height:1.07!important;margin:5px 0 0!important;color:#7d2430!important;font-weight:900!important;white-space:nowrap!important}
+.v48-dashboard .v48-podium .dz72-rank-1 .dz72-goal strong{color:#fff!important}
+/* Photo always fits the portrait box on BOTH axes: never 100% height with unconstrained width. */
+.v48-dashboard .v48-podium .dz72-person{position:absolute!important;z-index:2!important;right:0!important;bottom:0!important;width:49%!important;height:100%!important;display:flex!important;align-items:flex-end!important;justify-content:flex-end!important;overflow:hidden!important;pointer-events:none!important}
+.v48-dashboard .v48-podium .dz72-rank-1 .dz72-person{width:51%!important}
+.v48-dashboard .v48-podium .dz72-person img{display:block!important;box-sizing:border-box!important;width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important;object-fit:contain!important;object-position:right bottom!important;margin:0!important;padding:0!important;transform:none!important;filter:drop-shadow(-4px 7px 12px rgba(17,10,15,.15))!important}
+.v48-dashboard .v48-podium .dz72-no-photo{align-items:flex-end!important;justify-content:center!important}
+.v48-dashboard .v48-podium .dz72-no-photo span{display:flex!important;align-items:center!important;justify-content:center!important;width:88px!important;height:88px!important;margin-bottom:28px!important;background:#f0e5e8!important;border-radius:50%!important;color:#7a2130!important;font-size:27px!important;font-weight:900!important}
+.v48-dashboard .v48-podium .dz72-rank-1 .dz72-no-photo span{background:rgba(255,255,255,.15)!important;color:#fff!important}
+@media(max-width:1350px){
+ .v48-dashboard .v48-podium{gap:10px!important}
+ .v48-dashboard .v48-podium .dz72-award{height:290px!important}
+ .v48-dashboard .v48-podium .dz72-rank-1{height:325px!important}
+ .v48-dashboard .v48-podium .dz72-copy{left:17px!important;bottom:17px!important;width:calc(62% - 13px)!important}
+ .v48-dashboard .v48-podium .dz72-rank-1 .dz72-copy{left:22px!important;bottom:22px!important;width:calc(60% - 15px)!important}
+ .v48-dashboard .v48-podium .dz72-tag{left:17px!important;top:17px!important;height:34px!important;font-size:13px!important;min-width:79px!important}
+ .v48-dashboard .v48-podium .dz72-rank-1 .dz72-tag{left:22px!important;top:20px!important;min-width:96px!important}
+ .v48-dashboard .v48-podium .dz72-store{margin-bottom:13px!important}
+ .v48-dashboard .v48-podium .dz72-goal{min-width:0!important;padding:10px 11px!important}
+}
+@media(max-width:1000px){
+ .v48-dashboard .v48-podium{grid-template-columns:1fr!important;gap:13px!important}
+ .v48-dashboard .v48-podium .dz72-award,.v48-dashboard .v48-podium .dz72-rank-1{height:275px!important}
+ .v48-dashboard .v48-podium .dz72-name{font-size:21px!important}
+ .v48-dashboard .v48-podium .dz72-copy,.v48-dashboard .v48-podium .dz72-rank-1 .dz72-copy{left:22px!important;bottom:20px!important;width:50%!important}
+ .v48-dashboard .v48-podium .dz72-person,.v48-dashboard .v48-podium .dz72-rank-1 .dz72-person{width:49%!important}
+}
+@media(max-width:520px){
+ .v48-dashboard .v48-podium .dz72-award,.v48-dashboard .v48-podium .dz72-rank-1{height:240px!important;border-radius:20px!important}
+ .v48-dashboard .v48-podium .dz72-copy,.v48-dashboard .v48-podium .dz72-rank-1 .dz72-copy{left:15px!important;bottom:15px!important;width:57%!important}
+ .v48-dashboard .v48-podium .dz72-name{font-size:17px!important}
+ .v48-dashboard .v48-podium .dz72-tag,.v48-dashboard .v48-podium .dz72-rank-1 .dz72-tag{left:15px!important;top:15px!important;height:30px!important;font-size:12px!important;min-width:75px!important}
+ .v48-dashboard .v48-podium .dz72-rule{margin:9px 0 7px!important}
+ .v48-dashboard .v48-podium .dz72-store{font-size:12px!important;margin-bottom:10px!important}
+ .v48-dashboard .v48-podium .dz72-goal{padding:8px 10px!important;border-radius:13px!important}
+ .v48-dashboard .v48-podium .dz72-goal strong{font-size:20px!important}
+ .v48-dashboard .v48-podium .dz72-person,.v48-dashboard .v48-podium .dz72-rank-1 .dz72-person{width:47%!important}
+}
+@media(prefers-reduced-motion:reduce){.v48-dashboard .v48-podium .dz72-award{transition:none!important}.v48-dashboard .v48-podium .dz72-award:hover{translate:none!important}}
+
+/* Hide initials while the real portrait has loaded; show if the image fails to load. */
+.v48-dashboard .v48-podium .dz72-person .dz72-fallback-initials{display:none!important}
+.v48-dashboard .v48-podium .dz72-person.dz72-no-photo .dz72-fallback-initials{display:flex!important}
+
+
+/* === V73: refine top doanh thu to match demo more closely === */
+.v48-dashboard .v48-podium{
+  grid-template-columns:minmax(0,.95fr) minmax(0,1.18fr) minmax(0,.95fr)!important;
+  gap:18px!important;
+  align-items:end!important;
+}
+.v48-dashboard .v48-podium .dz72-award{
+  height:266px!important;
+  border-radius:24px!important;
+  border:1px solid #dfe5ea!important;
+  background:linear-gradient(180deg,#fbfafb 0%,#f7f4f6 100%)!important;
+  box-shadow:0 10px 24px rgba(33,37,45,.06)!important;
+}
+.v48-dashboard .v48-podium .dz72-award::after{
+  content:''!important;
+  position:absolute!important;
+  right:-18px!important;
+  top:-12px!important;
+  width:128px!important;
+  height:128px!important;
+  border-radius:50%!important;
+  background:rgba(178,123,137,.11)!important;
+  z-index:0!important;
+}
+.v48-dashboard .v48-podium .dz72-rank-1{
+  height:316px!important;
+  border:2px solid #efc6cd!important;
+  background:radial-gradient(circle at 18% 20%,rgba(255,255,255,.12),transparent 34%),linear-gradient(135deg,#a42f3f 0%,#8d2331 48%,#7f1e2b 100%)!important;
+  box-shadow:0 18px 38px rgba(115,24,40,.22)!important;
+}
+.v48-dashboard .v48-podium .dz72-rank-1::after{
+  content:''!important;
+  position:absolute!important;
+  inset:0!important;
+  background:radial-gradient(circle at 70% 20%,rgba(255,255,255,.12),transparent 22%),linear-gradient(180deg,transparent 0%,rgba(255,255,255,.02) 100%)!important;
+  z-index:0!important;
+}
+.v48-dashboard .v48-podium .dz72-rank-1:before{
+  font-size:94px!important;
+  top:16px!important;
+  right:20%!important;
+  color:rgba(255,255,255,.14)!important;
+}
+.v48-dashboard .v48-podium .dz72-tag{
+  top:18px!important;
+  left:20px!important;
+  min-width:104px!important;
+  height:42px!important;
+  padding:0 16px!important;
+  border-radius:999px!important;
+  border:1px solid #d9dfe6!important;
+  background:#eef1f4!important;
+  color:#334155!important;
+  box-shadow:none!important;
+  font-size:15px!important;
+}
+.v48-dashboard .v48-podium .dz72-rank-1 .dz72-tag{
+  top:24px!important;
+  left:28px!important;
+  min-width:118px!important;
+  height:44px!important;
+  background:#fff1e7!important;
+  border-color:#f3d6cc!important;
+  color:#7d1f2c!important;
+}
+.v48-dashboard .v48-podium .dz72-rank-3 .dz72-tag{
+  background:#f8ecef!important;
+  border-color:#edd2d9!important;
+  color:#8e3542!important;
+}
+ .v48-dashboard .v48-podium .dz72-copy{
+  left:20px!important;
+  bottom:18px!important;
+  width:50%!important;
+}
+ .v48-dashboard .v48-podium .dz72-rank-1 .dz72-copy{
+  left:28px!important;
+  bottom:22px!important;
+  width:49%!important;
+}
+.v48-dashboard .v48-podium .dz72-name{
+  font-size:clamp(15px,1.25vw,20px)!important;
+  line-height:1.18!important;
+  letter-spacing:-.02em!important;
+}
+.v48-dashboard .v48-podium .dz72-rank-1 .dz72-name{
+  font-size:clamp(18px,1.65vw,24px)!important;
+}
+.v48-dashboard .v48-podium .dz72-rule{
+  width:78%!important;
+  height:2px!important;
+  margin:12px 0 10px!important;
+  background:#e3aeb7!important;
+}
+.v48-dashboard .v48-podium .dz72-rank-1 .dz72-rule{
+  background:rgba(255,255,255,.62)!important;
+}
+.v48-dashboard .v48-podium .dz72-store{
+  font-size:clamp(11px,1vw,14px)!important;
+  line-height:1.28!important;
+  margin-bottom:16px!important;
+}
+.v48-dashboard .v48-podium .dz72-goal{
+  min-width:138px!important;
+  padding:12px 14px!important;
+  border-radius:18px!important;
+  border:1px solid #ecd8dd!important;
+  background:rgba(255,255,255,.96)!important;
+}
+.v48-dashboard .v48-podium .dz72-rank-1 .dz72-goal{
+  min-width:144px!important;
+  background:rgba(255,255,255,.10)!important;
+  border-color:rgba(255,255,255,.22)!important;
+}
+.v48-dashboard .v48-podium .dz72-goal-label{
+  font-size:12px!important;
+  color:#7a2a36!important;
+}
+.v48-dashboard .v48-podium .dz72-goal strong{
+  font-size:clamp(23px,1.85vw,34px)!important;
+  color:#8d2532!important;
+}
+.v48-dashboard .v48-podium .dz72-person{
+  right:8px!important;
+  bottom:0!important;
+  width:49%!important;
+  height:100%!important;
+  align-items:flex-end!important;
+  justify-content:flex-end!important;
+  overflow:visible!important;
+}
+.v48-dashboard .v48-podium .dz72-rank-1 .dz72-person{
+  right:10px!important;
+  width:42%!important;
+}
+.v48-dashboard .v48-podium .dz72-person img{
+  width:auto!important;
+  height:92%!important;
+  max-width:100%!important;
+  max-height:92%!important;
+  object-fit:contain!important;
+  object-position:right bottom!important;
+  filter:drop-shadow(-8px 10px 14px rgba(17,10,15,.16))!important;
+}
+.v48-dashboard .v48-podium .dz72-rank-1 .dz72-person img{
+  height:106%!important;
+  max-height:106%!important;
+}
+.v48-dashboard .v48-podium .dz72-no-photo{
+  justify-content:flex-end!important;
+  padding-right:16px!important;
+}
+.v48-dashboard .v48-podium .dz72-no-photo span{
+  width:84px!important;
+  height:84px!important;
+  margin-bottom:22px!important;
+}
+@media (max-width:1200px){
+  .v48-dashboard .v48-podium{gap:14px!important}
+  .v48-dashboard .v48-podium .dz72-award{height:250px!important}
+  .v48-dashboard .v48-podium .dz72-rank-1{height:296px!important}
+   .v48-dashboard .v48-podium .dz72-copy{width:51%!important}
+   .v48-dashboard .v48-podium .dz72-rank-1 .dz72-copy{width:49%!important}
+   .v48-dashboard .v48-podium .dz72-person{width:48%!important}
+   .v48-dashboard .v48-podium .dz72-rank-1 .dz72-person{width:44%!important}
+  .v48-dashboard .v48-podium .dz72-person img{height:90%!important;max-height:90%!important}
+}
+@media (max-width:860px){
+  .v48-dashboard .v48-podium{grid-template-columns:1fr!important;gap:14px!important}
+  .v48-dashboard .v48-podium .dz72-award,.v48-dashboard .v48-podium .dz72-rank-1{height:272px!important}
+   .v48-dashboard .v48-podium .dz72-copy,.v48-dashboard .v48-podium .dz72-rank-1 .dz72-copy{left:18px!important;bottom:16px!important;width:47%!important}
+   .v48-dashboard .v48-podium .dz72-person,.v48-dashboard .v48-podium .dz72-rank-1 .dz72-person{width:45%!important;right:6px!important}
+  .v48-dashboard .v48-podium .dz72-person img,.v48-dashboard .v48-podium .dz72-rank-1 .dz72-person img{height:92%!important;max-height:92%!important}
+}
+
+
+/* V75 - bigger portrait on top revenue cards */
+@media (min-width:861px){
+  .v48-dashboard .v48-podium .dz72-person img{transform:translateX(6px)!important;}
+  .v48-dashboard .v48-podium .dz72-rank-1 .dz72-person img{transform:translateX(2px)!important;}
+}
+
+
+/* V76 - icon Tổng Quan from supplied photo (desktop + mobile), no other menu sizing changes. */
+.mobile-tab-icon .v47-nav-picture,
+.mobile-subitem-icon .v47-nav-picture {
+  display:block!important;
+  width:25px!important;
+  height:25px!important;
+  max-width:25px!important;
+  max-height:25px!important;
+  object-fit:contain!important;
+  padding:0!important;
+  background:transparent!important;
+  border:none!important;
+  box-shadow:none!important;
+}
+
+
+/* V77: compact Top 1 podium height, keep same photo fit and text legibility */
+@media (min-width:1201px){
+  .v48-dashboard .v48-podium .dz72-award.dz72-rank-1{height:290px!important;}
+}
+@media (min-width:1001px) and (max-width:1200px){
+  .v48-dashboard .v48-podium .dz72-award.dz72-rank-1{height:276px!important;}
+}
+/* Lịch làm việc is a standalone large menu category like Tổng hợp báo cáo ngày. */
+.sidebar .group-schedule .nav-group-main b{background:#eef4fa!important;}
+
+
+/* V79: login image cropped from top, and top 1/2/3 cards prioritize portrait space (60/40). */
+.login-card .login-art-panel.login-fashion-panel {
+  padding: 0 !important;
+  background-color: #343038 !important;
+  background-image: url('/assets/v78/login-fashion.jpg') !important;
+  background-position: center top !important;
+  background-repeat: no-repeat !important;
+  background-size: cover !important;
+}
+.login-card .login-art-panel.login-fashion-panel::before,
+.login-card .login-art-panel.login-fashion-panel::after {
+  display: none !important;
+  content: none !important;
+}
+
+@media (min-width: 861px) {
+  .v48-dashboard .v48-podium .dz72-copy {
+    width: calc(40% - 8px) !important;
+    left: 18px !important;
+    bottom: 18px !important;
+  }
+  .v48-dashboard .v48-podium .dz72-rank-1 .dz72-copy {
+    width: calc(40% - 8px) !important;
+    left: 24px !important;
+    bottom: 22px !important;
+  }
+  .v48-dashboard .v48-podium .dz72-person {
+    width: 60% !important;
+    right: 0 !important;
+  }
+  .v48-dashboard .v48-podium .dz72-rank-1 .dz72-person {
+    width: 60% !important;
+    right: 0 !important;
+  }
+  .v48-dashboard .v48-podium .dz72-person img,
+  .v48-dashboard .v48-podium .dz72-rank-1 .dz72-person img {
+    width: auto !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    object-fit: contain !important;
+    object-position: right bottom !important;
+  }
+  .v48-dashboard .v48-podium .dz72-rank-1 .dz72-person img {
+    height: 104% !important;
+    max-height: 104% !important;
+  }
+  .v48-dashboard .v48-podium .dz72-rule {
+    width: 78% !important;
+  }
+  .v48-dashboard .v48-podium .dz72-goal {
+    min-width: 118px !important;
+    padding: 10px 12px !important;
+  }
+}
+
+/* V80 — Chân dung tràn viền thẻ Top, giống ảnh mẫu; giữ nền thẻ và vùng thông tin. */
+@media (min-width: 861px) {
+  .v48-dashboard .v48-rank-board { padding-top: 34px !important; }
+  .v48-dashboard .v48-podium .dz72-award {
+    overflow: visible !important; /* model's hair can rise past the rounded card */
+  }
+  .v48-dashboard .v48-podium .dz72-person,
+  .v48-dashboard .v48-podium .dz72-rank-1 .dz72-person {
+    position: absolute !important;
+    z-index: 2 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 62% !important;
+    height: 100% !important;
+    overflow: visible !important;
+    display: block !important;
+    pointer-events: none !important;
+  }
+  .v48-dashboard .v48-podium .dz72-person:not(.dz72-no-photo) img {
+    position: absolute !important;
+    display: block !important;
+    right: -46px !important;
+    bottom: 0 !important;
+    width: auto !important;
+    height: 112% !important;
+    max-width: none !important;
+    max-height: none !important;
+    object-fit: contain !important;
+    object-position: right bottom !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    transform: none !important;
+    filter: drop-shadow(-5px 9px 15px rgba(24,10,16,.16)) !important;
+  }
+  .v48-dashboard .v48-podium .dz72-rank-1 .dz72-person:not(.dz72-no-photo) img {
+    right: -44px !important;
+    height: 117% !important;
+  }
+  /* The info zone remains above the portrait and stays readable. */
+  .v48-dashboard .v48-podium .dz72-copy,
+  .v48-dashboard .v48-podium .dz72-rank-1 .dz72-copy {
+    z-index: 4 !important;
+  }
+}
+@media (min-width: 861px) and (max-width: 1200px) {
+  .v48-dashboard .v48-podium .dz72-person:not(.dz72-no-photo) img {
+    height: 109% !important;
+    right: -33px !important;
+  }
+  .v48-dashboard .v48-podium .dz72-rank-1 .dz72-person:not(.dz72-no-photo) img {
+    height: 113% !important;
+    right: -34px !important;
+  }
+}
+@media (max-width: 860px) {
+  .v48-dashboard .v48-podium .dz72-award { overflow: hidden !important; }
+  .v48-dashboard .v48-podium .dz72-person,
+  .v48-dashboard .v48-podium .dz72-rank-1 .dz72-person {
+    right: 0 !important;
+    width: 56% !important;
+    height: 100% !important;
+    overflow: visible !important;
+  }
+  .v48-dashboard .v48-podium .dz72-person:not(.dz72-no-photo) img {
+    width: auto !important;
+    height: 112% !important;
+    max-width: none !important;
+    max-height: none !important;
+    object-fit: contain !important;
+    object-position: right bottom !important;
+    transform: translateX(22px) !important;
+  }
+  .v48-dashboard .v48-podium .dz72-rank-1 .dz72-person:not(.dz72-no-photo) img {
+    height: 115% !important;
+  }
+}
+@media (min-width: 861px) {
+  /* Clip only the right/bottom overscan; allow hair to rise over the top border. */
+  .v48-dashboard .v48-podium .dz72-person:not(.dz72-no-photo) {
+    clip-path: inset(-72px 0 0 -190px) !important;
+  }
+}
+
+
+/* V81: add user-provided rank icons beside TOP 1/2/3 labels */
+.v48-dashboard .v48-podium .dz72-tag{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:8px!important;
+  padding-left:12px!important;
+  padding-right:14px!important;
+}
+.v48-dashboard .v48-podium .dz72-tag-label{
+  display:inline-block!important;
+  line-height:1!important;
+}
+.v48-dashboard .v48-podium .dz72-rank-tag-icon{
+  display:block!important;
+  width:22px!important;
+  height:22px!important;
+  object-fit:contain!important;
+  flex:0 0 auto!important;
+  filter:drop-shadow(0 3px 6px rgba(0,0,0,.12))!important;
+}
+.v48-dashboard .v48-podium .dz72-rank-tag-icon-1{
+  width:24px!important;
+  height:24px!important;
+}
+.v48-dashboard .v48-podium .dz72-rank-tag-icon-2,
+.v48-dashboard .v48-podium .dz72-rank-tag-icon-3{
+  width:21px!important;
+  height:21px!important;
+}
+@media (max-width: 860px){
+  .v48-dashboard .v48-podium .dz72-rank-tag-icon{width:18px!important;height:18px!important}
+  .v48-dashboard .v48-podium .dz72-rank-tag-icon-1{width:20px!important;height:20px!important}
+}
+
+
+/* V82 — podium portrait nudge and single-line labels, aligned to approved demo. */
+.v48-dashboard .v48-podium .dz72-name {
+  display: block !important;
+  width: max-content !important;
+  max-width: none !important;
+  overflow: visible !important;
+  white-space: nowrap !important;
+  overflow-wrap: normal !important;
+  word-break: keep-all !important;
+  -webkit-line-clamp: unset !important;
+  line-clamp: unset !important;
+  -webkit-box-orient: initial !important;
+  font-size: 22px !important;
+  font-weight: 850 !important;
+  line-height: 1.15 !important;
+  letter-spacing: -0.025em !important;
+}
+.v48-dashboard .v48-podium .dz72-rank-1 .dz72-name {
+  font-size: 24px !important;
+}
+.v48-dashboard .v48-podium .dz72-store {
+  display: block !important;
+  width: max-content !important;
+  max-width: none !important;
+  overflow: visible !important;
+  white-space: nowrap !important;
+  overflow-wrap: normal !important;
+  word-break: keep-all !important;
+  font-size: 16px !important;
+  line-height: 1.3 !important;
+  font-weight: 400 !important;
+}
+/* Permit a single-line name/store to extend beyond the 40% text column (like the demo),
+   while the target percentage itself remains inside its original column. */
+.v48-dashboard .v48-podium .dz72-copy {
+  overflow: visible !important;
+}
+@media (min-width: 861px) {
+  .v48-dashboard .v48-podium .dz72-person:not(.dz72-no-photo) img {
+    right: -20px !important;
+  }
+  .v48-dashboard .v48-podium .dz72-rank-1 .dz72-person:not(.dz72-no-photo) img {
+    right: -18px !important;
+  }
+}
+@media (min-width: 861px) and (max-width: 1200px) {
+  .v48-dashboard .v48-podium .dz72-person:not(.dz72-no-photo) img {
+    right: -16px !important;
+  }
+  .v48-dashboard .v48-podium .dz72-rank-1 .dz72-person:not(.dz72-no-photo) img {
+    right: -16px !important;
+  }
+}
+@media (max-width: 860px) {
+  .v48-dashboard .v48-podium .dz72-person:not(.dz72-no-photo) img,
+  .v48-dashboard .v48-podium .dz72-rank-1 .dz72-person:not(.dz72-no-photo) img {
+    transform: translateX(3px) !important;
+  }
+}
+
+
+/* V83 — rebalance podium cards: portrait slightly smaller, typography slightly smaller. */
+.v48-dashboard .v48-podium .dz72-name {
+  font-size: 20px !important;
+  line-height: 1.12 !important;
+}
+.v48-dashboard .v48-podium .dz72-rank-1 .dz72-name {
+  font-size: 22px !important;
+}
+.v48-dashboard .v48-podium .dz72-store {
+  font-size: 14px !important;
+  margin-bottom: 16px !important;
+}
+.v48-dashboard .v48-podium .dz72-goal-label {
+  font-size: 12px !important;
+}
+.v48-dashboard .v48-podium .dz72-goal strong {
+  font-size: 28px !important;
+}
+@media (min-width: 861px) {
+  .v48-dashboard .v48-podium .dz72-copy {
+    width: 52% !important;
+  }
+  .v48-dashboard .v48-podium .dz72-rank-1 .dz72-copy {
+    width: 50% !important;
+  }
+  .v48-dashboard .v48-podium .dz72-person,
+  .v48-dashboard .v48-podium .dz72-rank-1 .dz72-person {
+    width: 44% !important;
+  }
+  .v48-dashboard .v48-podium .dz72-person:not(.dz72-no-photo) img {
+    height: 94% !important;
+    max-height: 94% !important;
+    transform: translateX(-12px) !important;
+  }
+  .v48-dashboard .v48-podium .dz72-rank-1 .dz72-person:not(.dz72-no-photo) img {
+    height: 96% !important;
+    max-height: 96% !important;
+    transform: translateX(-10px) !important;
+  }
+}
+@media (max-width: 860px) {
+  .v48-dashboard .v48-podium .dz72-name {font-size: 18px !important;}
+  .v48-dashboard .v48-podium .dz72-rank-1 .dz72-name {font-size: 19px !important;}
+  .v48-dashboard .v48-podium .dz72-store {font-size: 13px !important; margin-bottom: 12px !important;}
+  .v48-dashboard .v48-podium .dz72-goal strong {font-size: 22px !important;}
+}
+
+
+/* V84 — equalize Top 2 & Top 3 card size, refine typography and label styling */
+.v48-dashboard .v48-podium .dz72-rank-2,
+.v48-dashboard .v48-podium .dz72-rank-3 {
+  height: 260px !important;
+  min-height: 260px !important;
+  width: 100% !important;
+}
+.v48-dashboard .v48-podium .dz72-tag {
+  height: 36px !important;
+  min-width: 96px !important;
+  padding: 0 15px !important;
+  gap: 8px !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  letter-spacing: -.01em !important;
+  border-width: 1px !important;
+}
+.v48-dashboard .v48-podium .dz72-rank-1 .dz72-tag {
+  height: 38px !important;
+  min-width: 112px !important;
+  font-size: 15px !important;
+}
+.v48-dashboard .v48-podium .dz72-rank-tag-icon {width: 18px !important; height: 18px !important;}
+.v48-dashboard .v48-podium .dz72-rank-tag-icon-1 {width: 19px !important; height: 19px !important;}
+
+.v48-dashboard .v48-podium .dz72-name {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  font-size: 18px !important;
+  line-height: 1.12 !important;
+  font-weight: 760 !important;
+  letter-spacing: -0.022em !important;
+}
+.v48-dashboard .v48-podium .dz72-rank-1 .dz72-name {
+  font-size: 20px !important;
+  font-weight: 780 !important;
+}
+.v48-dashboard .v48-podium .dz72-store {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  font-size: 14px !important;
+  line-height: 1.25 !important;
+  font-weight: 500 !important;
+  margin-bottom: 14px !important;
+  opacity: .92 !important;
+}
+.v48-dashboard .v48-podium .dz72-rule {
+  width: 82% !important;
+  margin: 10px 0 9px !important;
+}
+.v48-dashboard .v48-podium .dz72-goal {
+  min-width: 116px !important;
+  padding: 10px 13px !important;
+  border-radius: 16px !important;
+}
+.v48-dashboard .v48-podium .dz72-goal-label {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: -.01em !important;
+}
+.v48-dashboard .v48-podium .dz72-goal strong {
+  font-size: 24px !important;
+  margin-top: 4px !important;
+  font-weight: 820 !important;
+}
+@media (min-width: 861px) {
+  .v48-dashboard .v48-podium .dz72-copy {
+    width: 54% !important;
+    left: 20px !important;
+    bottom: 18px !important;
+  }
+  .v48-dashboard .v48-podium .dz72-rank-1 .dz72-copy {
+    width: 52% !important;
+    left: 28px !important;
+    bottom: 24px !important;
+  }
+  .v48-dashboard .v48-podium .dz72-person {
+    width: 42% !important;
+  }
+  .v48-dashboard .v48-podium .dz72-rank-1 .dz72-person {
+    width: 44% !important;
+  }
+  .v48-dashboard .v48-podium .dz72-person:not(.dz72-no-photo) img {
+    height: 88% !important;
+    max-height: 88% !important;
+    transform: translateX(-10px) !important;
+  }
+  .v48-dashboard .v48-podium .dz72-rank-1 .dz72-person:not(.dz72-no-photo) img {
+    height: 91% !important;
+    max-height: 91% !important;
+    transform: translateX(-8px) !important;
+  }
+}
+@media (max-width: 860px) {
+  .v48-dashboard .v48-podium .dz72-rank-2,
+  .v48-dashboard .v48-podium .dz72-rank-3,
+  .v48-dashboard .v48-podium .dz72-rank-1 {height: 272px !important; min-height: 272px !important;}
+  .v48-dashboard .v48-podium .dz72-name {font-size: 17px !important;}
+  .v48-dashboard .v48-podium .dz72-rank-1 .dz72-name {font-size: 18px !important;}
+  .v48-dashboard .v48-podium .dz72-store {font-size: 13px !important;}
+  .v48-dashboard .v48-podium .dz72-goal strong {font-size: 22px !important;}
+}
+
+/* V85 — center the trophy and TOP 1 text together within the badge. */
+.v48-dashboard .v48-podium .dz72-award.dz72-rank-1 .dz72-tag {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 7px !important;
+  box-sizing: border-box !important;
+  width: 124px !important;
+  min-width: 124px !important;
+  height: 38px !important;
+  padding: 0 10px !important;
+  text-align: center !important;
+  line-height: 1 !important;
+}
+.v48-dashboard .v48-podium .dz72-award.dz72-rank-1 .dz72-tag-label {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  white-space: nowrap !important;
+  line-height: 1 !important;
+  transform: none !important;
+}
+.v48-dashboard .v48-podium .dz72-award.dz72-rank-1 .dz72-rank-tag-icon-1 {
+  display: block !important;
+  width: 20px !important;
+  height: 20px !important;
+  flex: 0 0 20px !important;
+  margin: 0 !important;
+  object-fit: contain !important;
+  transform: none !important;
+}
+@media (max-width: 860px) {
+  .v48-dashboard .v48-podium .dz72-award.dz72-rank-1 .dz72-tag {
+    width: 112px !important;
+    min-width: 112px !important;
+    height: 34px !important;
+  }
+  .v48-dashboard .v48-podium .dz72-award.dz72-rank-1 .dz72-rank-tag-icon-1 {
+    width: 18px !important;
+    height: 18px !important;
+    flex-basis: 18px !important;
+  }
+}
+
+
+/* V86 — slim DEZUS-inspired rank badges, light wordmark-style TOP labels */
+/* Only the TOP badge styles change; podium card, image, revenue and navigation stay intact. */
+.v48-dashboard .v48-podium .dz72-award .dz72-tag,
+.v48-dashboard .v48-podium .dz72-award.dz72-rank-1 .dz72-tag,
+.v48-dashboard .v48-podium .dz72-award.dz72-rank-2 .dz72-tag,
+.v48-dashboard .v48-podium .dz72-award.dz72-rank-3 .dz72-tag {
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  width: auto !important;
+  min-width: 88px !important;
+  max-width: max-content !important;
+  height: 30px !important;
+  padding: 0 11px !important;
+  border: 1px solid rgba(92, 81, 89, .16) !important;
+  border-radius: 999px !important;
+  box-shadow: none !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+}
+.v48-dashboard .v48-podium .dz72-award.dz72-rank-1 .dz72-tag {
+  min-width: 97px !important;
+  height: 32px !important;
+  background: #fff4eb !important;
+  color: #69252e !important;
+  border-color: rgba(255, 255, 255, .38) !important;
+}
+.v48-dashboard .v48-podium .dz72-award.dz72-rank-2 .dz72-tag {
+  background: #f0f2f5 !important;
+  color: #39404b !important;
+  border-color: rgba(72, 84, 101, .14) !important;
+}
+.v48-dashboard .v48-podium .dz72-award.dz72-rank-3 .dz72-tag {
+  background: #f8eef0 !important;
+  color: #763944 !important;
+  border-color: rgba(133, 66, 80, .14) !important;
+}
+.v48-dashboard .v48-podium .dz72-award .dz72-tag-label,
+.v48-dashboard .v48-podium .dz72-award.dz72-rank-1 .dz72-tag-label {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-family: 'Century Gothic', 'Avenir Next', 'Helvetica Neue', 'Segoe UI', Arial, sans-serif !important;
+  font-size: 11.5px !important;
+  font-weight: 400 !important;
+  letter-spacing: .13em !important;
+  line-height: 1 !important;
+  text-transform: uppercase !important;
+  white-space: nowrap !important;
+  transform: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+.v48-dashboard .v48-podium .dz72-award .dz72-rank-tag-icon,
+.v48-dashboard .v48-podium .dz72-award .dz72-rank-tag-icon-1,
+.v48-dashboard .v48-podium .dz72-award .dz72-rank-tag-icon-2,
+.v48-dashboard .v48-podium .dz72-award .dz72-rank-tag-icon-3 {
+  display: block !important;
+  flex: 0 0 17px !important;
+  width: 17px !important;
+  height: 17px !important;
+  margin: 0 !important;
+  object-fit: contain !important;
+  filter: none !important;
+  transform: none !important;
+}
+@media (max-width: 860px) {
+  .v48-dashboard .v48-podium .dz72-award .dz72-tag,
+  .v48-dashboard .v48-podium .dz72-award.dz72-rank-1 .dz72-tag,
+  .v48-dashboard .v48-podium .dz72-award.dz72-rank-2 .dz72-tag,
+  .v48-dashboard .v48-podium .dz72-award.dz72-rank-3 .dz72-tag {
+    min-width: 82px !important;
+    height: 28px !important;
+    gap: 5px !important;
+    padding: 0 10px !important;
+  }
+  .v48-dashboard .v48-podium .dz72-award .dz72-tag-label,
+  .v48-dashboard .v48-podium .dz72-award.dz72-rank-1 .dz72-tag-label {
+    font-size: 10.5px !important;
+    letter-spacing: .11em !important;
+  }
+  .v48-dashboard .v48-podium .dz72-award .dz72-rank-tag-icon,
+  .v48-dashboard .v48-podium .dz72-award .dz72-rank-tag-icon-1,
+  .v48-dashboard .v48-podium .dz72-award .dz72-rank-tag-icon-2,
+  .v48-dashboard .v48-podium .dz72-award .dz72-rank-tag-icon-3 {
+    flex-basis: 15px !important;
+    width: 15px !important;
+    height: 15px !important;
+  }
+}
+
+
+/* V87: TOP labels subtly stronger; target icon supplied by user. */
+.v48-dashboard .v48-podium .dz72-award .dz72-tag-label,
+.v48-dashboard .v48-podium .dz72-award.dz72-rank-1 .dz72-tag-label {
+  font-weight: 500 !important;
+}
+.v48-dashboard .v48-podium .dz72-goal-label {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 7px !important;
+}
+.v48-dashboard .v48-podium .dz72-goal-label .dz87-goal-icon {
+  display: block !important;
+  width: 17px !important;
+  height: 17px !important;
+  object-fit: contain !important;
+  flex: 0 0 17px !important;
+  margin: 0 !important;
+}
+.v48-dashboard .v48-podium .dz72-goal-label > span {
+  display: inline !important;
+  white-space: nowrap !important;
+}
+@media (max-width: 860px) {
+  .v48-dashboard .v48-podium .dz72-goal-label .dz87-goal-icon {
+    width: 15px !important;
+    height: 15px !important;
+    flex-basis: 15px !important;
+  }
+}
+
+
+/* V88 - make TOP label text bolder */
+.v48-dashboard .v48-podium .dz72-tag{
+  font-weight: 900 !important;
+  letter-spacing: .015em !important;
+}
+.v48-dashboard .v48-podium .dz72-tag .dz72-rank-tag-label,
+.v48-dashboard .v48-podium .dz72-tag span,
+.v48-dashboard .v48-podium .dz72-tag b{
+  font-weight: 900 !important;
+}

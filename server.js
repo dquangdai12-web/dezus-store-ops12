@@ -591,6 +591,7 @@ function publicUser(row) {
     store_names: u.store_names || [],
     transfer_managed: Boolean(row.transfer_managed),
     status: u.status,
+    avatar_url: u.avatar_url || '',
     inactive_at: u.inactive_at || u.deleted_at || null,
     inactive_by: u.inactive_by || u.deleted_by || null,
     permissions: getPermissions(u.id, u.role)
@@ -2898,6 +2899,18 @@ app.get('/api/bootstrap', requireAuth, (req, res) => {
   res.json({ stores, users, currentUser: req.user });
 });
 
+app.post('/api/users/photo', requireAuth, requirePerm('can_manage_users'), upload.single('image'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'Vui lòng chọn ảnh nhân viên' });
+  const saved = saveUploadedFile(req.file);
+  const fullPath = path.join(UPLOAD_DIR, path.basename(String(saved || '')));
+  const mime = evidenceMimeType(fullPath);
+  if (!/^image\//i.test(mime || '')) {
+    removeLocalEvidenceFile(saved);
+    return res.status(400).json({ error: 'Chỉ hỗ trợ file ảnh' });
+  }
+  res.json({ ok: true, avatar_url: saved });
+});
+
 app.get('/api/users', requireAuth, requirePerm('can_manage_users'), (req, res) => {
   const statusMode = ['active', 'inactive', 'all'].includes(String(req.query.status || 'active')) ? String(req.query.status || 'active') : 'active';
   let rows = (db.users || []).filter(u => u.status !== 'deleted');
@@ -3070,12 +3083,14 @@ app.delete('/api/stores/:id', requireAuth, (req, res) => {
 
 
 app.post('/api/users', requireAuth, requirePerm('can_manage_users'), (req, res) => {
-  const { full_name, username, password, role, store_id, store_ids, permissions } = req.body || {};
+  const { full_name, username, password, role, store_id, store_ids, permissions, avatar_url } = req.body || {};
   if (!full_name || !username || !password || !['admin', 'office', 'manager', 'employee'].includes(role)) return res.status(400).json({ error: 'Thiếu thông tin tài khoản' });
   if (db.users.some(u => String(u.username).toLowerCase() === String(username).trim().toLowerCase())) return res.status(400).json({ error: 'Tên đăng nhập đã tồn tại' });
+  const cleanAvatar = String(avatar_url || '').trim();
+  if (cleanAvatar && !/^\/uploads\//i.test(cleanAvatar) && !/^https?:\/\//i.test(cleanAvatar)) return res.status(400).json({ error: 'Đường dẫn ảnh nhân viên không hợp lệ' });
   const id = nextId('users');
   const normalizedStoreIds = normalizeStoreIds(Array.isArray(store_ids) ? store_ids : (store_id ? [store_id] : []));
-  db.users.push({ id, full_name: String(full_name).trim(), username: String(username).trim(), password_hash: bcrypt.hashSync(String(password), 10), role, store_id: normalizedStoreIds[0] || null, store_ids: normalizedStoreIds, status: 'active', created_at: nowIso() });
+  db.users.push({ id, full_name: String(full_name).trim(), username: String(username).trim(), password_hash: bcrypt.hashSync(String(password), 10), role, avatar_url: cleanAvatar || '', store_id: normalizedStoreIds[0] || null, store_ids: normalizedStoreIds, status: 'active', created_at: nowIso() });
   const inputPerms = permissions && typeof permissions === 'object' ? permissions : {};
   const hasAnyPerm = Object.values(inputPerms).some(v => Number(v) === 1);
   setPermissions(id, role, role === 'office' && !hasAnyPerm ? ROLE_DEFAULTS.office : inputPerms);
@@ -3087,9 +3102,15 @@ app.patch('/api/users/:id', requireAuth, requirePerm('can_manage_users'), (req, 
   const id = Number(req.params.id);
   const existing = getUser(id);
   if (!existing) return res.status(404).json({ error: 'Không tìm thấy tài khoản' });
-  const { full_name, role, store_id, store_ids, status, password, permissions } = req.body || {};
+  const { full_name, role, store_id, store_ids, status, password, permissions, avatar_url } = req.body || {};
   if (full_name) existing.full_name = full_name;
   if (role && ['admin', 'office', 'manager', 'employee'].includes(role)) existing.role = role;
+  if (avatar_url !== undefined) {
+    const cleanAvatar = String(avatar_url || '').trim();
+    if (cleanAvatar && !/^\/uploads\//i.test(cleanAvatar) && !/^https?:\/\//i.test(cleanAvatar)) return res.status(400).json({ error: 'Đường dẫn ảnh nhân viên không hợp lệ' });
+    if (existing.avatar_url && existing.avatar_url !== cleanAvatar && /^\/uploads\//i.test(String(existing.avatar_url))) removeLocalEvidenceFile(existing.avatar_url);
+    existing.avatar_url = cleanAvatar || '';
+  }
   const nextStoreIds = store_ids === undefined ? getUserStoreIds(existing) : normalizeStoreIds(Array.isArray(store_ids) ? store_ids : (store_id ? [store_id] : []));
   existing.store_ids = nextStoreIds;
   existing.store_id = nextStoreIds[0] || null;
@@ -3120,6 +3141,7 @@ app.delete('/api/users/:id', requireAuth, requirePerm('can_delete_users'), (req,
     const activeAdmins = db.users.filter(u => u.status === 'active' && u.role === 'admin');
     if (activeAdmins.length <= 1) return res.status(400).json({ error: 'Không thể xóa admin cuối cùng của hệ thống' });
   }
+  if (existing?.avatar_url && /^\/uploads\//i.test(String(existing.avatar_url))) removeLocalEvidenceFile(existing.avatar_url);
   // Xóa vĩnh viễn tài khoản nhập sai và toàn bộ dữ liệu cá nhân gắn trực tiếp với tài khoản.
   db.users = (db.users || []).filter(u => Number(u.id) !== id);
   db.permissions = (db.permissions || []).filter(p => Number(p.user_id) !== id);

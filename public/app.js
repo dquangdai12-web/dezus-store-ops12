@@ -679,7 +679,7 @@ function navItems() {
     ['cdp_ojti', 'CDP / OJTI', 'OJTI', 'work'],
     ['tasks', 'Công việc', '✓', 'work'],
     ['checklists', 'Checklist', '★', 'work'],
-    ['schedule', 'Lịch làm việc', '↗', 'work'],
+    ['schedule', 'Lịch làm việc', '↗', 'schedule'],
     ['violations', 'Vi phạm', '!', 'work'],
     ['documents', 'Tài liệu', '☰', 'more'],
     ['reports', 'Tổng hợp điểm', '100', 'more'],
@@ -733,15 +733,16 @@ function appUiIcon(name) {
 
 
 // V47 navigation skin only. The original routes, permission rules and API functions stay intact.
-const DEZUS_MENU_ICON_GROUP = {'dashboard':'/assets/v47/icon-dashboard.png','work':'/assets/v47/icon-work.png','daily_overview':'/assets/v47/icon-report.png','revenue':'/assets/v47/icon-sales.png','product':'/assets/v47/icon-product.png','more':'/assets/v47/icon-folder-doc.png','system':'/assets/v47/icon-system.png'};
+const DEZUS_MENU_ICON_GROUP = {'overview':'/assets/v76/icon-tong-quan.png','dashboard':'/assets/v76/icon-tong-quan.png','work':'/assets/v47/icon-work.png','schedule':'/assets/v47/child-schedule.png','daily_overview':'/assets/v47/icon-report.png','revenue':'/assets/v47/icon-sales.png','product':'/assets/v47/icon-product.png','more':'/assets/v47/icon-folder-doc.png','system':'/assets/v47/icon-system.png'};
 const DEZUS_MENU_ICON_CHILD = {'tasks':'/assets/v47/child-tasks.png','cdp_ojti':'/assets/v47/child-cdp_ojti.png','checklists':'/assets/v47/child-checklists.png','schedule':'/assets/v47/child-schedule.png','violations':'/assets/v47/child-violations.png','sales':'/assets/v47/child-sales.png','daily_report':'/assets/v47/child-daily_report.png','weekly_report':'/assets/v47/child-weekly_report.png','loyalty':'/assets/v47/child-loyalty.png','ggnv':'/assets/v47/child-ggnv.png','online_orders':'/assets/v47/child-online_orders.png','bonuses':'/assets/v47/child-sales.png','orders':'/assets/v47/child-orders.png','product_analytics':'/assets/v47/child-product_analytics.png','documents':'/assets/v47/child-documents.png','reports':'/assets/v47/child-reports.png','account':'/assets/v47/child-account.png','admin':'/assets/v47/child-admin.png','store_daily_summary':'/assets/v47/icon-report.png'};
 function dezusNavPicture(src) { return src ? `<img class="v47-nav-picture" src="${src}" alt="" aria-hidden="true">` : ''; }
 
 function navGroups() {
   return [
-    { key:'overview', label:'Tổng Quan', icon:appUiIcon('home'), ids:['dashboard'] },
+    { key:'overview', label:'Tổng Quan', icon:dezusNavPicture('/assets/v76/icon-tong-quan.png'), ids:['dashboard'] },
     { key:'daily_overview', label:'Tổng hợp báo cáo ngày', icon:appUiIcon('weekly'), ids:['store_daily_summary'] },
-    { key:'work', label:'Công việc', icon:appUiIcon('checklist'), ids:['tasks','cdp_ojti','checklists','schedule','violations'] },
+    { key:'work', label:'Công việc', icon:appUiIcon('checklist'), ids:['tasks','cdp_ojti','checklists','violations'] },
+    { key:'schedule', label:'Lịch làm việc', icon:appUiIcon('calendar'), ids:['schedule'] },
     { key:'revenue', label:'Doanh thu', icon:appUiIcon('revenue'), ids:['sales','daily_report','weekly_report','loyalty','ggnv','online_orders','bonuses'] },
     { key:'product', label:'Sản phẩm', icon:appUiIcon('product'), ids:['orders','product_analytics'] },
     { key:'more', label:'Tài liệu', icon:appUiIcon('document'), ids:['documents','reports'] },
@@ -751,9 +752,10 @@ function navGroups() {
 
 function mobileNavGroups() {
   return [
-    { key:'overview', label:'Tổng Quan', icon:appUiIcon('home'), ids:['dashboard'] },
+    { key:'overview', label:'Tổng Quan', icon:dezusNavPicture('/assets/v76/icon-tong-quan.png'), ids:['dashboard'] },
     { key:'daily_overview', label:'Tổng hợp báo cáo ngày', icon:appUiIcon('weekly'), ids:['store_daily_summary'] },
-    { key:'work', label:'Công việc', icon:appUiIcon('tasks'), ids:['tasks','cdp_ojti','checklists','schedule','violations'] },
+    { key:'work', label:'Công việc', icon:appUiIcon('tasks'), ids:['tasks','cdp_ojti','checklists','violations'] },
+    { key:'schedule', label:'Lịch làm việc', icon:appUiIcon('calendar'), ids:['schedule'] },
     { key:'revenue', label:'Doanh thu', icon:appUiIcon('revenue'), ids:['sales','daily_report','weekly_report','loyalty','ggnv','online_orders','bonuses'] },
     { key:'product', label:'Sản phẩm', icon:appUiIcon('product'), ids:['orders','product_analytics'] },
     { key:'more', label:'Thêm', icon:appUiIcon('more'), ids:['documents','reports','account','admin'] },
@@ -762,7 +764,7 @@ function mobileNavGroups() {
 
 function mobileIconFor(id) {
   return ({
-    dashboard:appUiIcon('home'),
+    dashboard:dezusNavPicture('/assets/v76/icon-tong-quan.png'),
     tasks:appUiIcon('tasks'),
     cdp_ojti:appUiIcon('people'),
     checklists:appUiIcon('checklist'),
@@ -902,16 +904,7 @@ function renderLogin() {
           <button class="btn" style="width:100%;margin-top:8px">Đăng nhập</button>
           
         </section>
-        <section class="login-art-panel">
-          <div class="glass-badge">DEZUS STORE OPS</div>
-          <h3>Vận hành cửa hàng</h3>
-          <p>Giao việc • Checklist • Vi phạm • KPI 100 điểm</p>
-          <div class="mini-metrics">
-            <div><b>100</b><span>Điểm tổng</span></div>
-            <div><b>3</b><span>Checklist</span></div>
-            <div><b>CSV</b><span>Tải dữ liệu</span></div>
-          </div>
-        </section>
+        <section class="login-art-panel login-fashion-panel" role="img" aria-label="Ảnh thời trang DEZUS"></section>
       </form>
     </div>`;
   $('#loginForm').onsubmit = async (e) => {
@@ -1021,6 +1014,76 @@ function premiumRankIcon(rank) {
   return '';
 }
 
+function employeePhotoUrl(row) {
+  const users = Array.isArray(state.boot?.users) ? state.boot.users : [];
+  const uid = Number(row?.user_id || row?.id || 0);
+  const byId = uid ? users.find(u => Number(u.id) === uid) : null;
+  if (byId?.avatar_url) return String(byId.avatar_url);
+  const fullName = String(row?.full_name || row?.name || '').trim().toLowerCase();
+  const storeName = String(row?.store_name || '').trim().toLowerCase();
+  const byName = users.find(u => String(u.full_name || '').trim().toLowerCase() === fullName && (!storeName || String(u.store_name || '').trim().toLowerCase() === storeName));
+  return byName?.avatar_url ? String(byName.avatar_url) : '';
+}
+
+function userPhotoFieldsHtml(currentUrl = '') {
+  const safeUrl = esc(currentUrl || '');
+  const preview = currentUrl
+    ? `<div class="admin-user-photo-preview has-photo"><img src="${safeUrl}" alt="Ảnh nhân viên"></div>`
+    : '<div class="admin-user-photo-preview"><span>Chưa có ảnh nhân viên</span></div>';
+  return `<div class="field admin-user-photo-field admin-user-photo-main"><label>Ảnh nhân viên</label>${preview}<input type="hidden" name="avatar_url" value="${safeUrl}"></div><div class="field admin-user-photo-field admin-user-photo-side"><label>Tải ảnh lên</label><input class="input" type="file" name="avatar_file" accept="image/*"><div class="hint">Nên tải PNG chân dung đã tách nền. Ảnh sẽ hiện trên thẻ Top doanh thu, không thay nền có sẵn. Nên dùng ảnh chân dung PNG đã cắt sẵn nền để hệ thống đè trực tiếp lên mẫu Top 1 / Top 2 / Top 3.</div><div class="admin-user-photo-actions"><button class="btn secondary small userPhotoClearBtn" type="button">Xóa ảnh</button></div></div>`;
+}
+
+function refreshUserPhotoPreview(formEl) {
+  if (!formEl) return;
+  const wrap = formEl.querySelector('.admin-user-photo-preview');
+  const hidden = formEl.elements?.avatar_url;
+  const fileInput = formEl.elements?.avatar_file;
+  if (!wrap || !hidden) return;
+  if (fileInput?.files?.[0]) {
+    const src = URL.createObjectURL(fileInput.files[0]);
+    wrap.classList.add('has-photo');
+    wrap.innerHTML = `<img src="${src}" alt="Ảnh nhân viên">`;
+    return;
+  }
+  const src = String(hidden.value || '').trim();
+  if (src) {
+    wrap.classList.add('has-photo');
+    wrap.innerHTML = `<img src="${esc(src)}" alt="Ảnh nhân viên">`;
+  } else {
+    wrap.classList.remove('has-photo');
+    wrap.innerHTML = '<span>Chưa có ảnh nhân viên</span>';
+  }
+}
+
+function mountUserPhotoFields(formEl, currentUrl = '') {
+  if (!formEl || formEl.querySelector('[name="avatar_file"]')) return;
+  const actionRow = Array.from(formEl.children).find(el => String(el.style?.gridColumn || '').includes('1 / -1') || String(el.getAttribute?.('style') || '').includes('grid-column:1/-1'));
+  if (actionRow) actionRow.insertAdjacentHTML('beforebegin', userPhotoFieldsHtml(currentUrl));
+  else formEl.insertAdjacentHTML('beforeend', userPhotoFieldsHtml(currentUrl));
+  formEl.querySelector('[name="avatar_file"]')?.addEventListener('change', () => refreshUserPhotoPreview(formEl));
+  formEl.querySelector('.userPhotoClearBtn')?.addEventListener('click', () => {
+    if (formEl.elements?.avatar_file) formEl.elements.avatar_file.value = '';
+    if (formEl.elements?.avatar_url) formEl.elements.avatar_url.value = '';
+    refreshUserPhotoPreview(formEl);
+  });
+  refreshUserPhotoPreview(formEl);
+}
+
+async function uploadUserPhotoIfNeeded(formEl) {
+  const fileInput = formEl?.elements?.avatar_file;
+  const currentUrl = String(formEl?.elements?.avatar_url?.value || '').trim();
+  const file = fileInput?.files?.[0];
+  if (!file) return currentUrl;
+  const fdImg = new FormData();
+  fdImg.append('image', file);
+  const resp = await fetch('/api/users/photo', { method: 'POST', headers: state.token ? { Authorization: 'Bearer ' + state.token } : {}, body: fdImg });
+  const data = await resp.json().catch(() => ({}));
+  if (!resp.ok) throw new Error(data.error || 'Không tải được ảnh nhân viên');
+  if (formEl?.elements?.avatar_url) formEl.elements.avatar_url.value = data.avatar_url || '';
+  refreshUserPhotoPreview(formEl);
+  return data.avatar_url || '';
+}
+
 function overviewLeaderboardCards(rows) {
   if (!rows?.length) return '<div class="empty">Chưa có dữ liệu doanh thu/target</div>';
   const isMobile = window.matchMedia('(max-width: 860px)').matches;
@@ -1118,6 +1181,33 @@ async function overviewPerformanceForPeriod(ctx) {
   return { final_score: Math.round(avg*100)/100, months_count: rows.length };
 }
 
+// Fit podium names/store labels on one line, without changing the underlying names.
+function fitPodiumTextToOneLine() {
+  const awards = document.querySelectorAll('#overviewPage .v48-podium .dz72-award');
+  awards.forEach(card => {
+    const width = card.getBoundingClientRect().width;
+    if (!width) return;
+    const textBudget = width * (width >= 350 ? 0.76 : 0.79);
+    [
+      [card.querySelector('.dz72-name'), card.classList.contains('dz72-rank-1') ? 24 : 22, 12],
+      [card.querySelector('.dz72-store'), 16, 10]
+    ].forEach(([label, preferred, minimum]) => {
+      if (!label) return;
+      label.style.setProperty('font-size', preferred + 'px', 'important');
+      const naturalWidth = label.getBoundingClientRect().width;
+      if (naturalWidth > textBudget) {
+        const fitted = Math.max(minimum, Math.floor(preferred * textBudget / naturalWidth));
+        label.style.setProperty('font-size', fitted + 'px', 'important');
+      }
+    });
+  });
+}
+if (typeof window !== 'undefined') {
+  window.addEventListener('resize', () => {
+    if (document.querySelector('#overviewPage .v48-podium')) fitPodiumTextToOneLine();
+  }, { passive: true });
+}
+
 async function renderDashboard() {
   const ctx = overviewPeriodContext();
   const [tasksData, leaderboardData, myPerf] = await Promise.all([
@@ -1137,13 +1227,40 @@ async function renderDashboard() {
   const rankPct = r => Number(r.achievement_percent ?? 0).toLocaleString('vi-VN',{maximumFractionDigits:1}) + '%';
   const topRows = leaderboardRows.slice(0,3);
   const podiumOrder = [topRows[1],topRows[0],topRows[2]].filter(Boolean);
+  const rankTagIcon = rank => {
+    if (rank === 1) return '<img class="dz72-rank-tag-icon dz72-rank-tag-icon-1" src="/assets/top1-rank.png" alt="Top 1">';
+    if (rank === 2) return '<img class="dz72-rank-tag-icon dz72-rank-tag-icon-2" src="/assets/top2-rank.png" alt="Top 2">';
+    if (rank === 3) return '<img class="dz72-rank-tag-icon dz72-rank-tag-icon-3" src="/assets/top3-rank.png" alt="Top 3">';
+    return '';
+  };
+
   const podium = podiumOrder.map(r => {
-    const rank=topRows.indexOf(r)+1;
-    const name=userDisplayName(r);
-    const initials=String(r.full_name || r.name || 'D').trim().split(/\s+/).slice(-2).map(x=>x[0]||'').join('').toUpperCase();
-    return `<article class="v48-rank-card v48-top${rank}"><span class="v48-rank-label">TOP ${rank}</span><div class="v48-rank-avatar">${esc(initials)}</div><strong class="v48-rank-name">${name}</strong><div class="v48-rank-percent">${rankPct(r)}</div><small>Đạt target cá nhân</small></article>`;
+    const rank = topRows.indexOf(r) + 1;
+    const name = userDisplayName(r);
+    const initials = String(r.full_name || r.name || 'D').trim().split(/\s+/).slice(-2).map(x => x[0] || '').join('').toUpperCase();
+    const photoUrl = employeePhotoUrl(r);
+    // Profile photos belong only to their actual users: no demo image for another employee.
+    const photoHtml = photoUrl
+      ? `<div class="dz72-person"><img src="${esc(photoUrl)}" alt="Chân dung ${name}" loading="eager" draggable="false" onerror="this.parentElement.classList.add('dz72-no-photo');this.remove()"><span class="dz72-fallback-initials">${esc(initials)}</span></div>`
+      : `<div class="dz72-person dz72-no-photo"><span>${esc(initials)}</span></div>`;
+    return `<article class="dz72-award dz72-rank-${rank}" title="${esc(r.full_name || '')}">
+      <div class="dz72-tag">${rankTagIcon(rank)}<span class="dz72-tag-label">TOP ${rank}</span></div>
+      <div class="dz72-copy">
+        <strong class="dz72-name">${name}</strong>
+        <span class="dz72-rule"></span>
+        <span class="dz72-store">${esc(r.store_name || 'Chưa cập nhật cửa hàng')}</span>
+        <div class="dz72-goal"><span class="dz72-goal-label"><img class="dz87-goal-icon" src="/assets/target-achievement-v87.png" alt="" aria-hidden="true"><span>% Đạt target</span></span><strong>${rankPct(r)}</strong></div>
+      </div>
+      ${photoHtml}
+    </article>`;
   }).join('');
-  const rankList = leaderboardRows.slice(3).map((r,i)=>`<div class="v48-rank-row"><span class="v48-rank-number">#${i+4}</span><strong>${userDisplayName(r)}</strong><span class="v48-rank-store">${esc(r.store_name || '')}</span><b class="v48-rank-row-pct">${rankPct(r)}</b></div>`).join('');
+  // V64: List the complete ranking, split into two balanced columns as in the user's screenshot.
+  // The first member list begins with Top 1 (podium members are also shown in the table).
+  const rankMiddle = Math.ceil(leaderboardRows.length / 2);
+  const rankTable = (rows, startRank) => `<div class="v64-rank-table-wrap"><table class="v64-rank-table"><thead><tr><th scope="col">TOP</th><th scope="col">NHÂN VIÊN</th><th scope="col">CỬA HÀNG</th><th scope="col">% ĐẠT TARGET</th></tr></thead><tbody>${rows.map((r,i) => `<tr><td><span class="v64-rank-badge">● Top ${startRank+i}</span></td><td class="v64-member-name">${userDisplayName(r)}</td><td class="v64-member-store">${esc(r.store_name || '—')}</td><td><span class="v64-rank-percent">● ${rankPct(r)}</span></td></tr>`).join('')}</tbody></table></div>`;
+  const rankList = leaderboardRows.length
+    ? `<div class="v64-member-columns">${rankTable(leaderboardRows.slice(0, rankMiddle), 1)}${rankTable(leaderboardRows.slice(rankMiddle), rankMiddle + 1)}</div>`
+    : '<div class="empty">Chưa có dữ liệu xếp hạng</div>';
   shell(`
     <section class="v48-dashboard" id="overviewPage">
       <div class="v48-fashion-hero" role="img" aria-label="Ảnh thời trang DEZUS"></div>
@@ -1152,7 +1269,7 @@ async function renderDashboard() {
       </div>
       <section class="v48-rank-board">
         <div class="v48-podium">${podium || '<div class="empty">Chưa có dữ liệu doanh thu và target cá nhân</div>'}</div>
-        <div class="v48-member-list"><div class="v48-list-title"><h3>Danh sách thành viên</h3><span>% doanh thu thực đạt / target cá nhân</span></div>${rankList || '<div class="empty">Chưa có thành viên tiếp theo</div>'}</div>
+        <div class="v48-member-list"><div class="v48-list-title"><h3>Danh sách thành viên</h3><span>% doanh thu thực đạt / target cá nhân</span></div>${rankList}</div>
       </section>
       <div class="v48-supporting-grid">
         <section class="v48-supporting-card"><h3>Tiến độ công việc</h3><div class="v48-stats"><div><span>Đang mở</span><strong>${open}</strong></div><div><span>Đúng hạn</span><strong>${done}</strong></div><div><span>Trễ hạn</span><strong>${late}</strong></div><div><span>Tỷ lệ đúng hạn</span><strong>${onTimeRate}%</strong></div></div></section>
@@ -1160,6 +1277,7 @@ async function renderDashboard() {
       </div>
     </section>
   `, 'Tổng Quan', '');
+  fitPodiumTextToOneLine();
   $('#toggleOverviewRevenueBtn')?.addEventListener('click', () => {
     state.overviewRevenueExpanded = !state.overviewRevenueExpanded;
     renderDashboard();
@@ -4646,8 +4764,10 @@ async function renderAdmin() {
   </div>` : '';
   shell(`${form}${editCard}${transferCard}${storeForm}${storeEditCard}${storeTable}<div class="card" style="margin-top:16px"><h3>Danh sách tài khoản</h3>${table}</div>${exports}${cleanupCard}`, 'Admin', 'Cấp quyền, phân quyền xem và tải dữ liệu');
   const createUserForm = $('#userForm');
+  mountUserPhotoFields(createUserForm, '');
+  mountUserPhotoFields($('#editUserForm'), editUser?.avatar_url || '');
   createUserForm?.querySelector('[name="role"]')?.addEventListener('change', () => applyRolePermissionPreset(createUserForm));
-  $('#userForm')?.addEventListener('submit', async e => { e.preventDefault(); const fd = new FormData(e.target); const permissions = {}; Object.keys(PERM_LABELS).forEach(k => permissions[k] = fd.get(k) ? 1 : 0); const payload = { full_name: fd.get('full_name'), username: fd.get('username'), password: fd.get('password'), role: fd.get('role'), store_ids: selectedValues(e.target.querySelector('[name="store_ids"]')), permissions }; try { await api('/api/users', { method: 'POST', body: JSON.stringify(payload) }); toast('Đã tạo tài khoản'); await loadBase(); renderAdmin(); } catch (err) { toast(err.message, 'danger'); } });
+  $('#userForm')?.addEventListener('submit', async e => { e.preventDefault(); try { await uploadUserPhotoIfNeeded(e.target); const fd = new FormData(e.target); const permissions = {}; Object.keys(PERM_LABELS).forEach(k => permissions[k] = fd.get(k) ? 1 : 0); const payload = { full_name: fd.get('full_name'), username: fd.get('username'), password: fd.get('password'), role: fd.get('role'), avatar_url: String(fd.get('avatar_url') || '').trim(), store_ids: selectedValues(e.target.querySelector('[name="store_ids"]')), permissions }; await api('/api/users', { method: 'POST', body: JSON.stringify(payload) }); toast('Đã tạo tài khoản'); await loadBase(); renderAdmin(); } catch (err) { toast(err.message, 'danger'); } });
 
   $('#storeForm')?.addEventListener('submit', async e => {
     e.preventDefault();
@@ -4711,12 +4831,13 @@ async function renderAdmin() {
   $('#cancelEditUserBtn2')?.addEventListener('click', () => { state.adminEditUserId = null; renderAdmin(); });
   $('#editUserForm')?.addEventListener('submit', async e => {
     e.preventDefault();
-    const fd = new FormData(e.target);
-    const permissions = {};
-    Object.keys(PERM_LABELS).forEach(k => permissions[k] = fd.get(k) ? 1 : 0);
-    const payload = { full_name: fd.get('full_name'), role: fd.get('role'), status: fd.get('status'), store_ids: selectedValues(e.target.querySelector('[name="store_ids"]')), permissions };
-    if (String(fd.get('password') || '').trim()) payload.password = String(fd.get('password')).trim();
     try {
+      await uploadUserPhotoIfNeeded(e.target);
+      const fd = new FormData(e.target);
+      const permissions = {};
+      Object.keys(PERM_LABELS).forEach(k => permissions[k] = fd.get(k) ? 1 : 0);
+      const payload = { full_name: fd.get('full_name'), role: fd.get('role'), status: fd.get('status'), avatar_url: String(fd.get('avatar_url') || '').trim(), store_ids: selectedValues(e.target.querySelector('[name="store_ids"]')), permissions };
+      if (String(fd.get('password') || '').trim()) payload.password = String(fd.get('password')).trim();
       await api(`/api/users/${fd.get('id')}`, { method: 'PATCH', body: JSON.stringify(payload) });
       toast('Đã cập nhật tài khoản / quyền');
       state.adminEditUserId = null;

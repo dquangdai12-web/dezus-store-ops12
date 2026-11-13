@@ -1,0 +1,423 @@
+DEZUS STORE OPERATIONS — THÔNG TIN PHIÊN BẢN V86
+==============================================
+
+Đây là file thông tin phiên bản và lịch sử thay đổi duy nhất trong gói mã nguồn.
+Phiên bản hiện tại: V86 (thu gọn khung TOP 1 / TOP 2 / TOP 3, chữ mảnh theo phong cách logo).
+Bản này dựa trên V76. Chỉ cập nhật kích thước Top 1 và vị trí điều hướng Lịch làm việc; chức năng bên trong không đổi.
+
+LƯU Ý
+- Chạy trên Windows: RUN_WEB.cmd (cần Node.js theo cấu hình dự án).
+- Sao lưu: BACKUP_DATA.cmd.
+- Khi cập nhật bản chạy thật, cần bảo toàn thư mục dữ liệu và ảnh đã tải lên.
+
+V77
+- Thẻ Top 1 giảm chiều cao trên màn hình máy tính, không giảm chiều cao các thẻ khác.
+- Lịch làm việc được chuyển ra khỏi nhóm Công việc, thành danh mục lớn riêng ngay dưới Công việc.
+- Điều chỉnh cả menu desktop và mobile. Giữ quyền, route schedule, API và dữ liệu cũ.
+- Giữ nguyên icon Tổng Quan đã cập nhật ở V76.
+
+LỊCH SỬ THAY ĐỔI TỪ CÁC GHI CHÚ CŨ
+=================================
+
+--- CAP_NHAT.txt ---
+BẢN 4.235
+- Tải Excel doanh thu hỏi Dữ liệu cửa hàng hoặc Dữ liệu cá nhân.
+- Cửa hàng: mỗi cửa hàng/ngày một dòng, không có tên nhân viên.
+- Cộng doanh thu, bill, món; khách tính một lần/ngày; UPT/ATV tính lại từ tổng.
+- Giữ kỳ tháng/quý/năm và cửa hàng đang lọc.
+
+BẢN 4.234
+- Xuất doanh thu theo đúng tháng/quý/năm đang hiển thị, giữ cửa hàng đang chọn.
+- Các trang lọc tháng giữ kỳ tháng; trang không lọc kỳ không tự ép tháng hiện tại.
+- Tải dữ liệu quản trị có chọn Tháng/Quý/Năm và mốc thời gian.
+
+BẢN 4.233
+- Xuất Excel gửi tháng và cửa hàng đang lọc lên máy chủ.
+- Lịch làm việc, doanh thu, công việc, đơn online chỉ lấy dữ liệu tháng chọn.
+- Khu vực Tải dữ liệu quản trị có ô chọn tháng tải.
+- Danh mục ca làm không có ngày nên vẫn xuất danh mục ca.
+
+BẢN 4.232
+- Giao việc theo ca lưu đủ ngày, kể cả chưa có lịch làm việc.
+- Lưu lịch tuần mới tự gắn người nhận cho công việc đã lên kế hoạch.
+- Tự bổ sung ngày thiếu từ hôm nay cho đợt cũ còn đủ mô tả khoảng ngày/quy tắc lặp; bỏ qua đợt có công việc đã xóa.
+- Giữ bài đã hoàn thành, tránh trùng người nhận khi lưu lịch lại.
+- Tự sao lưu trước khi khôi phục kế hoạch cũ.
+
+BẢN 4.231
+- Gộp ca S1/S2, C1/C2, G1/G2, F1/F2 thành S/C/G/F.
+- C: 14:00–22:30. S/G/F lấy giờ bắt đầu sớm nhất và kết thúc muộn nhất.
+- Tự chuyển lịch và mã ca gắn công việc; đồng bộ người nhận công việc từ hôm nay.
+- Tự sao lưu dữ liệu trước chuyển đổi, chỉ chạy một lần khi khởi động.
+- Ô chưa xếp ca để trống, gõ trực tiếp S/C/G/F, mã sai báo đỏ và chặn lưu.
+
+BẢN 4.230
+- Bỏ Bill hủy khỏi menu desktop/mobile; giữ dữ liệu lịch sử.
+- Ca S xanh lá, C xanh dương, G/G1 vàng, G2 cam, F tím, OFF xám.
+- Áp dụng màu cho ô nhập ca, chế độ xem và chú thích.
+
+BẢN 4.229
+- Bỏ khối Đề xuất tái sớm ở Tổng hợp phân tích hàng hóa.
+- Loyalty: lọc tháng/quý/năm theo ngày đơn, mặc định tháng hiện tại.
+- Tổng tiền, số đơn, danh sách và Excel cùng áp dụng kỳ và cửa hàng đang chọn.
+
+BẢN 4.228
+- Tổng quan: chọn tháng/quý/năm bên trái, nút Tháng / Quý / Năm bên phải cùng hàng.
+- Phân tích hàng hóa: bỏ khối và nút Dữ liệu hiện có. Giữ chức năng Xóa dữ liệu cũ.
+- Deploy cả public/app.js, public/style.css và public/index.html.
+
+BẢN 4.227
+- Bảng nguyên giá / giảm giá bỏ sản phẩm Tổng doanh thu = 0 (túi giấy, quà tặng).
+- Không tính số lượng, tỷ trọng hoặc bill chỉ có sản phẩm 0 đồng.
+- Áp dụng cả dữ liệu đã nhập; không cần nhập lại chỉ để bỏ sản phẩm 0 đồng.
+
+BẢN 4.226
+- Tên nhóm: Hàng nguyên giá và Hàng giảm giá.
+- Giảm giá âm được tính theo giá trị tuyệt đối, vẫn áp dụng ngưỡng 10%.
+- Sau khi deploy, nhập lại file Sapo cùng kỳ để phân loại lại dữ liệu đã nhập.
+
+BẢN 4.225 — PHÂN TÍCH NGUYÊN GIÁ / GIẢM GIÁ
+- Phân tích hàng hóa > Tổng hợp: số lượng, tỷ trọng số lượng, tổng doanh thu,
+  tỷ trọng doanh thu và số lượng mỗi nhóm trên tổng bill không trùng.
+- Giảm giá / Tiền hàng <= 10% là nguyên giá; > 10% là giảm giá.
+- Doanh thu lấy đúng cột Tổng doanh thu. Số 1,000 trong file Sapo là 1.
+- Nhập lại báo cáo Sapo có Mã đơn hàng để tính bill. Dữ liệu cũ chưa có
+  thông tin giảm giá không được tự suy đoán là nguyên giá.
+- Dòng có trả hàng/thiếu cơ sở phân loại nằm ở nhóm Chưa phân loại,
+  vẫn giữ số lượng và doanh thu có dấu trong tổng. Thiếu mã đơn: không tính UPT.
+- Báo cáo không có ngày giao dịch cần chọn đúng khoảng ngày khi nhập.
+  Xem đúng kỳ; báo cáo một ngày có thể cộng lên tuần/tháng. Nếu đã có báo cáo
+  đúng toàn kỳ thì ưu tiên báo cáo đó, không cộng chồng các báo cáo ngày.
+- Admin nhập/xóa; tài khoản khác chỉ xem bảng tổng hợp trong phạm vi cửa hàng.
+- Xóa lô dữ liệu cũng xóa phần phân tích nguyên giá/giảm giá liên quan.
+- Giữ giao diện cũ và tất cả chức năng các bản trước.
+
+TRIỂN KHAI
+Cập nhật server.js, public/app.js, public/index.html vào repo Render rồi deploy.
+Không ghi đè thư mục dữ liệu thực tế hoặc biến môi trường.
+Bản này chưa được triển khai tự động lên Render.
+
+DEZUS — GIAO DIỆN GỐC, TỔNG QUAN GỌN HƠN
+
+- Bỏ tiêu đề Tổng Quan trong nội dung trang (máy tính và điện thoại).
+- Bỏ hai dòng Tổng quan tháng và Dữ liệu đang hiển thị theo; giữ bộ lọc kỳ.
+- Bỏ khối Vi phạm trong tháng/quý/năm khỏi trang Tổng quan.
+- Bỏ mục Tiền thưởng trong nhóm Doanh thu.
+- Giữ chức năng xóa cửa hàng đã đóng chỉ cho admin; giữ dữ liệu lịch sử.
+- Giữ màu sắc, font, icon và bố cục gốc ở các phần còn lại.
+
+Cập nhật: server.js, public/app.js và public/index.html vào repo đang chạy,
+sau đó deploy lại Render. Nếu từng dùng giao diện thử, dùng public/style.css
+của gói này để khôi phục giao diện gốc.
+Không ghi đè dữ liệu thực tế, biến môi trường hoặc cấu hình ổ đĩa.
+
+NHẬP NHANH LỊCH LÀM VIỆC
+Bấm Sửa lịch, nhập trực tiếp mã ca (không phân biệt hoa/thường).
+Có danh sách gợi ý để chọn; Enter chuyển sang ô ca tiếp theo, Shift+Enter quay lại.
+OFF hoặc để trống = nghỉ/chưa phân ca. Mã không hợp lệ sẽ chặn lưu.
+Bấm Lưu lịch để cập nhật; vẫn giữ ghi chú và quyền quản lý lịch hiện có.
+
+PHÂN TÍCH HÀNG HÓA — XÓA DỮ LIỆU CŨ
+Nút Xóa dữ liệu cũ ngay đầu trang, chỉ admin sử dụng.
+Lọc theo loại dữ liệu và ngày kết thúc kỳ báo cáo; xem mọi lần upload còn dữ liệu.
+Mỗi dòng hiển thị cửa hàng, kỳ, file, thời điểm upload và số dòng hiện còn.
+Xóa theo từng lần upload, có hộp xác nhận chi tiết; không xóa theo riêng cửa hàng
+nếu lần upload chứa nhiều cửa hàng. Các dữ liệu ngoài lần upload được chọn được giữ.
+
+DỮ LIỆU HIỆN CÓ
+Hiện bảng ngay đầu Phân tích hàng hóa cho admin: loại dữ liệu, cửa hàng,
+kỳ dữ liệu, số dòng còn và nhãn cũ hơn kỳ đang xem.
+Bao gồm doanh thu hàng hóa, xuất nhập tồn và sổ nhập/xuất kho nếu có.
+Kỳ cũ hiện trước; có thể mở xem toàn bộ. Đếm cả dữ liệu không còn gắn lần upload.
+
+V224 — PHÂN QUYỀN VÀ XÓA NHANH PHÂN TÍCH HÀNG HÓA
+- Admin xem dữ liệu chi tiết, file Excel, lịch sử nhập và quản lý dữ liệu.
+- Tài khoản khác chỉ xem tab Tổng hợp theo phạm vi cửa hàng hiện có.
+  API chỉ trả chỉ số và top 5 tổng hợp; không trả bảng chi tiết.
+- Admin lọc loại dữ liệu / kỳ cũ, chọn nhiều hoặc chọn tất cả đang hiển thị,
+  rồi bấm Xóa các lần upload đã chọn và xác nhận một lần.
+- Đổi bộ lọc sẽ bỏ chọn để tránh xóa nhầm các dòng đang bị ẩn.
+- Xóa theo toàn bộ lần upload, bao gồm tất cả cửa hàng trong file đó.
+- 6 bài kiểm tra đã đạt: giới hạn dữ liệu, quyền xóa/Excel, xác nhận và phạm vi xóa.
+
+Cập nhật server.js, public/app.js, public/index.html và public/style.css,
+sau đó deploy lại Render. Không thay dữ liệu thực tế hoặc biến môi trường.
+
+BAN SUA XUAT EXCEL 2026-11-02
+- Lay dung thang va ky thang/quy/nam dang xem o trang Doanh thu; khong lay nham bo loc trang Admin.
+- API loc dung khoang ngay export_start/export_end thay vi lay tron thang.
+- Giu hai lua chon xuat doanh thu cua hang theo ngay va doanh thu ca nhan.
+- Loc trang thai nhan su khi xuat doanh thu ca nhan.
+- Da kiem tra cu phap JS va 24 bai test tu dong (24/24 dat).
+
+--- EXPORT_FIX_V4.txt ---
+DEZUS EXPORT FIX V4
+- App JS URL changed to force new browser resource.
+- Sales/online exports strictly require date range server side.
+- Dashboard override cannot affect sales and online export.
+- Download filenames include FIX-V4 and exact range, diagnostic response headers.
+- Existing data untouched.
+
+--- EXPORT_FIX_V5.txt ---
+FIX V5: Visible export button label, API /api/export-build build id, Excel header version verification, row count and date-range toast.
+On production verify https://dezus-store-ops12.onrender.com/api/export-build returns EXPORT-FIX-V5.
+
+--- THAY_DOI_V6.txt ---
+V6 - Phân tích hàng hóa
+1. Xóa dòng chú thích dài ở bảng Nguyên giá / Giảm giá (không sửa thuật toán).
+2. Mặc định mở trang chọn Tuần trước, thứ Hai đến Chủ nhật. Ví dụ ngày 02/11/2026: 26/10/2026 - 01/11/2026.
+3. Giữ khả năng chuyển Ngày/Tuần/Tháng và chọn tuần khác.
+4. Tăng phiên bản app.js để trình duyệt cập nhật.
+
+--- THAY_DOI_V7.txt ---
+V7 – Phân tích hàng hóa
+- Bỏ dòng mô tả dài ở bảng Nguyên giá / Giảm giá (đã bỏ từ V6).
+- Khi nhấn menu vào Phân tích hàng hóa từ trang khác, đặt lại chế độ Tuần và ngày thứ Hai của tuần trước.
+- Chọn các bộ lọc trong trang vẫn hoạt động bình thường, không tự reset khi lọc.
+- Dấu nhận biết V7 được đặt trong nhãn Thời gian trên trang Phân tích hàng hóa.
+- Đổi phiên bản app.js tại index.html để tránh dùng cache JavaScript cũ.
+
+--- THAY_DOI_V8.txt ---
+V8 (04/11/2026): Admin được tạo ca mới (S1, S2, G1, G2, F2...) tại Lịch làm việc. API POST /api/shifts chỉ Admin; kiểm tra mã, giờ, chống trùng. Các ca mới dùng được ngay khi nhập lịch; giữ nguyên dữ liệu và chức năng V7.
+
+--- THAY_DOI_V9.txt ---
+V9 (04/11/2026): Sau khi Admin tạo ca, tự mở Sửa lịch để có thể nhập mã ca vào ngày làm việc ngay. Gợi ý mã ca trong ô nhập. API lưu lịch trả về các dòng bị bỏ qua và lý do thay vì báo thành công sai; giao diện hiện lỗi nếu có dòng không lưu. Giữ nguyên dữ liệu ca và lịch hiện có.
+
+--- THAY_DOI_V10.txt ---
+DEZUS V10 – TỔNG HỢP BÁO CÁO NGÀY CỬA HÀNG
+- Menu Doanh thu > Tổng hợp báo cáo ngày: chỉ hiện với Admin và Văn phòng.
+- Endpoint GET /api/store-daily-summary?date=YYYY-MM-DD: xác thực phiên đăng nhập và chặn tài khoản không phải admin/office.
+- Tổng doanh số từ dòng bán hàng theo nhân viên trong ngày, tránh cộng trùng doanh thu; khách theo dữ liệu sales_store_days; target theo cấu hình target ngày.
+- Hiện tình hình ca sáng/ca tối, thiếu size, phản hồi và trạng thái đã có/chưa có báo cáo ngày.
+- Lọc theo ngày, có nút Hôm nay; không thay đổi bản ghi hiện có.
+- Giữ lại các thay đổi nhập ca V9 và các chức năng trước đó.
+
+--- THAY_DOI_V11.txt ---
+V11 - Bao cao ngay cua hang
+- Dua Tong hop bao cao ngay thanh nhom menu lon rieng tren desktop va mobile.
+- KPI doanh so theo card tuong tu trang Doanh thu: doanh thu, target, % target, bill, mon, UPT, ATV, khach, tinh trang bao cao.
+- Cai thien khoang cach, bang so sanh va card tinh hinh cua hang.
+- Giu nguyen du lieu va phan quyen Admin / Van phong o client va server.
+
+--- THAY_DOI_V12.txt ---
+V12: Làm đẹp mục Tổng hợp báo cáo ngày.
+- Phần Tình hình từng cửa hàng đổi từ dòng chữ dài sang các khung KPI nhỏ riêng cho từng chỉ số.
+- Tách rõ Target, Bill, Món, Khách, Khách mới, UPT, ATV, CR, Thiếu size, Feedback.
+- Giữ nguyên dữ liệu, quyền truy cập và bố cục tổng thể của mục báo cáo ngày.
+
+--- THAY_DOI_V13.txt ---
+V13 – Làm đẹp phần từng cửa hàng trong Tổng hợp báo cáo ngày:
+- Màu pastel rất nhẹ theo nhóm chỉ số, không dùng nền đậm.
+- Viền trái mảnh, màu chữ rõ, nền thẻ cửa hàng trắng.
+- Không thay đổi dữ liệu, báo cáo, logic hoặc phân quyền.
+
+--- THAY_DOI_V14.txt ---
+V14: Cập nhật nền các thẻ KPI của từng cửa hàng trong Tổng hợp báo cáo ngày theo ảnh mẫu: nền pastel gradient rất nhẹ, vòng tròn mờ góc phải, sọc màu mảnh bên trái, số đậm dễ đọc. Giữ nguyên dữ liệu, tính toán và phân quyền.
+
+--- THAY_DOI_V15.txt ---
+V15: Đồng bộ chính xác mã màu KPI của trang Doanh thu cho các ô chỉ số từng cửa hàng trong Tổng hợp báo cáo ngày. Chỉ thay đổi CSS giao diện, giữ nguyên dữ liệu và chức năng.
+
+--- THAY_DOI_V16.txt ---
+V16: Đồng bộ họa tiết hình tròn mờ của KPI trang Doanh thu cho ô chỉ số ở Tổng hợp báo cáo ngày. Sửa thứ tự lớp để hình tròn hiển thị đúng; giữ màu pastel V15 và logic dữ liệu. Đổi phiên bản CSS để trình duyệt tải lại.
+
+--- THAY_DOI_V17.txt ---
+V17 - Tong hop bao cao ngay:
+- 9 KPI tong he thong dung mau nen pastel, vien trai va hoa tiet tron mo dong bo trang Doanh thu.
+- KPI trong tung cua hang thu nho chieu cao, padding, co chu va hoa tiet; giu nguyen so lieu.
+- Tang version CSS de trinh duyet tai giao dien moi sau deploy.
+
+--- THAY_DOI_V18.txt ---
+V18 - Báo cáo ngày: đưa doanh số nhân viên về hàng dọc trong bản xem trước gửi Zalo và nội dung sao chép Zalo. Mỗi nhân viên có tên, doanh thu, bill, món và ghi chú trên dòng riêng. Giữ nguyên các chức năng, dữ liệu và style khác của V17.
+
+--- THAY_DOI_V19.txt ---
+V19: Chỉnh lại bố cục Tổng quan báo cáo ngày theo mẫu gốc.
+- 10 ô KPI nhỏ phía trên theo dạng khung như ảnh mẫu.
+- Khối Tình hình cửa hàng full ngang.
+- 3 cột phía dưới: Doanh thu cá nhân | Thiếu size / cần order | Lỗi / feedback khách.
+- Doanh thu cá nhân hiển thị dạng hàng dọc: tên bên trái, doanh thu/bill/món căn phải.
+
+--- THAY_DOI_V20.txt ---
+V20: Khôi phục giao diện báo cáo ngày theo V9, mỗi nhân viên một dòng dọc; doanh thu/bill/món cùng hàng căn phải. Khôi phục các nhóm menu như V9 trên desktop/mobile; tính năng Tổng hợp báo cáo ngày nằm trong Doanh thu, vẫn giới hạn Admin/Văn phòng. Không sửa máy chủ hay dữ liệu.\n
+
+--- THAY_DOI_V21.txt ---
+DEZUS V21 - Thu gọn thanh danh mục theo V9
+- Khong thay doi nhom menu va du lieu / chuc nang bao cao V20.
+- Sidebar desktop thu gon: nut danh muc, icon, menu con va khoang cach.
+- Khong cho sidebar cuon ngang; cuon doc khi danh muc dai.
+- Giu danh muc Tong hop bao cao ngay ben trong Doanh thu nhu ban V20.
+
+--- THAY_DOI_V22.txt ---
+V22: Ẩn thanh cuộn của sidebar, vẫn cho phép cuộn bằng chuột/touchpad; đưa Tổng hợp báo cáo ngày ra mục cấp cao ngang với Doanh thu trên desktop và mobile. Giữ phân quyền Admin/Văn phòng. Không thay đổi dữ liệu.
+
+--- THAY_DOI_V47.txt ---
+DEZUS V47 – Gộp mã nguồn thật V22 với nhận diện V46.
+- Dùng nguyên server.js, toàn bộ API, auth/permission, xuất nhập dữ liệu, lưu dữ liệu từ V22.
+- Dùng nguyên nội dung các trang con từ public/app.js V22, không dùng trang minh họa pages.js.
+- Gắn logo, banner và icon của V46; lớp giao diện Space Silver–Maroon.
+- Sidebar mỗi lần chỉ mở một nhóm, hover rõ và phân quyền menu tự động từ user thật.
+- Dữ liệu thực nằm ở persistent disk Render qua STORAGE_ROOT; không ghi đè database khi deploy.
+- Tổng quan sử dụng leaderboard thật từ API V22; các KPI công việc gốc vẫn giữ nguyên.
+
+--- THAY_DOI_V48.txt ---
+V48: Dùng giao diện V46 cho shell + Tổng quan (banner, leaderboard, sidebar, topbar). Giữ nguyên toàn bộ hàm render các mục nhỏ, API, phân quyền và nhập/xuất V22. Tổng quan đọc dữ liệu thật từ API, không dùng seed demo. Menu lớn 1 route hiển thị trực tiếp; accordion không thay đổi trang hay làm mất dữ liệu đang nhập.
+
+--- THAY_DOI_V49.txt ---
+DEZUS V49: Khôi phục ảnh logo chữ DEZUS bằng cách nhúng trực tiếp asset PNG trong app.js cho desktop, mobile và đăng nhập, có Store Operations dưới logo. Giữ NGUYÊN CSS, bố cục, kích thước sidebar, cỡ chữ, banner, bảng xếp hạng, các mục con, phân quyền và API của V48. Không thay đổi dữ liệu.
+
+--- PHIEN_BAN_V50.txt ---
+DEZUS PREVIEW V50 — KIỂM TRA LOGO
+Tên gói và tên dịch vụ Render thử nghiệm riêng để tránh nhầm với web chính.
+Đã cập nhật title và nhãn ở góc trên cùng, cache-bust các tài nguyên.
+Giữ nguyên logo nhúng từ V49, CSS, bố cục, menu, các mục con, API, phân quyền và dữ liệu trong mã nguồn.
+Khi cập nhật 1 dịch vụ Render cũ, Render KHÔNG tự đổi tên dịch vụ vì thay render.yaml. Tạo dịch vụ thử nghiệm RIÊNG để nhìn thấy tên mới.
+
+--- THAY_DOI_V51.txt ---
+V51: Sửa lỗi logo DEZUS không thấy trên sidebar nền bạc. Nguyên nhân CSS cũ áp filter:brightness(0) invert(1) biến wordmark chữ đen thành trắng. Chỉ override filter:none cho wordmark desktop/mobile/login; giữ nguyên bố cục, banner, menu và các hàm chức năng. Đổi tên bản thử thành V51 để dễ kiểm tra.
+
+--- PHIEN_BAN_V52.txt ---
+DEZUS PREVIEW V52 - menu V46 + banner lớn hơn
+
+--- THAY_DOI_V52.txt ---
+V52
+- Tăng kích thước banner tổng quan và chỉnh vị trí ảnh để thấy mặt rõ hơn.
+- Đưa menu mục lớn về style/kích thước gần giống demo V46.
+- Tăng logo sidebar và giữ DEZUS + Store Operations hiển thị rõ.
+- Sửa lại icon mục Tổng Quan và đồng bộ cỡ chữ menu lớn.
+
+--- PHIEN_BAN_V53.txt ---
+DEZUS PREVIEW V53 - sidebar like screenshot
+
+--- THAY_DOI_V54.txt ---
+V54: Đối chiếu trực tiếp với file HTML V46 người dùng tải lên; khôi phục kích thước sidebar/menu lớn/icon/chữ, khoảng cách, topbar, banner, typography và các khung xếp hạng của Tổng quan. Chỉ thay CSS các lớp giao diện chung và Tổng quan; dữ liệu mục con, hàm API và phân quyền giữ nguyên từ V53.
+
+--- PHIEN_BAN_V55.txt ---
+DEZUS PREVIEW V55 — V46 hover và chuyển động danh mục; giữ nguyên nội dung mục nhỏ.
+
+--- THAY_DOI_V56.txt ---
+V56: Đưa Tổng hợp báo cáo ngày ngay sau Tổng Quan ở cả desktop/mobile; chỉnh font menu lớn về 13px, 650 giống V46; bỏ nhãn DEZUS BẢN THỬ V55 ở topbar. Giữ nguyên nội dung/hàm của mục nhỏ.
+
+--- THAY_DOI_V57.txt ---
+V57: Banner Tổng quan căn ảnh gốc từ mép trên (background-position: center top) trên desktop và mobile. Các mục khác giữ nguyên V56.
+
+--- THAY_DOI_V58.txt ---
+V58: Banner Tổng quan lớn hơn theo chiều cao, giữ ảnh gốc từ mép trên xuống; nguyên nội dung và chức năng các mục con.
+
+--- PHIEN_BAN_V59.txt ---
+DEZUS V59 - banner be hon mot xiu + icon tong quan nha
+
+--- PHIEN_BAN_V60.txt ---
+DEZUS V60 - banner dai giong V58, cao thu nho mot chut, icon tong quan moi
+
+--- THAY_DOI_V61.txt ---
+V61: Xóa cụm ngày/avatar/đăng xuất ở góc trên (giữ đăng xuất ở sidebar và menu mobile); giảm riêng tiêu đề Tổng quan vận hành thành 18px desktop / 16px mobile; tăng chiều cao banner lên 324px desktop, 286px màn hẹp và 212px mobile, giữ ảnh căn từ mép trên; giữ nguyên các nội dung khác.
+
+--- THAY_DOI_V62.txt ---
+V62: Khung tiêu đề Tổng quan chỉ rộng vừa chữ và thấp gọn. Banner cao hơn 26px trên desktop, giữ nguyên bề ngang và căn ảnh từ trên xuống. Sidebar cuộn đến cuối mới thấy nút Đăng xuất. Không thay đổi nội dung/logic mục nhỏ.
+
+--- THAY_DOI_V63.txt ---
+DEZUS V63
+- Bỏ toàn bộ header Tổng quan vận hành ở trang Tổng Quan, không để khung trống.
+- Tăng cao banner: desktop 375px (từ 350px), nhỏ 330px (từ 310px), mobile 247px (từ 232px); giữ nguyên bề ngang, căn ảnh từ phía trên.
+- Thay icon mục Tổng Quan bằng ảnh PNG do người dùng vừa đính kèm, giữ nguyên tỷ lệ.
+- Không chỉnh chức năng / nội dung mục nhỏ hoặc backend.
+
+--- THAY_DOI_V64.txt ---
+DEZUS V64
+- Trên 3 thẻ Top: thay Đạt target cá nhân bằng tên cửa hàng thực tế của nhân viên (store_name từ API).
+- Danh sách thành viên: hiển thị đủ Top 1 trở đi, chia đều 2 bảng trái/phải theo mẫu, mỗi bảng có Top, Nhân viên, Cửa hàng, % đạt target.
+- Không thay đổi server, API, điều kiện xếp hạng, menu hoặc các chức năng mục nhỏ.
+
+--- THAY_DOI_V65.txt ---
+V65: Dong bo mau danh sach nhan vien voi palette vang do ruou + bac; bo min-height cua menu va margin auto day ten tai khoan / Dang xuat qua xa. Khong thay doi du lieu hay API.
+
+--- THAY_DOI_V66.txt ---
+DEZUS V66 - TOP DOANH THU DÙNG ẢNH NHÂN VIÊN
+
+1. Phần Top doanh thu (Top 1 / Top 2 / Top 3) đã đổi sang kiểu hiển thị ảnh nhân viên nổi bật.
+2. Ảnh nhân viên được lấy trực tiếp từ phần Thông tin tài khoản / Sửa quyền nhân viên trong Admin.
+3. Đã thêm ô tải ảnh nhân viên lên trong form tạo tài khoản và sửa tài khoản.
+4. Khi cập nhật ảnh, phần Top doanh thu tự lấy đúng ảnh đó.
+5. Nếu chưa có ảnh, hệ thống tự hiện ký tự viết tắt làm ảnh đại diện tạm.
+
+--- PHIEN_BAN_V67.txt ---
+DEZUS V67 - chỉnh top doanh thu giống demo hơn
+
+--- THAY_DOI_V71.txt ---
+DEZUS V71 - chân dung đã tách nền, thẻ Top doanh thu mới
+
+- File chân dung đã tách nền: public/assets/v71/nhan-vien-mau-tach-nen.png
+- Chỉ dùng ảnh mẫu này trên thẻ Top 1 nếu tài khoản Top 1 CHƯA có ảnh được tải lên. Không tự gắn người mẫu vào hồ sơ nhân viên nào.
+- Nếu nhân viên đã có ảnh cũ còn nền cam, vào Admin > sửa tài khoản nhân viên > tải ảnh PNG đã tách nền lên rồi lưu. Ảnh mới sẽ được lấy qua trường avatar_url và hiện ở Top theo thứ hạng thực tế.
+- Giao diện Top 1/2/3: nội dung và ảnh là hai lớp độc lập, không có ảnh chữ nhật đè lên card, không làm chữ bị xếp dọc.
+- Bản xem thử bố cục (dữ liệu minh hoạ): /demo_top_doanh_thu.html
+- Phần danh sách nhân viên và các chức năng backend giữ nguyên.
+- Khi triển khai Render, ảnh tải lên và DB cần lưu trên persistent disk (STORAGE_ROOT) để không mất sau restart.
+
+--- HUONG_DAN_V72.txt ---
+V72 - Fix ảnh chân dung Top doanh thu.
+- Sửa lỗi ép ảnh cao 100% trong vùng rộng 48% dẫn đến người bị cắt.
+- Layout mới tách phần chữ/ảnh và giới hạn ảnh cả chiều rộng lẫn chiều cao.
+- KHÔNG tự gán ảnh người mẫu cho nhân viên khác; Admin tải ảnh đã tách nền lên hồ sơ nhân viên tương ứng.
+- Ảnh tham khảo đã tách nền: public/assets/v72/anh-nhan-vien-da-tach-nen.png
+- Danh sách thành viên, menu và các mục con giữ nguyên.
+
+V76 (13/11/2026): Chỉ thay icon mục Tổng Quan bằng ảnh ngôi nhà do người dùng cung cấp; sửa đúng khóa icon overview/dashboard (desktop + mobile) và làm mới mã cache CSS/JS. Không thay đổi giao diện/chức năng khác.
+
+
+V78 (13/11/2026): Thay toàn bộ chữ, badge và thống kê trong khung bên phải của màn hình đăng nhập bằng ảnh thời trang _LEA9757.jpg do người dùng cung cấp, ảnh phủ khung (cover), không chữ đè. Phần form nhập thông tin đăng nhập bên trái và các API/chức năng khác giữ nguyên.
+
+
+=== V79 ===
+- Màn hình đăng nhập: ảnh khung bên phải lấy từ trên xuống (background-position: center top).
+- Khối Top 1 / Top 2 / Top 3: ưu tiên diện tích chân dung lớn hơn tiêu đề theo tỷ lệ khoảng 6/4.
+- Tăng vùng ảnh chân dung trong thẻ top, giảm vùng chữ để sát mẫu hơn.
+
+
+=== V80 ===
+- Chân dung Top 1 / 2 / 3 tràn sát và hơi vượt mép trên của thẻ (desktop), giữ bo góc và tách lớp chữ/ảnh.
+- Ảnh PNG trong suốt hiển thị lớn hơn; điều chỉnh để không bị giới hạn kích cỡ trong vùng ảnh cũ.
+- Trên màn hình nhỏ ảnh nằm gọn trong khung để không bị tràn khỏi màn hình.
+
+
+=== V81 ===
+- Thêm icon cạnh tên hạng ở Top 1 / Top 2 / Top 3 theo đúng ảnh người dùng gửi.
+- Top 1 dùng cúp vàng, Top 2 dùng huy hiệu số 2, Top 3 dùng biểu tượng hạng 3.
+
+
+=== V82 ===
+- Dịch chân dung Top 1/2/3 sang trái nhẹ 20–25px.
+- Tên nhân viên và cửa hàng mỗi phần trên một dòng, xếp dọc; tên dài tự điều chỉnh cỡ chữ.
+- Cỡ chữ gốc tên 22px, Top 1 24px; tên cửa hàng 16px, bám demo.
+- Giữ icon Top, hệ thống và chức năng mục con như V81.
+
+
+=== V83 ===
+- Thu nhỏ nhẹ chân dung ở Top 1 / Top 2 / Top 3 để tổng thể cân đối hơn.
+- Giảm cỡ chữ tên nhân viên, tên cửa hàng và % đạt target để ô hiển thị gọn, hài hòa hơn.
+
+
+=== V84 ===
+- Cân lại khung Top 2 và Top 3 để cùng kích thước.
+- Tinh chỉnh typography phần tên nhân viên, cửa hàng, nhãn TOP và % target để mềm và tinh tế hơn.
+- Ép tên nhân viên và tên cửa hàng hiển thị 1 dòng, nếu dài sẽ tự ...
+
+
+=== V85 ===
+- Căn chính giữa icon cúp và chữ TOP 1 trong khung nhãn xếp hạng.
+- Giữ nguyên nội dung thẻ, ảnh và các danh mục khác.
+
+
+V86
+- Chữ TOP 1 / TOP 2 / TOP 3 nét mảnh, giãn ký tự theo phong cách logo DEZUS.
+- Thu nhỏ chiều cao, chiều rộng và viền nhãn, căn giữa icon và chữ, đồng bộ trên desktop/mobile.
+- Giữ nguyên các thẻ Top, ảnh nhân viên, báo cáo và chức năng.
+
+
+=== V87 ===
+- Tăng nhẹ độ đậm chữ TOP 1, TOP 2, TOP 3 từ 400 lên 500.
+- Thay ký hiệu mục % Đạt target trong ba thẻ bằng icon target.png người dùng cung cấp.
+- Giữ nguyên kích thước thẻ, ảnh chân dung, dữ liệu và chức năng.
+
+
+=== V88 ===
+- Tăng độ đậm chữ TOP 1 / TOP 2 / TOP 3 để nổi và rõ hơn.
