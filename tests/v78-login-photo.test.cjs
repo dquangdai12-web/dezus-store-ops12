@@ -23,5 +23,5 @@ test('right-side panel contains only the supplied fashion photo and no captions'
   assert.match(css, /login-fashion\.jpg/);
 });
 test('current cache code is set for CSS and JS', () => {
-  assert.equal((html.match(/DEZUS_V90_PT_SCHEDULE_ONLY_20261119/g) || []).length, 3);
+  assert.equal((html.match(/DEZUS_V91_OPTIMIZED_20261119/g) || []).length, 3);
 });

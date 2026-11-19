@@ -10,6 +10,7 @@ const multer = require('multer');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const XLSX = require('xlsx');
+const compression = require('compression');
 
 const PORT = Number(process.env.PORT || 3000);
 const JWT_SECRET = process.env.JWT_SECRET || 'CHANGE_ME_DEZUS_STORE_OPS_SECRET';
@@ -43,6 +44,18 @@ const upload = multer({
   }
 });
 
+// Compress JSON/API responses with non-blocking zlib compression to reduce traffic.
+app.use(compression({ threshold: 1024, level: 4 }));
+// Log only unusually slow API paths to Render Logs, not query params or user data.
+app.use((req, res, next) => {
+  if (!req.path.startsWith('/api/')) return next();
+  const start = process.hrtime.bigint();
+  res.once('finish', () => {
+    const elapsedMs = Number(process.hrtime.bigint() - start) / 1e6;
+    if (elapsedMs >= 1500) console.warn(`[DEZUS SLOW API] ${req.method} ${req.path} ${elapsedMs.toFixed(0)}ms`);
+  });
+  next();
+});
 app.use(express.json({ limit: '6mb' }));
 function evidenceMimeType(filePath) {
   const ext = path.extname(filePath || '').toLowerCase();
@@ -109,13 +122,28 @@ app.get('/evidence-view/:filename', (req, res) => {
 
 app.get('/api/export-build', (req,res) => { res.setHeader('Cache-Control','no-store'); res.json({version:'EXPORT-FIX-V5',exportPeriodRequired:true,build:'2026-11-02'}); });
 
-app.use('/uploads', express.static(UPLOAD_DIR));
+// V91: precompressed, versioned frontend files avoid downloading ~900KB of text on every visit.
+// Gzip files are built with the deployment package; no extra runtime dependencies.
+app.get(['/app.js', '/style.css'], (req, res, next) => {
+  if (!req.acceptsEncodings('gzip')) return next();
+  const asset = req.path === '/app.js' ? 'app.js' : 'style.css';
+  const gzipPath = path.join(ROOT, 'public', asset + '.gz');
+  if (!fs.existsSync(gzipPath)) return next();
+  res.setHeader('Content-Encoding', 'gzip');
+  res.setHeader('Vary', 'Accept-Encoding');
+  res.setHeader('Cache-Control', 'public, max-age=86400, must-revalidate');
+  res.setHeader('Content-Type', asset.endsWith('.js') ? 'application/javascript; charset=utf-8' : 'text/css; charset=utf-8');
+  return res.sendFile(gzipPath);
+});
+app.use('/uploads', express.static(UPLOAD_DIR, { maxAge: '1h' }));
 app.use(express.static(path.join(ROOT, 'public'), {
   setHeaders: (res, filePath) => {
-    if (/\.(html|js|css)$/i.test(filePath)) {
+    if (/\.html$/i.test(filePath)) {
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-      res.setHeader('Pragma', 'no-cache');
-      res.setHeader('Expires', '0');
+    } else if (/\.(js|css)$/i.test(filePath)) {
+      res.setHeader('Cache-Control', 'public, max-age=86400, must-revalidate');
+    } else if (/\.(webp|png|jpg|jpeg|gif|svg)$/i.test(filePath)) {
+      res.setHeader('Cache-Control', 'public, max-age=604800');
     }
   }
 }));
@@ -281,6 +309,17 @@ function defaultDb() {
   };
 }
 
+const expensiveReadCache = new Map();
+function cachedHeavyRead(key, compute, ttlMs = 5000) {
+  const now = Date.now();
+  const cached = expensiveReadCache.get(key);
+  if (cached && now - cached.created < ttlMs) return cached.data;
+  const data = compute();
+  if (expensiveReadCache.size >= 60) expensiveReadCache.clear();
+  expensiveReadCache.set(key, { data, created: now });
+  return data;
+}
+
 let db = loadDb();
 
 function loadDb() {
@@ -345,10 +384,16 @@ function loadDb() {
   }
 }
 
+// Compact serialization cuts write volume without delaying or skipping any write.
+// Keep synchronous, atomic tmp -> rename, so a successful API write is still on disk.
 function saveDb() {
+  const startedAt = Date.now();
   const tmp = DB_PATH + '.tmp';
-  fs.writeFileSync(tmp, JSON.stringify(db, null, 2), 'utf8');
+  fs.writeFileSync(tmp, JSON.stringify(db), 'utf8');
   fs.renameSync(tmp, DB_PATH);
+  expensiveReadCache.clear();
+  const writeMs = Date.now() - startedAt;
+  if (writeMs >= 500) console.warn(`[DEZUS SLOW DB WRITE] ${writeMs}ms`);
 }
 
 
@@ -2480,12 +2525,16 @@ function syncFutureShiftTasksForSchedule(storeId, changedDates = [], actorId = n
 }
 
 function taskRowsForUser(user) {
+  // One lookup map per request instead of searching every task for each assignment.
+  const taskById = new Map((db.tasks || []).map(t => [Number(t.id), t]));
+  const userById = new Map((db.users || []).map(u => [Number(u.id), u]));
+  const storeById = new Map((db.stores || []).map(s => [Number(s.id), s]));
   let rows = db.task_assignees.map(ta => {
-    const t = db.tasks.find(x => Number(x.id) === Number(ta.task_id));
-    const ass = getUser(ta.user_id);
+    const t = taskById.get(Number(ta.task_id));
+    const ass = userById.get(Number(ta.user_id));
     if (!t || !ass) return null;
-    const s = getStore(t.store_id);
-    const creator = getUser(t.created_by);
+    const s = storeById.get(Number(t.store_id));
+    const creator = userById.get(Number(t.created_by));
     return {
       assignment_id: ta.id,
       assignee_id: ta.user_id,
@@ -3180,6 +3229,30 @@ app.delete('/api/users/:id', requireAuth, requirePerm('can_delete_users'), (req,
   });
   saveDb();
   res.json({ ok: true, permanently_deleted: true });
+});
+
+app.get('/api/dashboard/task-summary', requireAuth, (req, res) => {
+  const start = String(req.query.start || '');
+  const end = String(req.query.end || '');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(start) || !/^\d{4}-\d{2}-\d{2}$/.test(end) || start >= end) {
+    return res.status(400).json({ error: 'Khoảng thời gian không hợp lệ' });
+  }
+  const cacheKey = `task-summary:${req.user.id}:${start}:${end}`;
+  const summary = cachedHeavyRead(cacheKey, () => {
+    const rows = taskRowsForUser(req.user).filter(t => {
+      const raw = t.task_date || t.due_at || t.created_at || '';
+      const date = String(raw).slice(0, 10);
+      return date >= start && date < end;
+    });
+    return {
+      open: rows.filter(t => t.status === 'assigned').length,
+      late: rows.filter(t => ['overdue', 'completed_late', 'not_completed'].includes(t.status)).length,
+      done: rows.filter(t => t.status === 'completed_on_time').length,
+      total: rows.length,
+    };
+  }, 3000);
+  res.setHeader('Cache-Control', 'private, no-store');
+  res.json(summary);
 });
 
 app.get('/api/tasks', requireAuth, (req, res) => res.json({ tasks: taskRowsForUser(req.user) }));
@@ -5178,7 +5251,8 @@ app.get('/api/sales/leaderboard', requireAuth, (req, res) => {
     if (req.user.role !== 'admin' && !userHasStore(req.user, storeId)) return res.status(403).json({ error: 'Không có quyền xem doanh thu cửa hàng này' });
   }
   const userStatus = ['active', 'inactive', 'all'].includes(String(req.query.user_status || 'active')) ? String(req.query.user_status || 'active') : 'active';
-  const result = leaderboardRows(req.user, period, date, storeId, { includeAllStores: overviewPercentScope, userStatus });
+  const cacheKey = `leaderboard:${req.user.id}:${period}:${date || ''}:${storeId || ''}:${overviewPercentScope}:${userStatus}`;
+  const result = cachedHeavyRead(cacheKey, () => leaderboardRows(req.user, period, date, storeId, { includeAllStores: overviewPercentScope, userStatus }));
   if (overviewPercentScope && req.user.role !== 'admin') {
     // Ở Tổng quan, cửa hàng được xem thứ hạng toàn hệ thống theo %, nhưng không trả số tiền doanh thu/target.
     result.leaderboard = result.leaderboard.map(r => ({ ...r, revenue: 0, target: 0 }));
@@ -6321,8 +6395,12 @@ app.get('/api/reports/performance', requireAuth, (req, res) => {
   const year = Math.max(2000, Math.min(2100, Number(req.query.year) || now.getFullYear()));
   const month = Math.max(1, Math.min(12, Number(req.query.month) || (now.getMonth() + 1)));
   const { start, end } = periodRange('month', new Date(Date.UTC(year, month - 1, 1)));
-  const performance = computePerformance(req.user, year, month).sort((a, b) => b.final_score - a.final_score);
-  res.json({ performance, storeSummary: storeSummaryRows(req.user, start, end), year, month });
+  const report = cachedHeavyRead(`performance:${req.user.id}:${year}:${month}`, () => ({
+    performance: computePerformance(req.user, year, month).sort((a, b) => b.final_score - a.final_score),
+    storeSummary: storeSummaryRows(req.user, start, end), year, month,
+  }), 5000);
+  res.setHeader('Cache-Control', 'private, no-store');
+  res.json(report);
 });
 
 

@@ -439,3 +439,16 @@ V86
 - Tài khoản PT chỉ truy cập lịch làm việc và mục đổi mật khẩu; không được nhập doanh thu hoặc target qua API.
 - Không thay đổi biểu mẫu, dữ liệu, giao diện Top 1/2/3, banner và các mục khác của V89.
 - Giữ nguyên một file ghi chú phiên bản này, không thêm ghi chú riêng.
+
+
+=== DEZUS V91 — TỐI ƯU HIỆU NĂNG (19/11/2026) ===
+- Tổng quan: bỏ 1–12 API báo cáo hiệu suất không sử dụng; giữ nguyên bảng doanh thu và chức năng lọc.
+- Tổng quan: nhận số lượng công việc dạng tổng hợp thay cho toàn bộ danh sách công việc.
+- Tối ưu tìm tác vụ bằng Map, giảm việc tìm kiếm lặp lại.
+- API báo cáo nặng có bộ nhớ đệm ngắn (3–5 giây), phân tách theo người dùng và xoá khi lưu dữ liệu.
+- Lưu cơ sở dữ liệu JSON ở dạng gọn để giảm dữ liệu ghi, vẫn dùng ghi đồng bộ và đổi tên file nguyên tử.
+- CSS/JavaScript: đóng gói gzip và cache 1 ngày; mã phiên bản v91 làm mới tài nguyên khi cập nhật.
+- Banner Tổng quan dùng ảnh WebP chất lượng cao, giữ ảnh gốc PNG để có thể phục hồi.
+- Không xoá hoặc thay đổi dữ liệu vận hành, phân quyền, mục nhỏ, nhân viên PT, ca làm việc.
+- Chưa đo được độ trễ thực tế trên Render (chỉ có mã nguồn để kiểm thử ngoại tuyến).
+- Thêm log chẩn đoán API >= 1,5 giây và ghi cơ sở dữ liệu >= 0,5 giây (không ghi dữ liệu cá nhân).

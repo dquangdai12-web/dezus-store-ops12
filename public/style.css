@@ -6542,7 +6542,7 @@ html,body{color:#111!important} body{background:linear-gradient(150deg,#fbfbfc,#
 th{background:#edf0f3!important;font-weight:800!important}td{border-color:#e0e3e8!important}
 .badge,.tag,.pillbar button{color:#111!important}
 .pillbar button.active{background:#e8dce0!important;color:#111!important}
-.v47-fashion-hero{height:230px;min-height:135px;background:#590907 url('/assets/v47/hero-reference.png') center 44%/cover no-repeat;border-radius:22px;margin-bottom:18px;border:1px solid rgba(89,9,7,.12);box-shadow:0 15px 30px rgba(89,9,7,.10)}
+.v47-fashion-hero{height:230px;min-height:135px;background:#590907 url('/assets/v47/hero-reference-v91.webp') center 44%/cover no-repeat;border-radius:22px;margin-bottom:18px;border:1px solid rgba(89,9,7,.12);box-shadow:0 15px 30px rgba(89,9,7,.10)}
 .nav-group-btn:focus-visible,.nav-btn:focus-visible{outline:2px solid #590907!important;outline-offset:2px!important}
 @media(max-width:1100px){.app-shell{grid-template-columns:225px minmax(0,1fr)!important}.sidebar{width:225px!important}.main{padding:17px!important}}
 @media(max-width:860px){.app-shell{display:block!important}.sidebar{display:none!important}.main{max-width:560px!important;padding:13px 12px calc(90px + env(safe-area-inset-bottom))!important}.v47-fashion-hero{height:165px!important;border-radius:17px!important}.topbar{padding:10px!important}}
@@ -6581,7 +6581,7 @@ body{background:radial-gradient(circle at 85% 4%,rgba(89,9,7,.055),transparent 3
 .v48-topbar-right .btn{min-height:34px!important;font-size:11px!important}
 /* Main dashboard - V46 hierarchy, data remains from original APIs */
 .v48-dashboard{width:100%;max-width:none;min-width:0}
-.v48-fashion-hero{height:250px;border-radius:27px;background:#590907 url('/assets/v47/hero-reference.png') center 43%/cover no-repeat;box-shadow:0 18px 35px rgba(89,9,7,.12);border:1px solid rgba(89,9,7,.10)}
+.v48-fashion-hero{height:250px;border-radius:27px;background:#590907 url('/assets/v47/hero-reference-v91.webp') center 43%/cover no-repeat;box-shadow:0 18px 35px rgba(89,9,7,.12);border:1px solid rgba(89,9,7,.10)}
 .v48-rank-head{display:flex;align-items:center;justify-content:space-between;gap:24px;margin:34px 0 18px}
 .v48-rank-head h2{font-size:clamp(25px,2.2vw,34px);font-weight:820;letter-spacing:-1px;white-space:nowrap;color:#191b20;margin:0 0 6px}
 .v48-rank-head p{margin:0;color:#555e69;font-size:12px}
@@ -6675,7 +6675,7 @@ body{font-family:Inter,'Segoe UI',Arial,sans-serif!important}
 .sidebar .nav-sub .nav-btn:hover .v47-subnav-leading>span,.sidebar .nav-sub .nav-btn.active .v47-subnav-leading>span{color:#7b5c4c!important}
 .sidebar .nav-dot{display:none!important}
 .page-title h2{font-size:22px!important;letter-spacing:-.8px!important;font-weight:700!important}
-.v48-fashion-hero{height:316px!important;border-radius:24px!important;background:#590907 url('/assets/v47/hero-reference.png') center 57%/cover no-repeat!important;box-shadow:0 12px 26px rgba(68,44,39,.07)!important;border:1px solid rgba(89,9,7,.10)!important;margin-bottom:26px!important}
+.v48-fashion-hero{height:316px!important;border-radius:24px!important;background:#590907 url('/assets/v47/hero-reference-v91.webp') center 57%/cover no-repeat!important;box-shadow:0 12px 26px rgba(68,44,39,.07)!important;border:1px solid rgba(89,9,7,.10)!important;margin-bottom:26px!important}
 .v48-rank-head{margin:30px 0 15px!important;align-items:flex-end!important}
 .v48-rank-head h2{font-size:23px!important;letter-spacing:-.7px!important;margin:0 0 6px!important;font-weight:800!important}
 .v48-rank-head p{font-size:12px!important;color:#999491!important;margin:0!important}
@@ -6844,7 +6844,7 @@ body{font-family:Inter,'Segoe UI',Arial,sans-serif!important}
  .v48-topbar .page-title h2{font-size:22px!important;letter-spacing:-.8px!important;font-weight:700!important}
 }
 .v48-dashboard{width:100%!important;max-width:none!important;min-width:0!important;font-family:Inter,'Segoe UI',Arial,sans-serif!important}
-.v48-fashion-hero{height:276px!important;border-radius:24px!important;background:#590907 url('/assets/v47/hero-reference.png') center 52%/cover no-repeat!important;border:1px solid rgba(255,255,255,.78)!important;box-shadow:0 18px 40px rgba(32,36,43,.10)!important;margin-bottom:0!important}
+.v48-fashion-hero{height:276px!important;border-radius:24px!important;background:#590907 url('/assets/v47/hero-reference-v91.webp') center 52%/cover no-repeat!important;border:1px solid rgba(255,255,255,.78)!important;box-shadow:0 18px 40px rgba(32,36,43,.10)!important;margin-bottom:0!important}
 .v48-rank-head{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:22px!important;margin:30px 0 15px!important}
 .v48-rank-head>div:first-child{min-width:0!important;flex:1 1 auto!important}
 .v48-rank-head h2{font-family:'Helvetica Neue',Helvetica,Arial,'Segoe UI',sans-serif!important;font-size:clamp(28px,2.7vw,43px)!important;letter-spacing:-.035em!important;line-height:1.1!important;font-weight:700!important;margin:0 0 8px!important;color:#111!important}

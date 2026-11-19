@@ -1219,17 +1219,16 @@ if (typeof window !== 'undefined') {
 
 async function renderDashboard() {
   const ctx = overviewPeriodContext();
-  const [tasksData, leaderboardData, myPerf] = await Promise.all([
-    api('/api/tasks'),
+  // Dashboard only needs task totals and leaderboard; the previous performance calculation
+  // launched 1–12 expensive API calls but never used their result in the UI.
+  const [taskSummary, leaderboardData] = await Promise.all([
+    api(`/api/dashboard/task-summary?start=${encodeURIComponent(ctx.start)}&end=${encodeURIComponent(ctx.end)}`),
     api(`/api/sales/leaderboard?period=${encodeURIComponent(ctx.period)}&date=${encodeURIComponent(ctx.refDate)}&scope=overview_percent`),
-    overviewPerformanceForPeriod(ctx),
   ]);
-  const allTasks = tasksData.tasks || [];
-  const tasks = allTasks.filter(t => overviewInPeriod(t.task_date || t.due_at || t.created_at, ctx));
-  const open = tasks.filter(t => t.status === 'assigned').length;
-  const late = tasks.filter(t => ['overdue','completed_late','not_completed'].includes(t.status)).length;
-  const done = tasks.filter(t => t.status === 'completed_on_time').length;
-  const total = Math.max(tasks.length, 1);
+  const open = Number(taskSummary.open || 0);
+  const late = Number(taskSummary.late || 0);
+  const done = Number(taskSummary.done || 0);
+  const total = Math.max(Number(taskSummary.total || 0), 1);
   const onTimeRate = Math.round((done / total) * 100);
   const leaderboardRows = leaderboardData.leaderboard || [];
   const today = new Date().toLocaleDateString('vi-VN', {day:'2-digit',month:'2-digit',year:'numeric'});
