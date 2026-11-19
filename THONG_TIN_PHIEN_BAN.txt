@@ -428,3 +428,14 @@ V86
 - Bỏ giới hạn co ảnh theo chiều ngang; ảnh PNG bám đáy thẻ và được phóng lớn hơn.
 - Tối ưu riêng desktop, màn hình trung bình và điện thoại.
 - Chỉ thay CSS/nhớ tải CSS mới; không thay đổi dữ liệu, logo, icon, nhãn, menu hay API.
+
+
+=== V90: NHÂN VIÊN PT CHỈ HIỂN THỊ Ở LỊCH LÀM VIỆC ===
+- Admin → Cấp tài khoản / phân quyền: thêm Loại nhân viên SALE (chạy số) / PT (Part-time – chỉ Lịch làm việc).
+- Admin → Sửa quyền / thông tin tài khoản: có thể đổi SALE ↔ PT mà không xóa lịch, tài khoản hay dữ liệu lịch sử.
+- Danh sách tài khoản thể hiện PT – Part-time để quản lý dễ phân biệt.
+- Lịch làm việc hiển thị PT để phân ca như nhân viên bình thường; nhãn PT được ghi ở dòng nhân sự.
+- PT bị loại khỏi danh sách doanh thu cá nhân, bảng xếp hạng, target, thưởng theo số, nhân viên chọn trong các nghiệp vụ khác.
+- Tài khoản PT chỉ truy cập lịch làm việc và mục đổi mật khẩu; không được nhập doanh thu hoặc target qua API.
+- Không thay đổi biểu mẫu, dữ liệu, giao diện Top 1/2/3, banner và các mục khác của V89.
+- Giữ nguyên một file ghi chú phiên bản này, không thêm ghi chú riêng.

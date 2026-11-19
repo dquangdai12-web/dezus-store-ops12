@@ -8171,3 +8171,13 @@ body{font-family:Inter,'Segoe UI',Arial,sans-serif!important}
     object-position: right bottom !important;
   }
 }
+
+
+/* V90: PT staff is managed in Admin and scheduled with standard employees. */
+.pt-staff-badge {
+  background: #f0f2f6 !important;
+  border-color: #d7dce6 !important;
+  color: #344054 !important;
+  font-weight: 700 !important;
+}
+.form .field[hidden], .field[hidden] { display: none !important; }

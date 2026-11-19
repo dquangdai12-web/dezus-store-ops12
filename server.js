@@ -472,6 +472,9 @@ function nextId(name) {
 function getStore(id) { return db.stores.find(s => Number(s.id) === Number(id)); }
 function getUser(id) { return db.users.find(u => Number(u.id) === Number(id)); }
 function getActiveUser(id) { const u = getUser(id); return u && u.status === 'active' ? u : null; }
+// PT staff only participate in work scheduling, not individual sales/target rankings.
+function isPtEmployee(user) { return !!user && user.role === 'employee' && user.employee_type === 'pt'; }
+function userEmployeeType(user) { return isPtEmployee(user) ? 'pt' : 'sales'; }
 function isAllStoreRole(user) { return user?.role === 'admin' || user?.role === 'office'; }
 function canSelectAssignedStore(user) {
   return isAllStoreRole(user) || (user?.role === 'manager' && getUserStoreIds(user).length > 1);
@@ -481,6 +484,9 @@ function getPermissions(userId, role) {
   const row = db.permissions.find(p => Number(p.user_id) === Number(userId)) || {};
   const out = { ...defaults };
   Object.keys(defaults).forEach(k => out[k] = Number(row[k] ?? defaults[k]));
+  if (isPtEmployee(getUser(userId))) {
+    Object.keys(out).forEach(k => { out[k] = k === 'can_view_schedule' ? 1 : 0; });
+  }
   return out;
 }
 function setPermissions(userId, role, permissions) {
@@ -585,6 +591,7 @@ function publicUser(row) {
     full_name: u.full_name,
     username: u.username,
     role: u.role,
+    employee_type: userEmployeeType(u),
     store_id: u.store_id,
     store_ids: u.store_ids || [],
     store_name: u.store_name || null,
@@ -873,6 +880,10 @@ function requireAuth(req, res, next) {
     const row = getActiveUser(payload.id);
     if (!row) return res.status(401).json({ error: 'Tài khoản không tồn tại hoặc đã bị khóa' });
     req.user = publicUser(row);
+    if (isPtEmployee(row)) {
+      const ptAllowed = new Set(['/api/bootstrap', '/api/schedules', '/api/me', '/api/me/password', '/api/checklist/templates']);
+      if (!ptAllowed.has(req.path)) return res.status(403).json({ error: 'Tài khoản PT chỉ được xem Lịch làm việc' });
+    }
     next();
   } catch (_err) {
     return res.status(401).json({ error: 'Phiên đăng nhập hết hạn' });
@@ -1745,7 +1756,7 @@ function trainingProgress(trainingId, userId, passPercent = 90) {
 function trainingAssignees(row) {
   if (!row || Number(row.is_required || 0) !== 1) return [];
   const refDate = dateOnly(row.due_at || row.arrival_date || row.created_at || new Date());
-  return db.users.filter(u => u.status === 'active' && ['employee','manager'].includes(u.role) && (
+  return db.users.filter(u => u.status === 'active' && ['employee','manager'].includes(u.role) && !isPtEmployee(u) && (
     !row.store_id || userCanWorkAtStoreOnDate(u, Number(row.store_id), refDate)
   ));
 }
@@ -2073,7 +2084,7 @@ function salesStaffForStore(storeId, opts = {}) {
   // chỉ đưa nhân viên vào cửa hàng nếu thực sự được phân công/làm/phát sinh dữ liệu trong kỳ đó.
   // Không dùng cửa hàng hiện tại để kéo ngược nhân viên vào các tháng/tuần trước ngày điều chuyển.
   let rows = (db.users || []).filter(u => {
-    if (u.status === 'deleted' || u.role !== 'employee') return false;
+    if (u.status === 'deleted' || u.role !== 'employee' || isPtEmployee(u)) return false;
     if (start && end) return idsWithData.has(Number(u.id)) || userAssignedToStoreDuringPeriod(u, sid, start, end);
     return Number(getPrimaryStoreId(u)) === sid || getUserStoreIds(u).includes(sid);
   });
@@ -2382,7 +2393,8 @@ function scheduledUsersByShift(storeId, workDate, shiftIds = []) {
   if (!set.size) return [];
   return (db.work_schedules || [])
     .filter(x => x.status !== 'deleted' && Number(x.store_id) === Number(storeId) && String(x.work_date) === String(workDate) && set.has(Number(x.shift_id)) && scheduleRowValidForTransfer(x))
-    .map(x => Number(x.user_id));
+    .map(x => Number(x.user_id))
+    .filter(uid => !isPtEmployee(getUser(uid)));
 }
 
 
@@ -2442,7 +2454,7 @@ function syncFutureShiftTasksForSchedule(storeId, changedDates = [], actorId = n
     normalizeIdArray(t.manual_assignee_ids || []).forEach(uid => desired.add(Number(uid)));
     const desiredUsers = Array.from(desired).filter(uid => {
       const u = getActiveUser(uid);
-      return u && u.role !== 'admin' && userCanWorkAtStoreOnDate(u, storeId, workDate);
+      return u && u.role !== 'admin' && !(u.role === 'employee' && u.employee_type === 'pt') && userCanWorkAtStoreOnDate(u, storeId, workDate);
     });
     const desiredSet = new Set(desiredUsers);
     const before = db.task_assignees.length;
@@ -2598,7 +2610,7 @@ function leaderboardRows(user, period, refDate, storeId = null, options = {}) {
   const { start, end } = periodRange(period, refDate);
   const statusMode = ['active', 'inactive', 'all'].includes(String(options.userStatus || 'active')) ? String(options.userStatus || 'active') : 'active';
   // Bảng doanh thu chỉ hiển thị nhân viên bán hàng, không đưa quản lý vào bảng này.
-  let people = (db.users || []).filter(u => u.status !== 'deleted' && u.role === 'employee');
+  let people = (db.users || []).filter(u => u.status !== 'deleted' && u.role === 'employee' && !isPtEmployee(u));
   if (statusMode === 'active') people = people.filter(u => u.status === 'active');
   if (statusMode === 'inactive') people = people.filter(u => u.status !== 'active');
   const requestedStoreId = storeId ? Number(storeId) : null;
@@ -2703,7 +2715,7 @@ function computePerformance(scopeUser, year = null, month = null) {
   const periodDate = new Date(Date.UTC(selectedYear, selectedMonth - 1, 1));
   const { start, end } = periodRange('month', periodDate);
   const periodEndForStatus = end;
-  let users = db.users.filter(u => u.status === 'active' && ['employee', 'manager'].includes(u.role));
+  let users = db.users.filter(u => u.status === 'active' && ['employee', 'manager'].includes(u.role) && !isPtEmployee(u));
   if (scopeUser.role === 'manager') {
     const managerStoreIds = getUserStoreIds(scopeUser).map(Number);
     users = users.filter(u => managerStoreIds.some(storeId =>
@@ -3083,14 +3095,14 @@ app.delete('/api/stores/:id', requireAuth, (req, res) => {
 
 
 app.post('/api/users', requireAuth, requirePerm('can_manage_users'), (req, res) => {
-  const { full_name, username, password, role, store_id, store_ids, permissions, avatar_url } = req.body || {};
+  const { full_name, username, password, role, store_id, store_ids, permissions, avatar_url, employee_type } = req.body || {};
   if (!full_name || !username || !password || !['admin', 'office', 'manager', 'employee'].includes(role)) return res.status(400).json({ error: 'Thiếu thông tin tài khoản' });
   if (db.users.some(u => String(u.username).toLowerCase() === String(username).trim().toLowerCase())) return res.status(400).json({ error: 'Tên đăng nhập đã tồn tại' });
   const cleanAvatar = String(avatar_url || '').trim();
   if (cleanAvatar && !/^\/uploads\//i.test(cleanAvatar) && !/^https?:\/\//i.test(cleanAvatar)) return res.status(400).json({ error: 'Đường dẫn ảnh nhân viên không hợp lệ' });
   const id = nextId('users');
   const normalizedStoreIds = normalizeStoreIds(Array.isArray(store_ids) ? store_ids : (store_id ? [store_id] : []));
-  db.users.push({ id, full_name: String(full_name).trim(), username: String(username).trim(), password_hash: bcrypt.hashSync(String(password), 10), role, avatar_url: cleanAvatar || '', store_id: normalizedStoreIds[0] || null, store_ids: normalizedStoreIds, status: 'active', created_at: nowIso() });
+  db.users.push({ id, full_name: String(full_name).trim(), username: String(username).trim(), password_hash: bcrypt.hashSync(String(password), 10), role, employee_type: role === 'employee' && employee_type === 'pt' ? 'pt' : 'sales', avatar_url: cleanAvatar || '', store_id: normalizedStoreIds[0] || null, store_ids: normalizedStoreIds, status: 'active', created_at: nowIso() });
   const inputPerms = permissions && typeof permissions === 'object' ? permissions : {};
   const hasAnyPerm = Object.values(inputPerms).some(v => Number(v) === 1);
   setPermissions(id, role, role === 'office' && !hasAnyPerm ? ROLE_DEFAULTS.office : inputPerms);
@@ -3102,9 +3114,12 @@ app.patch('/api/users/:id', requireAuth, requirePerm('can_manage_users'), (req, 
   const id = Number(req.params.id);
   const existing = getUser(id);
   if (!existing) return res.status(404).json({ error: 'Không tìm thấy tài khoản' });
-  const { full_name, role, store_id, store_ids, status, password, permissions, avatar_url } = req.body || {};
+  const { full_name, role, store_id, store_ids, status, password, permissions, avatar_url, employee_type } = req.body || {};
   if (full_name) existing.full_name = full_name;
   if (role && ['admin', 'office', 'manager', 'employee'].includes(role)) existing.role = role;
+  if (employee_type !== undefined || (role && role !== 'employee')) {
+    existing.employee_type = existing.role === 'employee' && employee_type === 'pt' ? 'pt' : 'sales';
+  }
   if (avatar_url !== undefined) {
     const cleanAvatar = String(avatar_url || '').trim();
     if (cleanAvatar && !/^\/uploads\//i.test(cleanAvatar) && !/^https?:\/\//i.test(cleanAvatar)) return res.status(400).json({ error: 'Đường dẫn ảnh nhân viên không hợp lệ' });
@@ -3363,7 +3378,7 @@ app.post('/api/tasks', requireAuth, requirePerm('can_assign_tasks'), (req, res) 
     scheduledUsersByShift(storeId, workDate, selectedShiftIds).forEach(uid => ids.add(uid));
     const validUsers = Array.from(ids).filter(uid => {
       const u = getActiveUser(uid);
-      return u && u.role !== 'admin' && userCanWorkAtStoreOnDate(u, storeId, workDate);
+      return u && u.role !== 'admin' && !(u.role === 'employee' && u.employee_type === 'pt') && userCanWorkAtStoreOnDate(u, storeId, workDate);
     });
     if (!validUsers.length && !selectedShiftIds.length) return;
     const taskId = nextId('tasks');
@@ -3523,7 +3538,7 @@ app.patch('/api/tasks/:taskId', requireAuth, requirePerm('can_edit_tasks'), (req
   if (requestedIds) {
     const validIds = requestedIds.filter(uid => {
       const u = getActiveUser(uid);
-      return u && u.role !== 'admin' && userCanWorkAtStoreOnDate(u, task.store_id, task.task_date || task.due_at || new Date());
+      return u && u.role !== 'admin' && !isPtEmployee(u) && userCanWorkAtStoreOnDate(u, task.store_id, task.task_date || task.due_at || new Date());
     });
     if (!validIds.length) return res.status(400).json({ error: 'Không có nhân sự hợp lệ trong cửa hàng' });
     const completed = db.task_assignees.filter(a => Number(a.task_id) === taskId && a.completed_at);
@@ -3693,7 +3708,7 @@ app.delete('/api/violations/:id', requireAuth, (req, res) => {
 app.post('/api/violations', requireAuth, requirePerm('can_manage_violations'), upload.array('evidence', 10), (req, res) => {
   const { user_id, store_id, violation_code, violation_level, description } = req.body || {};
   const target = getActiveUser(Number(user_id));
-  if (!target) return res.status(400).json({ error: 'Nhân viên không hợp lệ' });
+  if (!target || isPtEmployee(target)) return res.status(400).json({ error: 'Nhân viên PT chỉ hiển thị tại Lịch làm việc' });
   const violationDate = dateOnly(new Date());
   const targetStoreId = Number(store_id || preferredStoreForUserOnDate(target, violationDate) || getPrimaryStoreId(target) || 0);
   if (!targetStoreId || !userCanWorkAtStoreOnDate(target, targetStoreId, violationDate)) return res.status(400).json({ error: 'Nhân viên không làm tại cửa hàng đã chọn trong ngày ghi nhận' });
@@ -3726,7 +3741,7 @@ app.post('/api/checklist/assessments', requireAuth, requirePerm('can_grade_check
   let empId = employee_id ? Number(employee_id) : null;
   if (template.target_type === 'employee') {
     const emp = getActiveUser(empId);
-    if (!emp || emp.role !== 'employee') return res.status(400).json({ error: 'Đại sứ kinh doanh không hợp lệ' });
+    if (!emp || emp.role !== 'employee' || isPtEmployee(emp)) return res.status(400).json({ error: 'Đại sứ kinh doanh không hợp lệ' });
     if (!storeId) storeId = Number(preferredStoreForUserOnDate(emp, assessedDate) || 0);
     if (!storeId || !userCanWorkAtStoreOnDate(emp, storeId, assessedDate)) return res.status(400).json({ error: 'Nhân viên không làm tại cửa hàng đã chọn trong ngày chấm' });
     if (req.user.role !== 'admin' && !userHasStore(req.user, storeId)) return res.status(403).json({ error: 'Không có quyền chấm nhân viên này' });
@@ -3920,7 +3935,7 @@ app.post('/api/loyalty', requireAuth, upload.single('evidence'), (req, res) => {
   if (!canReviewLoyalty(req.user) && !userHasStore(req.user, storeId)) return res.status(403).json({ error: 'Không có quyền tạo Loyalty cửa hàng này' });
   const employee = getActiveUser(Number(req.body?.user_id));
   const saleDate = dateOnly(req.body?.sale_date);
-  if (!employee || employee.role !== 'employee' || !userCanWorkAtStoreOnDate(employee, storeId, saleDate)) return res.status(400).json({ error: 'Nhân viên không làm tại cửa hàng đã chọn trong ngày giao dịch' });
+  if (!employee || employee.role !== 'employee' || isPtEmployee(employee) || !userCanWorkAtStoreOnDate(employee, storeId, saleDate)) return res.status(400).json({ error: 'Nhân viên không làm tại cửa hàng đã chọn trong ngày giao dịch' });
   const invoice = String(req.body?.invoice_number || '').trim();
   const amount = toNumber(req.body?.discount_amount, 0);
   if (!invoice) return res.status(400).json({ error: 'Nhập số hóa đơn' });
@@ -3942,7 +3957,7 @@ app.patch('/api/loyalty/:id', requireAuth, upload.single('evidence'), (req, res)
   const storeId = Number(req.body?.store_id || row.store_id);
   const employee = getUser(Number(req.body?.user_id || row.user_id));
   const nextSaleDate = dateOnly(req.body?.sale_date || row.sale_date);
-  if (!getStore(storeId) || !employee || employee.role !== 'employee' || !userCanWorkAtStoreOnDate(employee, storeId, nextSaleDate)) return res.status(400).json({ error: 'Cửa hàng/nhân viên không hợp lệ tại ngày giao dịch' });
+  if (!getStore(storeId) || !employee || employee.role !== 'employee' || isPtEmployee(employee) || !userCanWorkAtStoreOnDate(employee, storeId, nextSaleDate)) return res.status(400).json({ error: 'Cửa hàng/nhân viên không hợp lệ tại ngày giao dịch' });
   const amount = toNumber(req.body?.discount_amount ?? row.discount_amount, 0);
   if (!(amount > 0)) return res.status(400).json({ error: 'Số tiền giảm phải lớn hơn 0' });
   const invoice = String(req.body?.invoice_number ?? row.invoice_number).trim();
@@ -3983,7 +3998,7 @@ app.delete('/api/loyalty/:id', requireAuth, (req, res) => {
 app.post('/api/sales', requireAuth, requireAnyPerm('can_manage_total_sales','can_manage_sales'), (req, res) => {
   const { user_id, store_id, sale_date, revenue, bill_count, item_count, customer_count, customer_new_count, customer_old_count, note } = req.body || {};
   const employee = getActiveUser(Number(user_id));
-  if (!employee || employee.role !== 'employee') return res.status(400).json({ error: 'Chỉ nhập doanh thu cho nhân viên bán hàng' });
+  if (!employee || employee.role !== 'employee' || isPtEmployee(employee)) return res.status(400).json({ error: 'Nhân viên PT chỉ xuất hiện trong Lịch làm việc, không chạy số' });
   const d = dateOnly(sale_date || new Date());
   const saleStoreId = Number(store_id || preferredStoreForUserOnDate(employee, d) || 0);
   if (!saleStoreId || !getStore(saleStoreId) || !userCanWorkAtStoreOnDate(employee, saleStoreId, d)) return res.status(400).json({ error: 'Nhân viên không làm tại cửa hàng này trong ngày đã chọn' });
@@ -5009,7 +5024,7 @@ app.post('/api/sales/daily', requireAuth, requireAnyPerm('can_manage_total_sales
   const saved = [];
   entries.forEach(entry => {
     const employee = getActiveUser(Number(entry.user_id));
-    if (!employee || employee.role !== 'employee' || !userCanWorkAtStoreOnDate(employee, storeId, sale_date)) return;
+    if (!employee || employee.role !== 'employee' || isPtEmployee(employee) || !userCanWorkAtStoreOnDate(employee, storeId, sale_date)) return;
     saved.push(upsertSalesRow(employee, sale_date, entry, req.user.id, storeId));
   });
   upsertStoreSalesDay(storeId, sale_date, customer_count, note, req.user.id, customer_new_count, customer_old_count);
@@ -5034,7 +5049,7 @@ app.post('/api/sales/targets', requireAuth, requirePerm('can_set_sales_targets')
   const saved = [];
   for (const id of ids) {
     const employee = getActiveUser(Number(id));
-    if (!employee || employee.role !== 'employee') return res.status(400).json({ error: 'Chỉ nhập target cá nhân cho nhân viên bán hàng' });
+    if (!employee || employee.role !== 'employee' || isPtEmployee(employee)) return res.status(400).json({ error: 'Nhân viên PT không có target doanh thu cá nhân' });
     // V4.204: target gắn với cửa hàng được chọn, không ép về cửa hàng chính hiện tại.
     const employeeStoreId = requestedStoreId || effectivePermanentStoreId(employee, `${target_month}-15`) || getPrimaryStoreId(employee);
     if (!employeeStoreId || !getStore(employeeStoreId)) return res.status(400).json({ error: `Không xác định được cửa hàng target của ${employee.full_name}` });
@@ -5146,7 +5161,7 @@ app.get('/api/store-staff', requireAuth, (req, res) => {
     return res.json({ store_id: storeId, store_name: store.name, month, start, end, employees });
   }
   const d = dateOnly(req.query.date || new Date());
-  const employees = (db.users || []).filter(u => u.status === 'active' && u.role === 'employee' && (
+  const employees = (db.users || []).filter(u => u.status === 'active' && u.role === 'employee' && !isPtEmployee(u) && (
     userCanWorkAtStoreOnDate(u, storeId, d) ||
     (db.sales || []).some(r => Number(r.user_id) === Number(u.id) && Number(r.store_id) === storeId && String(r.sale_date || '') === d)
   )).sort((a,b)=>a.full_name.localeCompare(b.full_name,'vi')).map(u => publicUserForStore(u, storeId, d));
@@ -5491,7 +5506,7 @@ app.post('/api/daily-report', requireAuth, requireAnyPerm('can_manage_daily_repo
   const savedSales = [];
   cleanSales.forEach(entry => {
     const employee = getActiveUser(Number(entry.user_id));
-    if (!employee || employee.role !== 'employee' || (!userHasStore(employee, storeId) && !userWorkedAtStoreOnDate(employee.id, storeId, d))) return;
+    if (!employee || employee.role !== 'employee' || isPtEmployee(employee) || (!userHasStore(employee, storeId) && !userWorkedAtStoreOnDate(employee.id, storeId, d))) return;
     savedSales.push(upsertSalesRow(employee, d, entry, req.user.id, storeId));
   });
   const morningSituation = String(store_situation_morning || '').trim();
@@ -5885,7 +5900,7 @@ app.get('/api/online-orders', requireAuth, (req, res) => {
     const end = next.toISOString().slice(0, 10);
     const ids = new Set(rows.map(r => Number(r.packer_id)).filter(Boolean));
     salesStaffForStore(storeId, { status: 'active', start, end }).forEach(u => ids.add(Number(u.id)));
-    staff = Array.from(ids).map(id => getUser(id)).filter(u => u && u.role === 'employee' && u.status !== 'deleted').sort((a,b)=>a.full_name.localeCompare(b.full_name,'vi')).map(u => publicUserForStore(u, storeId));
+    staff = Array.from(ids).map(id => getUser(id)).filter(u => u && u.role === 'employee' && !isPtEmployee(u) && u.status !== 'deleted').sort((a,b)=>a.full_name.localeCompare(b.full_name,'vi')).map(u => publicUserForStore(u, storeId));
   }
   res.json({ month, store_id: storeId, orders: rows, summary: onlineOrderSummary(rows), staff });
 });
@@ -5899,7 +5914,7 @@ app.post('/api/online-orders', requireAuth, requirePerm('can_manage_online_order
   if (!canManageOnlineOrderScope(req.user, storeId)) return res.status(403).json({ error: 'Không có quyền nhập đơn online cửa hàng này' });
   const d = dateOnly(order_date || new Date());
   const packer = getActiveUser(Number(packer_id));
-  if (!packer || packer.role !== 'employee' || !userCanWorkAtStoreOnDate(packer, storeId, d)) return res.status(400).json({ error: 'Nhân viên đóng đơn không làm tại cửa hàng này trong ngày hóa đơn' });
+  if (!packer || packer.role !== 'employee' || isPtEmployee(packer) || !userCanWorkAtStoreOnDate(packer, storeId, d)) return res.status(400).json({ error: 'Nhân viên đóng đơn không làm tại cửa hàng này trong ngày hóa đơn' });
   const invoice = String(invoice_no || '').trim();
   if (!invoice) return res.status(400).json({ error: 'Chưa nhập số hóa đơn' });
   const value = Math.max(0, toNumber(order_value, 0));
@@ -5930,7 +5945,7 @@ app.patch('/api/online-orders/:id', requireAuth, requirePerm('can_manage_online_
   const nextOrderDate = order_date ? dateOnly(order_date) : dateOnly(row.order_date || new Date());
   const nextPackerId = packer_id !== undefined ? Number(packer_id) : Number(row.packer_id);
   const nextPacker = getActiveUser(nextPackerId);
-  if (!nextPacker || nextPacker.role !== 'employee' || !userCanWorkAtStoreOnDate(nextPacker, row.store_id, nextOrderDate)) return res.status(400).json({ error: 'Nhân viên đóng đơn không làm tại cửa hàng này trong ngày hóa đơn' });
+  if (!nextPacker || nextPacker.role !== 'employee' || isPtEmployee(nextPacker) || !userCanWorkAtStoreOnDate(nextPacker, row.store_id, nextOrderDate)) return res.status(400).json({ error: 'Nhân viên đóng đơn không làm tại cửa hàng này trong ngày hóa đơn' });
   row.order_date = nextOrderDate;
   if (invoice_no !== undefined) row.invoice_no = String(invoice_no || '').trim();
   if (order_value !== undefined) { const value = Math.max(0, toNumber(order_value, 0)); row.order_value = value; row.benefit_revenue = Math.round(value * 0.3); }
@@ -6289,7 +6304,7 @@ app.get('/api/bonuses', requireAuth, (req, res) => {
 app.post('/api/bonuses', requireAuth, requirePerm('can_manage_bonuses'), (req, res) => {
   const { user_id, store_id, bonus_date, bonus_type, amount, note } = req.body || {};
   const target = getActiveUser(Number(user_id));
-  if (!target || target.role !== 'employee') return res.status(400).json({ error: 'Nhân viên không hợp lệ' });
+  if (!target || target.role !== 'employee' || isPtEmployee(target)) return res.status(400).json({ error: 'Nhân viên PT không tham gia mục thưởng doanh thu' });
   const d = dateOnly(bonus_date || new Date());
   const targetStoreId = Number(store_id || preferredStoreForUserOnDate(target, d) || getPrimaryStoreId(target) || 0);
   if (!targetStoreId || !userCanWorkAtStoreOnDate(target, targetStoreId, d)) return res.status(400).json({ error: 'Nhân viên không làm tại cửa hàng đã chọn trong ngày ghi nhận thưởng' });
