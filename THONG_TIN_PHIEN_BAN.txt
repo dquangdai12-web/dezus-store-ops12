@@ -452,3 +452,12 @@ V86
 - Không xoá hoặc thay đổi dữ liệu vận hành, phân quyền, mục nhỏ, nhân viên PT, ca làm việc.
 - Chưa đo được độ trễ thực tế trên Render (chỉ có mã nguồn để kiểm thử ngoại tuyến).
 - Thêm log chẩn đoán API >= 1,5 giây và ghi cơ sở dữ liệu >= 0,5 giây (không ghi dữ liệu cá nhân).
+
+
+=== DEZUS V92 — LỊCH LÀM VIỆC HIỂN THỊ TRỌN TUẦN GIAO THÁNG (28/11/2026) ===
+- Chọn một tháng sẽ thấy đầy đủ 7 ngày Thứ Hai–Chủ Nhật của mọi tuần có ngày trong tháng, kể cả ngày của tháng trước/tháng sau.
+- Tiêu đề tuần hiển thị đúng khoảng thời gian có ngày/tháng/năm ở cả hai đầu.
+- Ca làm và ghi chú của ngày ngoài tháng hiển thị bình thường; tài khoản có quyền phân ca có thể sửa và lưu cả ngày giao tháng.
+- Ngày ngoài tháng được tô nền nhẹ để dễ phân biệt, không bị vô hiệu hóa.
+- Cùng một tuần có dữ liệu thống nhất khi chuyển qua tháng kế cận.
+- Giữ nguyên API, dữ liệu, phân quyền, màn hình khác và cơ chế xuất Excel theo bộ lọc đang chọn.

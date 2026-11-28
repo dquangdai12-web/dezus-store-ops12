@@ -8181,3 +8181,28 @@ body{font-family:Inter,'Segoe UI',Arial,sans-serif!important}
   font-weight: 700 !important;
 }
 .form .field[hidden], .field[hidden] { display: none !important; }
+
+
+/* V92 — Weekly schedule spans the full Monday–Sunday range across months. */
+.schedule-month-hint {
+  margin: 0 0 12px;
+  color: #6b7280;
+  font-size: 12px;
+  line-height: 1.5;
+}
+/* Outside-month dates remain fully readable and editable, but are visually distinguished. */
+.schedule-table th.schedule-out-month {
+  background: #e9edf3 !important;
+  color: #536175 !important;
+}
+.schedule-table th.schedule-out-month .hint {
+  color: #536175 !important;
+}
+.schedule-table td.schedule-out-month:not(.schedule-not-eligible) {
+  background: #f7f8fa !important;
+  border-color: #dfe5ed !important;
+}
+.schedule-table td.schedule-out-month .scheduleQuickShift,
+.schedule-table td.schedule-out-month .scheduleNote {
+  opacity: 1 !important;
+}
