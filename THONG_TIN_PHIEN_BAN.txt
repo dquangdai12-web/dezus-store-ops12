@@ -461,3 +461,26 @@ V86
 - Ngày ngoài tháng được tô nền nhẹ để dễ phân biệt, không bị vô hiệu hóa.
 - Cùng một tuần có dữ liệu thống nhất khi chuyển qua tháng kế cận.
 - Giữ nguyên API, dữ liệu, phân quyền, màn hình khác và cơ chế xuất Excel theo bộ lọc đang chọn.
+
+
+=== V93 - TỐI ƯU ĐIỆN THOẠI ===
+- Sửa lỗi chạm danh mục lớn trên mobile chỉ mở menu PC thay vì menu con điện thoại.
+- Menu bottom 7 nhóm không còn tràn thành hai hàng gây che nút; có thể vuốt ngang.
+- Bỏ blur của menu cố định để giảm tải GPU trên điện thoại.
+- Tải dữ liệu nền song song khi đăng nhập; giảm tính toán đo chữ khi xoay màn hình.
+- Phản hồi ngay khi chọn mục trong khi tải API.
+
+
+=== V94 - GIAO DIEN DIEN THOAI DE DUNG ===
+- Trên điện thoại hiển thị 5 nút điều hướng cố định: Tổng quan, Công việc, Lịch, Doanh thu, Tất cả. Trên vai trò hạn chế chỉ hiển thị mục có quyền; mục Tất cả luôn cho phép xem đầy đủ danh mục hợp lệ.
+- Các nhóm nhiều trang mở trong bảng chọn dễ chạm; có thể đóng bằng nút X hoặc chạm nền ngoài; không còn thanh menu con cố định che thao tác.
+- Header di động hiển thị logo DEZUS khi ở Tổng quan, trang khác hiển thị tên màn hình rõ ràng.
+- Bảng lịch trên điện thoại có thanh chọn đủ 7 ngày, hiển thị nhân viên và ngày đang chọn để không phải kéo bảng ngang; khi lưu vẫn lưu toàn bộ tuần, kể cả ngày giao tháng.
+- Bảng Top 1/2/3 trên điện thoại chuyển thành thẻ vuốt ngang (Top 1 đầu tiên). Không đổi hiển thị trên máy tính.
+- Tăng kích thước vùng bấm, cải thiện bảng biểu, giữ nguyên API, quyền truy cập và dữ liệu từ V93.
+
+
+=== V95 — BỎ CÂU MÔ TẢ DỮ LIỆU TRÊN TỔNG QUAN ===
+- Xóa dòng: "Số liệu tổng hợp từ hệ thống thực, không sử dụng số liệu giả của bản demo."
+- Giữ nguyên khung Thông tin kỳ báo cáo và toàn bộ chức năng khác.
+- Cập nhật mã cache để trình duyệt nhận JavaScript mới.

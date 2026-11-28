@@ -487,11 +487,21 @@ function percentBadge(percent) {
 
 function apiUrl(path) { return path; }
 
+// Route changes cancel stale GETs so a slow page cannot overwrite a later tap.
+// POST/PATCH/DELETE are not cancelled: user changes must still be saved safely.
+let routeReadController = null;
+function cancelStaleRouteReads() {
+  if (routeReadController) routeReadController.abort();
+  routeReadController = new AbortController();
+}
+
 async function api(path, opts = {}) {
   const headers = opts.headers || {};
   if (!(opts.body instanceof FormData)) headers['Content-Type'] = 'application/json';
   if (state.token) headers.Authorization = `Bearer ${state.token}`;
-  const res = await fetch(apiUrl(path), { ...opts, headers });
+  const read = !opts.method || String(opts.method).toUpperCase() === 'GET';
+  const signal = opts.signal || (read ? routeReadController?.signal : undefined);
+  const res = await fetch(apiUrl(path), { ...opts, headers, ...(signal ? { signal } : {}) });
   const type = res.headers.get('content-type') || '';
   const data = type.includes('application/json') ? await res.json() : await res.text();
   if (!res.ok) {
@@ -810,6 +820,7 @@ function activeGroupKey(items = navItems()) {
 }
 
 function shell(content, title = 'Tổng Quan', subtitle = 'Vận hành cửa hàng Dezus') {
+  document.body.classList.remove('v94-menu-open');
   const items = navItems();
   const groups = navGroups();
   const activeGroup = activeGroupKey(items);
@@ -824,14 +835,21 @@ function shell(content, title = 'Tổng Quan', subtitle = 'Vận hành cửa hà
   }).join('');
   const mobileGroups = mobileNavGroups();
   const mobileActiveGroup = mobileGroups.find(g => g.ids.includes(state.route) && availableGroupItems(g, items).length)?.key || activeGroup;
-  const bottomGroups = mobileGroups.filter(g => availableGroupItems(g, items).length);
-  const mobileBottom = bottomGroups.map(group => `<button class="mobile-tab group-${group.key} ${mobileActiveGroup === group.key ? 'active' : ''}" data-group="${group.key}"><span class="mobile-tab-icon">${group.icon}</span><span>${group.label}</span></button>`).join('');
-  const mobileCats = '';
-  const openGroup = groups.find(g => g.key === state.navOpenGroup) || groups.find(g => g.key === activeGroup) || groups[0];
-  const mobileOpenGroup = mobileGroups.find(g => g.key === state.navOpenGroup && availableGroupItems(g, items).length) || mobileGroups.find(g => g.key === mobileActiveGroup && availableGroupItems(g, items).length) || mobileGroups[0];
-  const mobileTitle = mobileOpenGroup?.label || title;
-  const mobileOpenItems = mobileOpenGroup ? availableGroupItems(mobileOpenGroup, items) : [];
-  const mobileSubnav = mobileOpenGroup && mobileOpenItems.length > 1 ? `<div class="mobile-subnav mobile-menu-list">${mobileOpenItems.map(([id,label,,groupKey]) => `<button class="mobile-subitem group-${groupKey || mobileOpenGroup.key} route-${id} ${state.route === id ? 'active' : ''}" data-route="${id}"><span class="mobile-subitem-icon">${mobileIconFor(id)}</span><span class="mobile-subitem-label">${label}</span><span class="mobile-subitem-arrow">›</span></button>`).join('')}</div>` : '';
+  const pinnedKeys = ['overview', 'work', 'schedule', 'revenue'];
+  const bottomGroups = mobileGroups.filter(g => pinnedKeys.includes(g.key) && availableGroupItems(g, items).length);
+  const moreTab = {key:'all',label:'Tất cả',icon:appUiIcon('more')};
+  const mobileBottom = [...bottomGroups, moreTab].map(group => {
+    const active = group.key === 'all' ? !pinnedKeys.includes(mobileActiveGroup) : mobileActiveGroup === group.key;
+    const title = group.key === 'schedule' ? 'Lịch' : group.key === 'overview' ? 'Tổng quan' : group.label;
+    return `<button type="button" class="mobile-tab group-${group.key} ${active ? 'active' : ''}" data-group="${group.key}" aria-label="${esc(group.label)}" aria-haspopup="${group.key === 'all' || availableGroupItems(group, items).length > 1 ? 'dialog' : 'false'}" aria-expanded="false"><span class="mobile-tab-icon">${group.icon}</span><span>${esc(title)}</span></button>`;
+  }).join('');
+  const sheetSections = mobileGroups.map(group => {
+    const routes = availableGroupItems(group, items);
+    if (!routes.length) return '';
+    return `<section class="v94-menu-section" data-menu-group="${group.key}"><h3>${esc(group.label)}</h3><div class="v94-menu-options">${routes.map(([id,label]) => `<button type="button" class="v94-menu-item ${state.route === id ? 'active' : ''}" data-route="${id}"><span class="v94-menu-icon">${mobileIconFor(id)}</span><span class="v94-menu-label">${esc(label)}</span><span class="v94-menu-chevron" aria-hidden="true">›</span></button>`).join('')}</div></section>`;
+  }).join('');
+  const mobileSheet = `<div class="v94-mobile-menu" id="mobileMenuSheet" hidden><button type="button" class="v94-mobile-scrim" id="mobileMenuScrim" aria-label="Đóng danh mục"></button><section class="v94-mobile-panel" role="dialog" aria-modal="true" aria-label="Danh mục DEZUS"><div class="v94-mobile-grab" aria-hidden="true"></div><header class="v94-mobile-panel-head"><div><span>DEZUS / STORE OPERATIONS</span><h2 id="mobileSheetTitle">Tất cả danh mục</h2></div><button type="button" id="mobileMenuClose" class="v94-mobile-close" aria-label="Đóng danh mục">✕</button></header><div class="v94-mobile-panel-body">${sheetSections}</div></section></div>`;
+  const mobileTitle = title;
   app.innerHTML = `
     <div class="app-shell">
       <aside class="sidebar">
@@ -851,30 +869,79 @@ function shell(content, title = 'Tổng Quan', subtitle = 'Vận hành cửa hà
           <button class="mobile-icon-btn" id="logoutBtn2" title="Đăng xuất">↗</button>
         </div>
         ${state.route === 'dashboard' ? '' : `<div class="topbar v48-topbar"><div class="page-title"><h2>${esc(title)}</h2></div></div>`}
-        <div class="mobile-page-title">${state.route === 'dashboard' ? '' : `<h2>${esc(mobileTitle)}</h2>`}<button class="mobile-page-logout" id="logoutBtnMobile" type="button" aria-label="Đăng xuất">Đăng xuất</button></div>
-        <div class="mobile-cats">${mobileCats}</div>
+        <div class="mobile-page-title"><div class="v94-mobile-title">${state.route === 'dashboard' ? '<img class="v94-mobile-wordmark" src="/assets/v47/dezus-wordmark.png" alt="DEZUS"><small>Store Operations</small>' : `<small>DEZUS · STORE OPERATIONS</small><h2>${esc(mobileTitle)}</h2>`}</div><button class="mobile-page-logout" id="logoutBtnMobile" type="button" aria-label="Đăng xuất">Thoát</button></div>
         ${content}
       </main>
-      ${mobileSubnav}
-      <nav class="mobile-bottom-nav">${mobileBottom}</nav>
+      <nav aria-label="Danh mục chính" class="mobile-bottom-nav" style="--v94-mobile-tab-count:${bottomGroups.length + 1}">${mobileBottom}</nav>
+      ${mobileSheet}
     </div>`;
-  $$('[data-route]').forEach(btn => btn.onclick = () => { if (btn.dataset.route === 'product_analytics' && state.route !== 'product_analytics') resetProductAnalyticsOnEntry(); state.route = btn.dataset.route; state.navOpenGroup = activeGroupKey(items); localStorage.setItem('dezus_ops_nav_group', state.navOpenGroup); localStorage.setItem('dezus_ops_route', state.route); render(); });
-  $$('[data-group]').forEach(btn => btn.onclick = () => {
+  // V93: Mobile navigation must open the MOBILE submenu, not the hidden desktop accordion.
+  // Keep the current form mounted while switching menu groups so unsaved inputs survive.
+  const openRoute = route => {
+    if (!route) return;
+    if (route === 'product_analytics' && state.route !== 'product_analytics') resetProductAnalyticsOnEntry();
+    const current = state.route;
+    if (current !== route) cancelStaleRouteReads();
+    state.route = route;
+    const groupKey = mobileGroups.find(g => g.ids.includes(route))?.key || groups.find(g => g.ids.includes(route))?.key || 'overview';
+    state.navOpenGroup = groupKey;
+    localStorage.setItem('dezus_ops_nav_group', groupKey);
+    localStorage.setItem('dezus_ops_route', route);
+    if (current === route) return;
+    // Instant touch feedback while the destination API loads (does not block buttons).
+    if (window.matchMedia('(max-width: 860px)').matches) {
+      const main = $('.main', app);
+      if (main && !$('.mobile-route-progress', main)) {
+        const progress = document.createElement('div');
+        progress.className = 'mobile-route-progress';
+        progress.setAttribute('role', 'status');
+        progress.textContent = 'Đang mở trang…';
+        main.prepend(progress);
+      }
+    }
+    // Yield one frame so a slow API cannot prevent pressed-state feedback on phones.
+    requestAnimationFrame(() => render());
+  };
+  const menuSheet = $('#mobileMenuSheet', app);
+  const closeMobileMenu = () => {
+    if (!menuSheet || menuSheet.hidden) return;
+    menuSheet.hidden = true;
+    document.body.classList.remove('v94-menu-open');
+    $$('.mobile-bottom-nav .mobile-tab', app).forEach(btn => btn.setAttribute('aria-expanded','false'));
+  };
+  const openMobileMenu = key => {
+    if (!menuSheet) return;
+    const requested = mobileGroups.find(g => g.key === key);
+    const focused = requested && availableGroupItems(requested, items).length ? requested : null;
+    $$('.v94-menu-section', menuSheet).forEach(section => {
+      section.hidden = Boolean(focused && section.dataset.menuGroup !== focused.key);
+    });
+    const titleEl = $('#mobileSheetTitle', menuSheet);
+    if (titleEl) titleEl.textContent = focused ? focused.label : 'Tất cả danh mục';
+    menuSheet.hidden = false;
+    document.body.classList.add('v94-menu-open');
+    const body = $('.v94-mobile-panel-body',menuSheet);
+    if (body) body.scrollTop = 0;
+    $$('.mobile-bottom-nav .mobile-tab', app).forEach(btn => btn.setAttribute('aria-expanded',String(btn.dataset.group === key)));
+    $('#mobileMenuClose',menuSheet)?.focus({preventScroll:true});
+  };
+  $$('[data-route]', app).forEach(btn => btn.addEventListener('click', () => {closeMobileMenu(); openRoute(btn.dataset.route); }));
+  $$('[data-group]', app).forEach(btn => btn.addEventListener('click', () => {
     const key = btn.dataset.group;
+    if (btn.classList.contains('mobile-tab')) {
+      if (key === 'all') {openMobileMenu('all'); return;}
+      const mobileGroup = mobileGroups.find(g => g.key === key);
+      const choices = mobileGroup ? availableGroupItems(mobileGroup, items) : [];
+      if (choices.length === 1) {closeMobileMenu(); openRoute(choices[0][0]); return;}
+      if (choices.length > 1) {openMobileMenu(key); return;}
+      return;
+    }
     const group = groups.find(g => g.key === key);
     if (!group) return;
     const available = availableGroupItems(group, items);
-    if (available.length === 1) {
-      state.navOpenGroup = key;
-      state.route = available[0][0];
-      localStorage.setItem('dezus_ops_nav_group', key);
-      localStorage.setItem('dezus_ops_route', state.route);
-      render();
-      return;
-    }
+    if (available.length === 1) return openRoute(available[0][0]);
     state.navOpenGroup = state.navOpenGroup === key ? '' : key;
     localStorage.setItem('dezus_ops_nav_group', state.navOpenGroup);
-    // Expand/collapse without changing current form contents or losing unsaved input.
     $$('.sidebar .nav-group').forEach(node => {
       const active = node.classList.contains(`group-${state.navOpenGroup}`);
       node.classList.toggle('open', active);
@@ -882,6 +949,16 @@ function shell(content, title = 'Tổng Quan', subtitle = 'Vận hành cửa hà
       const trigger = node.querySelector('.nav-group-btn');
       if (trigger) trigger.setAttribute('aria-expanded', String(active));
     });
+  }));
+  $('#mobileMenuClose',app)?.addEventListener('click', closeMobileMenu);
+  $('#mobileMenuScrim',app)?.addEventListener('click', closeMobileMenu);
+  menuSheet?.addEventListener('keydown', event => {
+    if (event.key === 'Escape') {event.preventDefault(); closeMobileMenu();}
+    if (event.key !== 'Tab') return;
+    const focusable = Array.from(menuSheet.querySelectorAll('button:not([disabled])')).filter(el => el.getClientRects().length);
+    if (!focusable.length) return;
+    if (event.shiftKey && document.activeElement === focusable[0]) {event.preventDefault(); focusable.at(-1).focus();}
+    else if (!event.shiftKey && document.activeElement === focusable.at(-1)) {event.preventDefault(); focusable[0].focus();}
   });
   $('#logoutBtn')?.addEventListener('click', logout);
   $('#logoutBtn2')?.addEventListener('click', logout);
@@ -892,6 +969,7 @@ function shell(content, title = 'Tổng Quan', subtitle = 'Vận hành cửa hà
 }
 
 function logout() {
+  document.body.classList.remove('v94-menu-open');
   localStorage.removeItem('dezus_ops_token');
   state.token = '';
   state.user = null;
@@ -930,11 +1008,14 @@ function renderLogin() {
 }
 
 async function loadBase() {
-  const boot = await api('/api/bootstrap');
+  // These endpoints are independent; avoid a second network round-trip on mobile.
+  const [boot, templates] = await Promise.all([
+    api('/api/bootstrap'),
+    api('/api/checklist/templates'),
+  ]);
   state.user = boot.currentUser;
   state.boot = boot;
-  const t = await api('/api/checklist/templates');
-  state.templates = t.templates;
+  state.templates = templates.templates;
 }
 
 async function start() {
@@ -970,6 +1051,7 @@ async function render() {
     if (active === 'reports') return await renderReports();
     if (active === 'admin') return await renderAdmin();
   } catch (err) {
+    if (err?.name === 'AbortError') return; // user tapped another section before this one finished loading
     console.error('Render error:', err);
     const msg = err?.message || 'Không thể tải giao diện';
     if (typeof shell === 'function') shell(`<div class="card"><div class="empty"><b>Không thể tải trang</b><p>${esc(msg)}</p><button class="btn" id="retryRender" type="button">Tải lại</button></div></div>`, 'Có lỗi tải trang', 'Vui lòng thử tải lại');
@@ -1192,6 +1274,7 @@ async function overviewPerformanceForPeriod(ctx) {
 
 // Fit podium names/store labels on one line, without changing the underlying names.
 function fitPodiumTextToOneLine() {
+  if (window.matchMedia('(max-width: 860px)').matches) return;
   const awards = document.querySelectorAll('#overviewPage .v48-podium .dz72-award');
   awards.forEach(card => {
     const width = card.getBoundingClientRect().width;
@@ -1212,8 +1295,14 @@ function fitPodiumTextToOneLine() {
   });
 }
 if (typeof window !== 'undefined') {
+  let podiumResizeFrame = 0;
   window.addEventListener('resize', () => {
-    if (document.querySelector('#overviewPage .v48-podium')) fitPodiumTextToOneLine();
+    if (!document.querySelector('#overviewPage .v48-podium') || window.innerWidth <= 860) return;
+    if (podiumResizeFrame) cancelAnimationFrame(podiumResizeFrame);
+    podiumResizeFrame = requestAnimationFrame(() => {
+      podiumResizeFrame = 0;
+      fitPodiumTextToOneLine();
+    });
   }, { passive: true });
 }
 
@@ -1265,7 +1354,7 @@ async function renderDashboard() {
   // V64: List the complete ranking, split into two balanced columns as in the user's screenshot.
   // The first member list begins with Top 1 (podium members are also shown in the table).
   const rankMiddle = Math.ceil(leaderboardRows.length / 2);
-  const rankTable = (rows, startRank) => `<div class="v64-rank-table-wrap"><table class="v64-rank-table"><thead><tr><th scope="col">TOP</th><th scope="col">NHÂN VIÊN</th><th scope="col">CỬA HÀNG</th><th scope="col">% ĐẠT TARGET</th></tr></thead><tbody>${rows.map((r,i) => `<tr><td><span class="v64-rank-badge">● Top ${startRank+i}</span></td><td class="v64-member-name">${userDisplayName(r)}</td><td class="v64-member-store">${esc(r.store_name || '—')}</td><td><span class="v64-rank-percent">● ${rankPct(r)}</span></td></tr>`).join('')}</tbody></table></div>`;
+  const rankTable = (rows, startRank) => `<div class="v64-rank-table-wrap"><table class="v64-rank-table"><thead><tr><th scope="col">TOP</th><th scope="col">NHÂN VIÊN</th><th scope="col">CỬA HÀNG</th><th scope="col">% ĐẠT TARGET</th></tr></thead><tbody>${rows.map((r,i) => `<tr><td><span class="v64-rank-badge">● Top ${startRank+i}</span></td><td class="v64-member-name" data-store="${esc(r.store_name || '—')}">${userDisplayName(r)}</td><td class="v64-member-store">${esc(r.store_name || '—')}</td><td><span class="v64-rank-percent">● ${rankPct(r)}</span></td></tr>`).join('')}</tbody></table></div>`;
   const rankList = leaderboardRows.length
     ? `<div class="v64-member-columns">${rankTable(leaderboardRows.slice(0, rankMiddle), 1)}${rankTable(leaderboardRows.slice(rankMiddle), rankMiddle + 1)}</div>`
     : '<div class="empty">Chưa có dữ liệu xếp hạng</div>';
@@ -1281,7 +1370,7 @@ async function renderDashboard() {
       </section>
       <div class="v48-supporting-grid">
         <section class="v48-supporting-card"><h3>Tiến độ công việc</h3><div class="v48-stats"><div><span>Đang mở</span><strong>${open}</strong></div><div><span>Đúng hạn</span><strong>${done}</strong></div><div><span>Trễ hạn</span><strong>${late}</strong></div><div><span>Tỷ lệ đúng hạn</span><strong>${onTimeRate}%</strong></div></div></section>
-        <section class="v48-supporting-card"><h3>Thông tin kỳ báo cáo</h3><div class="v48-period-summary"><span>Đang xem ${esc(ctx.label)}</span><strong>${esc(today)}</strong></div><p>Số liệu tổng hợp từ hệ thống thực, không sử dụng số liệu giả của bản demo.</p></section>
+        <section class="v48-supporting-card"><h3>Thông tin kỳ báo cáo</h3><div class="v48-period-summary"><span>Đang xem ${esc(ctx.label)}</span><strong>${esc(today)}</strong></div></section>
       </div>
     </section>
   `, 'Tổng Quan', '');
@@ -4503,10 +4592,32 @@ async function renderSchedule() {
     }).join('') || `<tr><td colspan="8"><div class="empty">Tuần này không có nhân sự làm tại cửa hàng</div></td></tr>`;
   };
   const legend = `<div class="schedule-legend">${shifts.map(sh => `<span>${shiftChip(sh)} <small>${esc(sh.start_time || '')}-${esc(sh.end_time || '')}</small></span>`).join('')}<span><span class="shift-chip off" aria-label="Chưa phân ca"></span><small>Nghỉ/chưa phân ca</small></span></div>`;
-  const weekTables = weeks.map((week, idx) => `<div class="schedule-week-block"><div class="schedule-week-title">Tuần ${idx + 1} <span>${dOnly(week.dates[0])} – ${dOnly(week.dates[6])}</span></div><div class="table-wrap schedule-wrap"><table class="schedule-table"><thead><tr><th>Nhân sự</th>${week.dates.map((d) => `<th class="${d.startsWith(month) ? '' : 'schedule-out-month'}">${weekLabel(d)}</th>`).join('')}</tr></thead><tbody>${makeRows(week)}</tbody></table></div></div>`).join('');
+  // On phones each day remains accessible by tap rather than requiring a very wide table.
+  // All seven columns and their input values remain mounted for correct weekly saves.
+  const weekTables = weeks.map((week, idx) => {
+    const preferredDay = Math.max(0, week.dates.findIndex(d => d.startsWith(month)));
+    const dayPicker = `<div class="v94-week-day-picker" role="group" aria-label="Chọn ngày tuần ${idx+1}">${week.dates.map((day, dayIndex) => `<button type="button" class="v94-week-day ${dayIndex === preferredDay ? 'active' : ''} ${day.startsWith(month) ? '' : 'other-month'}" data-day-index="${dayIndex}" aria-pressed="${dayIndex === preferredDay}"><span>${['T2','T3','T4','T5','T6','T7','CN'][dayIndex]}</span><strong>${day.slice(8)}/${day.slice(5,7)}</strong></button>`).join('')}</div>`;
+    return `<div class="schedule-week-block" data-v94-initial-day="${preferredDay}"><div class="schedule-week-title">Tuần ${idx + 1} <span>${dOnly(week.dates[0])} – ${dOnly(week.dates[6])}</span></div>${dayPicker}<div class="table-wrap schedule-wrap"><table class="schedule-table"><thead><tr><th>Nhân sự</th>${week.dates.map((d) => `<th class="${d.startsWith(month) ? '' : 'schedule-out-month'}">${weekLabel(d)}</th>`).join('')}</tr></thead><tbody>${makeRows(week)}</tbody></table></div></div>`;
+  }).join('');
   const scheduleTable = `<div class="card" style="margin-top:16px"><datalist id="scheduleShiftCodes">${shifts.map(sh => `<option value="${esc(shiftCode(sh))}"></option>`).join('')}</datalist><form id="scheduleForm"><div class="toolbar"><h3 style="margin-right:auto">Bảng phân ca theo tháng</h3>${isEditing ? '<span class="badge warning">Đang sửa</span>' : '<span class="badge ok">Đang xem</span>'}</div>${isEditing ? `<p class="hint">Nhập mã ca đã tạo (ví dụ S, S1, G2, F); để trống nếu chưa xếp ca. Mã sai sẽ báo đỏ. Nhấn Enter sang ô tiếp theo, rồi bấm Lưu lịch.</p>` : ''}${legend}${weekTables}</form></div>`;
   const shiftForm = state.user?.role === 'admin' ? `<div class="card" id="adminShiftManager" style="margin-top:16px"><h3>Quản lý ca làm · Admin</h3><p class="hint">Tạo ca mới với mã riêng như S1, S2, G1, G2, F2; các ca hiện tại vẫn được giữ nguyên.</p><form id="shiftForm" class="grid three simple-shift-form"><div class="field"><label>Mã ca</label><input class="input" name="code" placeholder="Ví dụ: S1, G2, F2" maxlength="12" pattern="[A-Za-z][A-Za-z0-9]{0,11}" required></div><div class="field"><label>Giờ bắt đầu</label><input class="input" type="time" name="start_time" required></div><div class="field"><label>Giờ kết thúc</label><input class="input" type="time" name="end_time" required></div><input type="hidden" name="name"><div style="grid-column:1/-1"><button class="btn" type="submit">Tạo ca mới</button></div></form><div class="shift-admin-list">${shifts.map(sh => `<div class="shift-admin-card"><div class="shift-admin-code">${shiftChip(sh)}</div><div class="grid three"><div class="field"><label>Mã ca</label><input class="input shiftField" data-id="${sh.id}" data-field="code" value="${esc(shiftCode(sh))}"></div><div class="field"><label>Bắt đầu</label><input class="input shiftField" data-id="${sh.id}" data-field="start_time" type="time" value="${esc(sh.start_time || '')}"></div><div class="field"><label>Kết thúc</label><input class="input shiftField" data-id="${sh.id}" data-field="end_time" type="time" value="${esc(sh.end_time || '')}"></div><input type="hidden" class="shiftField" data-id="${sh.id}" data-field="name" value="Ca ${esc(shiftCode(sh))}"><div class="row" style="grid-column:1/-1"><button type="button" class="btn small secondary saveShiftBtn" data-id="${sh.id}">Lưu</button><button type="button" class="btn small danger deleteShiftBtn" data-id="${sh.id}" data-name="${esc(shiftCode(sh))}">Xóa</button></div></div></div>`).join('')}</div></div>` : '';
   shell(`${filter}${state.user?.role === 'admin' ? '<div style="margin:12px 0"><button class="btn secondary" id="openShiftManagerBtn" type="button">+ Tạo / quản lý ca (Admin)</button></div>' : ''}${scheduleTable}${shiftForm}`, 'Lịch làm việc', '');
+  $$('.schedule-week-block').forEach(block => {
+    const selectDay = index => {
+      block.querySelectorAll('.schedule-table tr').forEach(row => {
+        Array.from(row.children).forEach((cell,col) => {
+          if (col > 0) cell.classList.toggle('v94-day-unselected', col !== index + 1);
+        });
+      });
+      block.querySelectorAll('.v94-week-day').forEach(btn => {
+        const isSelected = Number(btn.dataset.dayIndex) === index;
+        btn.classList.toggle('active', isSelected);
+        btn.setAttribute('aria-pressed', String(isSelected));
+      });
+    };
+    selectDay(Number(block.dataset.v94InitialDay || 0));
+    block.querySelectorAll('.v94-week-day').forEach(btn => btn.addEventListener('click', () => selectDay(Number(btn.dataset.dayIndex))));
+  });
   $('#openShiftManagerBtn')?.addEventListener('click', () => $('#adminShiftManager')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
   $('#scheduleMonthInput')?.addEventListener('change', e => { state.scheduleMonth = e.target.value; state.scheduleDate = `${e.target.value}-01`; state.scheduleEditMode = false; renderSchedule(); });
   $('#scheduleStoreFilter')?.addEventListener('change', e => { state.scheduleStoreId = e.target.value; state.scheduleEditMode = false; renderSchedule(); });
