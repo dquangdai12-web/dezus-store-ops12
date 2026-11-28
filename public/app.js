@@ -725,7 +725,7 @@ function navItems() {
 
 
 function appUiIcon(name) {
-  const attrs = 'class="app-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.05" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"';
+  const attrs = 'class="app-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"';
   const icons = {
     home: `<svg ${attrs}><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V21h5v-6h3v6h5V9.5"/></svg>`,
     tasks: `<svg ${attrs}><rect x="4" y="3.5" width="16" height="17" rx="3"/><path d="M9 3v3h6V3"/><path d="m8.2 12.2 1.8 1.8 4-4"/><path d="M8 17h8"/></svg>`,
@@ -745,6 +745,12 @@ function appUiIcon(name) {
     key: `<svg ${attrs}><circle cx="8" cy="15" r="4"/><path d="M11 12 20 3"/><path d="M16 7l2 2"/><path d="M14 9l2 2"/></svg>`,
     admin: `<svg ${attrs}><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2 3.4-.2-.1a1.7 1.7 0 0 0-2.1.4l-.1.1a1.7 1.7 0 0 0-.4 1.2H9a1.7 1.7 0 0 0-.4-1.2l-.1-.1a1.7 1.7 0 0 0-2.1-.4l-.2.1-2-3.4.1-.1A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.1-1.5H3.3V10h.2a1.7 1.7 0 0 0 1.1-1.5 1.7 1.7 0 0 0-.3-1.9l-.1-.1 2-3.4.2.1a1.7 1.7 0 0 0 2.1-.4l.1-.1A1.7 1.7 0 0 0 9 1.5h6a1.7 1.7 0 0 0 .4 1.2l.1.1a1.7 1.7 0 0 0 2.1.4l.2-.1 2 3.4-.1.1a1.7 1.7 0 0 0-.3 1.9A1.7 1.7 0 0 0 20.5 10h.2v3.5h-.2A1.7 1.7 0 0 0 19.4 15Z" opacity=".28"/></svg>`,
     more: `<svg ${attrs}><rect x="4" y="4" width="6" height="6" rx="1.5"/><rect x="14" y="4" width="6" height="6" rx="1.5"/><rect x="4" y="14" width="6" height="6" rx="1.5"/><rect x="14" y="14" width="6" height="6" rx="1.5"/></svg>`,
+    report: `<svg ${attrs}><rect x="4" y="3" width="16" height="18" rx="2.5"/><path d="M8 8h8M8 12h3M8 16h3"/><path d="m14 14 1.8 2 3.2-3.5"/></svg>`,
+    trend: `<svg ${attrs}><path d="M3 19.5h18M4.5 17V7"/><path d="m7 14 4-4 3 2 5-6"/><path d="M15.5 6H19v3.5"/></svg>`,
+    heart: `<svg ${attrs}><path d="M20.5 8.7c0 4.1-8.5 10.2-8.5 10.2S3.5 12.8 3.5 8.7a4.6 4.6 0 0 1 8.5-2.4 4.6 4.6 0 0 1 8.5 2.4Z"/></svg>`,
+    sparkle: `<svg ${attrs}><path d="m12 2 2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4L12 2Z"/><path d="M19.5 2.5v4M17.5 4.5h4"/></svg>`,
+    package: `<svg ${attrs}><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Z"/><path d="m4.5 7.5 7.5 4 7.5-4M12 11.5V21M8 5.2l8 4.4"/></svg>`,
+    settings: `<svg ${attrs}><circle cx="12" cy="12" r="3.25"/><path d="m9.6 3.5.5-1h3.8l.5 1 1.6.7 1.1-.4 2.7 2.7-.4 1.1.7 1.6 1 .5v3.8l-1 .5-.7 1.6.4 1.1-2.7 2.7-1.1-.4-1.6.7-.5 1h-3.8l-.5-1-1.6-.7-1.1.4-2.7-2.7.4-1.1-.7-1.6-1-.5V9.7l1-.5.7-1.6-.4-1.1L6.9 3.8l1.1.4 1.6-.7Z" transform="translate(0 1) scale(.94)"/></svg>`,
   };
   return icons[name] || icons.more;
 }
@@ -757,21 +763,21 @@ function dezusNavPicture(src) { return src ? `<img class="v47-nav-picture" src="
 
 function navGroups() {
   return [
-    { key:'overview', label:'Tổng Quan', icon:dezusNavPicture('/assets/v76/icon-tong-quan.png'), ids:['dashboard'] },
-    { key:'daily_overview', label:'Tổng hợp báo cáo ngày', icon:appUiIcon('weekly'), ids:['store_daily_summary'] },
-    { key:'work', label:'Công việc', icon:appUiIcon('checklist'), ids:['tasks','cdp_ojti','checklists','violations'] },
+    { key:'overview', label:'Tổng Quan', icon:appUiIcon('home'), ids:['dashboard'] },
+    { key:'daily_overview', label:'Tổng hợp báo cáo ngày', icon:appUiIcon('report'), ids:['store_daily_summary'] },
+    { key:'work', label:'Công việc', icon:appUiIcon('tasks'), ids:['tasks','cdp_ojti','checklists','violations'] },
     { key:'schedule', label:'Lịch làm việc', icon:appUiIcon('calendar'), ids:['schedule'] },
     { key:'revenue', label:'Doanh thu', icon:appUiIcon('revenue'), ids:['sales','daily_report','weekly_report','loyalty','ggnv','online_orders','bonuses'] },
     { key:'product', label:'Sản phẩm', icon:appUiIcon('product'), ids:['orders','product_analytics'] },
     { key:'more', label:'Tài liệu', icon:appUiIcon('document'), ids:['documents','reports'] },
-    { key:'system', label:'Hệ thống', icon:appUiIcon('admin'), ids:['account','admin'] },
+    { key:'system', label:'Hệ thống', icon:appUiIcon('settings'), ids:['account','admin'] },
   ];
 }
 
 function mobileNavGroups() {
   return [
-    { key:'overview', label:'Tổng Quan', icon:dezusNavPicture('/assets/v76/icon-tong-quan.png'), ids:['dashboard'] },
-    { key:'daily_overview', label:'Tổng hợp báo cáo ngày', icon:appUiIcon('weekly'), ids:['store_daily_summary'] },
+    { key:'overview', label:'Tổng Quan', icon:appUiIcon('home'), ids:['dashboard'] },
+    { key:'daily_overview', label:'Tổng hợp báo cáo ngày', icon:appUiIcon('report'), ids:['store_daily_summary'] },
     { key:'work', label:'Công việc', icon:appUiIcon('tasks'), ids:['tasks','cdp_ojti','checklists','violations'] },
     { key:'schedule', label:'Lịch làm việc', icon:appUiIcon('calendar'), ids:['schedule'] },
     { key:'revenue', label:'Doanh thu', icon:appUiIcon('revenue'), ids:['sales','daily_report','weekly_report','loyalty','ggnv','online_orders','bonuses'] },
@@ -782,27 +788,27 @@ function mobileNavGroups() {
 
 function mobileIconFor(id) {
   return ({
-    dashboard:dezusNavPicture('/assets/v76/icon-tong-quan.png'),
+    dashboard:appUiIcon('home'),
     tasks:appUiIcon('tasks'),
     cdp_ojti:appUiIcon('people'),
     checklists:appUiIcon('checklist'),
     schedule:appUiIcon('calendar'),
     violations:appUiIcon('alert'),
     sales:appUiIcon('revenue'),
-    daily_report:appUiIcon('weekly'),
-    store_daily_summary:appUiIcon('weekly'),
+    daily_report:appUiIcon('report'),
+    store_daily_summary:appUiIcon('report'),
     weekly_report:appUiIcon('weekly'),
-    loyalty:appUiIcon('bonus'),
-    ggnv:appUiIcon('bonus'),
+    loyalty:appUiIcon('heart'),
+    ggnv:appUiIcon('sparkle'),
     bill_cancel:appUiIcon('alert'),
     online_orders:appUiIcon('online'),
     bonuses:appUiIcon('bonus'),
-    orders:appUiIcon('product'),
-    product_analytics:appUiIcon('product'),
+    orders:appUiIcon('package'),
+    product_analytics:appUiIcon('trend'),
     documents:appUiIcon('document'),
     reports:appUiIcon('score'),
     account:appUiIcon('key'),
-    admin:appUiIcon('admin'),
+    admin:appUiIcon('settings'),
   })[id] || appUiIcon('more');
 }
 
@@ -819,6 +825,85 @@ function activeGroupKey(items = navItems()) {
   return found?.[3] || 'overview';
 }
 
+/* V97: Adapt content tables for phones without changing data, actions, or permissions.
+ * Simple tables become labeled reading cards. Complex/large tables remain complete and
+ * scroll horizontally with a visible hint; never hide or discard columns/inputs. */
+let mobileContentObserver = null;
+function enhanceMobileContentTables(root) {
+  if (!root) return;
+  const skipSelectors = '.schedule-table,.v64-rank-table,.leaderboard-table,.weekly-read-table,.weekly-extra-input-table,.overview-detail-table';
+  // The week schedule already has a one-day-at-a-time layout on phones.
+  // Do not turn its 7-column table back into a wide table or add 6 redundant hints.
+  root.querySelectorAll('.main .table-wrap table.schedule-table:not([data-v97-reviewed])').forEach(table => {
+    table.setAttribute('data-v97-reviewed','true');
+  });
+  // Re-label any rows added after the initial page render (e.g. daily report + row).
+  root.querySelectorAll('.main table.v97-mobile-cards').forEach(table => {
+    const labels=Array.from(table.tHead?.rows[table.tHead.rows.length-1]?.cells || [])
+      .map((head,index)=>(head.textContent || '').trim().replace(/\s+/g,' ').slice(0,75) || `Cột ${index+1}`);
+    table.querySelectorAll('tbody tr:not([data-v97-row-labeled])').forEach(row => {
+      Array.from(row.cells).forEach((cell,index) => {
+        if (row.cells.length===1 && cell.colSpan>1) {
+          row.classList.add('v97-mobile-empty-row');
+        } else cell.setAttribute('data-mobile-label',labels[index] || 'Thông tin');
+      });
+      row.setAttribute('data-v97-row-labeled','true');
+    });
+  });
+  root.querySelectorAll('.main .table-wrap table:not([data-v97-reviewed])').forEach(table => {
+    table.setAttribute('data-v97-reviewed','true');
+    const wrapper = table.closest('.table-wrap');
+    if (!wrapper) return;
+    const thead = table.tHead;
+    const headers = thead ? Array.from(thead.rows[thead.rows.length - 1]?.cells || []) : [];
+    const rows = Array.from(table.tBodies).flatMap(body => Array.from(body.rows));
+    const simple = !table.matches(skipSelectors) &&
+      !wrapper.matches('.schedule-wrap,.weekly-read-table-wrap,.v64-rank-table-wrap,.leaderboard-wrap') &&
+      headers.length >= 2 && headers.length <= 12 && rows.length > 0 && rows.length <= 120 &&
+      headers.every(cell => cell.colSpan === 1 && cell.rowSpan === 1) &&
+      rows.every(row =>
+        (row.cells.length === headers.length && Array.from(row.cells).every(cell => cell.colSpan === 1 && cell.rowSpan === 1)) ||
+        (row.cells.length === 1 && row.cells[0].colSpan === headers.length));
+    if (simple) {
+      const names = headers.map((head, index) => (head.textContent || '').trim().replace(/\s+/g,' ').slice(0,75) || `Cột ${index + 1}`);
+      rows.forEach(row => {
+        if (row.cells.length === 1 && row.cells[0].colSpan > 1) row.classList.add('v97-mobile-empty-row');
+        else Array.from(row.cells).forEach((cell,index) => cell.setAttribute('data-mobile-label',names[index]));
+        row.setAttribute('data-v97-row-labeled','true');
+      });
+      table.classList.add('v97-mobile-cards');
+      wrapper.classList.add('v97-card-table-wrap');
+    } else if (headers.length > 1 || table.scrollWidth > wrapper.clientWidth + 8) {
+      wrapper.classList.add('v97-wide-table-wrap');
+      if (!wrapper.previousElementSibling?.classList.contains('v97-table-scroll-hint')) {
+        const notice=document.createElement('p');
+        notice.className='v97-table-scroll-hint';
+        notice.textContent='Vuốt ngang để xem đầy đủ các cột của bảng';
+        wrapper.before(notice);
+      }
+    }
+  });
+}
+function setupMobileContentEnhancements() {
+  if (mobileContentObserver) mobileContentObserver.disconnect();
+  const root = app.querySelector('.main');
+  if (!root) return;
+  enhanceMobileContentTables(app);
+  // Some modules rebuild their result tables after filtering, without rerunning shell().
+  // Observe new elements only; changes to labels/classes above cannot re-trigger this.
+  let queued = false;
+  mobileContentObserver = new MutationObserver(changes => {
+    if (!changes.some(change => Array.from(change.addedNodes).some(node => node.nodeType === 1))) return;
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(() => {
+      queued = false;
+      if (app.contains(root)) enhanceMobileContentTables(app);
+    });
+  });
+  mobileContentObserver.observe(root,{childList:true,subtree:true});
+}
+
 function shell(content, title = 'Tổng Quan', subtitle = 'Vận hành cửa hàng Dezus') {
   document.body.classList.remove('v94-menu-open');
   const items = navItems();
@@ -831,7 +916,7 @@ function shell(content, title = 'Tổng Quan', subtitle = 'Vận hành cửa hà
     const open = state.navOpenGroup === group.key;
     const isSingle = groupItems.length === 1;
     const category = group.key === 'overview' ? '<div class="v48-nav-category">TỔNG HỢP</div>' : group.key === 'work' ? '<div class="v48-nav-category">VẬN HÀNH</div>' : group.key === 'system' ? '<div class="v48-nav-category">HỆ THỐNG</div>' : '';
-    return `${category}<div class="nav-group ${open ? 'open' : ''} group-${group.key}"><button class="nav-group-btn group-${group.key} ${activeGroup === group.key ? 'active' : ''}" data-group="${group.key}" aria-expanded="${!isSingle && open}"><span class="nav-group-main"><b>${dezusNavPicture(DEZUS_MENU_ICON_GROUP[group.key]) || group.icon}</b><strong>${group.label}</strong></span>${!isSingle ? `<span class="nav-group-caret">⌄</span>` : ''}</button>${isSingle ? '' : `<div class="nav-sub ${open ? 'show' : ''}">${groupItems.map(([id, label, dot]) => `<button class="nav-btn ${state.route === id ? 'active' : ''}" data-route="${id}"><span class="v47-subnav-leading">${dezusNavPicture(DEZUS_MENU_ICON_CHILD[id])}<span>${label}</span></span><span class="nav-dot">${dot}</span></button>`).join('')}</div>`}</div>`;
+    return `${category}<div class="nav-group ${open ? 'open' : ''} group-${group.key}"><button class="nav-group-btn group-${group.key} ${activeGroup === group.key ? 'active' : ''}" data-group="${group.key}" aria-expanded="${!isSingle && open}"><span class="nav-group-main"><b>${group.icon}</b><strong>${group.label}</strong></span>${!isSingle ? `<span class="nav-group-caret">⌄</span>` : ''}</button>${isSingle ? '' : `<div class="nav-sub ${open ? 'show' : ''}">${groupItems.map(([id, label]) => `<button class="nav-btn ${state.route === id ? 'active' : ''}" data-route="${id}"><span class="v47-subnav-leading"><i class="v96-child-icon">${mobileIconFor(id)}</i><span>${label}</span></span><span class="nav-dot" aria-hidden="true">›</span></button>`).join('')}</div>`}</div>`;
   }).join('');
   const mobileGroups = mobileNavGroups();
   const mobileActiveGroup = mobileGroups.find(g => g.ids.includes(state.route) && availableGroupItems(g, items).length)?.key || activeGroup;
@@ -875,6 +960,7 @@ function shell(content, title = 'Tổng Quan', subtitle = 'Vận hành cửa hà
       <nav aria-label="Danh mục chính" class="mobile-bottom-nav" style="--v94-mobile-tab-count:${bottomGroups.length + 1}">${mobileBottom}</nav>
       ${mobileSheet}
     </div>`;
+  setupMobileContentEnhancements();
   // V93: Mobile navigation must open the MOBILE submenu, not the hidden desktop accordion.
   // Keep the current form mounted while switching menu groups so unsaved inputs survive.
   const openRoute = route => {

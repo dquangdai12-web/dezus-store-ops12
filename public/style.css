@@ -1,4 +1,3 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap");
 :root{
   color-scheme: light;
   --font: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -8483,4 +8482,243 @@ body{font-family:Inter,'Segoe UI',Arial,sans-serif!important}
   .v48-dashboard .v64-rank-table .v64-member-name::after {content:attr(data-store);display:block;margin-top:3px;color:#6f737d;font-weight:500;font-size:9.8px;line-height:1.3;}
   .v48-dashboard .v64-rank-badge,.v48-dashboard .v64-rank-percent {padding:4px 5px!important;font-size:9px!important;white-space:nowrap!important;}
   .schedule-table .schedule-person b {white-space:normal!important;overflow:visible!important;text-overflow:clip!important;max-width:100%!important;display:block!important;}
+}
+
+
+/* V96: DEZUS visual refinement – unified navigation icons and careful mobile details.
+   Scoped presentation-only changes; routes, filters, workflows, access and data untouched. */
+:root {
+  --dz96-ink: #20232b;
+  --dz96-muted: #69707d;
+  --dz96-border: #dfe2e9;
+  --dz96-brand: #732538;
+  --dz96-soft: #f7eff1;
+  --dz96-ease: cubic-bezier(.22,1,.36,1);
+}
+/* Icons use one stroke weight and size independent of surrounding font-size. */
+.sidebar .v96-group-icon,
+.sidebar .nav-group-main b {
+  display:grid!important;
+  place-items:center!important;
+  width:34px!important;height:34px!important;
+  min-width:34px!important;min-height:34px!important;flex:0 0 34px!important;
+  padding:0!important;
+  overflow:hidden!important;
+  background:#f6f7fa!important;
+  color:#5d6471!important;
+  border:1px solid #e8eaf0!important;
+  border-radius:11px!important;
+  box-shadow:none!important;
+}
+.sidebar .nav-group-main b .app-ui-icon {width:19px!important;height:19px!important;display:block!important;stroke-width:1.85!important;}
+.sidebar .nav-group-btn.active .nav-group-main b,
+.sidebar .nav-group.open>.nav-group-btn .nav-group-main b {
+  background:#f5e9ed!important;border-color:#edd5dc!important;color:var(--dz96-brand)!important;
+}
+.sidebar .nav-group-btn {
+  min-height:52px!important;padding:7px 10px!important;margin:3px 0!important;
+  border:1px solid #e0e4eb!important;border-radius:14px!important;
+  background:#fff!important;color:var(--dz96-ink)!important;
+  box-shadow:0 1px 2px rgba(23,27,39,.035)!important;
+  transition:background .17s ease,border-color .17s ease,box-shadow .17s ease!important;
+  transform:none!important;
+}
+.sidebar .nav-group-main {gap:10px!important;}
+.sidebar .nav-group-main strong {font-size:13px!important;letter-spacing:-.015em!important;font-weight:680!important;color:var(--dz96-ink)!important;}
+.sidebar .nav-group-btn.active,.sidebar .nav-group.open>.nav-group-btn {
+  background:#fbf6f7!important;border-color:#d7acb7!important;
+  box-shadow:inset 2px 0 0 var(--dz96-brand)!important;
+}
+.sidebar .nav-group-caret {color:#8d929e!important;font-size:14px!important;font-weight:650!important;}
+.sidebar .nav-sub {border-left:1px solid #dce0e6!important;}
+.sidebar .nav-sub .nav-btn {
+  min-height:41px!important;padding:7px 9px!important;border-radius:10px!important;
+  background:transparent!important;border-color:transparent!important;
+  box-shadow:none!important;transform:none!important;
+}
+.sidebar .nav-sub .nav-btn .v47-subnav-leading {display:flex!important;align-items:center!important;gap:9px!important;min-width:0!important;}
+.sidebar .v96-child-icon {display:grid;place-items:center;flex:0 0 18px;width:18px;height:18px;color:#7a8190;font-style:normal;}
+.sidebar .v96-child-icon .app-ui-icon {width:17px;height:17px;stroke-width:1.75;}
+.sidebar .nav-sub .nav-btn .v47-subnav-leading>span {font-size:12px!important;line-height:1.35!important;font-weight:560!important;color:#535b68!important;}
+.sidebar .nav-sub .nav-btn.active {background:#f7eff1!important;border-color:#ead3da!important;box-shadow:none!important;}
+.sidebar .nav-sub .nav-btn.active .v96-child-icon,.sidebar .nav-sub .nav-btn.active .v47-subnav-leading>span {color:#722538!important;}
+.sidebar .nav-sub .nav-dot {display:inline-flex!important;align-items:center!important;justify-content:center!important;flex:0 0 14px!important;padding:0!important;margin:0!important;background:transparent!important;border:0!important;color:#a3a7af!important;box-shadow:none!important;font-size:17px!important;line-height:1!important;font-weight:450!important;}
+.sidebar .nav-sub .nav-btn.active .nav-dot {color:var(--dz96-brand)!important;}
+@media(hover:hover) and (pointer:fine){
+  .sidebar .nav-group-btn:hover:not(.active),
+  .sidebar .nav-group-btn.active:hover,.sidebar .nav-group.open>.nav-group-btn:hover {
+    transform:none!important;background:#f7f4f6!important;border-color:#c9aeb8!important;box-shadow:0 4px 12px rgba(27,29,39,.055)!important;
+  }
+  .sidebar .nav-sub .nav-btn:hover:not(.active),
+  .sidebar .nav-sub .nav-btn.active:hover {transform:none!important;background:#f4f0f3!important;border-color:#e7d8de!important;box-shadow:none!important;}
+}
+.sidebar .nav-group-btn:focus-visible,.sidebar .nav-sub .nav-btn:focus-visible,
+.mobile-bottom-nav .mobile-tab:focus-visible,.v94-menu-item:focus-visible,
+.v94-mobile-close:focus-visible,.v94-week-day:focus-visible {
+  outline:2px solid #79283b!important;outline-offset:2px!important;
+}
+/* Consistent compact controls and input focus on all screens. */
+.main .btn:not(.danger),.main .input,.main select,.main textarea {transition:border-color .17s ease,background-color .17s ease,box-shadow .17s ease!important;}
+.main .input:focus-visible,.main select:focus-visible,.main textarea:focus-visible {
+  outline:none!important;border-color:#995566!important;box-shadow:0 0 0 3px rgba(132,43,62,.12)!important;
+}
+.main .card {border-color:#e2e4e9!important;}
+.main .btn:focus-visible {outline:2px solid var(--dz96-brand)!important;outline-offset:2px!important;}
+@media(max-width:860px){
+  .mobile-bottom-nav {border-top:1px solid #e5e6ed!important;box-shadow:0 -4px 18px rgba(17,22,32,.055)!important;}
+  .mobile-bottom-nav .mobile-tab {
+    gap:4px!important;border-radius:12px!important;color:#68707d!important;
+    transition:background-color .16s ease,color .16s ease!important;
+  }
+  .mobile-bottom-nav .mobile-tab .mobile-tab-icon {
+    width:29px!important;height:29px!important;background:transparent!important;color:inherit!important;
+  }
+  .mobile-bottom-nav .mobile-tab .app-ui-icon {width:22px!important;height:22px!important;stroke-width:1.85!important;}
+  .mobile-bottom-nav .mobile-tab > span:last-child {font-size:10px!important;letter-spacing:-.01em!important;font-weight:650!important;line-height:1.15!important;}
+  .mobile-bottom-nav .mobile-tab.active {color:#722538!important;background:#f7eef1!important;}
+  .mobile-bottom-nav .mobile-tab.active .mobile-tab-icon {color:#722538!important;}
+  .v94-mobile-panel {background:#f7f8fa!important;border-radius:24px 24px 0 0!important;}
+  .v94-mobile-panel-head {border-bottom:1px solid #e7e8ed!important;padding:15px 18px!important;}
+  .v94-mobile-panel-head h2 {font-weight:740!important;letter-spacing:-.025em!important;}
+  .v94-mobile-grab {height:4px!important;width:38px!important;background:#ccd0d8!important;}
+  .v94-mobile-close {border-radius:12px!important;background:#f4f5f8!important;}
+  .v94-menu-options {gap:10px!important;}
+  .v94-menu-item {
+    min-height:64px!important;gap:10px!important;padding:11px!important;
+    border:1px solid #e3e6ed!important;border-radius:15px!important;
+    box-shadow:0 1px 3px rgba(17,23,39,.045)!important;
+    transition:background-color .16s ease,border-color .16s ease!important;
+  }
+  .v94-menu-item.active {background:#fcf5f7!important;border-color:#d9a8b6!important;}
+  .v94-menu-icon {
+    flex:0 0 34px!important;width:34px!important;height:34px!important;
+    border-radius:10px!important;background:#f3f4f7!important;
+    color:#596272!important;
+  }
+  .v94-menu-icon .app-ui-icon {width:19px!important;height:19px!important;stroke-width:1.85!important;}
+  .v94-menu-item.active .v94-menu-icon {background:#f5e7ec!important;color:#7b263b!important;}
+  .v94-menu-label {font-size:12.4px!important;line-height:1.3!important;font-weight:670!important;color:#282d38!important;}
+  .v94-menu-item.active .v94-menu-label {color:#762438!important;}
+  .v94-menu-chevron {font-size:20px!important;font-weight:350!important;color:#abb0b9!important;}
+  .v94-menu-section h3 {font-size:10px!important;letter-spacing:.11em!important;margin:8px 8px 10px!important;color:#707784!important;}
+  .v94-week-day {border-radius:12px!important;border-color:#e2e5ec!important;}
+  .v94-week-day.active {background:#75263a!important;border-color:#75263a!important;}
+  .main .card {border-radius:17px!important;}
+}
+@media(max-width:699px){
+  .mobile-page-title {border-bottom-color:#e7e8ed!important;box-shadow:0 1px 4px rgba(21,25,35,.045)!important;}
+  .mobile-page-logout {font-size:12px!important;font-weight:650!important;border-color:#e2e4ea!important;}
+  .v94-menu-options {gap:9px!important;}
+  .v94-menu-label {font-size:12px!important;}
+  .v48-dashboard .v48-podium {scrollbar-width:none!important;}
+  .v48-dashboard .v64-rank-table th {background:#f0f2f5!important;color:#4f5563!important;}
+  .v48-dashboard .v64-rank-table td {border-color:#eceef2!important;}
+}
+@media(prefers-reduced-motion:reduce){
+  .v94-menu-item,.mobile-bottom-nav .mobile-tab,.sidebar .nav-group-btn,.sidebar .nav-sub .nav-btn,.main .btn,.main .input {transition:none!important;animation:none!important;}
+}
+
+
+/* V97 – Responsive contents, not just a responsive menu.
+   Applies to every page inside .main on phones; desktop stays as V96. */
+.v97-table-scroll-hint{display:none}
+@media (max-width:860px){
+  /* Stop fixed desktop-sized content from making the whole page wider. */
+  .app-shell,.main,.main > *, .main .card, .main .toolbar,
+  .main .table-wrap,.main .grid,.main form,.main .row {min-width:0;max-width:100%;}
+  .main {width:100%!important;box-sizing:border-box!important;overflow-x:clip!important;}
+  .main .card {padding:15px!important;margin-bottom:12px;border-radius:17px!important;}
+  .main .card h3{font-size:15px!important;line-height:1.35!important;overflow-wrap:anywhere;}
+  .main .hint,.main p{overflow-wrap:anywhere;}
+  /* Common 2/3/4-column forms and filters (daily report, sale targets, store,
+     employee, product training, checklist, uploads, rewards and administration). */
+  .main .grid.two,.main .grid.three,.main .grid.four,.main .grid.five,
+  .main form.grid,.main form.grid.two,.main form.grid.three,
+  .main form.grid.four,.main form.grid.five,
+  .main form[style*="grid-template-columns"],
+  .main form .grid[style*="grid-template-columns"]{
+    grid-template-columns:minmax(0,1fr)!important;
+    gap:10px!important;
+  }
+  .main form.grid > *, .main .grid > .field{min-width:0!important;max-width:100%!important;}
+  .main form.grid > [style*="grid-column"],
+  .main form .grid > [style*="grid-column"] {grid-column:1 / -1!important;}
+  .main .field{min-width:0!important;width:100%;max-width:100%;margin:7px 0!important;}
+  .main .field label{display:block;font-size:12px!important;line-height:1.4!important;font-weight:680!important;color:#404550!important;white-space:normal!important;}
+  .main .field :is(input:not([type=checkbox]):not([type=radio]),select,textarea),
+  .main :is(.input,select,textarea){max-width:100%!important;min-width:0!important;min-height:45px!important;box-sizing:border-box!important;}
+  .main textarea {resize:vertical;min-height:94px!important;}
+  .main input[type="checkbox"],.main input[type="radio"] {width:18px;min-width:18px;height:18px;accent-color:#792738;}
+  .main .toolbar{display:flex!important;flex-wrap:wrap!important;gap:9px!important;align-items:stretch!important;min-width:0!important;}
+  .main .toolbar > :is(h2,h3,h4){width:100%!important;flex:1 0 100%!important;max-width:100%!important;margin:0 0 2px!important;}
+  .main .toolbar > .field{flex:1 1 155px!important;min-width:0!important;margin:0!important;}
+  .main .toolbar > .btn, .main .toolbar > button{flex:1 1 auto!important;min-width:0!important;}
+  .main .btn{min-height:44px!important;line-height:1.25!important;white-space:normal!important;text-align:center!important;touch-action:manipulation;}
+  .main .btn.small{min-height:40px!important;font-size:12px!important;}
+  .main .row{gap:8px!important;max-width:100%!important;}
+  .main .row > :is(.input,select,textarea){flex:1 1 140px!important;min-width:0!important;max-width:100%!important;}
+  .main .row > button{max-width:100%!important;}
+  .main .pillbar{max-width:100%!important;overflow-x:auto!important;overscroll-behavior-x:contain;scrollbar-width:none;}
+  .main .pillbar button{flex:1 0 auto!important;min-height:40px!important;}
+  .main .export-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;}
+  .main .export-grid .btn{width:100%!important;}
+  .main .mini-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+  /* Basic lists and read-only reports are legible as information cards. */
+  .main .table-wrap{max-width:100%!important;overscroll-behavior-x:contain!important;-webkit-overflow-scrolling:touch!important;}
+  .main .table-wrap:not(.v97-card-table-wrap){overflow-x:auto!important;}
+  .main .table-wrap:not(.v97-card-table-wrap) > table:not(.schedule-table):not(.v64-rank-table){width:max-content;max-width:none;}
+  .main .v97-card-table-wrap{overflow:visible!important;border:0!important;box-shadow:none!important;background:transparent!important;}
+  .main table.v97-mobile-cards{display:block!important;min-width:0!important;max-width:100%!important;width:100%!important;table-layout:auto!important;border:0!important;background:transparent!important;}
+  .main table.v97-mobile-cards thead{display:none!important;}
+  .main table.v97-mobile-cards tbody{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:11px!important;}
+  .main table.v97-mobile-cards tbody tr{display:block!important;min-width:0!important;padding:0!important;overflow:hidden!important;border:1px solid #e0e3e9!important;border-radius:14px!important;background:#fff!important;box-shadow:0 2px 9px rgba(24,30,42,.035)!important;}
+  .main table.v97-mobile-cards tbody td{display:block!important;position:static!important;min-width:0!important;max-width:100%!important;width:100%!important;padding:9px 12px!important;text-align:left!important;white-space:normal!important;overflow-wrap:anywhere!important;line-height:1.4!important;border:0!important;border-top:1px solid #edf0f4!important;background:transparent!important;color:#272d36!important;font-size:13px!important;}
+  .main table.v97-mobile-cards tbody td:first-child{border-top:0!important;background:#f8f3f5!important;padding:12px!important;font-size:14px!important;}
+  .main table.v97-mobile-cards tbody td::before{content:attr(data-mobile-label);display:block!important;margin:0 0 4px!important;font-size:10.5px!important;line-height:1.2!important;letter-spacing:.01em!important;font-weight:720!important;color:#747b87!important;}
+  .main table.v97-mobile-cards tbody td:first-child::before{color:#823247!important;}
+  .main table.v97-mobile-cards tbody td:empty{display:none!important;}
+  .main table.v97-mobile-cards :is(input,textarea,select){display:block!important;width:100%!important;min-width:0!important;max-width:100%!important;margin-top:5px!important;}
+  .main table.v97-mobile-cards td .row{display:flex;flex-wrap:wrap;gap:7px;}
+  .main table.v97-mobile-cards td .row .btn{flex:1 1 auto;min-width:min(100%,105px);}
+  /* Dense layouts remain horizontally scrollable, with an explicit cue. */
+  .main .v97-table-scroll-hint{display:flex!important;align-items:center;gap:7px;margin:4px 0 7px!important;color:#6c5560!important;font-weight:650;font-size:11.5px!important;}
+  .main .v97-table-scroll-hint::before{content:'↔';display:inline-grid;place-items:center;flex:0 0 26px;width:26px;height:26px;border-radius:7px;background:#f4e9ed;color:#823247;font-size:17px;}
+  .main .v97-wide-table-wrap{border:1px solid #e3e5eb!important;border-radius:12px!important;background:#fff!important;}
+  .main .v97-wide-table-wrap table{min-width:max(680px,100%)!important;}
+  .main .v97-wide-table-wrap td,.main .v97-wide-table-wrap th{padding:10px 11px!important;}
+  .main :is(.daily-report-table-wrap,.revenue-sticky-name,.weekly-read-table-wrap,.product-analytics-table,.order-batch-table-wrap){max-width:100%!important;}
+  /* Buttons and actions must stay above the fixed five-icon navigation. */
+  .main .card:last-child{margin-bottom:20px!important;}
+  .main :is(.modal,.dialog,.modal-content){max-width:calc(100vw - 24px)!important;}
+  .main img,.main video,.main canvas,.main svg{max-width:100%;}
+}
+@media (max-width:520px){
+  .main {padding-left:12px!important;padding-right:12px!important;}
+  .main .card {padding:13px!important;}
+  .main .toolbar > .field{flex:1 1 100%!important;}
+  .main .toolbar > button:not(.btn.small){flex:1 1 130px!important;}
+  .main .export-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+  .main .field input[type="file"]{width:100%!important;min-width:0;white-space:normal;}
+  .main .daily-target-range-row{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:7px!important;}
+  .main .daily-target-range-sep{text-align:center;}
+  .main .daily-target-weekday-actions{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;}
+  .main .target-employee-grid{grid-template-columns:1fr!important;}
+  .main .admin-store-grid,.main .admin-user-grid{grid-template-columns:1fr!important;}
+  .main .daily-multi-calendar{min-width:0!important;max-width:100%!important;}
+}
+@media (prefers-reduced-motion:reduce){
+  .main table.v97-mobile-cards tbody tr{transition:none!important;}
+}
+
+/* V97 final: preserve phone weekday view and comfortable report input cards. */
+@media (max-width:860px){
+  .main table.v97-mobile-cards tbody tr.v97-mobile-empty-row td::before{display:none!important;content:none!important;}
+  .main table.v97-mobile-cards tbody tr.v97-mobile-empty-row td{background:#fff!important;padding:13px!important;}
+  .main .daily-report-table-wrap.v97-card-table-wrap .daily-sticky-name{position:static!important;left:auto!important;width:100%!important;max-width:100%!important;}
+  .main .daily-report-table-wrap.v97-card-table-wrap table{min-width:0!important;}
+  .main .daily-report-table-wrap.v97-card-table-wrap :is(.daily-sales-row,.daily-missing-row,.daily-feedback-row){min-width:0!important;}
+}
+/* V97: don't show the legacy horizontal-scroll prompt beneath a converted card table. */
+@media(max-width:860px){
+  .main .v97-card-table-wrap::after {display:none!important;content:none!important;}
 }
