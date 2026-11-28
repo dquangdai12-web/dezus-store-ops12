@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap");
 :root{
   color-scheme: light;
   --font: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -8485,85 +8486,8 @@ body{font-family:Inter,'Segoe UI',Arial,sans-serif!important}
 }
 
 
-/* V96: DEZUS visual refinement – unified navigation icons and careful mobile details.
-   Scoped presentation-only changes; routes, filters, workflows, access and data untouched. */
-:root {
-  --dz96-ink: #20232b;
-  --dz96-muted: #69707d;
-  --dz96-border: #dfe2e9;
-  --dz96-brand: #732538;
-  --dz96-soft: #f7eff1;
-  --dz96-ease: cubic-bezier(.22,1,.36,1);
-}
-/* Icons use one stroke weight and size independent of surrounding font-size. */
-.sidebar .v96-group-icon,
-.sidebar .nav-group-main b {
-  display:grid!important;
-  place-items:center!important;
-  width:34px!important;height:34px!important;
-  min-width:34px!important;min-height:34px!important;flex:0 0 34px!important;
-  padding:0!important;
-  overflow:hidden!important;
-  background:#f6f7fa!important;
-  color:#5d6471!important;
-  border:1px solid #e8eaf0!important;
-  border-radius:11px!important;
-  box-shadow:none!important;
-}
-.sidebar .nav-group-main b .app-ui-icon {width:19px!important;height:19px!important;display:block!important;stroke-width:1.85!important;}
-.sidebar .nav-group-btn.active .nav-group-main b,
-.sidebar .nav-group.open>.nav-group-btn .nav-group-main b {
-  background:#f5e9ed!important;border-color:#edd5dc!important;color:var(--dz96-brand)!important;
-}
-.sidebar .nav-group-btn {
-  min-height:52px!important;padding:7px 10px!important;margin:3px 0!important;
-  border:1px solid #e0e4eb!important;border-radius:14px!important;
-  background:#fff!important;color:var(--dz96-ink)!important;
-  box-shadow:0 1px 2px rgba(23,27,39,.035)!important;
-  transition:background .17s ease,border-color .17s ease,box-shadow .17s ease!important;
-  transform:none!important;
-}
-.sidebar .nav-group-main {gap:10px!important;}
-.sidebar .nav-group-main strong {font-size:13px!important;letter-spacing:-.015em!important;font-weight:680!important;color:var(--dz96-ink)!important;}
-.sidebar .nav-group-btn.active,.sidebar .nav-group.open>.nav-group-btn {
-  background:#fbf6f7!important;border-color:#d7acb7!important;
-  box-shadow:inset 2px 0 0 var(--dz96-brand)!important;
-}
-.sidebar .nav-group-caret {color:#8d929e!important;font-size:14px!important;font-weight:650!important;}
-.sidebar .nav-sub {border-left:1px solid #dce0e6!important;}
-.sidebar .nav-sub .nav-btn {
-  min-height:41px!important;padding:7px 9px!important;border-radius:10px!important;
-  background:transparent!important;border-color:transparent!important;
-  box-shadow:none!important;transform:none!important;
-}
-.sidebar .nav-sub .nav-btn .v47-subnav-leading {display:flex!important;align-items:center!important;gap:9px!important;min-width:0!important;}
-.sidebar .v96-child-icon {display:grid;place-items:center;flex:0 0 18px;width:18px;height:18px;color:#7a8190;font-style:normal;}
-.sidebar .v96-child-icon .app-ui-icon {width:17px;height:17px;stroke-width:1.75;}
-.sidebar .nav-sub .nav-btn .v47-subnav-leading>span {font-size:12px!important;line-height:1.35!important;font-weight:560!important;color:#535b68!important;}
-.sidebar .nav-sub .nav-btn.active {background:#f7eff1!important;border-color:#ead3da!important;box-shadow:none!important;}
-.sidebar .nav-sub .nav-btn.active .v96-child-icon,.sidebar .nav-sub .nav-btn.active .v47-subnav-leading>span {color:#722538!important;}
-.sidebar .nav-sub .nav-dot {display:inline-flex!important;align-items:center!important;justify-content:center!important;flex:0 0 14px!important;padding:0!important;margin:0!important;background:transparent!important;border:0!important;color:#a3a7af!important;box-shadow:none!important;font-size:17px!important;line-height:1!important;font-weight:450!important;}
-.sidebar .nav-sub .nav-btn.active .nav-dot {color:var(--dz96-brand)!important;}
-@media(hover:hover) and (pointer:fine){
-  .sidebar .nav-group-btn:hover:not(.active),
-  .sidebar .nav-group-btn.active:hover,.sidebar .nav-group.open>.nav-group-btn:hover {
-    transform:none!important;background:#f7f4f6!important;border-color:#c9aeb8!important;box-shadow:0 4px 12px rgba(27,29,39,.055)!important;
-  }
-  .sidebar .nav-sub .nav-btn:hover:not(.active),
-  .sidebar .nav-sub .nav-btn.active:hover {transform:none!important;background:#f4f0f3!important;border-color:#e7d8de!important;box-shadow:none!important;}
-}
-.sidebar .nav-group-btn:focus-visible,.sidebar .nav-sub .nav-btn:focus-visible,
-.mobile-bottom-nav .mobile-tab:focus-visible,.v94-menu-item:focus-visible,
-.v94-mobile-close:focus-visible,.v94-week-day:focus-visible {
-  outline:2px solid #79283b!important;outline-offset:2px!important;
-}
-/* Consistent compact controls and input focus on all screens. */
-.main .btn:not(.danger),.main .input,.main select,.main textarea {transition:border-color .17s ease,background-color .17s ease,box-shadow .17s ease!important;}
-.main .input:focus-visible,.main select:focus-visible,.main textarea:focus-visible {
-  outline:none!important;border-color:#995566!important;box-shadow:0 0 0 3px rgba(132,43,62,.12)!important;
-}
-.main .card {border-color:#e2e4e9!important;}
-.main .btn:focus-visible {outline:2px solid var(--dz96-brand)!important;outline-offset:2px!important;}
+/* V99: Desktop exactly inherits the V92 typography and icon styling.
+   Keep V96 phone-only refinements from here below. */
 @media(max-width:860px){
   .mobile-bottom-nav {border-top:1px solid #e5e6ed!important;box-shadow:0 -4px 18px rgba(17,22,32,.055)!important;}
   .mobile-bottom-nav .mobile-tab {
@@ -8617,6 +8541,7 @@ body{font-family:Inter,'Segoe UI',Arial,sans-serif!important}
 @media(prefers-reduced-motion:reduce){
   .v94-menu-item,.mobile-bottom-nav .mobile-tab,.sidebar .nav-group-btn,.sidebar .nav-sub .nav-btn,.main .btn,.main .input {transition:none!important;animation:none!important;}
 }
+
 
 
 /* V97 – Responsive contents, not just a responsive menu.

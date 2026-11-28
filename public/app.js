@@ -725,7 +725,7 @@ function navItems() {
 
 
 function appUiIcon(name) {
-  const attrs = 'class="app-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"';
+  const attrs = 'class="app-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.05" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"';
   const icons = {
     home: `<svg ${attrs}><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V21h5v-6h3v6h5V9.5"/></svg>`,
     tasks: `<svg ${attrs}><rect x="4" y="3.5" width="16" height="17" rx="3"/><path d="M9 3v3h6V3"/><path d="m8.2 12.2 1.8 1.8 4-4"/><path d="M8 17h8"/></svg>`,
@@ -763,21 +763,21 @@ function dezusNavPicture(src) { return src ? `<img class="v47-nav-picture" src="
 
 function navGroups() {
   return [
-    { key:'overview', label:'Tổng Quan', icon:appUiIcon('home'), ids:['dashboard'] },
-    { key:'daily_overview', label:'Tổng hợp báo cáo ngày', icon:appUiIcon('report'), ids:['store_daily_summary'] },
-    { key:'work', label:'Công việc', icon:appUiIcon('tasks'), ids:['tasks','cdp_ojti','checklists','violations'] },
+    { key:'overview', label:'Tổng Quan', icon:dezusNavPicture('/assets/v76/icon-tong-quan.png'), ids:['dashboard'] },
+    { key:'daily_overview', label:'Tổng hợp báo cáo ngày', icon:appUiIcon('weekly'), ids:['store_daily_summary'] },
+    { key:'work', label:'Công việc', icon:appUiIcon('checklist'), ids:['tasks','cdp_ojti','checklists','violations'] },
     { key:'schedule', label:'Lịch làm việc', icon:appUiIcon('calendar'), ids:['schedule'] },
     { key:'revenue', label:'Doanh thu', icon:appUiIcon('revenue'), ids:['sales','daily_report','weekly_report','loyalty','ggnv','online_orders','bonuses'] },
     { key:'product', label:'Sản phẩm', icon:appUiIcon('product'), ids:['orders','product_analytics'] },
     { key:'more', label:'Tài liệu', icon:appUiIcon('document'), ids:['documents','reports'] },
-    { key:'system', label:'Hệ thống', icon:appUiIcon('settings'), ids:['account','admin'] },
+    { key:'system', label:'Hệ thống', icon:appUiIcon('admin'), ids:['account','admin'] },
   ];
 }
 
 function mobileNavGroups() {
   return [
-    { key:'overview', label:'Tổng Quan', icon:appUiIcon('home'), ids:['dashboard'] },
-    { key:'daily_overview', label:'Tổng hợp báo cáo ngày', icon:appUiIcon('report'), ids:['store_daily_summary'] },
+    { key:'overview', label:'Tổng Quan', icon:dezusNavPicture('/assets/v76/icon-tong-quan.png'), ids:['dashboard'] },
+    { key:'daily_overview', label:'Tổng hợp báo cáo ngày', icon:appUiIcon('weekly'), ids:['store_daily_summary'] },
     { key:'work', label:'Công việc', icon:appUiIcon('tasks'), ids:['tasks','cdp_ojti','checklists','violations'] },
     { key:'schedule', label:'Lịch làm việc', icon:appUiIcon('calendar'), ids:['schedule'] },
     { key:'revenue', label:'Doanh thu', icon:appUiIcon('revenue'), ids:['sales','daily_report','weekly_report','loyalty','ggnv','online_orders','bonuses'] },
@@ -788,27 +788,27 @@ function mobileNavGroups() {
 
 function mobileIconFor(id) {
   return ({
-    dashboard:appUiIcon('home'),
+    dashboard:dezusNavPicture('/assets/v76/icon-tong-quan.png'),
     tasks:appUiIcon('tasks'),
     cdp_ojti:appUiIcon('people'),
     checklists:appUiIcon('checklist'),
     schedule:appUiIcon('calendar'),
     violations:appUiIcon('alert'),
     sales:appUiIcon('revenue'),
-    daily_report:appUiIcon('report'),
-    store_daily_summary:appUiIcon('report'),
+    daily_report:appUiIcon('weekly'),
+    store_daily_summary:appUiIcon('weekly'),
     weekly_report:appUiIcon('weekly'),
-    loyalty:appUiIcon('heart'),
-    ggnv:appUiIcon('sparkle'),
+    loyalty:appUiIcon('bonus'),
+    ggnv:appUiIcon('bonus'),
     bill_cancel:appUiIcon('alert'),
     online_orders:appUiIcon('online'),
     bonuses:appUiIcon('bonus'),
-    orders:appUiIcon('package'),
-    product_analytics:appUiIcon('trend'),
+    orders:appUiIcon('product'),
+    product_analytics:appUiIcon('product'),
     documents:appUiIcon('document'),
     reports:appUiIcon('score'),
     account:appUiIcon('key'),
-    admin:appUiIcon('settings'),
+    admin:appUiIcon('admin'),
   })[id] || appUiIcon('more');
 }
 
@@ -916,7 +916,7 @@ function shell(content, title = 'Tổng Quan', subtitle = 'Vận hành cửa hà
     const open = state.navOpenGroup === group.key;
     const isSingle = groupItems.length === 1;
     const category = group.key === 'overview' ? '<div class="v48-nav-category">TỔNG HỢP</div>' : group.key === 'work' ? '<div class="v48-nav-category">VẬN HÀNH</div>' : group.key === 'system' ? '<div class="v48-nav-category">HỆ THỐNG</div>' : '';
-    return `${category}<div class="nav-group ${open ? 'open' : ''} group-${group.key}"><button class="nav-group-btn group-${group.key} ${activeGroup === group.key ? 'active' : ''}" data-group="${group.key}" aria-expanded="${!isSingle && open}"><span class="nav-group-main"><b>${group.icon}</b><strong>${group.label}</strong></span>${!isSingle ? `<span class="nav-group-caret">⌄</span>` : ''}</button>${isSingle ? '' : `<div class="nav-sub ${open ? 'show' : ''}">${groupItems.map(([id, label]) => `<button class="nav-btn ${state.route === id ? 'active' : ''}" data-route="${id}"><span class="v47-subnav-leading"><i class="v96-child-icon">${mobileIconFor(id)}</i><span>${label}</span></span><span class="nav-dot" aria-hidden="true">›</span></button>`).join('')}</div>`}</div>`;
+    return `${category}<div class="nav-group ${open ? 'open' : ''} group-${group.key}"><button class="nav-group-btn group-${group.key} ${activeGroup === group.key ? 'active' : ''}" data-group="${group.key}" aria-expanded="${!isSingle && open}"><span class="nav-group-main"><b>${dezusNavPicture(DEZUS_MENU_ICON_GROUP[group.key]) || group.icon}</b><strong>${group.label}</strong></span>${!isSingle ? `<span class="nav-group-caret">⌄</span>` : ''}</button>${isSingle ? '' : `<div class="nav-sub ${open ? 'show' : ''}">${groupItems.map(([id, label, dot]) => `<button class="nav-btn ${state.route === id ? 'active' : ''}" data-route="${id}"><span class="v47-subnav-leading">${dezusNavPicture(DEZUS_MENU_ICON_CHILD[id])}<span>${label}</span></span><span class="nav-dot">${dot}</span></button>`).join('')}</div>`}</div>`;
   }).join('');
   const mobileGroups = mobileNavGroups();
   const mobileActiveGroup = mobileGroups.find(g => g.ids.includes(state.route) && availableGroupItems(g, items).length)?.key || activeGroup;

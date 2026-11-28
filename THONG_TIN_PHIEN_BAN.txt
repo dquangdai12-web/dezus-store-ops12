@@ -13,3 +13,12 @@ DEZUS Store Operations — V97
 - Cân lại toolbar, nhóm nút, nhãn trạng thái, bảng nhập, biểu mẫu và modal.
 - Thu vừa bộ chọn 7 ngày của lịch làm việc trên màn hình nhỏ.
 - Giữ nguyên web máy tính, dữ liệu và API.
+
+
+DEZUS V99 – Khôi phục font và icon chính xác từ V92
+- Giao diện máy tính: khôi phục import font Inter, kiểu chữ của V92.
+- Menu máy tính: khôi phục icon ảnh gốc của V92 cho danh mục lớn và từng danh mục con, cả kiểu hiển thị và trang trí.
+- Menu mobile: khôi phục các biểu tượng chọn từ V92, giữ nguyên thiết kế 5 nút và bảng danh mục của V98.
+- Bỏ các CSS V96 can thiệp vào menu và chữ trên desktop; giữ toàn bộ CSS V94–V98 dành riêng cho mobile.
+- Cập nhật version query và file .gz để tránh trình duyệt dùng cache cũ.
+- Không thay đổi dữ liệu, API, phân quyền, lịch làm việc hay các cải tiến mobile V98.
