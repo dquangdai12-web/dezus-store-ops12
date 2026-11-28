@@ -6,3 +6,10 @@ DEZUS Store Operations — V97
 - Form, bộ lọc, toolbar, nút thao tác, biểu mẫu admin/đào tạo/nhân viên: tự xếp 1 cột và tăng vùng chạm trên điện thoại.
 - Giữ nguyên desktop, dữ liệu nghiệp vụ, phân quyền và API.
 - CSS / JS cache-bust V97.
+
+
+=== V98 ===
+- Khắc phục tiêu đề và nội dung bị cắt/chồng trong ô trên mobile 320-860px.
+- Cân lại toolbar, nhóm nút, nhãn trạng thái, bảng nhập, biểu mẫu và modal.
+- Thu vừa bộ chọn 7 ngày của lịch làm việc trên màn hình nhỏ.
+- Giữ nguyên web máy tính, dữ liệu và API.

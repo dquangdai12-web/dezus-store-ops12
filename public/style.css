@@ -8722,3 +8722,234 @@ body{font-family:Inter,'Segoe UI',Arial,sans-serif!important}
 @media(max-width:860px){
   .main .v97-card-table-wrap::after {display:none!important;content:none!important;}
 }
+
+/* V98 — mobile content layout audit (320–860px).
+   Fix inherited desktop nowrap/fixed-width conflicts, group actions safely,
+   preserve full data, desktop UI and working form controls. */
+@media (max-width:860px){
+  .main *, .main *::before, .main *::after { box-sizing:border-box; }
+  .main, .main .card, .main .grid, .main .toolbar, .main .section-title,
+  .main .row, .main .table-wrap, .main .field, .main form,
+  .main .task-card, .main .task-card-main { min-width:0!important; }
+  .main .card, .main .task-card, .main .order-batch-card {
+    max-width:100%!important;
+    overflow-wrap:break-word;
+  }
+  /* Headings must never be truncated by old desktop nowrap rules. */
+  .main .card h3,
+  .main .card .toolbar > h3,
+  .main .card .section-title > h3,
+  .main .card .section-title > h4,
+  .main .card .toolbar > h4 {
+    display:block!important;
+    width:auto!important;
+    max-width:100%!important;
+    min-width:0!important;
+    height:auto!important;
+    white-space:normal!important;
+    overflow:visible!important;
+    text-overflow:clip!important;
+    overflow-wrap:break-word!important;
+    word-break:normal!important;
+    line-height:1.38!important;
+  }
+  .main .card .toolbar {
+    display:flex!important;
+    flex-wrap:wrap!important;
+    width:100%!important;
+    max-width:100%!important;
+    gap:9px!important;
+    align-items:stretch!important;
+    justify-content:flex-start!important;
+  }
+  .main .card .toolbar > :is(h2,h3,h4),
+  .main .card .toolbar > div:has(> :is(h2,h3,h4)) {
+    flex:1 0 100%!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    margin:0!important;
+    align-self:start!important;
+  }
+  .main .card .toolbar > :is(button,.btn){
+    flex:1 1 145px!important;
+    width:auto!important;
+    min-width:0!important;
+    max-width:100%!important;
+    height:auto!important;
+    white-space:normal!important;
+    overflow-wrap:anywhere!important;
+    line-height:1.32!important;
+    padding:10px 12px!important;
+  }
+  .main .card .toolbar > .field,
+  .main .card .toolbar > :is(select,input){
+    flex:1 1 170px!important;
+    width:auto!important;
+    min-width:0!important;
+    max-width:100%!important;
+  }
+  /* Status badges, descriptions and action buttons wrap instead of colliding. */
+  .main .card .section-title {
+    display:flex!important;
+    flex-wrap:wrap!important;
+    align-items:flex-start!important;
+    justify-content:space-between!important;
+    width:100%!important;
+    max-width:100%!important;
+    gap:8px!important;
+  }
+  .main .card .section-title > :is(h2,h3,h4) {
+    flex:1 1 175px!important;
+    min-width:0!important;
+    margin:0!important;
+  }
+  .main .card .section-title > :is(.badge,.hint,small,span) {
+    flex:0 1 auto!important;
+    max-width:100%!important;
+    min-width:0!important;
+    white-space:normal!important;
+    overflow-wrap:break-word!important;
+    line-height:1.35!important;
+  }
+  .main .card .section-title > .btn{flex:1 1 115px!important;min-width:0!important;}
+  .main .card .row {flex-wrap:wrap!important;gap:8px!important;}
+  .main .card .row > :is(button,.btn){
+    white-space:normal!important;
+    min-width:0!important;
+    max-width:100%!important;
+    overflow-wrap:anywhere!important;
+  }
+  .main .card :is(.stat,.kpi,.daily-overview-kpi,.store-daily-metric,
+    .daily-overview-store,.order-batch-head,.task-info-grid,.task-card-main) {
+    min-width:0!important;
+    max-width:100%!important;
+  }
+  .main .grid[style*="grid-template-columns"],
+  .main :is(.task-card-main,.task-info-grid,.daily-overview-stores,
+    .admin-store-grid,.admin-user-grid) {
+    grid-template-columns:minmax(0,1fr)!important;
+  }
+  .main :is(input,textarea,select) {max-width:100%!important;min-width:0!important;}
+  /* Simple report tables become tidy cards; keep every input and action visible. */
+  .main .v97-card-table-wrap,
+  .main table.v97-mobile-cards,
+  .main table.v97-mobile-cards tbody,
+  .main table.v97-mobile-cards tbody tr {width:100%!important;max-width:100%!important;min-width:0!important;}
+  .main table.v97-mobile-cards tbody td {
+    overflow-wrap:anywhere!important;
+    word-break:normal!important;
+    min-width:0!important;
+    max-width:100%!important;
+  }
+  .main table.v97-mobile-cards tbody td > :is(.row,.field,div,form) {
+    max-width:100%!important;
+    min-width:0!important;
+  }
+  .main table.v97-mobile-cards tbody td :is(input:not([type=checkbox]):not([type=radio]),select,textarea) {
+    display:block!important;
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+  }
+  .main .v97-wide-table-wrap {
+    max-width:100%!important;
+    width:100%!important;
+    overflow-x:auto!important;
+    overflow-y:auto!important;
+    overscroll-behavior-x:contain;
+    -webkit-overflow-scrolling:touch;
+  }
+  /* The buttons in modal dialogs are mobile controls too, outside .main. */
+  .sales-export-dialog,
+  .task-edit-modal,.loyalty-edit-modal {
+    box-sizing:border-box!important;
+    width:calc(100vw - 24px)!important;
+    max-width:calc(100vw - 24px)!important;
+    max-height:calc(100dvh - 30px)!important;
+    overflow-y:auto!important;
+    overflow-x:hidden!important;
+  }
+  .sales-export-dialog .grid.two,
+  .task-edit-modal .grid.two,.task-edit-modal .grid.three,
+  .loyalty-edit-modal .grid.two {grid-template-columns:minmax(0,1fr)!important;}
+  .sales-export-dialog .btn,
+  .task-edit-modal .btn,.loyalty-edit-modal .btn {
+    max-width:100%!important;white-space:normal!important;overflow-wrap:anywhere!important;
+  }
+  .main .daily-target-bulk-actions > button {
+    flex:1 1 120px!important;
+    min-width:0!important;
+    white-space:normal!important;
+  }
+  .main .daily-target-weekday-actions > button {
+    padding:8px 2px!important;
+    min-width:0!important;
+  }
+  /* Long names and controls in admin & business forms cannot push other columns. */
+  .main :is(.target-employee-grid,.daily-report-table-wrap,.order-batch-card,
+    .report-filter-row,.admin-user-grid,.admin-store-grid) {min-width:0!important;max-width:100%!important;}
+  .main :is(.target-employee-check,.order-batch-head,.admin-store-card,.admin-user-card) {
+    max-width:100%!important;min-width:0!important;overflow-wrap:anywhere!important;
+  }
+  .main .v97-table-scroll-hint {white-space:normal!important;overflow-wrap:break-word!important;}
+  .main .card:last-child {margin-bottom:24px!important;}
+}
+@media (max-width:699px){
+  .mobile-page-title {
+    height:auto!important;
+    min-height:70px!important;
+    gap:10px!important;
+    padding:10px 13px!important;
+    align-items:center!important;
+  }
+  .mobile-page-title .v94-mobile-title {min-width:0!important;flex:1 1 auto!important;max-width:100%!important;}
+  .mobile-page-title .v94-mobile-title h2 {
+    width:100%!important;
+    max-width:100%!important;
+    white-space:normal!important;
+    overflow:visible!important;
+    text-overflow:clip!important;
+    overflow-wrap:break-word!important;
+    line-height:1.18!important;
+    font-size:18px!important;
+  }
+  .mobile-page-title .mobile-page-logout{flex:0 0 auto!important;}
+  /* The 7-day schedule picker actually fits a narrow phone. */
+  .main .v94-week-day-picker {
+    display:grid!important;
+    grid-template-columns:repeat(7,minmax(0,1fr))!important;
+    gap:3px!important;
+    width:100%!important;
+    max-width:100%!important;
+    overflow:visible!important;
+    padding:6px 0 9px!important;
+  }
+  .main .v94-week-day {
+    box-sizing:border-box!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+    min-height:48px!important;
+    gap:3px!important;
+    padding:4px 0!important;
+    border-radius:9px!important;
+  }
+  .main .v94-week-day span {font-size:10px!important;line-height:1.1!important;}
+  .main .v94-week-day strong {font-size:9px!important;letter-spacing:-.025em!important;line-height:1.1!important;}
+  .main .schedule-week-block {padding:10px 9px!important;}
+  .main .schedule-week-title {max-width:100%!important;white-space:normal!important;overflow-wrap:anywhere!important;}
+  .main .schedule-week-block .schedule-table {max-width:100%!important;}
+  .main .toolbar > :is(button,.btn) {min-width:0!important;}
+  .main .card :is(.badge,.hint,small){overflow-wrap:break-word;}
+}
+@media (max-width:360px){
+  .main .card .toolbar > :is(button,.btn) {flex:1 1 100%!important;}
+  .main .card .section-title > :is(h2,h3,h4) {flex-basis:100%!important;}
+  .main .card .section-title > .badge {flex-basis:auto!important;}
+  .main .export-grid {grid-template-columns:minmax(0,1fr)!important;}
+  .main .daily-target-weekday-actions {grid-template-columns:repeat(4,minmax(0,1fr))!important;}
+  .main .schedule-week-block{padding:9px 7px!important;}
+  .main .v94-week-day-picker{gap:2px!important;}
+  .main .v94-week-day strong{font-size:8.5px!important;}
+}
